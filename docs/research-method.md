@@ -20,6 +20,8 @@ The CLI implements the first production slice:
 - anchor normalization;
 - alphabet-specific constraint extraction;
 - adjacent-span analysis and generic mod-10 recurrence screening with random-baseline warnings;
+- seeded null-distribution baselines with add-one empirical p-values and Holm adjustment;
+- targeted raw key-fragment filtering by anchor/span, alphabet, and derivation mode;
 - ranked hypothesis reporting;
 - Markdown/JSON output.
 
@@ -34,7 +36,19 @@ The integration tests in `tests/cli_e2e.rs` execute the compiled CLI and verify:
 - Markdown report generation writes a complete report;
 - JSON report output is parseable and includes the expected top-level sections;
 - source-provenance fields remain attached to anchor and source output.
+- key-fragment filters are mutually exclusive for anchors/spans and fail clearly on empty results;
+- baseline output is deterministic for a fixed seed and includes p-value fields without promoting candidates.
 
 ## Release Gate
 
-Production release tags require the main CI lane to pass first. The tag-triggered release workflow builds pinned-toolchain binaries for Linux, macOS Apple Silicon, and Windows, then publishes archives and SHA-256 checksums to GitHub Releases.
+Production release tags require local verification first. This repo intentionally does not use GitHub Actions. Before creating a tag or GitHub Release, run:
+
+```bash
+cargo fmt --check
+cargo clippy --locked --all-targets --all-features -- -D warnings
+cargo test --locked --all-targets --all-features
+cargo build --locked --release
+target/release/kryptos-k4 --help
+```
+
+Then create the tag and release manually with `git` and `gh release create`.

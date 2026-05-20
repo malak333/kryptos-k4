@@ -59,6 +59,22 @@ pub struct RecurrenceScreen {
     pub notes: Vec<String>,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct BaselineSummary {
+    pub target_label: String,
+    pub alphabet_kind: crate::AlphabetKind,
+    pub mode: FragmentMode,
+    pub observed_matches: usize,
+    pub triples_checked: usize,
+    pub expected_random_matches: f64,
+    pub control_runs: usize,
+    pub control_mean_matches: f64,
+    pub control_max_matches: usize,
+    pub empirical_p_at_least_observed: f64,
+    pub promoted_candidate: bool,
+    pub interpretation: &'static str,
+}
+
 pub fn analyze_constraints() -> Result<Vec<ConstraintAnalysis>> {
     let mut analyses = Vec::new();
 
@@ -197,6 +213,84 @@ fn screen_gromark_recurrence(fragments: &[KeyFragment]) -> RecurrenceScreen {
     }
 }
 
+pub fn baseline_known_plaintext_spans(control_runs: usize) -> Result<Vec<BaselineSummary>> {
+    let mut summaries = Vec::new();
+
+    for analysis in analyze_known_plaintext_spans()? {
+        let additive_values: Vec<u8> = analysis
+            .fragments
+            .iter()
+            .filter(|fragment| fragment.mode == FragmentMode::AdditiveKey)
+            .map(|fragment| fragment.value)
+            .collect();
+        let observed_matches = count_mod10_recurrence_matches(&additive_values);
+        let triples_checked = additive_values.len().saturating_sub(2);
+        let control_counts = deterministic_control_counts(&additive_values, control_runs);
+        let control_sum: usize = control_counts.iter().sum();
+        let control_mean_matches = if control_counts.is_empty() {
+            0.0
+        } else {
+            control_sum as f64 / control_counts.len() as f64
+        };
+        let control_max_matches = control_counts.iter().copied().max().unwrap_or(0);
+        let at_least_observed = control_counts
+            .iter()
+            .filter(|count| **count >= observed_matches)
+            .count();
+        let empirical_p_at_least_observed = if control_counts.is_empty() {
+            1.0
+        } else {
+            at_least_observed as f64 / control_counts.len() as f64
+        };
+
+        summaries.push(BaselineSummary {
+            target_label: analysis.target.label,
+            alphabet_kind: analysis.alphabet.kind,
+            mode: FragmentMode::AdditiveKey,
+            observed_matches,
+            triples_checked,
+            expected_random_matches: triples_checked as f64 * 0.1,
+            control_runs,
+            control_mean_matches,
+            control_max_matches,
+            empirical_p_at_least_observed,
+            promoted_candidate: false,
+            interpretation: "Exploratory control only; public-anchor samples are too small to promote a candidate.",
+        });
+    }
+
+    Ok(summaries)
+}
+
+fn deterministic_control_counts(values: &[u8], control_runs: usize) -> Vec<usize> {
+    (0..control_runs)
+        .map(|run| {
+            let mut shuffled = values.to_vec();
+            deterministic_shuffle(&mut shuffled, run as u64 + 0xA5A5_5A5A);
+            count_mod10_recurrence_matches(&shuffled)
+        })
+        .collect()
+}
+
+fn deterministic_shuffle(values: &mut [u8], mut state: u64) {
+    if values.len() < 2 {
+        return;
+    }
+
+    for index in (1..values.len()).rev() {
+        state = state.wrapping_mul(6364136223846793005).wrapping_add(1);
+        let swap_with = (state as usize) % (index + 1);
+        values.swap(index, swap_with);
+    }
+}
+
+fn count_mod10_recurrence_matches(values: &[u8]) -> usize {
+    values
+        .windows(3)
+        .filter(|window| (window[0] + window[1]) % 10 == window[2] % 10)
+        .count()
+}
+
 impl AnalysisTarget {
     pub fn from_anchor(anchor: &Anchor) -> Self {
         Self {
@@ -279,5 +373,21 @@ mod tests {
             !analysis.recurrence.promoted_candidate
                 && analysis.recurrence.sample_warning.contains("Exploratory")
         }));
+    }
+
+    #[test]
+    fn baseline_never_promotes_tiny_public_span_samples() {
+        let summaries = baseline_known_plaintext_spans(16).unwrap();
+
+        assert_eq!(
+            summaries.len(),
+            analyze_known_plaintext_spans().unwrap().len()
+        );
+        assert!(summaries.iter().all(|summary| !summary.promoted_candidate));
+        assert!(
+            summaries
+                .iter()
+                .all(|summary| summary.interpretation.contains("too small"))
+        );
     }
 }

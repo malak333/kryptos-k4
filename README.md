@@ -14,7 +14,7 @@ This project is not a claimed K4 solution.
 - Gromark-style recurrence screening over known-anchor fragments.
 - Ranked hypothesis register from the research plan.
 - Markdown and JSON reports.
-- CLI E2E tests and CI workflow.
+- CLI E2E tests and local release checks.
 
 ## Usage
 
@@ -23,6 +23,9 @@ cargo run -- facts
 cargo run -- anchors
 cargo run -- constraints
 cargo run -- constraints --spans
+cargo run -- key-fragments --span BERLINCLOCK --alphabet kryptos --mode additive-key
+cargo run -- baseline --target spans --iterations 1000 --seed 42
+cargo run -- baseline --target spans --iterations 1000 --seed 42 --format json
 cargo run -- hypotheses
 cargo run -- sources
 cargo run -- export-data --directory data
@@ -38,6 +41,8 @@ cargo run -- report --format json
 | `anchors` | Public known-plaintext anchors with 0-based and 1-based positions plus source IDs. |
 | `constraints` | Anchor-derived fragments for supported alphabets. |
 | `constraints --spans` | Adjacent public clues merged into known-plaintext spans before screening. |
+| `key-fragments` | Raw derived key-fragment rows with anchor/span/alphabet/mode filters. |
+| `baseline` | Seeded false-positive controls for the generic recurrence screen. |
 | `hypotheses` | Ranked source-grounded hypothesis register. |
 | `sources` | Source provenance records. |
 | `export-data` | Machine-readable JSON for ciphertext, anchors, and sources. |
@@ -61,13 +66,18 @@ cargo install --path .
 kryptos-k4 --help
 ```
 
-CI runs formatting, clippy, tests, and release builds on Linux, macOS, and Windows using the pinned toolchain.
-
-Tagged releases are published by GitHub Actions when a `v*` tag is pushed. The release workflow builds Linux, macOS Apple Silicon, and Windows binaries, packages README/LICENSE with each artifact, and uploads SHA-256 checksums.
+Releases are manual. Run the local verification gate, build the release binary, then create a GitHub release with the `gh` CLI. Do not use GitHub Actions for this repo.
 
 ```bash
+VERSION=v0.1.0
+cargo fmt --check
+cargo clippy --locked --all-targets --all-features -- -D warnings
+cargo test --locked --all-targets --all-features
+cargo build --locked --release
+target/release/kryptos-k4 --help
 git tag v0.1.0
 git push origin v0.1.0
+gh release create "$VERSION" target/release/kryptos-k4 README.md LICENSE --title "$VERSION" --notes "Initial public Kryptos K4 research CLI release."
 ```
 
 ## Evidence Boundary
