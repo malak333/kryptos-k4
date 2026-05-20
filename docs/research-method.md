@@ -56,3 +56,5 @@ target/release/kryptos-k4 --help
 ```
 
 Then create the tag and release manually with `git` and `gh release create`.
+
+The `release-check` command verifies the no-Actions policy and required source packet before release.

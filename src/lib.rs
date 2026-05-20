@@ -5,6 +5,7 @@ pub mod analysis;
 pub mod candidates;
 pub mod data;
 pub mod hypotheses;
+pub mod release_check;
 pub mod report;
 pub mod routes;
 
@@ -25,5 +26,6 @@ pub use data::{
     sources,
 };
 pub use hypotheses::{Hypothesis, hypotheses};
+pub use release_check::{ReleaseCheck, run_release_checks};
 pub use report::{Report, ReportFormat, build_report, render_report};
 pub use routes::{RouteExperiment, RouteFamily, registered_route_families, run_route_experiments};
