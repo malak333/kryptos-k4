@@ -15,6 +15,7 @@ The project follows the source-led plan in `kryptos-k4-research-plan.md`.
 The CLI implements the first production slice:
 
 - canonical public data;
+- machine-readable exports for ciphertext, anchors, and source provenance;
 - anchor normalization;
 - alphabet-specific constraint extraction;
 - Gromark-style recurrence screening;

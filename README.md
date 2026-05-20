@@ -22,6 +22,7 @@ This project is not a claimed K4 solution.
 cargo run -- anchors
 cargo run -- constraints
 cargo run -- hypotheses
+cargo run -- export-data --directory data
 cargo run -- report --format markdown --output notes/k4-report.md
 cargo run -- report --format json
 ```

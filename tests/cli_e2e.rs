@@ -68,3 +68,27 @@ fn json_report_is_parseable() {
     assert!(json["anchors"].as_array().unwrap().len() >= 4);
     assert!(json["constraints"].as_array().unwrap().len() >= 12);
 }
+
+#[test]
+fn export_data_writes_machine_readable_files() {
+    let temp = tempfile::tempdir().unwrap();
+    let mut cmd = Command::cargo_bin("kryptos-k4").unwrap();
+
+    cmd.args(["export-data", "--directory", temp.path().to_str().unwrap()])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Exported K4 data files"));
+
+    let anchors = std::fs::read_to_string(temp.path().join("k4-known-anchors.json")).unwrap();
+    let anchors: Value = serde_json::from_str(&anchors).unwrap();
+    assert!(
+        anchors
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|anchor| { anchor["plaintext"] == "BERLIN" && anchor["start_zero_based"] == 63 })
+    );
+
+    assert!(temp.path().join("k4-ciphertext.json").exists());
+    assert!(temp.path().join("k4-sources.json").exists());
+}
