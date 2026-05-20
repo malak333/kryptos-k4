@@ -1,8 +1,9 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 use kryptos_k4::{
-    K4_CIPHERTEXT, ReportFormat, analyze_constraints, analyze_known_plaintext_spans, build_report,
-    hypotheses, known_anchors, render_report, sources,
+    AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, FragmentMode, K4_CIPHERTEXT,
+    ReportFormat, analyze_constraints, analyze_known_plaintext_spans, build_report, hypotheses,
+    known_anchors, render_report, run_baseline, sources,
 };
 use std::{fs, path::PathBuf};
 
@@ -24,6 +25,39 @@ enum Command {
         /// Analyze merged adjacent known-plaintext spans instead of individual anchors.
         #[arg(long)]
         spans: bool,
+    },
+    /// Print one row per derived key fragment, with optional filters.
+    KeyFragments {
+        /// Filter by individual anchor label, for example BERLIN.
+        #[arg(long, conflicts_with = "span")]
+        anchor: Option<String>,
+        /// Filter by adjacent known-plaintext span label, for example BERLINCLOCK.
+        #[arg(long, conflicts_with = "anchor")]
+        span: Option<String>,
+        /// Filter by alphabet.
+        #[arg(long, value_enum)]
+        alphabet: Option<CliAlphabet>,
+        /// Filter by derivation mode.
+        #[arg(long, value_enum)]
+        mode: Option<CliFragmentMode>,
+    },
+    /// Run deterministic false-positive controls for the generic recurrence screen.
+    Baseline {
+        /// Target family to evaluate.
+        #[arg(long, value_enum, default_value_t = CliBaselineTarget::Spans)]
+        target: CliBaselineTarget,
+        /// Alphabet family to evaluate.
+        #[arg(long, value_enum, default_value_t = CliBaselineAlphabet::All)]
+        alphabet: CliBaselineAlphabet,
+        /// Number of seeded null iterations.
+        #[arg(long, default_value_t = 10_000)]
+        iterations: usize,
+        /// Seed for deterministic null controls.
+        #[arg(long, default_value_t = 42)]
+        seed: u64,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
     },
     /// Print ranked source-grounded hypotheses.
     Hypotheses,
@@ -52,11 +86,84 @@ enum OutputFormat {
     Json,
 }
 
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum CliAlphabet {
+    Standard,
+    Kryptos,
+    KryptosReversed,
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum CliFragmentMode {
+    #[value(name = "additive-key")]
+    Additive,
+    #[value(name = "subtractive-key")]
+    Subtractive,
+    #[value(name = "beaufort-key")]
+    Beaufort,
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum CliBaselineTarget {
+    Anchors,
+    Spans,
+    All,
+}
+
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum CliBaselineAlphabet {
+    Standard,
+    Kryptos,
+    KryptosReversed,
+    All,
+}
+
 impl From<OutputFormat> for ReportFormat {
     fn from(value: OutputFormat) -> Self {
         match value {
             OutputFormat::Markdown => ReportFormat::Markdown,
             OutputFormat::Json => ReportFormat::Json,
+        }
+    }
+}
+
+impl From<CliAlphabet> for AlphabetKind {
+    fn from(value: CliAlphabet) -> Self {
+        match value {
+            CliAlphabet::Standard => AlphabetKind::Standard,
+            CliAlphabet::Kryptos => AlphabetKind::Kryptos,
+            CliAlphabet::KryptosReversed => AlphabetKind::KryptosReversed,
+        }
+    }
+}
+
+impl From<CliFragmentMode> for FragmentMode {
+    fn from(value: CliFragmentMode) -> Self {
+        match value {
+            CliFragmentMode::Additive => FragmentMode::AdditiveKey,
+            CliFragmentMode::Subtractive => FragmentMode::SubtractiveKey,
+            CliFragmentMode::Beaufort => FragmentMode::BeaufortKey,
+        }
+    }
+}
+
+impl From<CliBaselineTarget> for BaselineTargetScope {
+    fn from(value: CliBaselineTarget) -> Self {
+        match value {
+            CliBaselineTarget::Anchors => BaselineTargetScope::Anchors,
+            CliBaselineTarget::Spans => BaselineTargetScope::Spans,
+            CliBaselineTarget::All => BaselineTargetScope::All,
+        }
+    }
+}
+
+impl From<CliBaselineAlphabet> for BaselineAlphabetScope {
+    fn from(value: CliBaselineAlphabet) -> Self {
+        match value {
+            CliBaselineAlphabet::Standard => BaselineAlphabetScope::Standard,
+            CliBaselineAlphabet::Kryptos => BaselineAlphabetScope::Kryptos,
+            CliBaselineAlphabet::KryptosReversed => BaselineAlphabetScope::KryptosReversed,
+            CliBaselineAlphabet::All => BaselineAlphabetScope::All,
         }
     }
 }
@@ -68,6 +175,19 @@ fn main() -> Result<()> {
         Command::Facts => print_facts(),
         Command::Anchors => print_anchors(),
         Command::Constraints { spans } => print_constraints(spans)?,
+        Command::KeyFragments {
+            anchor,
+            span,
+            alphabet,
+            mode,
+        } => print_key_fragments(anchor, span, alphabet, mode)?,
+        Command::Baseline {
+            target,
+            alphabet,
+            iterations,
+            seed,
+            format,
+        } => print_baseline(target, alphabet, iterations, seed, format)?,
         Command::Hypotheses => print_hypotheses(),
         Command::Sources => print_sources(),
         Command::ExportData { directory } => export_data(directory)?,
@@ -139,6 +259,121 @@ fn print_constraints(spans: bool) -> Result<()> {
             analysis.recurrence.sample_warning
         );
     }
+    Ok(())
+}
+
+fn print_key_fragments(
+    anchor: Option<String>,
+    span: Option<String>,
+    alphabet: Option<CliAlphabet>,
+    mode: Option<CliFragmentMode>,
+) -> Result<()> {
+    let alphabet_filter = alphabet.map(AlphabetKind::from);
+    let mode_filter = mode.map(FragmentMode::from);
+    let (analyses, filter_kind, target_filter) = if let Some(anchor) = anchor {
+        (
+            analyze_constraints()?,
+            "anchor",
+            Some(anchor.to_ascii_uppercase()),
+        )
+    } else if let Some(span) = span {
+        (
+            analyze_known_plaintext_spans()?,
+            "span",
+            Some(span.to_ascii_uppercase()),
+        )
+    } else {
+        let mut all = analyze_constraints()?;
+        all.extend(analyze_known_plaintext_spans()?);
+        (all, "target", None)
+    };
+
+    let mut rows_printed = 0usize;
+    for analysis in analyses {
+        if target_filter
+            .as_ref()
+            .is_some_and(|filter| analysis.target.label != *filter)
+        {
+            continue;
+        }
+        if alphabet_filter.is_some_and(|filter| analysis.alphabet.kind != filter) {
+            continue;
+        }
+
+        let target_kind = match analysis.target.kind {
+            kryptos_k4::AnalysisTargetKind::Anchor => "anchor",
+            kryptos_k4::AnalysisTargetKind::Span => "span",
+        };
+
+        for fragment in analysis.fragments {
+            if mode_filter.is_some_and(|filter| fragment.mode != filter) {
+                continue;
+            }
+
+            rows_printed += 1;
+            println!(
+                "{} {} / {:?} | pos {} | {}->{} | {:?} | value {} | symbol {}",
+                target_kind,
+                analysis.target.label,
+                analysis.alphabet.kind,
+                fragment.position_one_based,
+                fragment.plaintext,
+                fragment.ciphertext,
+                fragment.mode,
+                fragment.value,
+                fragment.symbol
+            );
+        }
+    }
+
+    if rows_printed == 0 {
+        anyhow::bail!("no key-fragment rows matched the requested {filter_kind} filters");
+    }
+
+    Ok(())
+}
+
+fn print_baseline(
+    target: CliBaselineTarget,
+    alphabet: CliBaselineAlphabet,
+    iterations: usize,
+    seed: u64,
+    format: OutputFormat,
+) -> Result<()> {
+    let run = run_baseline(target.into(), alphabet.into(), iterations, seed)?;
+
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&run)?),
+        OutputFormat::Markdown => {
+            println!("# Kryptos K4 Baseline Report\n");
+            println!("This is not a claimed solution.\n");
+            println!(
+                "Target: {}; alphabet: {}; iterations: {}; seed: {}\n",
+                run.target_scope, run.alphabet_scope, run.iterations, run.seed
+            );
+            println!(
+                "| Target | Kind | Alphabet | Observed | Triples | Null mean | Null sd | Empirical p-value | Adjusted p-value | Promoted | Warning |"
+            );
+            println!("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |");
+            for result in run.results {
+                println!(
+                    "| {} | {} | {:?} | {} | {} | {:.2} | {:.2} | {:.4} | {:.4} | {} | {} |",
+                    result.target_label,
+                    result.target_kind,
+                    result.alphabet,
+                    result.observed_matches,
+                    result.triples_checked,
+                    result.null_mean,
+                    result.null_std_dev,
+                    result.empirical_p_value,
+                    result.adjusted_p_value,
+                    result.promoted_candidate,
+                    result.warning
+                );
+            }
+        }
+    }
+
     Ok(())
 }
 

@@ -88,6 +88,113 @@ fn invalid_report_format_fails() {
 }
 
 #[test]
+fn key_fragments_support_target_alphabet_and_mode_filters() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "key-fragments",
+            "--span",
+            "BERLINCLOCK",
+            "--alphabet",
+            "standard",
+            "--mode",
+            "additive-key",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("span BERLINCLOCK / Standard"))
+        .stdout(predicate::str::contains("AdditiveKey"))
+        .stdout(predicate::str::contains("SubtractiveKey").not());
+}
+
+#[test]
+fn key_fragments_reject_conflicting_or_empty_filters() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "key-fragments",
+            "--anchor",
+            "BERLIN",
+            "--span",
+            "BERLINCLOCK",
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("cannot be used with"));
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["key-fragments", "--anchor", "BERLINCLOCK"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("no key-fragment rows matched"));
+}
+
+#[test]
+fn baseline_json_is_deterministic_and_parseable() {
+    let args = [
+        "baseline",
+        "--target",
+        "spans",
+        "--iterations",
+        "100",
+        "--seed",
+        "42",
+        "--format",
+        "json",
+    ];
+    let first = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(args)
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let second = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(args)
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    assert_eq!(first, second);
+    let json: Value = serde_json::from_slice(&first).unwrap();
+    assert_eq!(json["iterations"], 100);
+    assert_eq!(json["seed"], 42);
+    assert!(
+        json["results"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|result| result["target_label"] == "BERLINCLOCK")
+    );
+}
+
+#[test]
+fn baseline_markdown_mentions_p_values_and_solution_boundary() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["baseline", "--iterations", "25", "--seed", "42"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Empirical p-value"))
+        .stdout(predicate::str::contains("Adjusted p-value"))
+        .stdout(predicate::str::contains("not a claimed solution"));
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["baseline", "--iterations", "0"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "baseline iterations must be greater than zero",
+        ));
+}
+
+#[test]
 fn markdown_report_can_be_written_to_file() {
     let temp = tempfile::tempdir().unwrap();
     let report_path = temp.path().join("k4-report.md");
