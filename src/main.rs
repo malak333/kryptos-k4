@@ -4,7 +4,7 @@ use kryptos_k4::{
     AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, FragmentMode, K4_CIPHERTEXT,
     ReportFormat, analyze_constraints, analyze_known_plaintext_spans, build_report,
     candidate_sequences, hypotheses, known_anchors, render_report, run_baseline,
-    run_route_experiments, score_candidate_sequences, sources,
+    run_release_checks, run_route_experiments, score_candidate_sequences, sources,
 };
 use std::{fs, path::PathBuf};
 
@@ -76,6 +76,12 @@ enum Command {
     },
     /// Print source provenance records.
     Sources,
+    /// Run local release preflight checks. Does not use GitHub Actions.
+    ReleaseCheck {
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Render the full research report.
     Report {
         /// Output format.
@@ -205,6 +211,7 @@ fn main() -> Result<()> {
         Command::CandidateSequences { format } => print_candidate_sequences(format)?,
         Command::Routes { format } => print_routes(format)?,
         Command::Sources => print_sources(),
+        Command::ReleaseCheck { format } => print_release_check(format)?,
         Command::ExportData { directory } => export_data(directory)?,
         Command::Report { format, output } => {
             let report = build_report()?;
@@ -473,6 +480,21 @@ fn print_sources() {
             source.use_note
         );
     }
+}
+
+fn print_release_check(format: OutputFormat) -> Result<()> {
+    let checks = run_release_checks(std::env::current_dir()?)?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&checks)?),
+        OutputFormat::Markdown => {
+            println!("# Release Check\n");
+            println!("Local preflight only. This repo does not use GitHub Actions.\n");
+            for check in checks {
+                println!("- {}: {} ({})", check.name, check.passed, check.detail);
+            }
+        }
+    }
+    Ok(())
 }
 
 fn export_data(directory: PathBuf) -> Result<()> {

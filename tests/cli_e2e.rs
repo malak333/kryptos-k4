@@ -229,6 +229,17 @@ fn routes_command_prints_named_routes_and_baselines() {
 }
 
 #[test]
+fn release_check_confirms_no_github_actions_policy() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .arg("release-check")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("github-actions-disabled"))
+        .stdout(predicate::str::contains("does not use GitHub Actions"));
+}
+
+#[test]
 fn json_report_includes_candidate_and_route_experiments() {
     let output = Command::cargo_bin("kryptos-k4")
         .unwrap()

@@ -30,6 +30,7 @@ cargo run -- candidate-sequences
 cargo run -- candidate-sequences --format json
 cargo run -- routes
 cargo run -- routes --format json
+cargo run -- release-check
 cargo run -- hypotheses
 cargo run -- sources
 cargo run -- export-data --directory data
@@ -49,6 +50,7 @@ cargo run -- report --format json
 | `baseline` | Seeded false-positive controls for the generic recurrence screen. |
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |
 | `routes` | Small named route/permutation screens with fixed baselines. |
+| `release-check` | Local release preflight confirming no GitHub Actions and required source docs. |
 | `hypotheses` | Ranked source-grounded hypothesis register. |
 | `sources` | Source provenance records. |
 | `export-data` | Machine-readable JSON for ciphertext, anchors, and sources. |
