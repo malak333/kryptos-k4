@@ -63,6 +63,13 @@ kryptos-k4 --help
 
 CI runs formatting, clippy, tests, and release builds on Linux, macOS, and Windows using the pinned toolchain.
 
+Tagged releases are published by GitHub Actions when a `v*` tag is pushed. The release workflow builds Linux, macOS Apple Silicon, and Windows binaries, packages README/LICENSE with each artifact, and uploads SHA-256 checksums.
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
 ## Evidence Boundary
 
 Allowed:

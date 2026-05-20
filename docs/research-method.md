@@ -34,3 +34,7 @@ The integration tests in `tests/cli_e2e.rs` execute the compiled CLI and verify:
 - Markdown report generation writes a complete report;
 - JSON report output is parseable and includes the expected top-level sections;
 - source-provenance fields remain attached to anchor and source output.
+
+## Release Gate
+
+Production release tags require the main CI lane to pass first. The tag-triggered release workflow builds pinned-toolchain binaries for Linux, macOS Apple Silicon, and Windows, then publishes archives and SHA-256 checksums to GitHub Releases.
