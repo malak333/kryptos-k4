@@ -26,6 +26,10 @@ cargo run -- constraints --spans
 cargo run -- key-fragments --span BERLINCLOCK --alphabet kryptos --mode additive-key
 cargo run -- baseline --target spans --iterations 1000 --seed 42
 cargo run -- baseline --target spans --iterations 1000 --seed 42 --format json
+cargo run -- candidate-sequences
+cargo run -- candidate-sequences --format json
+cargo run -- routes
+cargo run -- routes --format json
 cargo run -- hypotheses
 cargo run -- sources
 cargo run -- export-data --directory data
@@ -43,6 +47,8 @@ cargo run -- report --format json
 | `constraints --spans` | Adjacent public clues merged into known-plaintext spans before screening. |
 | `key-fragments` | Raw derived key-fragment rows with anchor/span/alphabet/mode filters. |
 | `baseline` | Seeded false-positive controls for the generic recurrence screen. |
+| `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |
+| `routes` | Small named route/permutation screens with fixed baselines. |
 | `hypotheses` | Ranked source-grounded hypothesis register. |
 | `sources` | Source provenance records. |
 | `export-data` | Machine-readable JSON for ciphertext, anchors, and sources. |

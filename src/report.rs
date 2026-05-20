@@ -1,6 +1,7 @@
 use crate::{
     ConstraintAnalysis, K4_CIPHERTEXT, analyze_constraints, analyze_known_plaintext_spans,
-    hypotheses, known_anchors, known_plaintext_spans, sources,
+    candidate_sequences, hypotheses, known_anchors, known_plaintext_spans, run_route_experiments,
+    score_candidate_sequences, sources,
 };
 use anyhow::Result;
 use serde::Serialize;
@@ -21,6 +22,9 @@ pub struct Report {
     pub constraints: Vec<ConstraintAnalysis>,
     pub span_constraints: Vec<ConstraintAnalysis>,
     pub hypotheses: Vec<crate::Hypothesis>,
+    pub candidate_sequences: Vec<crate::CandidateSequence>,
+    pub candidate_sequence_scores: Vec<crate::CandidateSequenceScore>,
+    pub route_experiments: Vec<crate::RouteExperiment>,
 }
 
 pub fn build_report() -> Result<Report> {
@@ -33,6 +37,9 @@ pub fn build_report() -> Result<Report> {
         constraints: analyze_constraints()?,
         span_constraints: analyze_known_plaintext_spans()?,
         hypotheses: hypotheses(),
+        candidate_sequences: candidate_sequences(),
+        candidate_sequence_scores: score_candidate_sequences()?,
+        route_experiments: run_route_experiments()?,
     })
 }
 
@@ -120,6 +127,37 @@ fn render_markdown(report: &Report) -> String {
         ));
     }
 
+    output.push_str("\n## Candidate Sequences\n\n");
+    output.push_str(
+        "Pre-registered contextual candidates only; no candidate is a claimed solution.\n\n",
+    );
+    for candidate in &report.candidate_sequences {
+        output.push_str(&format!(
+            "- `{}` {:?} {:?}: `{}` values={:?} sources=`{}`\n",
+            candidate.id,
+            candidate.family,
+            candidate.transform,
+            candidate.raw_material,
+            candidate.values,
+            candidate.source_ids.join("`, `")
+        ));
+    }
+
+    output.push_str("\n## Route Experiments\n\n");
+    output.push_str("Exploratory named route screens only; no decryption text is emitted.\n\n");
+    for experiment in &report.route_experiments {
+        output.push_str(&format!(
+            "- {:?} / {}: score={} identity={} reverse={} seeded_random={} promoted={}\n",
+            experiment.route,
+            experiment.target_label,
+            experiment.score,
+            experiment.identity_baseline,
+            experiment.reverse_baseline,
+            experiment.seeded_random_baseline,
+            experiment.promoted_candidate
+        ));
+    }
+
     output
 }
 
@@ -162,6 +200,8 @@ mod tests {
         assert!(rendered.contains("## Known Anchors"));
         assert!(rendered.contains("## Known Plaintext Spans"));
         assert!(rendered.contains("## Ranked Hypotheses"));
+        assert!(rendered.contains("## Candidate Sequences"));
+        assert!(rendered.contains("## Route Experiments"));
         assert!(rendered.contains("Source IDs"));
         assert!(rendered.contains("BERLIN"));
     }

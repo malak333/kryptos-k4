@@ -2,8 +2,9 @@ use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 use kryptos_k4::{
     AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, FragmentMode, K4_CIPHERTEXT,
-    ReportFormat, analyze_constraints, analyze_known_plaintext_spans, build_report, hypotheses,
-    known_anchors, render_report, run_baseline, sources,
+    ReportFormat, analyze_constraints, analyze_known_plaintext_spans, build_report,
+    candidate_sequences, hypotheses, known_anchors, render_report, run_baseline,
+    run_route_experiments, score_candidate_sequences, sources,
 };
 use std::{fs, path::PathBuf};
 
@@ -61,6 +62,18 @@ enum Command {
     },
     /// Print ranked source-grounded hypotheses.
     Hypotheses,
+    /// Print pre-registered contextual candidate sequences.
+    CandidateSequences {
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Print bounded named route experiments over public fragments.
+    Routes {
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Print source provenance records.
     Sources,
     /// Render the full research report.
@@ -189,6 +202,8 @@ fn main() -> Result<()> {
             format,
         } => print_baseline(target, alphabet, iterations, seed, format)?,
         Command::Hypotheses => print_hypotheses(),
+        Command::CandidateSequences { format } => print_candidate_sequences(format)?,
+        Command::Routes { format } => print_routes(format)?,
         Command::Sources => print_sources(),
         Command::ExportData { directory } => export_data(directory)?,
         Command::Report { format, output } => {
@@ -388,6 +403,62 @@ fn print_hypotheses() {
             hypothesis.risk
         );
     }
+}
+
+fn print_candidate_sequences(format: OutputFormat) -> Result<()> {
+    match format {
+        OutputFormat::Json => println!(
+            "{}",
+            serde_json::to_string_pretty(&serde_json::json!({
+                "candidate_sequences": candidate_sequences(),
+                "scores": score_candidate_sequences()?,
+                "note": "Pre-registered contextual candidates only; not a claimed solution."
+            }))?
+        ),
+        OutputFormat::Markdown => {
+            println!("# Candidate Sequences\n");
+            println!("Pre-registered contextual candidates only; not a claimed solution.\n");
+            for candidate in candidate_sequences() {
+                println!(
+                    "- `{}` {:?} {:?}: `{}` values={:?} promoted=false",
+                    candidate.id,
+                    candidate.family,
+                    candidate.transform,
+                    candidate.raw_material,
+                    candidate.values
+                );
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn print_routes(format: OutputFormat) -> Result<()> {
+    let experiments = run_route_experiments()?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&experiments)?),
+        OutputFormat::Markdown => {
+            println!("# Route Experiments\n");
+            println!(
+                "Exploratory route screen only; not a claimed solution and no decryption text is emitted.\n"
+            );
+            for experiment in experiments {
+                println!(
+                    "- {:?} / {}: score={} identity_baseline={} reverse_baseline={} seeded_random_baseline={} promoted={}",
+                    experiment.route,
+                    experiment.target_label,
+                    experiment.score,
+                    experiment.identity_baseline,
+                    experiment.reverse_baseline,
+                    experiment.seeded_random_baseline,
+                    experiment.promoted_candidate
+                );
+            }
+        }
+    }
+
+    Ok(())
 }
 
 fn print_sources() {
