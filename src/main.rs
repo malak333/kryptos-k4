@@ -1,8 +1,8 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 use kryptos_k4::{
-    K4_CIPHERTEXT, ReportFormat, analyze_constraints, build_report, hypotheses, known_anchors,
-    render_report, sources,
+    K4_CIPHERTEXT, ReportFormat, analyze_constraints, analyze_known_plaintext_spans, build_report,
+    hypotheses, known_anchors, render_report, sources,
 };
 use std::{fs, path::PathBuf};
 
@@ -15,18 +15,32 @@ struct Cli {
 
 #[derive(Debug, Subcommand)]
 enum Command {
+    /// Print core public K4 facts and evidence boundary.
     Facts,
+    /// Print public known-plaintext anchors with positions and source IDs.
     Anchors,
-    Constraints,
+    /// Print derived constraint fragments for anchors or adjacent spans.
+    Constraints {
+        /// Analyze merged adjacent known-plaintext spans instead of individual anchors.
+        #[arg(long)]
+        spans: bool,
+    },
+    /// Print ranked source-grounded hypotheses.
     Hypotheses,
+    /// Print source provenance records.
     Sources,
+    /// Render the full research report.
     Report {
+        /// Output format.
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
+        /// Optional output path. Prints to stdout when omitted.
         #[arg(long)]
         output: Option<PathBuf>,
     },
+    /// Write machine-readable ciphertext, anchor, and source JSON files.
     ExportData {
+        /// Directory where JSON data files should be written.
         #[arg(long, default_value = "data")]
         directory: PathBuf,
     },
@@ -53,7 +67,7 @@ fn main() -> Result<()> {
     match cli.command {
         Command::Facts => print_facts(),
         Command::Anchors => print_anchors(),
-        Command::Constraints => print_constraints()?,
+        Command::Constraints { spans } => print_constraints(spans)?,
         Command::Hypotheses => print_hypotheses(),
         Command::Sources => print_sources(),
         Command::ExportData { directory } => export_data(directory)?,
@@ -83,23 +97,28 @@ fn print_facts() {
 fn print_anchors() {
     for anchor in known_anchors() {
         println!(
-            "{} => {} | 0-based {}-{} | 1-based {}-{}",
+            "{} => {} | 0-based {}-{} | 1-based {}-{} | sources: {} | confidence: {}",
             anchor.ciphertext,
             anchor.plaintext,
             anchor.start_zero_based,
             anchor.end_zero_based_inclusive,
             anchor.start_one_based(),
-            anchor.end_one_based_inclusive()
+            anchor.end_one_based_inclusive(),
+            anchor.source_ids.join(","),
+            anchor.confidence
         );
     }
 }
 
-fn print_constraints() -> Result<()> {
-    for analysis in analyze_constraints()? {
-        println!(
-            "{} / {:?}",
-            analysis.anchor.plaintext, analysis.alphabet.kind
-        );
+fn print_constraints(spans: bool) -> Result<()> {
+    let analyses = if spans {
+        analyze_known_plaintext_spans()?
+    } else {
+        analyze_constraints()?
+    };
+
+    for analysis in analyses {
+        println!("{} / {:?}", analysis.target.label, analysis.alphabet.kind);
         for fragment in analysis.fragments {
             println!(
                 "  pos {:>2}: {}->{} {:?} value {:>2} symbol {}",
@@ -112,8 +131,12 @@ fn print_constraints() -> Result<()> {
             );
         }
         println!(
-            "  recurrence: {}/{} local additive triples matched",
-            analysis.recurrence.gromark_sum_matches, analysis.recurrence.contiguous_pairs_checked
+            "  recurrence: {}/{} generic mod-10 triples matched; expected random {:.1}; promoted: {}; warning: {}",
+            analysis.recurrence.gromark_sum_matches,
+            analysis.recurrence.contiguous_pairs_checked,
+            analysis.recurrence.expected_random_matches,
+            analysis.recurrence.promoted_candidate,
+            analysis.recurrence.sample_warning
         );
     }
     Ok(())
@@ -134,7 +157,15 @@ fn print_hypotheses() {
 
 fn print_sources() {
     for source in sources() {
-        println!("{}: {}\n  {}", source.label, source.url, source.use_note);
+        println!(
+            "{} ({}): {}\n  accessed {} | use: {}\n  {}",
+            source.label,
+            source.id,
+            source.url,
+            source.accessed_at,
+            source.allowed_use,
+            source.use_note
+        );
     }
 }
 

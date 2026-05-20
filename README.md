@@ -19,13 +19,29 @@ This project is not a claimed K4 solution.
 ## Usage
 
 ```bash
+cargo run -- facts
 cargo run -- anchors
 cargo run -- constraints
+cargo run -- constraints --spans
 cargo run -- hypotheses
+cargo run -- sources
 cargo run -- export-data --directory data
 cargo run -- report --format markdown --output notes/k4-report.md
 cargo run -- report --format json
 ```
+
+## Commands
+
+| Command | Output |
+| --- | --- |
+| `facts` | K4 ciphertext length, ciphertext, and evidence boundary. |
+| `anchors` | Public known-plaintext anchors with 0-based and 1-based positions plus source IDs. |
+| `constraints` | Anchor-derived fragments for supported alphabets. |
+| `constraints --spans` | Adjacent public clues merged into known-plaintext spans before screening. |
+| `hypotheses` | Ranked source-grounded hypothesis register. |
+| `sources` | Source provenance records. |
+| `export-data` | Machine-readable JSON for ciphertext, anchors, and sources. |
+| `report` | Full Markdown or JSON report. |
 
 ## Development
 
@@ -35,6 +51,17 @@ cargo clippy --all-targets --all-features -- -D warnings
 cargo test
 cargo build --release
 ```
+
+The supported Rust toolchain is pinned in `rust-toolchain.toml`; the crate declares MSRV `1.95`.
+
+## Install / Release
+
+```bash
+cargo install --path .
+kryptos-k4 --help
+```
+
+CI runs formatting, clippy, tests, and release builds on Linux, macOS, and Windows using the pinned toolchain.
 
 ## Evidence Boundary
 

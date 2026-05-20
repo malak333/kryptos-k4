@@ -2,9 +2,14 @@
 name = "kryptos-k4"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.95"
 license = "MIT"
 description = "Source-grounded Kryptos K4 research CLI and constraint analyzer"
 repository = "https://github.com/malak333/kryptos-k4"
+homepage = "https://github.com/malak333/kryptos-k4"
+documentation = "https://github.com/malak333/kryptos-k4#readme"
+keywords = ["cryptography", "kryptos", "cipher", "research", "cli"]
+categories = ["command-line-utilities", "cryptography"]
 
 [dependencies]
 anyhow = "1.0.100"
