@@ -4,9 +4,9 @@ use serde_json::Value;
 
 #[test]
 fn anchors_command_prints_public_anchor_positions() {
-    let mut cmd = Command::cargo_bin("kryptos-k4").unwrap();
-
-    cmd.arg("anchors")
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .arg("anchors")
         .assert()
         .success()
         .stdout(predicate::str::contains(
@@ -20,9 +20,9 @@ fn anchors_command_prints_public_anchor_positions() {
 
 #[test]
 fn constraints_command_prints_alphabet_fragments() {
-    let mut cmd = Command::cargo_bin("kryptos-k4").unwrap();
-
-    cmd.arg("constraints")
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .arg("constraints")
         .assert()
         .success()
         .stdout(predicate::str::contains("BERLIN / Standard"))
@@ -32,9 +32,9 @@ fn constraints_command_prints_alphabet_fragments() {
 
 #[test]
 fn span_constraints_include_adjacent_clues_and_warnings() {
-    let mut cmd = Command::cargo_bin("kryptos-k4").unwrap();
-
-    cmd.args(["constraints", "--spans"])
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["constraints", "--spans"])
         .assert()
         .success()
         .stdout(predicate::str::contains("EASTNORTHEAST / Standard"))
@@ -195,20 +195,72 @@ fn baseline_markdown_mentions_p_values_and_solution_boundary() {
 }
 
 #[test]
+fn candidate_sequences_json_contains_registered_families() {
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["candidate-sequences", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    let serialized = serde_json::to_string(&json).unwrap();
+    assert!(serialized.contains("berlin-world-clock"));
+    assert!(serialized.contains("compass-directions"));
+    assert!(serialized.contains("egypt-1986"));
+    assert!(serialized.contains("berlin-wall-1989"));
+    assert!(serialized.contains("pre_registered"));
+}
+
+#[test]
+fn routes_command_prints_named_routes_and_baselines() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .arg("routes")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Identity"))
+        .stdout(predicate::str::contains("identity_baseline"))
+        .stdout(predicate::str::contains("seeded_random_baseline"))
+        .stdout(predicate::str::contains("not a claimed solution"))
+        .stdout(predicate::str::contains("plaintext guess").not());
+}
+
+#[test]
+fn json_report_includes_candidate_and_route_experiments() {
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["report", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert!(json["candidate_sequences"].as_array().unwrap().len() >= 4);
+    assert!(json["route_experiments"].as_array().unwrap().len() >= 2);
+    assert_eq!(json["route_experiments"][0]["promoted_candidate"], false);
+}
+
+#[test]
 fn markdown_report_can_be_written_to_file() {
     let temp = tempfile::tempdir().unwrap();
     let report_path = temp.path().join("k4-report.md");
-    let mut cmd = Command::cargo_bin("kryptos-k4").unwrap();
 
-    cmd.args([
-        "report",
-        "--format",
-        "markdown",
-        "--output",
-        report_path.to_str().unwrap(),
-    ])
-    .assert()
-    .success();
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "report",
+            "--format",
+            "markdown",
+            "--output",
+            report_path.to_str().unwrap(),
+        ])
+        .assert()
+        .success();
 
     let report = std::fs::read_to_string(report_path).unwrap();
     assert!(report.contains("# Kryptos K4 Constraint Report"));
@@ -218,9 +270,8 @@ fn markdown_report_can_be_written_to_file() {
 
 #[test]
 fn json_report_is_parseable() {
-    let mut cmd = Command::cargo_bin("kryptos-k4").unwrap();
-
-    let output = cmd
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
         .args(["report", "--format", "json"])
         .assert()
         .success()
@@ -250,9 +301,10 @@ fn json_report_is_parseable() {
 #[test]
 fn export_data_writes_machine_readable_files() {
     let temp = tempfile::tempdir().unwrap();
-    let mut cmd = Command::cargo_bin("kryptos-k4").unwrap();
 
-    cmd.args(["export-data", "--directory", temp.path().to_str().unwrap()])
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["export-data", "--directory", temp.path().to_str().unwrap()])
         .assert()
         .success()
         .stdout(predicate::str::contains("Exported K4 data files"));
