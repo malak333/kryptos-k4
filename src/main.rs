@@ -26,6 +26,10 @@ enum Command {
         #[arg(long)]
         output: Option<PathBuf>,
     },
+    ExportData {
+        #[arg(long, default_value = "data")]
+        directory: PathBuf,
+    },
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -52,6 +56,7 @@ fn main() -> Result<()> {
         Command::Constraints => print_constraints()?,
         Command::Hypotheses => print_hypotheses(),
         Command::Sources => print_sources(),
+        Command::ExportData { directory } => export_data(directory)?,
         Command::Report { format, output } => {
             let report = build_report()?;
             let rendered = render_report(&report, format.into())?;
@@ -131,4 +136,27 @@ fn print_sources() {
     for source in sources() {
         println!("{}: {}\n  {}", source.label, source.url, source.use_note);
     }
+}
+
+fn export_data(directory: PathBuf) -> Result<()> {
+    fs::create_dir_all(&directory)?;
+    fs::write(
+        directory.join("k4-ciphertext.json"),
+        serde_json::to_string_pretty(&serde_json::json!({
+            "ciphertext": K4_CIPHERTEXT,
+            "length": K4_CIPHERTEXT.len(),
+            "evidence_boundary": "public ciphertext only; no claimed full plaintext"
+        }))?,
+    )?;
+    fs::write(
+        directory.join("k4-known-anchors.json"),
+        serde_json::to_string_pretty(&known_anchors())?,
+    )?;
+    fs::write(
+        directory.join("k4-sources.json"),
+        serde_json::to_string_pretty(&sources())?,
+    )?;
+
+    println!("Exported K4 data files to {}", directory.display());
+    Ok(())
 }
