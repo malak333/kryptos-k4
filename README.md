@@ -106,3 +106,4 @@ Excluded:
 - Community claims used as proof.
 
 See [docs/research-method.md](docs/research-method.md) and [kryptos-k4-research-plan.md](kryptos-k4-research-plan.md).
+Implementation diagrams are tracked in [docs/architecture-current.md](docs/architecture-current.md) and [docs/architecture-production-goal.md](docs/architecture-production-goal.md).

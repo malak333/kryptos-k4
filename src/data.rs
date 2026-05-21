@@ -204,6 +204,17 @@ pub fn sources() -> Vec<Source> {
             allowed_use: "archive-context-only",
             use_note: "Archive-discovery context and Sanborn decipherment distinction.",
         },
+        Source {
+            id: "ap-2025-archive-sale",
+            label: "Associated Press 2025 archive sale follow-up",
+            url: "https://apnews.com/article/kryptos-jim-sanborn-auction-cia-secret-code-cb8ee8554ca473910cbd0592f8bdb350",
+            archive_url: None,
+            accessed_at: "2026-05-20",
+            publication_date: Some("2025-11-21"),
+            source_type: "major-reporting",
+            allowed_use: "archive-context-only",
+            use_note: "Archive sale outcome and context only; no archive-discovered plaintext content.",
+        },
     ]
 }
 
@@ -268,6 +279,27 @@ mod tests {
             for source_id in anchor.source_ids {
                 assert!(source_ids.contains(source_id), "missing source {source_id}");
             }
+        }
+    }
+
+    #[test]
+    fn plan_source_list_entries_are_registered() {
+        let source_ids: std::collections::HashSet<_> =
+            sources().into_iter().map(|source| source.id).collect();
+
+        for required_source in [
+            "cia-artifact",
+            "cia-sculpture",
+            "elonka-kryptos",
+            "histocrypt-2021-bean",
+            "scientific-american-2025",
+            "ap-2025-auction",
+            "ap-2025-archive-sale",
+        ] {
+            assert!(
+                source_ids.contains(required_source),
+                "missing plan source {required_source}"
+            );
         }
     }
 }

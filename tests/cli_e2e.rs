@@ -327,13 +327,15 @@ fn release_check_json_exposes_all_local_preflight_gates() {
         .map(|check| check["name"].as_str().unwrap())
         .collect();
 
-    assert!(checks.len() >= 10);
+    assert!(checks.len() >= 12);
     assert!(checks.iter().all(|check| check["passed"] == true));
     for expected_name in [
         "github-actions-disabled",
         "dependabot-disabled",
         "readme-present",
         "research-method-present",
+        "current-architecture-present",
+        "production-goal-architecture-present",
         "source-packet-present",
         "research-plan-present",
         "license-present",
