@@ -299,6 +299,44 @@ fn routes_json_contains_bounded_experiments_without_plaintext_output() {
 }
 
 #[test]
+fn findings_command_exposes_evidence_baselines_and_next_tests() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .arg("findings")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Findings Ledger"))
+        .stdout(predicate::str::contains("sources:"))
+        .stdout(predicate::str::contains("baseline:"))
+        .stdout(predicate::str::contains("next test:"))
+        .stdout(predicate::str::contains("promoted: false"))
+        .stdout(predicate::str::contains("not a claimed solution"));
+}
+
+#[test]
+fn findings_json_is_parseable_and_non_promotional() {
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["findings", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert!(json.as_array().unwrap().len() >= 4);
+    assert!(
+        json.as_array()
+            .unwrap()
+            .iter()
+            .all(|finding| finding["promoted_candidate"] == false)
+    );
+    assert_eq!(json[0]["id"], "F1");
+    assert!(json[0]["transformation_steps"].as_array().unwrap().len() >= 3);
+}
+
+#[test]
 fn release_check_confirms_no_github_actions_policy() {
     Command::cargo_bin("kryptos-k4")
         .unwrap()
@@ -381,7 +419,9 @@ fn json_report_includes_candidate_and_route_experiments() {
     let json: Value = serde_json::from_slice(&output).unwrap();
     assert!(json["candidate_sequences"].as_array().unwrap().len() >= 4);
     assert!(json["route_experiments"].as_array().unwrap().len() >= 2);
+    assert!(json["findings"].as_array().unwrap().len() >= 4);
     assert_eq!(json["route_experiments"][0]["promoted_candidate"], false);
+    assert_eq!(json["findings"][0]["promoted_candidate"], false);
 }
 
 #[test]
@@ -405,6 +445,7 @@ fn markdown_report_can_be_written_to_file() {
     assert!(report.contains("# Kryptos K4 Constraint Report"));
     assert!(report.contains("## Known Anchors"));
     assert!(report.contains("## Ranked Hypotheses"));
+    assert!(report.contains("## Findings Ledger"));
 }
 
 #[test]

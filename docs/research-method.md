@@ -27,6 +27,7 @@ The CLI implements the first production slice:
 - bounded named route/permutation screens for H3;
 - ranked hypothesis reporting;
 - Markdown/JSON output.
+- findings ledger entries that tie each current observation to public source inputs, transformation steps, baseline context, interpretation, and a repeatable next test.
 
 It does not attempt unconstrained key search or claim decryption.
 
@@ -43,6 +44,7 @@ The integration tests in `tests/cli_e2e.rs` execute the compiled CLI and verify:
 - baseline output is deterministic for a fixed seed and includes p-value fields without promoting candidates.
 - candidate-sequence output includes family, source IDs, transform metadata, and no promoted candidates;
 - route output uses only small named route families and emits no plaintext guesses.
+- findings output includes evidence inputs, baseline comparison, next-test fields, and non-promotion flags in Markdown and JSON.
 
 ## Release Gate
 

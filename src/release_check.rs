@@ -129,10 +129,7 @@ fn check_no_plaintext_leakage_markers(repo_root: &Path) -> ReleaseCheck {
         name: "no-plaintext-leakage-markers",
         passed: marker_hits.is_empty(),
         detail: if marker_hits.is_empty() {
-            format!(
-                "No leaked/full-plaintext sentinel markers found in release-facing files. markers={}",
-                PLAINTEXT_LEAKAGE_MARKERS.join(",")
-            )
+            "No leaked/full-plaintext sentinel markers found in release-facing files.".to_string()
         } else {
             format!(
                 "Leaked/full-plaintext sentinel markers found: {}",
