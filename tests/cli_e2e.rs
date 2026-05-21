@@ -1,6 +1,7 @@
 use assert_cmd::Command;
 use predicates::prelude::*;
 use serde_json::Value;
+use std::collections::HashSet;
 
 #[test]
 fn anchors_command_prints_public_anchor_positions() {
@@ -206,12 +207,44 @@ fn candidate_sequences_json_contains_registered_families() {
         .clone();
 
     let json: Value = serde_json::from_slice(&output).unwrap();
-    let serialized = serde_json::to_string(&json).unwrap();
-    assert!(serialized.contains("berlin-world-clock"));
-    assert!(serialized.contains("compass-directions"));
-    assert!(serialized.contains("egypt-1986"));
-    assert!(serialized.contains("berlin-wall-1989"));
-    assert!(serialized.contains("pre_registered"));
+    let candidates = json["candidate_sequences"].as_array().unwrap();
+    let scores = json["scores"].as_array().unwrap();
+    assert_eq!(candidates.len(), scores.len());
+    assert_eq!(
+        json["note"],
+        "Pre-registered contextual candidates only; not a claimed solution."
+    );
+
+    let ids: HashSet<_> = candidates
+        .iter()
+        .map(|candidate| candidate["id"].as_str().unwrap())
+        .collect();
+    assert!(ids.contains("h4-berlin-world-clock-english"));
+    assert!(ids.contains("h4-compass-8point-east-northeast"));
+    assert!(ids.contains("h5-egypt-1986-year"));
+    assert!(ids.contains("h5-berlin-wall-1989-date"));
+
+    let families: HashSet<_> = candidates
+        .iter()
+        .map(|candidate| candidate["family"].as_str().unwrap())
+        .collect();
+    assert!(families.contains("berlin-world-clock"));
+    assert!(families.contains("compass-directions"));
+    assert!(families.contains("egypt1986"));
+    assert!(families.contains("berlin-wall1989"));
+    assert!(candidates.iter().all(|candidate| {
+        candidate["pre_registered"] == true
+            && candidate["expanded_to_k4"].as_array().unwrap().len() == 97
+            && !candidate["values"].as_array().unwrap().is_empty()
+    }));
+    assert!(scores.iter().all(|score| {
+        score["promoted_candidate"] == false
+            && score["compared_fragment_count"] == 24
+            && score["note"]
+                .as_str()
+                .unwrap()
+                .contains("no candidate is promoted")
+    }));
 }
 
 #[test]
@@ -229,6 +262,43 @@ fn routes_command_prints_named_routes_and_baselines() {
 }
 
 #[test]
+fn routes_json_contains_bounded_experiments_without_plaintext_output() {
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["routes", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    let experiments = json.as_array().unwrap();
+    assert!(experiments.len() >= 5);
+    assert!(experiments.iter().all(|experiment| {
+        experiment["alphabet"] == "standard"
+            && experiment["fragment_mode"] == "additive-key"
+            && experiment["promoted_candidate"] == false
+            && experiment["notes"]
+                .as_str()
+                .unwrap()
+                .contains("no decryption text is emitted")
+            && experiment["permutation"].as_array().unwrap().len()
+                == experiment["target_label"].as_str().unwrap().len()
+    }));
+    assert!(experiments.iter().any(|experiment| {
+        experiment["route"] == "row-to-column-width13"
+            && experiment["target_label"] == "EASTNORTHEAST"
+    }));
+    assert!(experiments.iter().any(|experiment| {
+        experiment["route"] == "identity" && experiment["target_label"] == "BERLINCLOCK"
+    }));
+    let serialized = serde_json::to_string(&json).unwrap();
+    assert!(!serialized.contains("plaintext guess"));
+    assert!(!serialized.contains("claimed solution"));
+}
+
+#[test]
 fn release_check_confirms_no_github_actions_policy() {
     Command::cargo_bin("kryptos-k4")
         .unwrap()
@@ -237,6 +307,62 @@ fn release_check_confirms_no_github_actions_policy() {
         .success()
         .stdout(predicate::str::contains("github-actions-disabled"))
         .stdout(predicate::str::contains("does not use GitHub Actions"));
+}
+
+#[test]
+fn release_check_json_exposes_all_local_preflight_gates() {
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["release-check", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    let checks = json.as_array().unwrap();
+    let names: HashSet<_> = checks
+        .iter()
+        .map(|check| check["name"].as_str().unwrap())
+        .collect();
+
+    assert!(checks.len() >= 10);
+    assert!(checks.iter().all(|check| check["passed"] == true));
+    for expected_name in [
+        "github-actions-disabled",
+        "dependabot-disabled",
+        "readme-present",
+        "research-method-present",
+        "source-packet-present",
+        "research-plan-present",
+        "license-present",
+        "lockfile-present",
+        "markdown-report-present",
+        "no-plaintext-leakage-markers",
+    ] {
+        assert!(names.contains(expected_name));
+    }
+    assert!(checks.iter().any(|check| {
+        check["name"] == "github-actions-disabled"
+            && check["detail"]
+                .as_str()
+                .unwrap()
+                .contains(".github/workflows")
+    }));
+    assert!(checks.iter().any(|check| {
+        check["name"] == "dependabot-disabled"
+            && check["detail"]
+                .as_str()
+                .unwrap()
+                .contains(".github/dependabot.yml")
+    }));
+    assert!(
+        checks
+            .iter()
+            .filter(|check| check["name"] != "no-plaintext-leakage-markers")
+            .all(|check| { check["detail"].as_str().unwrap().contains("path=") })
+    );
 }
 
 #[test]
@@ -329,7 +455,31 @@ fn export_data_writes_machine_readable_files() {
             .iter()
             .any(|anchor| { anchor["plaintext"] == "BERLIN" && anchor["start_zero_based"] == 63 })
     );
+    assert_eq!(anchors.as_array().unwrap().len(), 4);
+    assert!(anchors.as_array().unwrap().iter().all(|anchor| {
+        anchor["claim_type"] == "public-anchor"
+            && anchor["confidence"] == "high"
+            && !anchor["source_ids"].as_array().unwrap().is_empty()
+            && anchor["end_zero_based_inclusive"].as_u64().unwrap()
+                >= anchor["start_zero_based"].as_u64().unwrap()
+    }));
 
-    assert!(temp.path().join("k4-ciphertext.json").exists());
-    assert!(temp.path().join("k4-sources.json").exists());
+    let ciphertext = std::fs::read_to_string(temp.path().join("k4-ciphertext.json")).unwrap();
+    let ciphertext: Value = serde_json::from_str(&ciphertext).unwrap();
+    assert_eq!(ciphertext["length"], 97);
+    assert_eq!(ciphertext["ciphertext"].as_str().unwrap().len(), 97);
+    assert_eq!(
+        ciphertext["evidence_boundary"],
+        "public ciphertext only; no claimed full plaintext"
+    );
+
+    let sources = std::fs::read_to_string(temp.path().join("k4-sources.json")).unwrap();
+    let sources: Value = serde_json::from_str(&sources).unwrap();
+    assert!(sources.as_array().unwrap().iter().any(|source| {
+        source["id"] == "scientific-american-2025" && source["allowed_use"] == "public-clue-context"
+    }));
+    assert!(sources.as_array().unwrap().iter().all(|source| {
+        source["url"].as_str().unwrap().starts_with("https://")
+            && !source["accessed_at"].as_str().unwrap().is_empty()
+    }));
 }
