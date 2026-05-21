@@ -17,6 +17,7 @@ The CLI implements the first production slice:
 - canonical public data;
 - machine-readable exports for ciphertext, anchors, and source provenance;
 - source IDs, confidence labels, and allowed-use notes for public facts;
+- a source packet with exact URLs, access dates, allowed-use boundaries, and quote-free summaries;
 - anchor normalization;
 - alphabet-specific constraint extraction;
 - adjacent-span analysis and generic mod-10 recurrence screening with random-baseline warnings;
@@ -59,3 +60,5 @@ target/release/kryptos-k4 --help
 Then create the tag and release manually with `git` and `gh release create`.
 
 The `release-check` command verifies the no-Actions/no-Dependabot policy, required release docs, generated Markdown report presence, and absence of explicit leaked/full-plaintext sentinel markers before release.
+
+The source packet and `src/data.rs` source registry must stay aligned. Archive-sale reporting is historical context only; it must not introduce archive-discovered plaintext or private auction material into the data model, reports, exports, or tests.

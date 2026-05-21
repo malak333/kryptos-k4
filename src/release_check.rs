@@ -3,9 +3,17 @@ use serde::Serialize;
 use std::fs;
 use std::path::Path;
 
-const REQUIRED_RELEASE_FILES: [(&str, &str); 6] = [
+const REQUIRED_RELEASE_FILES: [(&str, &str); 8] = [
     ("readme-present", "README.md"),
     ("research-method-present", "docs/research-method.md"),
+    (
+        "current-architecture-present",
+        "docs/architecture-current.md",
+    ),
+    (
+        "production-goal-architecture-present",
+        "docs/architecture-production-goal.md",
+    ),
     ("source-packet-present", "sources/source-packet.md"),
     ("research-plan-present", "kryptos-k4-research-plan.md"),
     ("license-present", "LICENSE"),
