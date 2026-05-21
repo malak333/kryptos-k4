@@ -41,6 +41,13 @@ pub struct CandidateSequenceScore {
     pub exact_mod26_matches: usize,
     pub match_rate: f64,
     pub promoted_candidate: bool,
+    pub source_inputs: String,
+    pub transformation_steps: &'static str,
+    pub output_summary: String,
+    pub baseline_comparison: &'static str,
+    pub meaningfulness: &'static str,
+    pub next_test: &'static str,
+    pub score_caveat: &'static str,
     pub note: &'static str,
 }
 
@@ -144,6 +151,21 @@ pub fn score_candidate_sequences() -> Result<Vec<CandidateSequenceScore>> {
                 exact_mod26_matches,
                 match_rate,
                 promoted_candidate: false,
+                source_inputs: format!(
+                    "candidate_id={} raw_material={} source_ids={}",
+                    candidate.id,
+                    candidate.raw_material,
+                    candidate.source_ids.join(",")
+                ),
+                transformation_steps: candidate.transform.findings_ledger_label(),
+                output_summary: format!(
+                    "{} exact mod-26 matches across {} compared additive fragments; match_rate={:.4}",
+                    exact_mod26_matches, compared_fragment_count, match_rate
+                ),
+                baseline_comparison: "No independent null baseline is attached to this candidate screen; compare against baseline and route outputs before any follow-up.",
+                meaningfulness: "Exploratory source-derived key material only; a score is not meaningful unless it predicts held-out public anchors without tuning.",
+                next_test: "Pre-register a held-out public-anchor prediction or a seeded null baseline before expanding this candidate family.",
+                score_caveat: "Candidate scores are small-sample exact-match screens, not evidence of plaintext or decryption.",
                 note: "Exploratory candidate screen only; no candidate is promoted without independent baselines.",
             }
         })
@@ -216,6 +238,28 @@ fn expand_to_k4(values: &[u8]) -> Vec<u8> {
         .collect()
 }
 
+impl CandidateTransform {
+    fn findings_ledger_label(self) -> &'static str {
+        match self {
+            Self::A1Z26ZeroBased => {
+                "Filter ASCII letters, uppercase them, convert A-Z to zero-based 0-25 values, then cycle to K4 length for bounded comparison."
+            }
+            Self::A1Z26OneBased => {
+                "Filter ASCII letters, uppercase them, convert A-Z to one-based 1-26 values, then cycle to K4 length for bounded comparison."
+            }
+            Self::DecimalDigits => {
+                "Extract decimal digits as numeric values, then cycle to K4 length for bounded comparison."
+            }
+            Self::Compass8Point => {
+                "Map the registered direction phrase onto fixed 8-point compass indices, then cycle to K4 length for bounded comparison."
+            }
+            Self::Compass16Point => {
+                "Map the registered direction phrase onto fixed 16-point compass indices, then cycle to K4 length for bounded comparison."
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -277,5 +321,23 @@ mod tests {
         let scores = score_candidate_sequences().unwrap();
 
         assert!(scores.iter().all(|score| !score.promoted_candidate));
+    }
+
+    #[test]
+    fn candidate_scores_include_findings_ledger_and_next_test_boundaries() {
+        let scores = score_candidate_sequences().unwrap();
+
+        for score in scores {
+            assert!(score.source_inputs.contains(score.candidate_id));
+            assert!(score.output_summary.contains("exact mod-26 matches"));
+            assert!(
+                score
+                    .baseline_comparison
+                    .contains("No independent null baseline")
+            );
+            assert!(score.meaningfulness.contains("Exploratory"));
+            assert!(score.next_test.contains("Pre-register"));
+            assert!(score.score_caveat.contains("not evidence of plaintext"));
+        }
     }
 }

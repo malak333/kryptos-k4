@@ -46,6 +46,12 @@ pub struct BaselineResult {
     pub iterations: usize,
     pub seed: u64,
     pub promoted_candidate: bool,
+    pub source_inputs: String,
+    pub transformation_steps: &'static str,
+    pub output_summary: String,
+    pub baseline_comparison: String,
+    pub meaningfulness: &'static str,
+    pub next_test: &'static str,
     pub warning: &'static str,
 }
 
@@ -131,9 +137,10 @@ fn push_results(
             .filter(|count| **count >= observed_matches)
             .count();
         let empirical_p_value = (at_least_observed as f64 + 1.0) / (iterations as f64 + 1.0);
+        let target_label = analysis.target.label;
 
         results.push(BaselineResult {
-            target_label: analysis.target.label,
+            target_label: target_label.clone(),
             target_kind,
             alphabet: analysis.alphabet.kind,
             fragment_mode: FragmentMode::AdditiveKey,
@@ -146,6 +153,24 @@ fn push_results(
             iterations,
             seed,
             promoted_candidate: false,
+            source_inputs: format!(
+                "target={} target_kind={} alphabet={:?} fragment_mode={:?}",
+                target_label,
+                target_kind,
+                analysis.alphabet.kind,
+                FragmentMode::AdditiveKey
+            ),
+            transformation_steps: "Take public additive-key fragments modulo 10, count local a+b=c mod-10 triples, and compare against seeded shuffles of the same values.",
+            output_summary: format!(
+                "observed_matches={} triples_checked={} empirical_p_value={:.4} adjusted_p_value_pending",
+                observed_matches, triples_checked, empirical_p_value
+            ),
+            baseline_comparison: format!(
+                "null_mean={:.4} null_std_dev={:.4} iterations={} seed={}",
+                null_mean, null_std_dev, iterations, seed
+            ),
+            meaningfulness: "False-positive control only; low p-values on public-anchor samples are insufficient to promote a candidate without independent prediction.",
+            next_test: next_test_for_sample(triples_checked),
             warning: warning_for_sample(triples_checked),
         });
     }
@@ -199,6 +224,13 @@ fn apply_holm_adjustment(results: &mut [BaselineResult]) {
         let adjusted = (p_value * (family_size - rank) as f64).min(1.0);
         running_max = running_max.max(adjusted);
         results[index].adjusted_p_value = running_max;
+        results[index].output_summary = format!(
+            "observed_matches={} triples_checked={} empirical_p_value={:.4} adjusted_p_value={:.4}",
+            results[index].observed_matches,
+            results[index].triples_checked,
+            results[index].empirical_p_value,
+            results[index].adjusted_p_value
+        );
     }
 }
 
@@ -207,6 +239,14 @@ fn warning_for_sample(triples_checked: usize) -> &'static str {
         "Underpowered public-anchor sample; never promote from this result."
     } else {
         "Exploratory only; promotion requires independent corroboration."
+    }
+}
+
+fn next_test_for_sample(triples_checked: usize) -> &'static str {
+    if triples_checked < MIN_TRIPLES_FOR_PROMOTION {
+        "Do not expand from this sample; gather a larger pre-registered public fragment set or use this only as a caveated control."
+    } else {
+        "Pre-register an independent prediction target, then rerun seeded controls before evaluating any candidate mechanism."
     }
 }
 
@@ -292,5 +332,27 @@ mod tests {
                 .iter()
                 .all(|result| result.adjusted_p_value >= result.empirical_p_value)
         );
+    }
+
+    #[test]
+    fn baseline_results_include_findings_ledger_and_next_test_boundaries() {
+        let run = run_baseline(
+            BaselineTargetScope::Spans,
+            BaselineAlphabetScope::Standard,
+            20,
+            42,
+        )
+        .unwrap();
+
+        for result in run.results {
+            assert!(result.source_inputs.contains(&result.target_label));
+            assert!(result.transformation_steps.contains("seeded shuffles"));
+            assert!(result.output_summary.contains("adjusted_p_value="));
+            assert!(result.baseline_comparison.contains("null_mean="));
+            assert!(result.meaningfulness.contains("False-positive control"));
+            assert!(
+                result.next_test.contains("pre-registered") || result.next_test.contains("larger")
+            );
+        }
     }
 }

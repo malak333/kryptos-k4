@@ -50,7 +50,7 @@ cargo run -- report --format json
 | `baseline` | Seeded false-positive controls for the generic recurrence screen. |
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |
 | `routes` | Small named route/permutation screens with fixed baselines. |
-| `release-check` | Local release preflight confirming no GitHub Actions and required source docs. |
+| `release-check` | Local release preflight confirming no hosted automation, required docs, generated report presence, and plaintext-leakage sentinel absence. |
 | `hypotheses` | Ranked source-grounded hypothesis register. |
 | `sources` | Source provenance records. |
 | `export-data` | Machine-readable JSON for ciphertext, anchors, and sources. |
@@ -82,6 +82,7 @@ cargo fmt --check
 cargo clippy --locked --all-targets --all-features -- -D warnings
 cargo test --locked --all-targets --all-features
 cargo build --locked --release
+cargo run --locked -- release-check
 target/release/kryptos-k4 --help
 git tag v0.1.0
 git push origin v0.1.0

@@ -52,9 +52,10 @@ cargo fmt --check
 cargo clippy --locked --all-targets --all-features -- -D warnings
 cargo test --locked --all-targets --all-features
 cargo build --locked --release
+cargo run --locked -- release-check
 target/release/kryptos-k4 --help
 ```
 
 Then create the tag and release manually with `git` and `gh release create`.
 
-The `release-check` command verifies the no-Actions policy and required source packet before release.
+The `release-check` command verifies the no-Actions/no-Dependabot policy, required release docs, generated Markdown report presence, and absence of explicit leaked/full-plaintext sentinel markers before release.

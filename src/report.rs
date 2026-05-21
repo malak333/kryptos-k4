@@ -1,10 +1,14 @@
 use crate::{
-    ConstraintAnalysis, K4_CIPHERTEXT, analyze_constraints, analyze_known_plaintext_spans,
-    candidate_sequences, hypotheses, known_anchors, known_plaintext_spans, run_route_experiments,
-    score_candidate_sequences, sources,
+    BaselineAlphabetScope, BaselineRun, BaselineTargetScope, ConstraintAnalysis, K4_CIPHERTEXT,
+    ReleaseCheck, analyze_constraints, analyze_known_plaintext_spans, candidate_sequences,
+    hypotheses, known_anchors, known_plaintext_spans, run_baseline, run_release_checks,
+    run_route_experiments, score_candidate_sequences, sources,
 };
 use anyhow::Result;
 use serde::Serialize;
+
+const REPORT_BASELINE_ITERATIONS: usize = 10_000;
+const REPORT_BASELINE_SEED: u64 = 42;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ReportFormat {
@@ -25,6 +29,8 @@ pub struct Report {
     pub candidate_sequences: Vec<crate::CandidateSequence>,
     pub candidate_sequence_scores: Vec<crate::CandidateSequenceScore>,
     pub route_experiments: Vec<crate::RouteExperiment>,
+    pub baseline: BaselineRun,
+    pub release_checks: Vec<ReleaseCheck>,
 }
 
 pub fn build_report() -> Result<Report> {
@@ -40,6 +46,13 @@ pub fn build_report() -> Result<Report> {
         candidate_sequences: candidate_sequences(),
         candidate_sequence_scores: score_candidate_sequences()?,
         route_experiments: run_route_experiments()?,
+        baseline: run_baseline(
+            BaselineTargetScope::All,
+            BaselineAlphabetScope::All,
+            REPORT_BASELINE_ITERATIONS,
+            REPORT_BASELINE_SEED,
+        )?,
+        release_checks: run_release_checks(env!("CARGO_MANIFEST_DIR"))?,
     })
 }
 
@@ -54,7 +67,25 @@ fn render_markdown(report: &Report) -> String {
     let mut output = String::new();
 
     output.push_str("# Kryptos K4 Constraint Report\n\n");
-    output.push_str("This report uses public anchors only and is not a claimed solution.\n\n");
+    output.push_str(
+        "This report uses public anchors only and is not a claimed solution. Production readiness here means the local, source-grounded research CLI and release package are repeatable and bounded; it does not mean Kryptos K4 is solved or that any candidate plaintext, key, route, or method is promoted.\n\n",
+    );
+    output.push_str("## Research Boundary and Production Readiness\n\n");
+    output.push_str(
+        "- Evidence boundary: public ciphertext, public known-plaintext anchors, source provenance, deterministic controls, and pre-registered exploratory screens only.\n",
+    );
+    output.push_str(
+        "- Research boundary: no generated plaintext is treated as decoded K4 text; all promoted-candidate flags remain false unless independent corroboration and stronger samples justify a future change.\n",
+    );
+    output.push_str(
+        "- Production-readiness scope: local Rust CLI, report rendering, JSON output, source packet presence, release preflight, and no-GitHub-Actions policy. External publication, peer review, and cryptanalytic validation remain outside this report.\n\n",
+    );
+
+    output.push_str("## Feature Coverage\n\n");
+    output.push_str(
+        "| Feature | Included result |\n| --- | --- |\n| `facts` | Ciphertext length, ciphertext, and evidence boundary. |\n| `anchors` | Public known-plaintext anchors with positions, source IDs, confidence, claim type, and notes. |\n| `constraints` | Per-anchor key fragments across supported alphabets and modes, with recurrence screens. |\n| `key-fragments` | The same fragment rows are rendered in full for anchors and adjacent spans. |\n| `baseline` | Seeded false-positive controls for anchors and spans across all supported alphabets. |\n| `hypotheses` | Ranked source-grounded hypotheses with facts, assumptions, falsification tests, and risks. |\n| `candidate-sequences` | Pre-registered contextual sequences and score results. |\n| `routes` | Bounded named route experiments with identity, reverse, and seeded-random baselines. |\n| `sources` | Source provenance records and allowed-use notes. |\n| `release-check` | Local release preflight results, including the no-GitHub-Actions boundary. |\n| `export-data` | Covered by the source data rendered here; the command writes ciphertext, anchor, and source JSON files. |\n\n",
+    );
+
     output.push_str("## Ciphertext\n\n");
     output.push_str(&format!(
         "- Length: {}\n- Text: `{}`\n\n",
@@ -63,12 +94,12 @@ fn render_markdown(report: &Report) -> String {
 
     output.push_str("## Known Anchors\n\n");
     output.push_str(
-        "| Plaintext | Ciphertext | 0-Based Range | 1-Based Range | Source IDs | Confidence |\n",
+        "| Plaintext | Ciphertext | 0-Based Range | 1-Based Range | Source IDs | Confidence | Claim Type | Note |\n",
     );
-    output.push_str("| --- | --- | --- | --- | --- | --- |\n");
+    output.push_str("| --- | --- | --- | --- | --- | --- | --- | --- |\n");
     for anchor in &report.anchors {
         output.push_str(&format!(
-            "| `{}` | `{}` | {}-{} | {}-{} | `{}` | {} |\n",
+            "| `{}` | `{}` | {}-{} | {}-{} | `{}` | {} | {} | {} |\n",
             anchor.plaintext,
             anchor.ciphertext,
             anchor.start_zero_based,
@@ -76,7 +107,9 @@ fn render_markdown(report: &Report) -> String {
             anchor.start_one_based(),
             anchor.end_one_based_inclusive(),
             anchor.source_ids.join("`, `"),
-            anchor.confidence
+            anchor.confidence,
+            anchor.claim_type,
+            anchor.source_note
         ));
     }
 
@@ -105,23 +138,56 @@ fn render_markdown(report: &Report) -> String {
     output.push_str("## Ranked Hypotheses\n\n");
     for hypothesis in &report.hypotheses {
         output.push_str(&format!(
-            "{}. **{} ({})**\n   - Test: {}\n   - Risk: {}\n",
+            "{}. **{} ({})**\n   - Supporting facts: {}\n   - Required assumptions: {}\n   - Test: {}\n   - Risk: {}\n",
             hypothesis.priority,
             hypothesis.name,
             hypothesis.id,
+            hypothesis.supporting_facts,
+            hypothesis.required_assumptions,
             hypothesis.falsification_test,
             hypothesis.risk
+        ));
+    }
+
+    output.push_str("\n## Baseline Controls\n\n");
+    output.push_str(&format!(
+        "{} Target: {}; alphabet: {}; iterations: {}; seed: {}.\n\n",
+        report.baseline.note,
+        report.baseline.target_scope,
+        report.baseline.alphabet_scope,
+        report.baseline.iterations,
+        report.baseline.seed
+    ));
+    output.push_str(
+        "| Target | Kind | Alphabet | Observed | Triples | Null Mean | Null SD | Empirical P | Adjusted P | Promoted | Warning |\n",
+    );
+    output.push_str("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n");
+    for result in &report.baseline.results {
+        output.push_str(&format!(
+            "| {} | {} | {:?} | {} | {} | {:.2} | {:.2} | {:.4} | {:.4} | {} | {} |\n",
+            result.target_label,
+            result.target_kind,
+            result.alphabet,
+            result.observed_matches,
+            result.triples_checked,
+            result.null_mean,
+            result.null_std_dev,
+            result.empirical_p_value,
+            result.adjusted_p_value,
+            result.promoted_candidate,
+            result.warning
         ));
     }
 
     output.push_str("\n## Sources\n\n");
     for source in &report.sources {
         output.push_str(&format!(
-            "- `{}` [{}]({}) - {}; accessed {}; use: {}\n",
+            "- `{}` [{}]({}) - {}; type: {}; accessed {}; use: {}\n",
             source.id,
             source.label,
             source.url,
             source.use_note,
+            source.source_type,
             source.accessed_at,
             source.allowed_use
         ));
@@ -143,6 +209,22 @@ fn render_markdown(report: &Report) -> String {
         ));
     }
 
+    output.push_str("\n## Candidate Sequence Scores\n\n");
+    output.push_str("| Candidate | Family | Compared Fragments | Exact Mod-26 Matches | Match Rate | Promoted | Note |\n");
+    output.push_str("| --- | --- | --- | --- | --- | --- | --- |\n");
+    for score in &report.candidate_sequence_scores {
+        output.push_str(&format!(
+            "| `{}` | {:?} | {} | {} | {:.3} | {} | {} |\n",
+            score.candidate_id,
+            score.family,
+            score.compared_fragment_count,
+            score.exact_mod26_matches,
+            score.match_rate,
+            score.promoted_candidate,
+            score.note
+        ));
+    }
+
     output.push_str("\n## Route Experiments\n\n");
     output.push_str("Exploratory named route screens only; no decryption text is emitted.\n\n");
     for experiment in &report.route_experiments {
@@ -155,6 +237,15 @@ fn render_markdown(report: &Report) -> String {
             experiment.reverse_baseline,
             experiment.seeded_random_baseline,
             experiment.promoted_candidate
+        ));
+    }
+
+    output.push_str("\n## Release Check\n\n");
+    output.push_str("Local preflight only. This repo does not use GitHub Actions.\n\n");
+    for check in &report.release_checks {
+        output.push_str(&format!(
+            "- {}: {} ({})\n",
+            check.name, check.passed, check.detail
         ));
     }
 
@@ -201,7 +292,11 @@ mod tests {
         assert!(rendered.contains("## Known Plaintext Spans"));
         assert!(rendered.contains("## Ranked Hypotheses"));
         assert!(rendered.contains("## Candidate Sequences"));
+        assert!(rendered.contains("## Candidate Sequence Scores"));
         assert!(rendered.contains("## Route Experiments"));
+        assert!(rendered.contains("## Baseline Controls"));
+        assert!(rendered.contains("## Release Check"));
+        assert!(rendered.contains("Production-readiness scope"));
         assert!(rendered.contains("Source IDs"));
         assert!(rendered.contains("BERLIN"));
     }

@@ -23,6 +23,12 @@ pub struct RouteExperiment {
     pub reverse_baseline: usize,
     pub seeded_random_baseline: usize,
     pub promoted_candidate: bool,
+    pub source_inputs: String,
+    pub transformation_steps: String,
+    pub output_summary: String,
+    pub baseline_comparison: String,
+    pub meaningfulness: &'static str,
+    pub next_test: &'static str,
     pub notes: &'static str,
 }
 
@@ -72,6 +78,28 @@ pub fn run_route_experiments() -> Result<Vec<RouteExperiment>> {
                 reverse_baseline,
                 seeded_random_baseline,
                 promoted_candidate: false,
+                source_inputs: format!(
+                    "target={} alphabet={:?} fragment_mode={:?} public_additive_fragment_count={}",
+                    analysis.target.label,
+                    analysis.alphabet.kind,
+                    FragmentMode::AdditiveKey,
+                    values.len()
+                ),
+                transformation_steps: format!(
+                    "Apply registered {:?} permutation to public additive fragments only; incompatible grid widths are skipped rather than padded.",
+                    route
+                ),
+                output_summary: format!(
+                    "score={} generic mod-10 recurrence matches after routing {} fragments",
+                    score,
+                    values.len()
+                ),
+                baseline_comparison: format!(
+                    "identity={} reverse={} seeded_random={} using the same public fragment set",
+                    identity_baseline, reverse_baseline, seeded_random_baseline
+                ),
+                meaningfulness: "Exploratory route coherence screen only; matching or beating a small baseline is not a decryption claim.",
+                next_test: "Only expand a route if it beats pre-registered seeded controls and predicts additional public-anchor structure without padding or tuning.",
                 notes: "Exploratory route screen over public known-plaintext fragments only; no decryption text is emitted.",
             });
         }
@@ -169,6 +197,24 @@ mod tests {
                 .iter()
                 .all(|experiment| !experiment.promoted_candidate)
         );
+    }
+
+    #[test]
+    fn route_experiments_include_findings_ledger_and_next_test_boundaries() {
+        let experiments = run_route_experiments().unwrap();
+
+        for experiment in experiments {
+            assert!(experiment.source_inputs.contains(&experiment.target_label));
+            assert!(experiment.transformation_steps.contains("registered"));
+            assert!(experiment.output_summary.contains("generic mod-10"));
+            assert!(experiment.baseline_comparison.contains("identity="));
+            assert!(experiment.meaningfulness.contains("not a decryption claim"));
+            assert!(
+                experiment
+                    .next_test
+                    .contains("pre-registered seeded controls")
+            );
+        }
     }
 
     #[test]
