@@ -12,6 +12,8 @@ This project is not a claimed K4 solution.
 - Standard A-Z, Kryptos, and reversed Kryptos alphabet analysis.
 - Additive, subtractive, and Beaufort-style anchor-derived fragments.
 - Gromark-style recurrence screening over known-anchor fragments.
+- Seeded baseline controls, pre-registered contextual candidates, and bounded route screens.
+- Findings ledger tying observations to sources, transformations, baselines, interpretation, and next tests.
 - Ranked hypothesis register from the research plan.
 - Markdown and JSON reports.
 - CLI E2E tests and local release checks.
@@ -30,6 +32,8 @@ cargo run -- candidate-sequences
 cargo run -- candidate-sequences --format json
 cargo run -- routes
 cargo run -- routes --format json
+cargo run -- findings
+cargo run -- findings --format json
 cargo run -- release-check
 cargo run -- hypotheses
 cargo run -- sources
@@ -50,6 +54,7 @@ cargo run -- report --format json
 | `baseline` | Seeded false-positive controls for the generic recurrence screen. |
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |
 | `routes` | Small named route/permutation screens with fixed baselines. |
+| `findings` | Findings ledger with evidence inputs, transformations, baselines, interpretation, and next tests. |
 | `release-check` | Local release preflight confirming no hosted automation, required docs, generated report presence, and plaintext-leakage sentinel absence. |
 | `hypotheses` | Ranked source-grounded hypothesis register. |
 | `sources` | Source provenance records. |

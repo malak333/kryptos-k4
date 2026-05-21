@@ -31,6 +31,7 @@ pub struct Report {
     pub route_experiments: Vec<crate::RouteExperiment>,
     pub baseline: BaselineRun,
     pub release_checks: Vec<ReleaseCheck>,
+    pub findings: Vec<crate::Finding>,
 }
 
 pub fn build_report() -> Result<Report> {
@@ -53,6 +54,7 @@ pub fn build_report() -> Result<Report> {
             REPORT_BASELINE_SEED,
         )?,
         release_checks: run_release_checks(env!("CARGO_MANIFEST_DIR"))?,
+        findings: crate::findings(),
     })
 }
 
@@ -83,7 +85,7 @@ fn render_markdown(report: &Report) -> String {
 
     output.push_str("## Feature Coverage\n\n");
     output.push_str(
-        "| Feature | Included result |\n| --- | --- |\n| `facts` | Ciphertext length, ciphertext, and evidence boundary. |\n| `anchors` | Public known-plaintext anchors with positions, source IDs, confidence, claim type, and notes. |\n| `constraints` | Per-anchor key fragments across supported alphabets and modes, with recurrence screens. |\n| `key-fragments` | The same fragment rows are rendered in full for anchors and adjacent spans. |\n| `baseline` | Seeded false-positive controls for anchors and spans across all supported alphabets. |\n| `hypotheses` | Ranked source-grounded hypotheses with facts, assumptions, falsification tests, and risks. |\n| `candidate-sequences` | Pre-registered contextual sequences and score results. |\n| `routes` | Bounded named route experiments with identity, reverse, and seeded-random baselines. |\n| `sources` | Source provenance records and allowed-use notes. |\n| `release-check` | Local release preflight results, including the no-GitHub-Actions boundary. |\n| `export-data` | Covered by the source data rendered here; the command writes ciphertext, anchor, and source JSON files. |\n\n",
+        "| Feature | Included result |\n| --- | --- |\n| `facts` | Ciphertext length, ciphertext, and evidence boundary. |\n| `anchors` | Public known-plaintext anchors with positions, source IDs, confidence, claim type, and notes. |\n| `constraints` | Per-anchor key fragments across supported alphabets and modes, with recurrence screens. |\n| `key-fragments` | The same fragment rows are rendered in full for anchors and adjacent spans. |\n| `baseline` | Seeded false-positive controls for anchors and spans across all supported alphabets. |\n| `hypotheses` | Ranked source-grounded hypotheses with facts, assumptions, falsification tests, and risks. |\n| `candidate-sequences` | Pre-registered contextual sequences and score results. |\n| `routes` | Bounded named route experiments with identity, reverse, and seeded-random baselines. |\n| `findings` | Reproducible findings ledger with sources, transformations, baselines, interpretation, and next tests. |\n| `sources` | Source provenance records and allowed-use notes. |\n| `release-check` | Local release preflight results, including the no-GitHub-Actions boundary. |\n| `export-data` | Covered by the source data rendered here; the command writes ciphertext, anchor, and source JSON files. |\n\n",
     );
 
     output.push_str("## Ciphertext\n\n");
@@ -240,6 +242,26 @@ fn render_markdown(report: &Report) -> String {
         ));
     }
 
+    output.push_str("\n## Findings Ledger\n\n");
+    output.push_str(
+        "Findings are reproducible research observations, not promoted solution claims.\n\n",
+    );
+    for finding in &report.findings {
+        output.push_str(&format!(
+            "- **{} {} ({})**\n  - Sources: `{}`\n  - Steps: {}\n  - Output: {}\n  - Baseline: {}\n  - Interpretation: {}\n  - Next test: {}\n  - Promoted: {}\n",
+            finding.id,
+            finding.title,
+            finding.related_hypothesis,
+            finding.source_inputs.join("`, `"),
+            finding.transformation_steps.join("; "),
+            finding.output_summary,
+            finding.baseline_comparison,
+            finding.interpretation,
+            finding.next_test,
+            finding.promoted_candidate
+        ));
+    }
+
     output.push_str("\n## Release Check\n\n");
     output.push_str("Local preflight only. This repo does not use GitHub Actions.\n\n");
     for check in &report.release_checks {
@@ -294,6 +316,7 @@ mod tests {
         assert!(rendered.contains("## Candidate Sequences"));
         assert!(rendered.contains("## Candidate Sequence Scores"));
         assert!(rendered.contains("## Route Experiments"));
+        assert!(rendered.contains("## Findings Ledger"));
         assert!(rendered.contains("## Baseline Controls"));
         assert!(rendered.contains("## Release Check"));
         assert!(rendered.contains("Production-readiness scope"));

@@ -3,7 +3,7 @@ use clap::{Parser, Subcommand, ValueEnum};
 use kryptos_k4::{
     AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, FragmentMode, K4_CIPHERTEXT,
     ReportFormat, analyze_constraints, analyze_known_plaintext_spans, build_report,
-    candidate_sequences, hypotheses, known_anchors, render_report, run_baseline,
+    candidate_sequences, findings, hypotheses, known_anchors, render_report, run_baseline,
     run_release_checks, run_route_experiments, score_candidate_sequences, sources,
 };
 use std::{fs, path::PathBuf};
@@ -70,6 +70,12 @@ enum Command {
     },
     /// Print bounded named route experiments over public fragments.
     Routes {
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Print the current findings ledger with evidence, baselines, and next tests.
+    Findings {
         /// Output format.
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
@@ -210,6 +216,7 @@ fn main() -> Result<()> {
         Command::Hypotheses => print_hypotheses(),
         Command::CandidateSequences { format } => print_candidate_sequences(format)?,
         Command::Routes { format } => print_routes(format)?,
+        Command::Findings { format } => print_findings(format)?,
         Command::Sources => print_sources(),
         Command::ReleaseCheck { format } => print_release_check(format)?,
         Command::ExportData { directory } => export_data(directory)?,
@@ -460,6 +467,34 @@ fn print_routes(format: OutputFormat) -> Result<()> {
                     experiment.reverse_baseline,
                     experiment.seeded_random_baseline,
                     experiment.promoted_candidate
+                );
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn print_findings(format: OutputFormat) -> Result<()> {
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&findings())?),
+        OutputFormat::Markdown => {
+            println!("# Findings Ledger\n");
+            println!(
+                "Every finding is tied to public source inputs, transformation steps, baseline context, and a next test. This is not a claimed solution.\n"
+            );
+            for finding in findings() {
+                println!(
+                    "- {} {} ({})\n  sources: {}\n  output: {}\n  baseline: {}\n  interpretation: {}\n  next test: {}\n  promoted: {}",
+                    finding.id,
+                    finding.title,
+                    finding.related_hypothesis,
+                    finding.source_inputs.join(","),
+                    finding.output_summary,
+                    finding.baseline_comparison,
+                    finding.interpretation,
+                    finding.next_test,
+                    finding.promoted_candidate
                 );
             }
         }

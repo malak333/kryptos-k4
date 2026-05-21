@@ -20,6 +20,7 @@ This report uses public anchors only and is not a claimed solution. Production r
 | `hypotheses` | Ranked source-grounded hypotheses with facts, assumptions, falsification tests, and risks. |
 | `candidate-sequences` | Pre-registered contextual sequences and score results. |
 | `routes` | Bounded named route experiments with identity, reverse, and seeded-random baselines. |
+| `findings` | Reproducible findings ledger with sources, transformations, baselines, interpretation, and next tests. |
 | `sources` | Source provenance records and allowed-use notes. |
 | `release-check` | Local release preflight results, including the no-GitHub-Actions boundary. |
 | `export-data` | Covered by the source data rendered here; the command writes ciphertext, anchor, and source JSON files. |
@@ -669,6 +670,7 @@ Baseline output is a false-positive control, not a claimed solution. Target: all
 - `histocrypt-2021-bean` [HistoCrypt 2021 Richard Bean abstract](https://ecp.ep.liu.se/index.php/histocrypt/article/view/153) - Academic cryptodiagnosis and Gromark-family hypothesis.; type: academic; accessed 2026-05-20; use: methodology-context
 - `scientific-american-2025` [Scientific American 2025 final clues report](https://www.scientificamerican.com/article/cia-kryptos-puzzle-creator-releases-final-clues/) - 2025 public clue context and Berlin World Clock clarification.; type: major-reporting; accessed 2026-05-20; use: public-clue-context
 - `ap-2025-auction` [Associated Press 2025 auction report](https://www.ap.org/news-highlights/spotlights/2025/kryptos-final-code-remains-unsolved-the-cia-sculptures-creator-is-auctioning-the-solution/) - Archive-discovery context and Sanborn decipherment distinction.; type: major-reporting; accessed 2026-05-20; use: archive-context-only
+- `ap-2025-archive-sale` [Associated Press 2025 archive sale follow-up](https://apnews.com/article/kryptos-jim-sanborn-auction-cia-secret-code-cb8ee8554ca473910cbd0592f8bdb350) - Archive sale outcome and context only; no archive-discovered plaintext content.; type: major-reporting; accessed 2026-05-20; use: archive-context-only
 
 ## Candidate Sequences
 
@@ -708,10 +710,56 @@ Exploratory named route screens only; no decryption text is emitted.
 - Identity / BERLINCLOCK: score=1 identity=1 reverse=0 seeded_random=1 promoted=false
 - Reverse / BERLINCLOCK: score=0 identity=1 reverse=0 seeded_random=1 promoted=false
 
+## Findings Ledger
+
+Findings are reproducible research observations, not promoted solution claims.
+
+- **F1 Public anchors normalize into two adjacent known-plaintext spans (H1/H2)**
+  - Sources: `elonka-kryptos`, `scientific-american-2025`
+  - Steps: store public anchors with zero-based and one-based positions; join anchors only when public positions are directly adjacent; derive alphabet-specific additive, subtractive, and Beaufort fragments
+  - Output: EAST joins NORTHEAST as EASTNORTHEAST, and BERLIN joins CLOCK as BERLINCLOCK.
+  - Baseline: Span-level recurrence results are compared against seeded shuffled controls in the baseline command.
+  - Interpretation: The spans are useful constraints, not solution text beyond the public anchors.
+  - Next test: Use the span fragments as fixed validation points for any future key-schedule or alphabet hypothesis.
+  - Promoted: false
+- **F2 Generic Gromark-style recurrence screens are underpowered (H1)**
+  - Sources: `histocrypt-2021-bean`, `elonka-kryptos`
+  - Steps: derive additive key fragments from public known-plaintext spans; screen contiguous triples for a mod-10 sum recurrence; run deterministic shuffled null controls with Holm adjustment
+  - Output: The CLI can reproduce recurrence counts and adjusted p-values, but never promotes them.
+  - Baseline: Public-anchor samples contain too few triples for promotion under the configured release boundary.
+  - Interpretation: The result is a falsifiable diagnostic lane, not evidence for a Gromark solution.
+  - Next test: Require a larger independently justified fragment set before considering any recurrence signal meaningful.
+  - Promoted: false
+- **F3 Contextual candidate sequences are registered before scoring (H4/H5)**
+  - Sources: `scientific-american-2025`, `elonka-kryptos`
+  - Steps: define Berlin World Clock, compass, Egypt 1986, and Berlin Wall 1989 material before scoring; convert each candidate with a declared transform; compare only against public-anchor-derived additive fragments
+  - Output: Candidate scores are reproducible and marked exploratory with no promoted candidate.
+  - Baseline: The candidate-sequences command reports match rates but does not treat them as independent proof.
+  - Interpretation: The feature constrains future contextual testing without expanding into ad hoc key hunting.
+  - Next test: Add new contextual material only when it has a source ID, declared transform, and pre-registration rationale.
+  - Promoted: false
+- **F4 Route experiments stay bounded to named permutation families (H3)**
+  - Sources: `cia-sculpture`, `elonka-kryptos`
+  - Steps: derive public span additive fragments under the standard alphabet; apply identity, reverse, and compatible row-to-column route families; score routed fragments against the same local recurrence diagnostic
+  - Output: Route screens report scores and baselines without emitting guessed plaintext.
+  - Baseline: Each route result is shown beside identity, reverse, and seeded-random baselines.
+  - Interpretation: The route lane is an exploratory guardrail against unconstrained permutation search.
+  - Next test: Only add route families that are named, deterministic, and justified before seeing their score.
+  - Promoted: false
+
 ## Release Check
 
 Local preflight only. This repo does not use GitHub Actions.
 
-- github-actions-disabled: true (GitHub Actions workflow directory must not exist. path=/Users/michaelnobile/Antigravity/Ciphers/.github/workflows)
-- source-packet-present: true (Source packet must be tracked before release. path=/Users/michaelnobile/Antigravity/Ciphers/sources/source-packet.md)
-- research-plan-present: true (Research plan must remain in the release artifact. path=/Users/michaelnobile/Antigravity/Ciphers/kryptos-k4-research-plan.md)
+- github-actions-disabled: true (GitHub Actions workflow directory must not exist. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/.github/workflows)
+- dependabot-disabled: true (Dependabot config must not exist because releases are locally gated. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/.github/dependabot.yml)
+- readme-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/README.md)
+- research-method-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/docs/research-method.md)
+- current-architecture-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/docs/architecture-current.md)
+- production-goal-architecture-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/docs/architecture-production-goal.md)
+- source-packet-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/sources/source-packet.md)
+- research-plan-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/kryptos-k4-research-plan.md)
+- license-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/LICENSE)
+- lockfile-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/Cargo.lock)
+- markdown-report-present: true (Generated release report must be present. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/notes/k4-report.md)
+- no-plaintext-leakage-markers: true (No leaked/full-plaintext sentinel markers found in release-facing files.)

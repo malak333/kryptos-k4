@@ -4,6 +4,7 @@ pub mod alphabet;
 pub mod analysis;
 pub mod candidates;
 pub mod data;
+pub mod findings;
 pub mod hypotheses;
 pub mod release_check;
 pub mod report;
@@ -25,6 +26,7 @@ pub use data::{
     Anchor, K4_CIPHERTEXT, KnownPlaintextSpan, Source, known_anchors, known_plaintext_spans,
     sources,
 };
+pub use findings::{Finding, findings};
 pub use hypotheses::{Hypothesis, hypotheses};
 pub use release_check::{ReleaseCheck, run_release_checks};
 pub use report::{Report, ReportFormat, build_report, render_report};
