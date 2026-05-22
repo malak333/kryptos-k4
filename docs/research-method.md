@@ -23,6 +23,7 @@ The CLI implements the first production slice:
 - adjacent-span analysis and generic mod-10 recurrence screening with random-baseline warnings;
 - seeded null-distribution baselines with add-one empirical p-values and Holm adjustment;
 - targeted raw key-fragment filtering by anchor/span, alphabet, and derivation mode;
+- proposed key-material checks against public span-derived additive fragments at actual K4 positions;
 - pre-registered contextual candidate sequences for H4/H5;
 - bounded named route/permutation screens for H3;
 - ranked hypothesis reporting;
@@ -42,6 +43,7 @@ The integration tests in `tests/cli_e2e.rs` execute the compiled CLI and verify:
 - source-provenance fields remain attached to anchor and source output.
 - key-fragment filters are mutually exclusive for anchors/spans and fail clearly on empty results;
 - baseline output is deterministic for a fixed seed and includes p-value fields without promoting candidates.
+- test-key output compares proposed material against public spans in Markdown/JSON and rejects material that cannot produce numeric values;
 - candidate-sequence output includes family, source IDs, transform metadata, and no promoted candidates;
 - route output uses only small named route families and emits no plaintext guesses.
 - findings output includes evidence inputs, baseline comparison, next-test fields, and non-promotion flags in Markdown and JSON.

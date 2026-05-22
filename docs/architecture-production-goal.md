@@ -18,6 +18,7 @@ flowchart TD
     subgraph Core["Research Core"]
         DataModel["Ciphertext / anchors / spans"]
         ConstraintEngine["Alphabet and key-fragment analysis"]
+        KeyMaterialChecks["Proposed key-material checks against public spans"]
         BaselineEngine["Seeded false-positive controls"]
         CandidateRegistry["Pre-registered contextual candidates"]
         RouteRegistry["Bounded deterministic route families"]
@@ -53,9 +54,11 @@ flowchart TD
     Forbidden -. "blocked by policy" .-> SourceRegistry
 
     DataModel --> ConstraintEngine
+    ConstraintEngine --> KeyMaterialChecks
     ConstraintEngine --> BaselineEngine
     ConstraintEngine --> CandidateRegistry
     ConstraintEngine --> RouteRegistry
+    KeyMaterialChecks --> FindingsLedger
     BaselineEngine --> FindingsLedger
     CandidateRegistry --> FindingsLedger
     RouteRegistry --> FindingsLedger
@@ -80,6 +83,7 @@ flowchart TD
 - Every factual source in the plan is registered in Rust and documented in the source packet.
 - Every finding includes source inputs, transformation steps, baseline comparison, interpretation, and next test.
 - Every command has E2E coverage for success paths and important guardrails.
+- Proposed key material is evaluated only against public known-plaintext spans and remains non-promotional unless future independently justified evidence changes the release boundary.
 - `cargo fmt --check`, `cargo clippy --locked --all-targets --all-features -- -D warnings`, `cargo test --locked --all-targets --all-features`, `cargo build --locked --release`, and `cargo run --locked -- release-check` pass locally.
 - Releases remain manual and local-gated; no GitHub Actions or Dependabot policy drift.
 

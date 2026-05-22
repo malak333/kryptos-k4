@@ -16,6 +16,7 @@ This report uses public anchors only and is not a claimed solution. Production r
 | `anchors` | Public known-plaintext anchors with positions, source IDs, confidence, claim type, and notes. |
 | `constraints` | Per-anchor key fragments across supported alphabets and modes, with recurrence screens. |
 | `key-fragments` | The same fragment rows are rendered in full for anchors and adjacent spans. |
+| `test-key` | Proposed key material is transformed and compared against public span additive fragments at true K4 positions. |
 | `baseline` | Seeded false-positive controls for anchors and spans across all supported alphabets. |
 | `hypotheses` | Ranked source-grounded hypotheses with facts, assumptions, falsification tests, and risks. |
 | `candidate-sequences` | Pre-registered contextual sequences and score results. |
@@ -751,15 +752,15 @@ Findings are reproducible research observations, not promoted solution claims.
 
 Local preflight only. This repo does not use GitHub Actions.
 
-- github-actions-disabled: true (GitHub Actions workflow directory must not exist. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/.github/workflows)
-- dependabot-disabled: true (Dependabot config must not exist because releases are locally gated. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/.github/dependabot.yml)
-- readme-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/README.md)
-- research-method-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/docs/research-method.md)
-- current-architecture-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/docs/architecture-current.md)
-- production-goal-architecture-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/docs/architecture-production-goal.md)
-- source-packet-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/sources/source-packet.md)
-- research-plan-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/kryptos-k4-research-plan.md)
-- license-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/LICENSE)
-- lockfile-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/Cargo.lock)
-- markdown-report-present: true (Generated release report must be present. path=/Users/michaelnobile/Antigravity/kryptos-k4-worktrees/findings-ledger/notes/k4-report.md)
+- github-actions-disabled: true (GitHub Actions workflow directory must not exist. path=/Users/michaelnobile/Antigravity/Ciphers/.github/workflows)
+- dependabot-disabled: true (Dependabot config must not exist because releases are locally gated. path=/Users/michaelnobile/Antigravity/Ciphers/.github/dependabot.yml)
+- readme-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/Ciphers/README.md)
+- research-method-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/Ciphers/docs/research-method.md)
+- current-architecture-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/Ciphers/docs/architecture-current.md)
+- production-goal-architecture-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/Ciphers/docs/architecture-production-goal.md)
+- source-packet-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/Ciphers/sources/source-packet.md)
+- research-plan-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/Ciphers/kryptos-k4-research-plan.md)
+- license-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/Ciphers/LICENSE)
+- lockfile-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/Ciphers/Cargo.lock)
+- markdown-report-present: true (Generated release report must be present. path=/Users/michaelnobile/Antigravity/Ciphers/notes/k4-report.md)
 - no-plaintext-leakage-markers: true (No leaked/full-plaintext sentinel markers found in release-facing files.)

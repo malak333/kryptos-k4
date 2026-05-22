@@ -6,6 +6,7 @@ pub mod candidates;
 pub mod data;
 pub mod findings;
 pub mod hypotheses;
+pub mod key_test;
 pub mod release_check;
 pub mod report;
 pub mod routes;
@@ -28,6 +29,9 @@ pub use data::{
 };
 pub use findings::{Finding, findings};
 pub use hypotheses::{Hypothesis, hypotheses};
+pub use key_test::{
+    KeyMaterialMismatch, KeyMaterialSpanResult, KeyMaterialTest, test_key_material,
+};
 pub use release_check::{ReleaseCheck, run_release_checks};
 pub use report::{Report, ReportFormat, build_report, render_report};
 pub use routes::{RouteExperiment, RouteFamily, registered_route_families, run_route_experiments};

@@ -132,6 +132,58 @@ fn key_fragments_reject_conflicting_or_empty_filters() {
 }
 
 #[test]
+fn test_key_scores_material_against_public_spans() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["test-key", "--material", "BERLINWORLDCLOCK"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Key Material Test"))
+        .stdout(predicate::str::contains("BERLINWORLDCLOCK"))
+        .stdout(predicate::str::contains("alphabet: Kryptos"))
+        .stdout(predicate::str::contains("BERLINCLOCK"))
+        .stdout(predicate::str::contains("promoted: false"))
+        .stdout(predicate::str::contains("not a claimed solution"));
+}
+
+#[test]
+fn test_key_json_is_parseable_and_non_promotional() {
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "test-key",
+            "--material",
+            "BERLINWORLDCLOCK",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["material"], "BERLINWORLDCLOCK");
+    assert_eq!(json["alphabet"], "kryptos");
+    assert_eq!(json["compared_fragment_count"], 24);
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(json["span_results"].as_array().unwrap().len() >= 2);
+}
+
+#[test]
+fn test_key_rejects_material_without_values() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["test-key", "--material", "!!!"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "key material did not produce any numeric values",
+        ));
+}
+
+#[test]
 fn baseline_json_is_deterministic_and_parseable() {
     let args = [
         "baseline",
