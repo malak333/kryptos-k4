@@ -11,6 +11,7 @@ This project is not a claimed K4 solution.
 - Source-provenance records for public facts.
 - Standard A-Z, Kryptos, and reversed Kryptos alphabet analysis.
 - Additive, subtractive, and Beaufort-style anchor-derived fragments.
+- Proposed key-material checks against public span-derived additive fragments.
 - Gromark-style recurrence screening over known-anchor fragments.
 - Seeded baseline controls, pre-registered contextual candidates, and bounded route screens.
 - Findings ledger tying observations to sources, transformations, baselines, interpretation, and next tests.
@@ -26,6 +27,9 @@ cargo run -- anchors
 cargo run -- constraints
 cargo run -- constraints --spans
 cargo run -- key-fragments --span BERLINCLOCK --alphabet kryptos --mode additive-key
+cargo run -- test-key --material BERLINWORLDCLOCK
+cargo run -- test-key --material WELTZEITUHR
+cargo run -- test-key --material ALEXANDERPLATZ --format json
 cargo run -- baseline --target spans --iterations 1000 --seed 42
 cargo run -- baseline --target spans --iterations 1000 --seed 42 --format json
 cargo run -- candidate-sequences
@@ -51,6 +55,7 @@ cargo run -- report --format json
 | `constraints` | Anchor-derived fragments for supported alphabets. |
 | `constraints --spans` | Adjacent public clues merged into known-plaintext spans before screening. |
 | `key-fragments` | Raw derived key-fragment rows with anchor/span/alphabet/mode filters. |
+| `test-key` | Proposed key material transformed and compared against public span additive fragments at true K4 positions. |
 | `baseline` | Seeded false-positive controls for the generic recurrence screen. |
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |
 | `routes` | Small named route/permutation screens with fixed baselines. |

@@ -1,10 +1,11 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 use kryptos_k4::{
-    AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, FragmentMode, K4_CIPHERTEXT,
-    ReportFormat, analyze_constraints, analyze_known_plaintext_spans, build_report,
-    candidate_sequences, findings, hypotheses, known_anchors, render_report, run_baseline,
-    run_release_checks, run_route_experiments, score_candidate_sequences, sources,
+    AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, CandidateTransform, FragmentMode,
+    K4_CIPHERTEXT, KeyMaterialTest, ReportFormat, analyze_constraints,
+    analyze_known_plaintext_spans, build_report, candidate_sequences, findings, hypotheses,
+    known_anchors, render_report, run_baseline, run_release_checks, run_route_experiments,
+    score_candidate_sequences, sources, test_key_material,
 };
 use std::{fs, path::PathBuf};
 
@@ -41,6 +42,21 @@ enum Command {
         /// Filter by derivation mode.
         #[arg(long, value_enum)]
         mode: Option<CliFragmentMode>,
+    },
+    /// Test proposed key material against public span-derived additive fragments.
+    TestKey {
+        /// Proposed key material to transform and cycle across K4 positions.
+        #[arg(long)]
+        material: String,
+        /// Transform used to convert material into numeric values.
+        #[arg(long, value_enum, default_value_t = CliCandidateTransform::A1Z26ZeroBased)]
+        transform: CliCandidateTransform,
+        /// Alphabet used for public span-derived fragments.
+        #[arg(long, value_enum, default_value_t = CliAlphabet::Kryptos)]
+        alphabet: CliAlphabet,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
     },
     /// Run deterministic false-positive controls for the generic recurrence screen.
     Baseline {
@@ -143,6 +159,20 @@ enum CliBaselineAlphabet {
     All,
 }
 
+#[derive(Debug, Clone, Copy, ValueEnum)]
+enum CliCandidateTransform {
+    #[value(name = "a1-z26-zero-based")]
+    A1Z26ZeroBased,
+    #[value(name = "a1-z26-one-based")]
+    A1Z26OneBased,
+    #[value(name = "decimal-digits")]
+    DecimalDigits,
+    #[value(name = "compass8-point")]
+    Compass8Point,
+    #[value(name = "compass16-point")]
+    Compass16Point,
+}
+
 impl From<OutputFormat> for ReportFormat {
     fn from(value: OutputFormat) -> Self {
         match value {
@@ -193,6 +223,18 @@ impl From<CliBaselineAlphabet> for BaselineAlphabetScope {
     }
 }
 
+impl From<CliCandidateTransform> for CandidateTransform {
+    fn from(value: CliCandidateTransform) -> Self {
+        match value {
+            CliCandidateTransform::A1Z26ZeroBased => CandidateTransform::A1Z26ZeroBased,
+            CliCandidateTransform::A1Z26OneBased => CandidateTransform::A1Z26OneBased,
+            CliCandidateTransform::DecimalDigits => CandidateTransform::DecimalDigits,
+            CliCandidateTransform::Compass8Point => CandidateTransform::Compass8Point,
+            CliCandidateTransform::Compass16Point => CandidateTransform::Compass16Point,
+        }
+    }
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
@@ -206,6 +248,12 @@ fn main() -> Result<()> {
             alphabet,
             mode,
         } => print_key_fragments(anchor, span, alphabet, mode)?,
+        Command::TestKey {
+            material,
+            transform,
+            alphabet,
+            format,
+        } => print_test_key(material, transform, alphabet, format)?,
         Command::Baseline {
             target,
             alphabet,
@@ -235,6 +283,60 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn print_test_key(
+    material: String,
+    transform: CliCandidateTransform,
+    alphabet: CliAlphabet,
+    format: OutputFormat,
+) -> Result<()> {
+    let test = test_key_material(&material, transform.into(), alphabet.into())?;
+
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&test)?),
+        OutputFormat::Markdown => print_key_material_test(&test),
+    }
+
+    Ok(())
+}
+
+fn print_key_material_test(test: &KeyMaterialTest) {
+    println!("# Key Material Test\n");
+    println!("This is not a claimed solution.\n");
+    println!("material: `{}`", test.material);
+    println!("transform: {:?}", test.transform);
+    println!("alphabet: {:?}", test.alphabet);
+    println!("fragment mode: {:?}", test.fragment_mode);
+    println!(
+        "matches: {}/{} ({:.4})",
+        test.exact_mod26_matches, test.compared_fragment_count, test.match_rate
+    );
+    println!("promoted: {}", test.promoted_candidate);
+    println!("note: {}\n", test.note);
+
+    for span in &test.span_results {
+        println!(
+            "## {}: {}/{} exact mod-26 matches",
+            span.target_label, span.exact_mod26_matches, span.compared_fragment_count
+        );
+        if span.mismatches.is_empty() {
+            println!("all compared public fragments matched");
+        } else {
+            for mismatch in &span.mismatches {
+                println!(
+                    "- pos {} | {}->{} | observed {} ({}) | material {}",
+                    mismatch.position_one_based,
+                    mismatch.plaintext,
+                    mismatch.ciphertext,
+                    mismatch.observed_key_value,
+                    mismatch.observed_key_symbol,
+                    mismatch.material_value
+                );
+            }
+        }
+        println!();
+    }
 }
 
 fn print_facts() {

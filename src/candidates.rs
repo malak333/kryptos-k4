@@ -192,7 +192,7 @@ fn candidate(
     }
 }
 
-fn transform_values(raw_material: &str, transform: CandidateTransform) -> Vec<u8> {
+pub(crate) fn transform_values(raw_material: &str, transform: CandidateTransform) -> Vec<u8> {
     match transform {
         CandidateTransform::A1Z26ZeroBased => raw_material
             .chars()
@@ -225,7 +225,7 @@ fn compass_values(raw_material: &str, points: u8) -> Vec<u8> {
     }
 }
 
-fn expand_to_k4(values: &[u8]) -> Vec<u8> {
+pub(crate) fn expand_to_k4(values: &[u8]) -> Vec<u8> {
     if values.is_empty() {
         return Vec::new();
     }
