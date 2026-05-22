@@ -49,6 +49,25 @@ cargo run -- report --format markdown --output notes/k4-report.md
 cargo run -- report --format json
 ```
 
+## Background Batch Runs
+
+Run a long batch once without tying up the terminal:
+
+```bash
+ITERATIONS=100000 RUNS=1 scripts/start-key-batch-loop.sh
+tail -f results/key-tests/batch-loop.log
+cat results/key-tests/latest-summary.md
+```
+
+Run repeated batches until stopped:
+
+```bash
+ITERATIONS=10000 RUNS=0 INTERVAL_SECONDS=300 scripts/start-key-batch-loop.sh
+scripts/stop-key-batch-loop.sh
+```
+
+The loop writes timestamped folders under `results/key-tests/`, updates `results/key-tests/latest`, and copies the newest ranked table to `results/key-tests/latest-summary.md`. The `results/` tree is ignored by git.
+
 ## Commands
 
 | Command | Output |
