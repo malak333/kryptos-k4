@@ -184,6 +184,61 @@ fn test_key_rejects_material_without_values() {
 }
 
 #[test]
+fn test_key_sweep_offsets_ranks_all_offsets_without_promotion() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "test-key",
+            "--material",
+            "BERLINWORLDCLOCK",
+            "--sweep-offsets",
+            "--top",
+            "3",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Key Material Offset Sweep"))
+        .stdout(predicate::str::contains("offsets tested: 16"))
+        .stdout(predicate::str::contains(
+            "| Rank | Offset | Matches | Match Rate |",
+        ))
+        .stdout(predicate::str::contains("promoted: false"))
+        .stdout(predicate::str::contains("not a claimed solution"));
+}
+
+#[test]
+fn test_key_sweep_offsets_json_is_parseable() {
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "test-key",
+            "--material",
+            "ALEXANDERPLATZ",
+            "--sweep-offsets",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["material"], "ALEXANDERPLATZ");
+    assert_eq!(json["offsets_tested"], 14);
+    assert_eq!(json["promoted_candidate"], false);
+    let results = json["results"].as_array().unwrap();
+    assert_eq!(results.len(), 14);
+    assert!(
+        results
+            .windows(2)
+            .all(|pair| pair[0]["exact_mod26_matches"].as_u64().unwrap()
+                >= pair[1]["exact_mod26_matches"].as_u64().unwrap())
+    );
+}
+
+#[test]
 fn baseline_json_is_deterministic_and_parseable() {
     let args = [
         "baseline",

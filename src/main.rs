@@ -2,10 +2,10 @@ use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 use kryptos_k4::{
     AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, CandidateTransform, FragmentMode,
-    K4_CIPHERTEXT, KeyMaterialTest, ReportFormat, analyze_constraints,
+    K4_CIPHERTEXT, KeyMaterialOffsetSweep, KeyMaterialTest, ReportFormat, analyze_constraints,
     analyze_known_plaintext_spans, build_report, candidate_sequences, findings, hypotheses,
     known_anchors, render_report, run_baseline, run_release_checks, run_route_experiments,
-    score_candidate_sequences, sources, test_key_material,
+    score_candidate_sequences, sources, sweep_key_material_offsets, test_key_material,
 };
 use std::{fs, path::PathBuf};
 
@@ -54,6 +54,12 @@ enum Command {
         /// Alphabet used for public span-derived fragments.
         #[arg(long, value_enum, default_value_t = CliAlphabet::Kryptos)]
         alphabet: CliAlphabet,
+        /// Try every cyclic phase offset and rank the resulting matches.
+        #[arg(long)]
+        sweep_offsets: bool,
+        /// Maximum ranked offsets to print when sweeping. JSON output always includes all offsets.
+        #[arg(long, default_value_t = 10)]
+        top: usize,
         /// Output format.
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
@@ -252,8 +258,10 @@ fn main() -> Result<()> {
             material,
             transform,
             alphabet,
+            sweep_offsets,
+            top,
             format,
-        } => print_test_key(material, transform, alphabet, format)?,
+        } => print_test_key(material, transform, alphabet, sweep_offsets, top, format)?,
         Command::Baseline {
             target,
             alphabet,
@@ -289,16 +297,50 @@ fn print_test_key(
     material: String,
     transform: CliCandidateTransform,
     alphabet: CliAlphabet,
+    sweep_offsets: bool,
+    top: usize,
     format: OutputFormat,
 ) -> Result<()> {
-    let test = test_key_material(&material, transform.into(), alphabet.into())?;
+    if sweep_offsets {
+        let sweep = sweep_key_material_offsets(&material, transform.into(), alphabet.into())?;
+        match format {
+            OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&sweep)?),
+            OutputFormat::Markdown => print_key_material_offset_sweep(&sweep, top),
+        }
+        return Ok(());
+    }
 
+    let test = test_key_material(&material, transform.into(), alphabet.into())?;
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&test)?),
         OutputFormat::Markdown => print_key_material_test(&test),
     }
 
     Ok(())
+}
+
+fn print_key_material_offset_sweep(sweep: &KeyMaterialOffsetSweep, top: usize) {
+    println!("# Key Material Offset Sweep\n");
+    println!("This is not a claimed solution.\n");
+    println!("material: `{}`", sweep.material);
+    println!("transform: {:?}", sweep.transform);
+    println!("alphabet: {:?}", sweep.alphabet);
+    println!("fragment mode: {:?}", sweep.fragment_mode);
+    println!("offsets tested: {}", sweep.offsets_tested);
+    println!("promoted: {}", sweep.promoted_candidate);
+    println!("note: {}\n", sweep.note);
+    println!("| Rank | Offset | Matches | Match Rate |");
+    println!("| --- | --- | --- | --- |");
+    for (index, result) in sweep.results.iter().take(top).enumerate() {
+        println!(
+            "| {} | {} | {}/{} | {:.4} |",
+            index + 1,
+            result.offset,
+            result.exact_mod26_matches,
+            result.compared_fragment_count,
+            result.match_rate
+        );
+    }
 }
 
 fn print_key_material_test(test: &KeyMaterialTest) {

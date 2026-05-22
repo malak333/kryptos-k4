@@ -30,6 +30,7 @@ cargo run -- key-fragments --span BERLINCLOCK --alphabet kryptos --mode additive
 cargo run -- test-key --material BERLINWORLDCLOCK
 cargo run -- test-key --material WELTZEITUHR
 cargo run -- test-key --material ALEXANDERPLATZ --format json
+cargo run -- test-key --material BERLINWORLDCLOCK --sweep-offsets --top 5
 cargo run -- baseline --target spans --iterations 1000 --seed 42
 cargo run -- baseline --target spans --iterations 1000 --seed 42 --format json
 cargo run -- candidate-sequences
@@ -55,7 +56,7 @@ cargo run -- report --format json
 | `constraints` | Anchor-derived fragments for supported alphabets. |
 | `constraints --spans` | Adjacent public clues merged into known-plaintext spans before screening. |
 | `key-fragments` | Raw derived key-fragment rows with anchor/span/alphabet/mode filters. |
-| `test-key` | Proposed key material transformed and compared against public span additive fragments at true K4 positions. |
+| `test-key` | Proposed key material transformed and compared against public span additive fragments at true K4 positions, with optional cyclic offset sweep. |
 | `baseline` | Seeded false-positive controls for the generic recurrence screen. |
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |
 | `routes` | Small named route/permutation screens with fixed baselines. |
