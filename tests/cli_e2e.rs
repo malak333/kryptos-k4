@@ -296,6 +296,134 @@ fn test_key_sweep_baseline_requires_sweep_offsets() {
 }
 
 #[test]
+fn batch_test_keys_prints_ranked_markdown() {
+    let temp = tempfile::tempdir().unwrap();
+    let input_path = temp.path().join("candidates.csv");
+    std::fs::write(
+        &input_path,
+        "material,transform\nBERLINWORLDCLOCK,a1-z26-zero-based\nWELTZEITUHR,a1-z26-zero-based\n",
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "batch-test-keys",
+            "--input",
+            input_path.to_str().unwrap(),
+            "--sweep-baseline-iterations",
+            "25",
+            "--seed",
+            "42",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Batch Key Material Results"))
+        .stdout(predicate::str::contains("BERLINWORLDCLOCK"))
+        .stdout(predicate::str::contains("WELTZEITUHR"))
+        .stdout(predicate::str::contains("Empirical P"))
+        .stdout(predicate::str::contains("promoted: false"))
+        .stdout(predicate::str::contains("not a claimed solution"));
+}
+
+#[test]
+fn batch_test_keys_json_is_ranked_and_non_promotional() {
+    let temp = tempfile::tempdir().unwrap();
+    let input_path = temp.path().join("candidates.csv");
+    std::fs::write(
+        &input_path,
+        "ALEXANDERPLATZ,a1-z26-zero-based\n1986,decimal-digits\n",
+    )
+    .unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "batch-test-keys",
+            "--input",
+            input_path.to_str().unwrap(),
+            "--sweep-baseline-iterations",
+            "25",
+            "--seed",
+            "42",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["candidate_count"], 2);
+    assert_eq!(json["promoted_candidate"], false);
+    let results = json["results"].as_array().unwrap();
+    assert_eq!(results.len(), 2);
+    assert!(
+        results
+            .windows(2)
+            .all(|pair| pair[0]["best_matches"].as_u64().unwrap()
+                >= pair[1]["best_matches"].as_u64().unwrap())
+    );
+    assert!(results.iter().all(|result| {
+        result["promoted_candidate"] == false && result["empirical_p_value"].is_number()
+    }));
+}
+
+#[test]
+fn batch_test_keys_writes_output_directory_artifacts() {
+    let temp = tempfile::tempdir().unwrap();
+    let input_path = temp.path().join("candidates.csv");
+    let output_dir = temp.path().join("run");
+    std::fs::write(
+        &input_path,
+        "material,transform\nBERLINWORLDCLOCK,a1-z26-zero-based\n",
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "batch-test-keys",
+            "--input",
+            input_path.to_str().unwrap(),
+            "--sweep-baseline-iterations",
+            "10",
+            "--output-dir",
+            output_dir.to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Wrote batch key-material results"));
+
+    for file_name in ["input.csv", "results.json", "summary.md", "command.txt"] {
+        assert!(output_dir.join(file_name).exists());
+    }
+
+    let summary = std::fs::read_to_string(output_dir.join("summary.md")).unwrap();
+    assert!(summary.contains("Batch Key Material Results"));
+    let results: Value =
+        serde_json::from_str(&std::fs::read_to_string(output_dir.join("results.json")).unwrap())
+            .unwrap();
+    assert_eq!(results["candidate_count"], 1);
+}
+
+#[test]
+fn batch_test_keys_rejects_invalid_transform() {
+    let temp = tempfile::tempdir().unwrap();
+    let input_path = temp.path().join("candidates.csv");
+    std::fs::write(&input_path, "THING,unknown-transform\n").unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["batch-test-keys", "--input", input_path.to_str().unwrap()])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("invalid transform"));
+}
+
+#[test]
 fn baseline_json_is_deterministic_and_parseable() {
     let args = [
         "baseline",

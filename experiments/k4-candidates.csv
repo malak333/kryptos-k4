@@ -1,0 +1,8 @@
+material,transform
+BERLINWORLDCLOCK,a1-z26-zero-based
+WELTZEITUHR,a1-z26-zero-based
+ALEXANDERPLATZ,a1-z26-zero-based
+BERLINWORLDCLOCK,a1-z26-one-based
+ALEXANDERPLATZ,a1-z26-one-based
+1986,decimal-digits
+19891109,decimal-digits

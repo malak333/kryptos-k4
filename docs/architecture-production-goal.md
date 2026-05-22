@@ -28,6 +28,7 @@ flowchart TD
     subgraph Outputs["User Outputs"]
         MarkdownReport["Markdown report"]
         JsonReport["JSON report"]
+        BatchArtifacts["Batch experiment artifacts"]
         DataExports["Machine-readable exports"]
         HumanCli["Human-readable CLI output"]
     end
@@ -65,6 +66,7 @@ flowchart TD
 
     FindingsLedger --> MarkdownReport
     FindingsLedger --> JsonReport
+    KeyMaterialChecks --> BatchArtifacts
     DataModel --> DataExports
     CLI --> HumanCli
 
