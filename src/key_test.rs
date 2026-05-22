@@ -23,6 +23,37 @@ pub struct KeyMaterialTest {
     pub note: &'static str,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BatchKeyMaterialCandidate {
+    pub material: String,
+    pub transform: CandidateTransform,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct BatchKeyMaterialRun {
+    pub alphabet: AlphabetKind,
+    pub baseline_iterations: usize,
+    pub seed: u64,
+    pub candidate_count: usize,
+    pub results: Vec<BatchKeyMaterialResult>,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct BatchKeyMaterialResult {
+    pub material: String,
+    pub transform: CandidateTransform,
+    pub best_offset: usize,
+    pub best_matches: usize,
+    pub compared_fragment_count: usize,
+    pub best_match_rate: f64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub empirical_p_value: Option<f64>,
+    pub promoted_candidate: bool,
+    pub sweep: KeyMaterialOffsetSweep,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct KeyMaterialOffsetSweep {
     pub material: String,
@@ -148,6 +179,69 @@ pub fn sweep_key_material_offsets_with_baseline(
         baseline,
         promoted_candidate: false,
         note: "Exploratory offset sweep over public known-plaintext spans only; best offsets are not evidence of plaintext or decryption.",
+    })
+}
+
+pub fn batch_test_key_material(
+    candidates: &[BatchKeyMaterialCandidate],
+    alphabet: AlphabetKind,
+    baseline_iterations: usize,
+    seed: u64,
+) -> Result<BatchKeyMaterialRun> {
+    if candidates.is_empty() {
+        bail!("batch key-material input did not contain any candidates");
+    }
+
+    let mut results = Vec::with_capacity(candidates.len());
+    for candidate in candidates {
+        let sweep = sweep_key_material_offsets_with_baseline(
+            &candidate.material,
+            candidate.transform,
+            alphabet,
+            baseline_iterations,
+            seed,
+        )?;
+        let best = sweep
+            .results
+            .first()
+            .expect("sweep results are non-empty for non-empty material");
+
+        results.push(BatchKeyMaterialResult {
+            material: candidate.material.clone(),
+            transform: candidate.transform,
+            best_offset: best.offset,
+            best_matches: best.exact_mod26_matches,
+            compared_fragment_count: best.compared_fragment_count,
+            best_match_rate: best.match_rate,
+            empirical_p_value: sweep
+                .baseline
+                .as_ref()
+                .map(|baseline| baseline.empirical_p_value),
+            promoted_candidate: false,
+            sweep,
+        });
+    }
+
+    results.sort_by(|left, right| {
+        right
+            .best_matches
+            .cmp(&left.best_matches)
+            .then_with(|| {
+                let left_p = left.empirical_p_value.unwrap_or(f64::INFINITY);
+                let right_p = right.empirical_p_value.unwrap_or(f64::INFINITY);
+                left_p.total_cmp(&right_p)
+            })
+            .then_with(|| left.material.cmp(&right.material))
+    });
+
+    Ok(BatchKeyMaterialRun {
+        alphabet,
+        baseline_iterations,
+        seed,
+        candidate_count: results.len(),
+        results,
+        promoted_candidate: false,
+        note: "Batch key-material run over public known-plaintext spans only; ranked results are exploratory and not decryption claims.",
     })
 }
 
@@ -382,5 +476,35 @@ mod tests {
         assert_eq!(baseline.iterations, 25);
         assert_eq!(baseline.seed, 42);
         assert!(!baseline.promoted_candidate);
+    }
+
+    #[test]
+    fn batch_run_ranks_candidates_without_promotion() {
+        let run = batch_test_key_material(
+            &[
+                BatchKeyMaterialCandidate {
+                    material: "WELTZEITUHR".to_string(),
+                    transform: CandidateTransform::A1Z26ZeroBased,
+                },
+                BatchKeyMaterialCandidate {
+                    material: "BERLINWORLDCLOCK".to_string(),
+                    transform: CandidateTransform::A1Z26ZeroBased,
+                },
+            ],
+            AlphabetKind::Kryptos,
+            10,
+            42,
+        )
+        .unwrap();
+
+        assert_eq!(run.candidate_count, 2);
+        assert!(!run.promoted_candidate);
+        assert!(run.results.iter().all(|result| !result.promoted_candidate));
+        assert!(run.results[0].best_matches >= run.results[1].best_matches);
+        assert!(
+            run.results
+                .iter()
+                .all(|result| result.empirical_p_value.is_some())
+        );
     }
 }

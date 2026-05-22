@@ -1,14 +1,18 @@
 use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 use kryptos_k4::{
-    AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, CandidateTransform, FragmentMode,
-    K4_CIPHERTEXT, KeyMaterialOffsetSweep, KeyMaterialTest, ReportFormat, analyze_constraints,
-    analyze_known_plaintext_spans, build_report, candidate_sequences, findings, hypotheses,
+    AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, BatchKeyMaterialCandidate,
+    BatchKeyMaterialRun, CandidateTransform, FragmentMode, K4_CIPHERTEXT, KeyMaterialOffsetSweep,
+    KeyMaterialTest, ReportFormat, analyze_constraints, analyze_known_plaintext_spans,
+    batch_test_key_material, build_report, candidate_sequences, findings, hypotheses,
     known_anchors, render_report, run_baseline, run_release_checks, run_route_experiments,
     score_candidate_sequences, sources, sweep_key_material_offsets_with_baseline,
     test_key_material,
 };
-use std::{fs, path::PathBuf};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 #[derive(Debug, Parser)]
 #[command(author, version, about)]
@@ -68,6 +72,27 @@ enum Command {
         #[arg(long, default_value_t = 42)]
         seed: u64,
         /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Run key-material checks for every candidate row in a CSV file.
+    BatchTestKeys {
+        /// CSV file with rows: material,transform. Header row is optional.
+        #[arg(long)]
+        input: PathBuf,
+        /// Alphabet used for public span-derived fragments.
+        #[arg(long, value_enum, default_value_t = CliAlphabet::Kryptos)]
+        alphabet: CliAlphabet,
+        /// Seeded shuffled-value null iterations for each candidate's best offset.
+        #[arg(long, default_value_t = 1_000)]
+        sweep_baseline_iterations: usize,
+        /// Seed for deterministic offset-sweep baseline controls.
+        #[arg(long, default_value_t = 42)]
+        seed: u64,
+        /// Optional directory for input.csv, results.json, summary.md, and command.txt.
+        #[arg(long)]
+        output_dir: Option<PathBuf>,
+        /// Output format for stdout.
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
     },
@@ -291,6 +316,21 @@ fn main() -> Result<()> {
             seed,
             format,
         })?,
+        Command::BatchTestKeys {
+            input,
+            alphabet,
+            sweep_baseline_iterations,
+            seed,
+            output_dir,
+            format,
+        } => print_batch_test_keys(
+            input,
+            alphabet,
+            sweep_baseline_iterations,
+            seed,
+            output_dir,
+            format,
+        )?,
         Command::Baseline {
             target,
             alphabet,
@@ -320,6 +360,135 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn print_batch_test_keys(
+    input: PathBuf,
+    alphabet: CliAlphabet,
+    baseline_iterations: usize,
+    seed: u64,
+    output_dir: Option<PathBuf>,
+    format: OutputFormat,
+) -> Result<()> {
+    let input_text = fs::read_to_string(&input)?;
+    let candidates = parse_batch_candidates(&input_text)?;
+    let run = batch_test_key_material(&candidates, alphabet.into(), baseline_iterations, seed)?;
+
+    if let Some(output_dir) = output_dir {
+        write_batch_outputs(&output_dir, &input_text, &run)?;
+        println!(
+            "Wrote batch key-material results to {}",
+            output_dir.display()
+        );
+    } else {
+        match format {
+            OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&run)?),
+            OutputFormat::Markdown => print_batch_key_material_summary(&run),
+        }
+    }
+
+    Ok(())
+}
+
+fn parse_batch_candidates(input: &str) -> Result<Vec<BatchKeyMaterialCandidate>> {
+    let mut candidates = Vec::new();
+    for (index, line) in input.lines().enumerate() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+
+        let columns: Vec<_> = trimmed.split(',').map(str::trim).collect();
+        if columns.len() != 2 {
+            anyhow::bail!(
+                "invalid candidate row {}: expected material,transform",
+                index + 1
+            );
+        }
+        if columns[0].eq_ignore_ascii_case("material")
+            && columns[1].eq_ignore_ascii_case("transform")
+        {
+            continue;
+        }
+
+        let transform = CliCandidateTransform::from_str(columns[1], true).map_err(|message| {
+            anyhow::anyhow!("invalid transform on row {}: {}", index + 1, message)
+        })?;
+        candidates.push(BatchKeyMaterialCandidate {
+            material: columns[0].to_string(),
+            transform: transform.into(),
+        });
+    }
+
+    if candidates.is_empty() {
+        anyhow::bail!("batch key-material input did not contain any candidates");
+    }
+    Ok(candidates)
+}
+
+fn write_batch_outputs(
+    output_dir: &Path,
+    input_text: &str,
+    run: &BatchKeyMaterialRun,
+) -> Result<()> {
+    fs::create_dir_all(output_dir)?;
+    fs::write(output_dir.join("input.csv"), input_text)?;
+    fs::write(
+        output_dir.join("results.json"),
+        serde_json::to_string_pretty(run)?,
+    )?;
+    fs::write(
+        output_dir.join("summary.md"),
+        render_batch_key_material_summary(run),
+    )?;
+    fs::write(
+        output_dir.join("command.txt"),
+        format!(
+            "batch-test-keys --input <input> --sweep-baseline-iterations {} --seed {}\n",
+            run.baseline_iterations, run.seed
+        ),
+    )?;
+    Ok(())
+}
+
+fn print_batch_key_material_summary(run: &BatchKeyMaterialRun) {
+    print!("{}", render_batch_key_material_summary(run));
+}
+
+fn render_batch_key_material_summary(run: &BatchKeyMaterialRun) -> String {
+    let mut output = String::new();
+    output.push_str("# Batch Key Material Results\n\n");
+    output.push_str("This is not a claimed solution.\n\n");
+    output.push_str(&format!(
+        "alphabet: {:?}; candidates: {}; baseline iterations: {}; seed: {}; promoted: {}\n\n",
+        run.alphabet,
+        run.candidate_count,
+        run.baseline_iterations,
+        run.seed,
+        run.promoted_candidate
+    ));
+    output.push_str("| Rank | Material | Transform | Best Offset | Matches | Match Rate | Empirical P | Promoted |\n");
+    output.push_str("| --- | --- | --- | --- | --- | --- | --- | --- |\n");
+    for (index, result) in run.results.iter().enumerate() {
+        let empirical_p = result
+            .empirical_p_value
+            .map(|value| format!("{value:.4}"))
+            .unwrap_or_else(|| "n/a".to_string());
+        output.push_str(&format!(
+            "| {} | `{}` | {:?} | {} | {}/{} | {:.4} | {} | {} |\n",
+            index + 1,
+            result.material,
+            result.transform,
+            result.best_offset,
+            result.best_matches,
+            result.compared_fragment_count,
+            result.best_match_rate,
+            empirical_p,
+            result.promoted_candidate
+        ));
+    }
+    output.push_str(&format!("\n{}\n", run.note));
+    output
 }
 
 fn print_test_key(options: TestKeyOptions) -> Result<()> {

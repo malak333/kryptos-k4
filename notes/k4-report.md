@@ -17,6 +17,7 @@ This report uses public anchors only and is not a claimed solution. Production r
 | `constraints` | Per-anchor key fragments across supported alphabets and modes, with recurrence screens. |
 | `key-fragments` | The same fragment rows are rendered in full for anchors and adjacent spans. |
 | `test-key` | Proposed key material is transformed and compared against public span additive fragments at true K4 positions, with optional cyclic offset sweep and seeded sweep baseline. |
+| `batch-test-keys` | CSV candidate rows are ranked with the same public-fragment checks and optional output artifacts. |
 | `baseline` | Seeded false-positive controls for anchors and spans across all supported alphabets. |
 | `hypotheses` | Ranked source-grounded hypotheses with facts, assumptions, falsification tests, and risks. |
 | `candidate-sequences` | Pre-registered contextual sequences and score results. |

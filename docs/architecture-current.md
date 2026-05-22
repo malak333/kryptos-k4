@@ -10,7 +10,7 @@ flowchart TD
 
     Cli --> Facts["facts / anchors / sources"]
     Cli --> Constraints["constraints / key-fragments"]
-    Cli --> KeyTest["test-key"]
+    Cli --> KeyTest["test-key / batch-test-keys"]
     Cli --> Baseline["baseline controls"]
     Cli --> Candidates["candidate-sequences"]
     Cli --> Routes["routes"]
@@ -50,7 +50,7 @@ flowchart TD
 - Public K4 ciphertext, public anchors, and source provenance are modeled in Rust.
 - Constraint, key-material test, baseline, candidate, route, findings, report, export, and release-check commands are implemented.
 - Candidate, route, and baseline outputs carry non-promotion boundaries and next-test metadata.
-- `test-key` compares proposed material against public span-derived additive fragments at actual K4 positions, can sweep cyclic phase offsets, can run seeded shuffled-value sweep baselines, and never promotes candidates.
+- `test-key` and `batch-test-keys` compare proposed material against public span-derived additive fragments at actual K4 positions, can sweep cyclic phase offsets, can run seeded shuffled-value sweep baselines, and never promote candidates.
 - Local release verification is implemented without GitHub Actions.
 - E2E tests execute the compiled CLI and validate command outputs.
 
