@@ -21,6 +21,28 @@ pub struct KeyMaterialTest {
     pub note: &'static str,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct KeyMaterialOffsetSweep {
+    pub material: String,
+    pub transform: CandidateTransform,
+    pub alphabet: AlphabetKind,
+    pub fragment_mode: FragmentMode,
+    pub values: Vec<u8>,
+    pub offsets_tested: usize,
+    pub results: Vec<KeyMaterialOffsetResult>,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct KeyMaterialOffsetResult {
+    pub offset: usize,
+    pub compared_fragment_count: usize,
+    pub exact_mod26_matches: usize,
+    pub match_rate: f64,
+    pub span_results: Vec<KeyMaterialSpanResult>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct KeyMaterialSpanResult {
     pub target_label: String,
@@ -49,6 +71,68 @@ pub fn test_key_material(
         bail!("key material did not produce any numeric values");
     }
     let expanded_to_k4 = expand_to_k4(&values);
+    let result = score_key_material_with_offset(&expanded_to_k4, alphabet, 0)?;
+
+    Ok(KeyMaterialTest {
+        material: material.to_string(),
+        transform,
+        alphabet,
+        fragment_mode: FragmentMode::AdditiveKey,
+        values,
+        expanded_to_k4,
+        compared_fragment_count: result.compared_fragment_count,
+        exact_mod26_matches: result.exact_mod26_matches,
+        match_rate: result.match_rate,
+        span_results: result.span_results,
+        promoted_candidate: false,
+        note: "Exploratory key-material check over public known-plaintext spans only; not evidence of plaintext or decryption.",
+    })
+}
+
+pub fn sweep_key_material_offsets(
+    material: &str,
+    transform: CandidateTransform,
+    alphabet: AlphabetKind,
+) -> Result<KeyMaterialOffsetSweep> {
+    let values = transform_values(material, transform);
+    if values.is_empty() {
+        bail!("key material did not produce any numeric values");
+    }
+    let expanded_to_k4 = expand_to_k4(&values);
+    let mut results = Vec::with_capacity(values.len());
+
+    for offset in 0..values.len() {
+        results.push(score_key_material_with_offset(
+            &expanded_to_k4,
+            alphabet,
+            offset,
+        )?);
+    }
+    results.sort_by(|left, right| {
+        right
+            .exact_mod26_matches
+            .cmp(&left.exact_mod26_matches)
+            .then_with(|| left.offset.cmp(&right.offset))
+    });
+
+    Ok(KeyMaterialOffsetSweep {
+        material: material.to_string(),
+        transform,
+        alphabet,
+        fragment_mode: FragmentMode::AdditiveKey,
+        values,
+        offsets_tested: results.len(),
+        results,
+        promoted_candidate: false,
+        note: "Exploratory offset sweep over public known-plaintext spans only; best offsets are not evidence of plaintext or decryption.",
+    })
+}
+
+fn score_key_material_with_offset(
+    expanded_to_k4: &[u8],
+    alphabet: AlphabetKind,
+    offset: usize,
+) -> Result<KeyMaterialOffsetResult> {
     let mut span_results = Vec::new();
 
     for analysis in analyze_known_plaintext_spans()? {
@@ -65,7 +149,8 @@ pub fn test_key_material(
             .filter(|fragment| fragment.mode == FragmentMode::AdditiveKey)
         {
             compared_fragment_count += 1;
-            let material_value = expanded_to_k4[fragment.position_zero_based] % 26;
+            let material_index = (fragment.position_zero_based + offset) % expanded_to_k4.len();
+            let material_value = expanded_to_k4[material_index] % 26;
             if fragment.value == material_value {
                 exact_mod26_matches += 1;
             } else {
@@ -102,19 +187,12 @@ pub fn test_key_material(
         exact_mod26_matches as f64 / compared_fragment_count as f64
     };
 
-    Ok(KeyMaterialTest {
-        material: material.to_string(),
-        transform,
-        alphabet,
-        fragment_mode: FragmentMode::AdditiveKey,
-        values,
-        expanded_to_k4,
+    Ok(KeyMaterialOffsetResult {
+        offset,
         compared_fragment_count,
         exact_mod26_matches,
         match_rate,
         span_results,
-        promoted_candidate: false,
-        note: "Exploratory key-material check over public known-plaintext spans only; not evidence of plaintext or decryption.",
     })
 }
 
@@ -150,6 +228,26 @@ mod tests {
                 AlphabetKind::Kryptos
             )
             .is_err()
+        );
+    }
+
+    #[test]
+    fn sweep_scores_all_material_offsets_without_promotion() {
+        let sweep = sweep_key_material_offsets(
+            "BERLINWORLDCLOCK",
+            CandidateTransform::A1Z26ZeroBased,
+            AlphabetKind::Kryptos,
+        )
+        .unwrap();
+
+        assert_eq!(sweep.offsets_tested, "BERLINWORLDCLOCK".len());
+        assert_eq!(sweep.results.len(), sweep.offsets_tested);
+        assert!(!sweep.promoted_candidate);
+        assert!(
+            sweep
+                .results
+                .windows(2)
+                .all(|pair| pair[0].exact_mod26_matches >= pair[1].exact_mod26_matches)
         );
     }
 }

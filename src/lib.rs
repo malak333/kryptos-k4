@@ -30,7 +30,8 @@ pub use data::{
 pub use findings::{Finding, findings};
 pub use hypotheses::{Hypothesis, hypotheses};
 pub use key_test::{
-    KeyMaterialMismatch, KeyMaterialSpanResult, KeyMaterialTest, test_key_material,
+    KeyMaterialMismatch, KeyMaterialOffsetResult, KeyMaterialOffsetSweep, KeyMaterialSpanResult,
+    KeyMaterialTest, sweep_key_material_offsets, test_key_material,
 };
 pub use release_check::{ReleaseCheck, run_release_checks};
 pub use report::{Report, ReportFormat, build_report, render_report};
