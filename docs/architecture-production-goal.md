@@ -1,12 +1,13 @@
 # Production Goal Architecture
 
-Last updated: 2026-05-21
+Last updated: 2026-05-22
 
 The production goal is a public, source-grounded Rust research CLI and release package with reproducible local verification. Production readiness does not mean Kryptos K4 is solved, and it does not mean speculative plaintext, keys, routes, or methods are promoted.
 
 ```mermaid
 flowchart TD
     Researcher["Researcher"] --> CLI["Rust CLI: kryptos-k4"]
+    Researcher --> BackgroundRunner["Background experiment runner"]
 
     subgraph Evidence["Evidence Boundary"]
         PublicSources["Public sources only"]
@@ -29,6 +30,7 @@ flowchart TD
         MarkdownReport["Markdown report"]
         JsonReport["JSON report"]
         BatchArtifacts["Batch experiment artifacts"]
+        LatestSummary["Latest ranked summary pointer"]
         DataExports["Machine-readable exports"]
         HumanCli["Human-readable CLI output"]
     end
@@ -67,6 +69,9 @@ flowchart TD
     FindingsLedger --> MarkdownReport
     FindingsLedger --> JsonReport
     KeyMaterialChecks --> BatchArtifacts
+    BackgroundRunner --> KeyMaterialChecks
+    BackgroundRunner --> BatchArtifacts
+    BackgroundRunner --> LatestSummary
     DataModel --> DataExports
     CLI --> HumanCli
 
@@ -86,6 +91,7 @@ flowchart TD
 - Every finding includes source inputs, transformation steps, baseline comparison, interpretation, and next test.
 - Every command has E2E coverage for success paths and important guardrails.
 - Proposed key material and cyclic phase offsets are evaluated only against public known-plaintext spans, compared to seeded shuffled-value controls when requested, and remain non-promotional unless future independently justified evidence changes the release boundary.
+- Background experiment loops are local, stoppable, and artifact-producing; they automate repeatable scoring but do not autonomously claim or promote a K4 solution.
 - `cargo fmt --check`, `cargo clippy --locked --all-targets --all-features -- -D warnings`, `cargo test --locked --all-targets --all-features`, `cargo build --locked --release`, and `cargo run --locked -- release-check` pass locally.
 - Releases remain manual and local-gated; no GitHub Actions or Dependabot policy drift.
 

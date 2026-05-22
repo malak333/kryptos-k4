@@ -1,12 +1,13 @@
 # Current Implementation Architecture
 
-Last updated: 2026-05-21
+Last updated: 2026-05-22
 
 This diagram reflects the current implementation phase for the Rust `kryptos-k4` research CLI. It describes source-grounded research tooling only; it does not claim a Kryptos K4 solution.
 
 ```mermaid
 flowchart TD
     User["CLI user / researcher"] --> Cli["kryptos-k4 CLI"]
+    User --> BackgroundScripts["background batch scripts"]
 
     Cli --> Facts["facts / anchors / sources"]
     Cli --> Constraints["constraints / key-fragments"]
@@ -18,6 +19,9 @@ flowchart TD
     Cli --> Report["report"]
     Cli --> Export["export-data"]
     Cli --> Release["release-check"]
+    BackgroundScripts --> BatchLoop["run-key-batch-loop.sh timestamped batch loop"]
+    BackgroundScripts --> StartStop["start / stop wrappers with flags"]
+    BatchLoop --> KeyTest
 
     Facts --> Data["src/data.rs public ciphertext, anchors, sources"]
     Constraints --> Data
@@ -36,6 +40,7 @@ flowchart TD
     Data --> SourcePacket["sources/source-packet.md quote-free source summaries"]
     Data --> ResearchPlan["kryptos-k4-research-plan.md scope, hypotheses, next tests"]
     ReportModel --> GeneratedReport["notes/k4-report.md generated release report"]
+    BatchLoop --> BatchArtifacts["results/key-tests ignored local artifacts"]
     FindingsModel --> ReportModel
     ReleaseModel --> GeneratedReport
     ReleaseModel --> SourcePacket
@@ -51,6 +56,7 @@ flowchart TD
 - Constraint, key-material test, baseline, candidate, route, findings, report, export, and release-check commands are implemented.
 - Candidate, route, and baseline outputs carry non-promotion boundaries and next-test metadata.
 - `test-key` and `batch-test-keys` compare proposed material against public span-derived additive fragments at actual K4 positions, can sweep cyclic phase offsets, can run seeded shuffled-value sweep baselines, and never promote candidates.
+- Background wrapper scripts can run repeated `batch-test-keys` experiments with explicit flags, timestamped local artifacts, latest-result pointers, and optional macOS keep-awake support.
 - Local release verification is implemented without GitHub Actions.
 - E2E tests execute the compiled CLI and validate command outputs.
 
