@@ -3,6 +3,8 @@ use crate::{
     candidates::{expand_to_k4, transform_values},
 };
 use anyhow::{Result, bail};
+use rand::seq::SliceRandom;
+use rand_chacha::{ChaCha8Rng, rand_core::SeedableRng};
 use serde::Serialize;
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -30,6 +32,20 @@ pub struct KeyMaterialOffsetSweep {
     pub values: Vec<u8>,
     pub offsets_tested: usize,
     pub results: Vec<KeyMaterialOffsetResult>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub baseline: Option<KeyMaterialSweepBaseline>,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct KeyMaterialSweepBaseline {
+    pub observed_best_matches: usize,
+    pub null_mean_best_matches: f64,
+    pub null_std_dev_best_matches: f64,
+    pub empirical_p_value: f64,
+    pub iterations: usize,
+    pub seed: u64,
     pub promoted_candidate: bool,
     pub note: &'static str,
 }
@@ -94,11 +110,52 @@ pub fn sweep_key_material_offsets(
     transform: CandidateTransform,
     alphabet: AlphabetKind,
 ) -> Result<KeyMaterialOffsetSweep> {
+    sweep_key_material_offsets_with_baseline(material, transform, alphabet, 0, 42)
+}
+
+pub fn sweep_key_material_offsets_with_baseline(
+    material: &str,
+    transform: CandidateTransform,
+    alphabet: AlphabetKind,
+    baseline_iterations: usize,
+    seed: u64,
+) -> Result<KeyMaterialOffsetSweep> {
     let values = transform_values(material, transform);
     if values.is_empty() {
         bail!("key material did not produce any numeric values");
     }
-    let expanded_to_k4 = expand_to_k4(&values);
+    let results = score_all_offsets(&values, alphabet)?;
+    let baseline = if baseline_iterations == 0 {
+        None
+    } else {
+        Some(run_sweep_baseline(
+            &values,
+            alphabet,
+            results[0].exact_mod26_matches,
+            baseline_iterations,
+            seed,
+        )?)
+    };
+
+    Ok(KeyMaterialOffsetSweep {
+        material: material.to_string(),
+        transform,
+        alphabet,
+        fragment_mode: FragmentMode::AdditiveKey,
+        values,
+        offsets_tested: results.len(),
+        results,
+        baseline,
+        promoted_candidate: false,
+        note: "Exploratory offset sweep over public known-plaintext spans only; best offsets are not evidence of plaintext or decryption.",
+    })
+}
+
+fn score_all_offsets(
+    values: &[u8],
+    alphabet: AlphabetKind,
+) -> Result<Vec<KeyMaterialOffsetResult>> {
+    let expanded_to_k4 = expand_to_k4(values);
     let mut results = Vec::with_capacity(values.len());
 
     for offset in 0..values.len() {
@@ -115,17 +172,63 @@ pub fn sweep_key_material_offsets(
             .then_with(|| left.offset.cmp(&right.offset))
     });
 
-    Ok(KeyMaterialOffsetSweep {
-        material: material.to_string(),
-        transform,
-        alphabet,
-        fragment_mode: FragmentMode::AdditiveKey,
-        values,
-        offsets_tested: results.len(),
-        results,
+    Ok(results)
+}
+
+fn run_sweep_baseline(
+    values: &[u8],
+    alphabet: AlphabetKind,
+    observed_best_matches: usize,
+    iterations: usize,
+    seed: u64,
+) -> Result<KeyMaterialSweepBaseline> {
+    let mut rng = ChaCha8Rng::seed_from_u64(seed);
+    let mut null_best_matches = Vec::with_capacity(iterations);
+
+    for _ in 0..iterations {
+        let mut shuffled = values.to_vec();
+        shuffled.shuffle(&mut rng);
+        let best = score_all_offsets(&shuffled, alphabet)?
+            .first()
+            .map(|result| result.exact_mod26_matches)
+            .unwrap_or(0);
+        null_best_matches.push(best);
+    }
+
+    let null_mean_best_matches = mean(&null_best_matches);
+    let null_std_dev_best_matches = std_dev(&null_best_matches, null_mean_best_matches);
+    let at_least_observed = null_best_matches
+        .iter()
+        .filter(|count| **count >= observed_best_matches)
+        .count();
+    let empirical_p_value = (at_least_observed as f64 + 1.0) / (iterations as f64 + 1.0);
+
+    Ok(KeyMaterialSweepBaseline {
+        observed_best_matches,
+        null_mean_best_matches,
+        null_std_dev_best_matches,
+        empirical_p_value,
+        iterations,
+        seed,
         promoted_candidate: false,
-        note: "Exploratory offset sweep over public known-plaintext spans only; best offsets are not evidence of plaintext or decryption.",
+        note: "Seeded null baseline over shuffled key-material values; still not a decryption claim.",
     })
+}
+
+fn mean(values: &[usize]) -> f64 {
+    values.iter().sum::<usize>() as f64 / values.len() as f64
+}
+
+fn std_dev(values: &[usize], mean: f64) -> f64 {
+    let variance = values
+        .iter()
+        .map(|value| {
+            let delta = *value as f64 - mean;
+            delta * delta
+        })
+        .sum::<f64>()
+        / values.len() as f64;
+    variance.sqrt()
 }
 
 fn score_key_material_with_offset(
@@ -249,5 +352,35 @@ mod tests {
                 .windows(2)
                 .all(|pair| pair[0].exact_mod26_matches >= pair[1].exact_mod26_matches)
         );
+    }
+
+    #[test]
+    fn sweep_baseline_is_seeded_and_non_promotional() {
+        let first = sweep_key_material_offsets_with_baseline(
+            "BERLINWORLDCLOCK",
+            CandidateTransform::A1Z26ZeroBased,
+            AlphabetKind::Kryptos,
+            25,
+            42,
+        )
+        .unwrap();
+        let second = sweep_key_material_offsets_with_baseline(
+            "BERLINWORLDCLOCK",
+            CandidateTransform::A1Z26ZeroBased,
+            AlphabetKind::Kryptos,
+            25,
+            42,
+        )
+        .unwrap();
+
+        assert_eq!(first.baseline, second.baseline);
+        let baseline = first.baseline.unwrap();
+        assert_eq!(
+            baseline.observed_best_matches,
+            first.results[0].exact_mod26_matches
+        );
+        assert_eq!(baseline.iterations, 25);
+        assert_eq!(baseline.seed, 42);
+        assert!(!baseline.promoted_candidate);
     }
 }

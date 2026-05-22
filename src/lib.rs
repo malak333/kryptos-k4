@@ -31,7 +31,8 @@ pub use findings::{Finding, findings};
 pub use hypotheses::{Hypothesis, hypotheses};
 pub use key_test::{
     KeyMaterialMismatch, KeyMaterialOffsetResult, KeyMaterialOffsetSweep, KeyMaterialSpanResult,
-    KeyMaterialTest, sweep_key_material_offsets, test_key_material,
+    KeyMaterialSweepBaseline, KeyMaterialTest, sweep_key_material_offsets,
+    sweep_key_material_offsets_with_baseline, test_key_material,
 };
 pub use release_check::{ReleaseCheck, run_release_checks};
 pub use report::{Report, ReportFormat, build_report, render_report};
