@@ -1,8 +1,39 @@
 material,transform
+# Berlin World Clock clue family.
 BERLINWORLDCLOCK,a1-z26-zero-based
-WELTZEITUHR,a1-z26-zero-based
-ALEXANDERPLATZ,a1-z26-zero-based
 BERLINWORLDCLOCK,a1-z26-one-based
+BERLINCLOCK,a1-z26-zero-based
+BERLINCLOCK,a1-z26-one-based
+WORLDCLOCK,a1-z26-zero-based
+WORLDCLOCK,a1-z26-one-based
+WELTZEITUHR,a1-z26-zero-based
+WELTZEITUHR,a1-z26-one-based
+ALEXANDERPLATZ,a1-z26-zero-based
 ALEXANDERPLATZ,a1-z26-one-based
+
+# Public anchor and compass direction family.
+EASTNORTHEAST,a1-z26-zero-based
+EASTNORTHEAST,a1-z26-one-based
+EASTNORTHEAST,compass8-point
+EASTNORTHEAST,compass16-point
+EAST,a1-z26-zero-based
+EAST,a1-z26-one-based
+EAST,compass8-point
+EAST,compass16-point
+NORTHEAST,a1-z26-zero-based
+NORTHEAST,a1-z26-one-based
+NORTHEAST,compass8-point
+NORTHEAST,compass16-point
+BERLIN,a1-z26-zero-based
+BERLIN,a1-z26-one-based
+CLOCK,a1-z26-zero-based
+CLOCK,a1-z26-one-based
+
+# 2025 reporting event clue family.
+EGYPT,a1-z26-zero-based
+EGYPT,a1-z26-one-based
 1986,decimal-digits
+BERLINWALL,a1-z26-zero-based
+BERLINWALL,a1-z26-one-based
 19891109,decimal-digits
+11091989,decimal-digits
