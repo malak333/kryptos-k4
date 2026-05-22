@@ -5,7 +5,8 @@ use kryptos_k4::{
     K4_CIPHERTEXT, KeyMaterialOffsetSweep, KeyMaterialTest, ReportFormat, analyze_constraints,
     analyze_known_plaintext_spans, build_report, candidate_sequences, findings, hypotheses,
     known_anchors, render_report, run_baseline, run_release_checks, run_route_experiments,
-    score_candidate_sequences, sources, sweep_key_material_offsets, test_key_material,
+    score_candidate_sequences, sources, sweep_key_material_offsets_with_baseline,
+    test_key_material,
 };
 use std::{fs, path::PathBuf};
 
@@ -60,6 +61,12 @@ enum Command {
         /// Maximum ranked offsets to print when sweeping. JSON output always includes all offsets.
         #[arg(long, default_value_t = 10)]
         top: usize,
+        /// Seeded shuffled-value null iterations for the best offset score. Requires --sweep-offsets.
+        #[arg(long, default_value_t = 0)]
+        sweep_baseline_iterations: usize,
+        /// Seed for deterministic offset-sweep baseline controls.
+        #[arg(long, default_value_t = 42)]
+        seed: u64,
         /// Output format.
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
@@ -179,6 +186,17 @@ enum CliCandidateTransform {
     Compass16Point,
 }
 
+struct TestKeyOptions {
+    material: String,
+    transform: CliCandidateTransform,
+    alphabet: CliAlphabet,
+    sweep_offsets: bool,
+    top: usize,
+    sweep_baseline_iterations: usize,
+    seed: u64,
+    format: OutputFormat,
+}
+
 impl From<OutputFormat> for ReportFormat {
     fn from(value: OutputFormat) -> Self {
         match value {
@@ -260,8 +278,19 @@ fn main() -> Result<()> {
             alphabet,
             sweep_offsets,
             top,
+            sweep_baseline_iterations,
+            seed,
             format,
-        } => print_test_key(material, transform, alphabet, sweep_offsets, top, format)?,
+        } => print_test_key(TestKeyOptions {
+            material,
+            transform,
+            alphabet,
+            sweep_offsets,
+            top,
+            sweep_baseline_iterations,
+            seed,
+            format,
+        })?,
         Command::Baseline {
             target,
             alphabet,
@@ -293,25 +322,32 @@ fn main() -> Result<()> {
     Ok(())
 }
 
-fn print_test_key(
-    material: String,
-    transform: CliCandidateTransform,
-    alphabet: CliAlphabet,
-    sweep_offsets: bool,
-    top: usize,
-    format: OutputFormat,
-) -> Result<()> {
-    if sweep_offsets {
-        let sweep = sweep_key_material_offsets(&material, transform.into(), alphabet.into())?;
-        match format {
+fn print_test_key(options: TestKeyOptions) -> Result<()> {
+    if !options.sweep_offsets && options.sweep_baseline_iterations > 0 {
+        anyhow::bail!("--sweep-baseline-iterations requires --sweep-offsets");
+    }
+
+    if options.sweep_offsets {
+        let sweep = sweep_key_material_offsets_with_baseline(
+            &options.material,
+            options.transform.into(),
+            options.alphabet.into(),
+            options.sweep_baseline_iterations,
+            options.seed,
+        )?;
+        match options.format {
             OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&sweep)?),
-            OutputFormat::Markdown => print_key_material_offset_sweep(&sweep, top),
+            OutputFormat::Markdown => print_key_material_offset_sweep(&sweep, options.top),
         }
         return Ok(());
     }
 
-    let test = test_key_material(&material, transform.into(), alphabet.into())?;
-    match format {
+    let test = test_key_material(
+        &options.material,
+        options.transform.into(),
+        options.alphabet.into(),
+    )?;
+    match options.format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&test)?),
         OutputFormat::Markdown => print_key_material_test(&test),
     }
@@ -340,6 +376,20 @@ fn print_key_material_offset_sweep(sweep: &KeyMaterialOffsetSweep, top: usize) {
             result.compared_fragment_count,
             result.match_rate
         );
+    }
+    if let Some(baseline) = &sweep.baseline {
+        println!("\n## Sweep Baseline\n");
+        println!(
+            "observed best: {} matches; null mean best: {:.2}; null sd: {:.2}; empirical p-value: {:.4}; iterations: {}; seed: {}; promoted: {}",
+            baseline.observed_best_matches,
+            baseline.null_mean_best_matches,
+            baseline.null_std_dev_best_matches,
+            baseline.empirical_p_value,
+            baseline.iterations,
+            baseline.seed,
+            baseline.promoted_candidate
+        );
+        println!("note: {}", baseline.note);
     }
 }
 

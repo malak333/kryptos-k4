@@ -239,6 +239,63 @@ fn test_key_sweep_offsets_json_is_parseable() {
 }
 
 #[test]
+fn test_key_sweep_baseline_is_seeded_and_non_promotional() {
+    let args = [
+        "test-key",
+        "--material",
+        "BERLINWORLDCLOCK",
+        "--sweep-offsets",
+        "--sweep-baseline-iterations",
+        "25",
+        "--seed",
+        "42",
+        "--format",
+        "json",
+    ];
+    let first = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(args)
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let second = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(args)
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    assert_eq!(first, second);
+    let json: Value = serde_json::from_slice(&first).unwrap();
+    assert_eq!(json["baseline"]["iterations"], 25);
+    assert_eq!(json["baseline"]["seed"], 42);
+    assert_eq!(json["baseline"]["promoted_candidate"], false);
+    assert!(json["baseline"]["empirical_p_value"].as_f64().unwrap() > 0.0);
+}
+
+#[test]
+fn test_key_sweep_baseline_requires_sweep_offsets() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "test-key",
+            "--material",
+            "BERLINWORLDCLOCK",
+            "--sweep-baseline-iterations",
+            "25",
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "--sweep-baseline-iterations requires --sweep-offsets",
+        ));
+}
+
+#[test]
 fn baseline_json_is_deterministic_and_parseable() {
     let args = [
         "baseline",
