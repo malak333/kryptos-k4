@@ -29,6 +29,23 @@ pub struct KeyMaterialTest {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct KeyMaterialExplanation {
+    pub material: String,
+    pub transform: CandidateTransform,
+    pub alphabet: AlphabetKind,
+    pub fragment_mode: FragmentMode,
+    pub offset: usize,
+    pub values: Vec<u8>,
+    pub compared_fragment_count: usize,
+    pub exact_mod26_matches: usize,
+    pub match_rate: f64,
+    pub span_results: Vec<KeyMaterialSpanResult>,
+    pub transform_caveat: Option<&'static str>,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct BatchKeyRunHistory {
     pub input_dir: String,
     pub scanned_result_files: usize,
@@ -85,6 +102,21 @@ pub struct BatchKeyMaterialRun {
     pub seed: u64,
     pub candidate_count: usize,
     pub results: Vec<BatchKeyMaterialResult>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub batch_baseline: Option<BatchKeyMaterialBaseline>,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct BatchKeyMaterialBaseline {
+    pub observed_best_matches: usize,
+    pub null_mean_best_matches: f64,
+    pub null_std_dev_best_matches: f64,
+    pub empirical_p_value: f64,
+    pub iterations: usize,
+    pub seed: u64,
+    pub candidate_count: usize,
     pub promoted_candidate: bool,
     pub note: &'static str,
 }
@@ -144,7 +176,18 @@ pub struct KeyMaterialSpanResult {
     pub target_label: String,
     pub compared_fragment_count: usize,
     pub exact_mod26_matches: usize,
+    pub matches: Vec<KeyMaterialMatch>,
     pub mismatches: Vec<KeyMaterialMismatch>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct KeyMaterialMatch {
+    pub position_one_based: usize,
+    pub plaintext: char,
+    pub ciphertext: char,
+    pub observed_key_value: u8,
+    pub observed_key_symbol: char,
+    pub material_value: u8,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -182,6 +225,44 @@ pub fn test_key_material(
         span_results: result.span_results,
         promoted_candidate: false,
         note: "Exploratory key-material check over public known-plaintext spans only; not evidence of plaintext or decryption.",
+    })
+}
+
+pub fn explain_key_material(
+    material: &str,
+    transform: CandidateTransform,
+    alphabet: AlphabetKind,
+    offset: Option<usize>,
+) -> Result<KeyMaterialExplanation> {
+    let values = transform_values(material, transform);
+    if values.is_empty() {
+        bail!("key material did not produce any numeric values");
+    }
+    let selected_offset = if let Some(offset) = offset {
+        offset
+    } else {
+        score_all_offsets(&values, alphabet)?
+            .first()
+            .map(|result| result.offset)
+            .expect("sweep results are non-empty for non-empty material")
+    };
+    let expanded_to_k4 = expand_to_k4(&values);
+    let result = score_key_material_with_offset(&expanded_to_k4, alphabet, selected_offset)?;
+
+    Ok(KeyMaterialExplanation {
+        material: material.to_string(),
+        transform,
+        alphabet,
+        fragment_mode: FragmentMode::AdditiveKey,
+        offset: selected_offset,
+        values,
+        compared_fragment_count: result.compared_fragment_count,
+        exact_mod26_matches: result.exact_mod26_matches,
+        match_rate: result.match_rate,
+        span_results: result.span_results,
+        transform_caveat: transform.modulo_caveat(),
+        promoted_candidate: false,
+        note: "Explanation of public-span key-material matches only; matched rows are follow-up leads, not decrypted plaintext.",
     })
 }
 
@@ -237,6 +318,16 @@ pub fn batch_test_key_material(
     baseline_iterations: usize,
     seed: u64,
 ) -> Result<BatchKeyMaterialRun> {
+    batch_test_key_material_with_batch_baseline(candidates, alphabet, baseline_iterations, seed, 0)
+}
+
+pub fn batch_test_key_material_with_batch_baseline(
+    candidates: &[BatchKeyMaterialCandidate],
+    alphabet: AlphabetKind,
+    baseline_iterations: usize,
+    seed: u64,
+    batch_baseline_iterations: usize,
+) -> Result<BatchKeyMaterialRun> {
     if candidates.is_empty() {
         bail!("batch key-material input did not contain any candidates");
     }
@@ -282,6 +373,22 @@ pub fn batch_test_key_material(
             })
             .then_with(|| left.material.cmp(&right.material))
     });
+    let observed_best_matches = results
+        .iter()
+        .map(|result| result.best_matches)
+        .max()
+        .unwrap_or(0);
+    let batch_baseline = if batch_baseline_iterations == 0 {
+        None
+    } else {
+        Some(run_batch_baseline(
+            candidates,
+            alphabet,
+            observed_best_matches,
+            batch_baseline_iterations,
+            seed,
+        )?)
+    };
 
     Ok(BatchKeyMaterialRun {
         alphabet,
@@ -289,8 +396,61 @@ pub fn batch_test_key_material(
         seed,
         candidate_count: results.len(),
         results,
+        batch_baseline,
         promoted_candidate: false,
         note: "Batch key-material run over public known-plaintext spans only; ranked results are exploratory and not decryption claims.",
+    })
+}
+
+fn run_batch_baseline(
+    candidates: &[BatchKeyMaterialCandidate],
+    alphabet: AlphabetKind,
+    observed_best_matches: usize,
+    iterations: usize,
+    seed: u64,
+) -> Result<BatchKeyMaterialBaseline> {
+    let candidate_values: Vec<Vec<u8>> = candidates
+        .iter()
+        .map(|candidate| transform_values(&candidate.material, candidate.transform))
+        .collect();
+    if candidate_values.iter().any(Vec::is_empty) {
+        bail!("batch key-material input contained a candidate without numeric values");
+    }
+
+    let mut rng = ChaCha8Rng::seed_from_u64(seed);
+    let mut null_best_matches = Vec::with_capacity(iterations);
+    for _ in 0..iterations {
+        let mut iteration_best = 0usize;
+        for values in &candidate_values {
+            let mut shuffled = values.clone();
+            shuffled.shuffle(&mut rng);
+            let best = score_all_offsets(&shuffled, alphabet)?
+                .first()
+                .map(|result| result.exact_mod26_matches)
+                .unwrap_or(0);
+            iteration_best = iteration_best.max(best);
+        }
+        null_best_matches.push(iteration_best);
+    }
+
+    let null_mean_best_matches = mean(&null_best_matches);
+    let null_std_dev_best_matches = std_dev(&null_best_matches, null_mean_best_matches);
+    let at_least_observed = null_best_matches
+        .iter()
+        .filter(|count| **count >= observed_best_matches)
+        .count();
+    let empirical_p_value = (at_least_observed as f64 + 1.0) / (iterations as f64 + 1.0);
+
+    Ok(BatchKeyMaterialBaseline {
+        observed_best_matches,
+        null_mean_best_matches,
+        null_std_dev_best_matches,
+        empirical_p_value,
+        iterations,
+        seed,
+        candidate_count: candidates.len(),
+        promoted_candidate: false,
+        note: "Seeded batch-level null over the best shuffled score across all candidate rows; this controls the candidate-file search surface, not the full hypothesis space.",
     })
 }
 
@@ -585,6 +745,7 @@ fn score_key_material_with_offset(
 
         let mut exact_mod26_matches = 0usize;
         let mut compared_fragment_count = 0usize;
+        let mut matches = Vec::new();
         let mut mismatches = Vec::new();
         for fragment in analysis
             .fragments
@@ -596,6 +757,14 @@ fn score_key_material_with_offset(
             let material_value = expanded_to_k4[material_index] % 26;
             if fragment.value == material_value {
                 exact_mod26_matches += 1;
+                matches.push(KeyMaterialMatch {
+                    position_one_based: fragment.position_one_based,
+                    plaintext: fragment.plaintext,
+                    ciphertext: fragment.ciphertext,
+                    observed_key_value: fragment.value,
+                    observed_key_symbol: fragment.symbol,
+                    material_value,
+                });
             } else {
                 mismatches.push(KeyMaterialMismatch {
                     position_one_based: fragment.position_one_based,
@@ -612,6 +781,7 @@ fn score_key_material_with_offset(
             target_label: analysis.target.label,
             compared_fragment_count,
             exact_mod26_matches,
+            matches,
             mismatches,
         });
     }
@@ -637,6 +807,17 @@ fn score_key_material_with_offset(
         match_rate,
         span_results,
     })
+}
+
+impl CandidateTransform {
+    pub fn modulo_caveat(self) -> Option<&'static str> {
+        match self {
+            CandidateTransform::A1Z26OneBased => Some(
+                "A1Z26OneBased emits A=1 through Z=26; comparisons reduce material values modulo 26, so Z=26 is compared as 0.",
+            ),
+            _ => None,
+        }
+    }
 }
 
 #[cfg(test)]

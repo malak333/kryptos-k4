@@ -296,6 +296,71 @@ fn test_key_sweep_baseline_requires_sweep_offsets() {
 }
 
 #[test]
+fn explain_key_prints_matching_positions_and_modulo_caveat() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "explain-key",
+            "--material",
+            "WELTZEITUHR",
+            "--transform",
+            "a1-z26-one-based",
+            "--offset",
+            "5",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Key Material Explanation"))
+        .stdout(predicate::str::contains("offset: 5"))
+        .stdout(predicate::str::contains("matches: 5/24"))
+        .stdout(predicate::str::contains("A1Z26OneBased emits A=1"))
+        .stdout(predicate::str::contains(
+            "- pos 29 | T->R | observed 23 (W) | material 23",
+        ))
+        .stdout(predicate::str::contains(
+            "- pos 67 | L->V | observed 5 (O) | material 5",
+        ))
+        .stdout(predicate::str::contains("not a claimed solution"));
+}
+
+#[test]
+fn explain_key_json_is_parseable() {
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "explain-key",
+            "--material",
+            "WELTZEITUHR",
+            "--transform",
+            "a1-z26-one-based",
+            "--offset",
+            "5",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["material"], "WELTZEITUHR");
+    assert_eq!(json["transform"], "a1-z26-one-based");
+    assert_eq!(json["offset"], 5);
+    assert_eq!(json["exact_mod26_matches"], 5);
+    assert!(
+        json["transform_caveat"]
+            .as_str()
+            .unwrap()
+            .contains("Z=26 is compared as 0")
+    );
+    let span_results = json["span_results"].as_array().unwrap();
+    assert_eq!(span_results[0]["matches"].as_array().unwrap().len(), 3);
+    assert_eq!(span_results[1]["matches"].as_array().unwrap().len(), 2);
+}
+
+#[test]
 fn batch_test_keys_prints_ranked_markdown() {
     let temp = tempfile::tempdir().unwrap();
     let input_path = temp.path().join("candidates.csv");
@@ -324,6 +389,51 @@ fn batch_test_keys_prints_ranked_markdown() {
         .stdout(predicate::str::contains("Empirical P"))
         .stdout(predicate::str::contains("promoted: false"))
         .stdout(predicate::str::contains("not a claimed solution"));
+}
+
+#[test]
+fn batch_test_keys_batch_baseline_controls_candidate_file_surface() {
+    let temp = tempfile::tempdir().unwrap();
+    let input_path = temp.path().join("candidates.csv");
+    std::fs::write(
+        &input_path,
+        "material,transform\nWELTZEITUHR,a1-z26-one-based\nBERLINWORLDCLOCK,a1-z26-one-based\n",
+    )
+    .unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "batch-test-keys",
+            "--input",
+            input_path.to_str().unwrap(),
+            "--sweep-baseline-iterations",
+            "5",
+            "--batch-baseline-iterations",
+            "5",
+            "--seed",
+            "42",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["candidate_count"], 2);
+    assert_eq!(json["batch_baseline"]["iterations"], 5);
+    assert_eq!(json["batch_baseline"]["candidate_count"], 2);
+    assert_eq!(json["batch_baseline"]["promoted_candidate"], false);
+    assert!(json["batch_baseline"]["empirical_p_value"].is_number());
+    assert!(
+        json["batch_baseline"]["note"]
+            .as_str()
+            .unwrap()
+            .contains("candidate-file search surface")
+    );
 }
 
 #[test]

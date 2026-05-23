@@ -3,11 +3,12 @@ use clap::{Parser, Subcommand, ValueEnum};
 use kryptos_k4::{
     AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, BatchKeyMaterialCandidate,
     BatchKeyMaterialRun, BatchKeyRunHistory, CandidateTransform, FragmentMode, K4_CIPHERTEXT,
-    KeyMaterialOffsetSweep, KeyMaterialTest, ReportFormat, analyze_constraints,
-    analyze_known_plaintext_spans, batch_test_key_material, build_report, candidate_sequences,
-    findings, hypotheses, known_anchors, render_report, run_baseline, run_release_checks,
-    run_route_experiments, score_candidate_sequences, sources, summarize_batch_key_material_runs,
-    sweep_key_material_offsets_with_baseline, test_key_material,
+    KeyMaterialExplanation, KeyMaterialOffsetSweep, KeyMaterialTest, ReportFormat,
+    analyze_constraints, analyze_known_plaintext_spans,
+    batch_test_key_material_with_batch_baseline, build_report, candidate_sequences,
+    explain_key_material, findings, hypotheses, known_anchors, render_report, run_baseline,
+    run_release_checks, run_route_experiments, score_candidate_sequences, sources,
+    summarize_batch_key_material_runs, sweep_key_material_offsets_with_baseline, test_key_material,
 };
 use std::{
     fs,
@@ -75,6 +76,24 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
     },
+    /// Explain one key-material lead by printing exact matching public-span positions.
+    ExplainKey {
+        /// Proposed key material to transform and cycle across K4 positions.
+        #[arg(long)]
+        material: String,
+        /// Transform used to convert material into numeric values.
+        #[arg(long, value_enum, default_value_t = CliCandidateTransform::A1Z26ZeroBased)]
+        transform: CliCandidateTransform,
+        /// Alphabet used for public span-derived fragments.
+        #[arg(long, value_enum, default_value_t = CliAlphabet::Kryptos)]
+        alphabet: CliAlphabet,
+        /// Cyclic phase offset to explain. If omitted, the best-scoring offset is used.
+        #[arg(long)]
+        offset: Option<usize>,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Run key-material checks for every candidate row in a CSV file.
     BatchTestKeys {
         /// CSV file with rows: material,transform. Header row is optional.
@@ -86,6 +105,9 @@ enum Command {
         /// Seeded shuffled-value null iterations for each candidate's best offset.
         #[arg(long, default_value_t = 1_000)]
         sweep_baseline_iterations: usize,
+        /// Seeded null iterations for the best score across all candidate rows and transforms.
+        #[arg(long, default_value_t = 0)]
+        batch_baseline_iterations: usize,
         /// Seed for deterministic offset-sweep baseline controls.
         #[arg(long, default_value_t = 42)]
         seed: u64,
@@ -234,6 +256,14 @@ struct TestKeyOptions {
     format: OutputFormat,
 }
 
+struct ExplainKeyOptions {
+    material: String,
+    transform: CliCandidateTransform,
+    alphabet: CliAlphabet,
+    offset: Option<usize>,
+    format: OutputFormat,
+}
+
 impl From<OutputFormat> for ReportFormat {
     fn from(value: OutputFormat) -> Self {
         match value {
@@ -328,10 +358,24 @@ fn main() -> Result<()> {
             seed,
             format,
         })?,
+        Command::ExplainKey {
+            material,
+            transform,
+            alphabet,
+            offset,
+            format,
+        } => print_explain_key(ExplainKeyOptions {
+            material,
+            transform,
+            alphabet,
+            offset,
+            format,
+        })?,
         Command::BatchTestKeys {
             input,
             alphabet,
             sweep_baseline_iterations,
+            batch_baseline_iterations,
             seed,
             output_dir,
             format,
@@ -339,6 +383,7 @@ fn main() -> Result<()> {
             input,
             alphabet,
             sweep_baseline_iterations,
+            batch_baseline_iterations,
             seed,
             output_dir,
             format,
@@ -452,13 +497,20 @@ fn print_batch_test_keys(
     input: PathBuf,
     alphabet: CliAlphabet,
     baseline_iterations: usize,
+    batch_baseline_iterations: usize,
     seed: u64,
     output_dir: Option<PathBuf>,
     format: OutputFormat,
 ) -> Result<()> {
     let input_text = fs::read_to_string(&input)?;
     let candidates = parse_batch_candidates(&input_text)?;
-    let run = batch_test_key_material(&candidates, alphabet.into(), baseline_iterations, seed)?;
+    let run = batch_test_key_material_with_batch_baseline(
+        &candidates,
+        alphabet.into(),
+        baseline_iterations,
+        seed,
+        batch_baseline_iterations,
+    )?;
 
     if let Some(output_dir) = output_dir {
         write_batch_outputs(&output_dir, &input_text, &run)?;
@@ -530,8 +582,13 @@ fn write_batch_outputs(
     fs::write(
         output_dir.join("command.txt"),
         format!(
-            "batch-test-keys --input <input> --sweep-baseline-iterations {} --seed {}\n",
-            run.baseline_iterations, run.seed
+            "batch-test-keys --input <input> --sweep-baseline-iterations {} --batch-baseline-iterations {} --seed {}\n",
+            run.baseline_iterations,
+            run.batch_baseline
+                .as_ref()
+                .map(|baseline| baseline.iterations)
+                .unwrap_or(0),
+            run.seed
         ),
     )?;
     Ok(())
@@ -573,8 +630,37 @@ fn render_batch_key_material_summary(run: &BatchKeyMaterialRun) -> String {
             result.promoted_candidate
         ));
     }
+    if let Some(baseline) = &run.batch_baseline {
+        output.push_str("\n## Batch Baseline\n\n");
+        output.push_str(&format!(
+            "observed best: {} matches; null mean best: {:.2}; null sd: {:.2}; empirical p-value: {:.4}; iterations: {}; seed: {}; candidates: {}; promoted: {}\n\n",
+            baseline.observed_best_matches,
+            baseline.null_mean_best_matches,
+            baseline.null_std_dev_best_matches,
+            baseline.empirical_p_value,
+            baseline.iterations,
+            baseline.seed,
+            baseline.candidate_count,
+            baseline.promoted_candidate
+        ));
+        output.push_str(&format!("note: {}\n", baseline.note));
+    }
     output.push_str(&format!("\n{}\n", run.note));
     output
+}
+
+fn print_explain_key(options: ExplainKeyOptions) -> Result<()> {
+    let explanation = explain_key_material(
+        &options.material,
+        options.transform.into(),
+        options.alphabet.into(),
+        options.offset,
+    )?;
+    match options.format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&explanation)?),
+        OutputFormat::Markdown => print_key_material_explanation(&explanation),
+    }
+    Ok(())
 }
 
 fn print_test_key(options: TestKeyOptions) -> Result<()> {
@@ -682,6 +768,52 @@ fn print_key_material_test(test: &KeyMaterialTest) {
                 );
             }
         }
+        println!();
+    }
+}
+
+fn print_key_material_explanation(explanation: &KeyMaterialExplanation) {
+    println!("# Key Material Explanation\n");
+    println!("This is not a claimed solution.\n");
+    println!("material: `{}`", explanation.material);
+    println!("transform: {:?}", explanation.transform);
+    println!("alphabet: {:?}", explanation.alphabet);
+    println!("fragment mode: {:?}", explanation.fragment_mode);
+    println!("offset: {}", explanation.offset);
+    println!(
+        "matches: {}/{} ({:.4})",
+        explanation.exact_mod26_matches,
+        explanation.compared_fragment_count,
+        explanation.match_rate
+    );
+    if let Some(caveat) = explanation.transform_caveat {
+        println!("modulo caveat: {caveat}");
+    }
+    println!("promoted: {}", explanation.promoted_candidate);
+    println!("note: {}\n", explanation.note);
+
+    for span in &explanation.span_results {
+        println!(
+            "## {}: {}/{} exact mod-26 matches",
+            span.target_label, span.exact_mod26_matches, span.compared_fragment_count
+        );
+        if span.matches.is_empty() {
+            println!("matching positions: none");
+        } else {
+            println!("matching positions:");
+            for key_match in &span.matches {
+                println!(
+                    "- pos {} | {}->{} | observed {} ({}) | material {}",
+                    key_match.position_one_based,
+                    key_match.plaintext,
+                    key_match.ciphertext,
+                    key_match.observed_key_value,
+                    key_match.observed_key_symbol,
+                    key_match.material_value
+                );
+            }
+        }
+        println!("mismatches: {}", span.mismatches.len());
         println!();
     }
 }
