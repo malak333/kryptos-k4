@@ -313,6 +313,9 @@ fn explain_key_prints_matching_positions_and_modulo_caveat() {
         .stdout(predicate::str::contains("Key Material Explanation"))
         .stdout(predicate::str::contains("offset: 5"))
         .stdout(predicate::str::contains("matches: 5/24"))
+        .stdout(predicate::str::contains(
+            "pattern: distinct_values=4 span_coverage=2 longest_run=2 repeated_values=1 (0.20)",
+        ))
         .stdout(predicate::str::contains("A1Z26OneBased emits A=1"))
         .stdout(predicate::str::contains(
             "- pos 29 | T->R | observed 23 (W) | material 23",
@@ -349,6 +352,10 @@ fn explain_key_json_is_parseable() {
     assert_eq!(json["transform"], "a1-z26-one-based");
     assert_eq!(json["offset"], 5);
     assert_eq!(json["exact_mod26_matches"], 5);
+    assert_eq!(json["pattern_metrics"]["distinct_matched_values"], 4);
+    assert_eq!(json["pattern_metrics"]["span_coverage"], 2);
+    assert_eq!(json["pattern_metrics"]["longest_contiguous_match_run"], 2);
+    assert_eq!(json["pattern_metrics"]["repeated_value_count"], 1);
     assert!(
         json["transform_caveat"]
             .as_str()
@@ -358,6 +365,35 @@ fn explain_key_json_is_parseable() {
     let span_results = json["span_results"].as_array().unwrap();
     assert_eq!(span_results[0]["matches"].as_array().unwrap().len(), 3);
     assert_eq!(span_results[1]["matches"].as_array().unwrap().len(), 2);
+}
+
+#[test]
+fn pattern_metrics_penalize_repeated_short_material_matches() {
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "explain-key",
+            "--material",
+            "CLOCK",
+            "--transform",
+            "a1-z26-zero-based",
+            "--offset",
+            "3",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["exact_mod26_matches"], 5);
+    assert_eq!(json["pattern_metrics"]["distinct_matched_values"], 2);
+    assert_eq!(json["pattern_metrics"]["span_coverage"], 2);
+    assert_eq!(json["pattern_metrics"]["longest_contiguous_match_run"], 1);
+    assert_eq!(json["pattern_metrics"]["repeated_value_count"], 3);
 }
 
 #[test]
@@ -386,6 +422,8 @@ fn batch_test_keys_prints_ranked_markdown() {
         .stdout(predicate::str::contains("Batch Key Material Results"))
         .stdout(predicate::str::contains("BERLINWORLDCLOCK"))
         .stdout(predicate::str::contains("WELTZEITUHR"))
+        .stdout(predicate::str::contains("Distinct Values"))
+        .stdout(predicate::str::contains("Repeated Values"))
         .stdout(predicate::str::contains("Empirical P"))
         .stdout(predicate::str::contains("promoted: false"))
         .stdout(predicate::str::contains("not a claimed solution"));
@@ -478,6 +516,11 @@ fn batch_test_keys_json_is_ranked_and_non_promotional() {
     );
     assert!(results.iter().all(|result| {
         result["promoted_candidate"] == false && result["empirical_p_value"].is_number()
+    }));
+    assert!(results.iter().all(|result| {
+        result["best_pattern_metrics"]["distinct_matched_values"].is_number()
+            && result["best_pattern_metrics"]["span_coverage"].is_number()
+            && result["best_pattern_metrics"]["repeated_value_count"].is_number()
     }));
 }
 
