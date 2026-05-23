@@ -610,15 +610,17 @@ fn render_batch_key_material_summary(run: &BatchKeyMaterialRun) -> String {
         run.seed,
         run.promoted_candidate
     ));
-    output.push_str("| Rank | Material | Transform | Best Offset | Matches | Match Rate | Distinct Values | Span Coverage | Longest Run | Repeated Values | Empirical P | Promoted |\n");
-    output.push_str("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n");
+    output.push_str("| Rank | Material | Transform | Best Offset | Matches | Match Rate | Pattern Score | Distinct Values | Span Coverage | Longest Run | Repeated Values | Empirical P | Promoted |\n");
+    output.push_str(
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n",
+    );
     for (index, result) in run.results.iter().enumerate() {
         let empirical_p = result
             .empirical_p_value
             .map(|value| format!("{value:.4}"))
             .unwrap_or_else(|| "n/a".to_string());
         output.push_str(&format!(
-            "| {} | `{}` | {:?} | {} | {}/{} | {:.4} | {} | {} | {} | {} ({:.2}) | {} | {} |\n",
+            "| {} | `{}` | {:?} | {} | {}/{} | {:.4} | {} | {} | {} | {} | {} ({:.2}) | {} | {} |\n",
             index + 1,
             result.material,
             result.transform,
@@ -626,6 +628,7 @@ fn render_batch_key_material_summary(run: &BatchKeyMaterialRun) -> String {
             result.best_matches,
             result.compared_fragment_count,
             result.best_match_rate,
+            result.best_pattern_metrics.pattern_score,
             result.best_pattern_metrics.distinct_matched_values,
             result.best_pattern_metrics.span_coverage,
             result.best_pattern_metrics.longest_contiguous_match_run,
@@ -647,6 +650,13 @@ fn render_batch_key_material_summary(run: &BatchKeyMaterialRun) -> String {
             baseline.seed,
             baseline.candidate_count,
             baseline.promoted_candidate
+        ));
+        output.push_str(&format!(
+            "observed best pattern score: {}; null mean best pattern score: {:.2}; null sd: {:.2}; empirical p-value: {:.4}\n\n",
+            baseline.observed_best_pattern_score,
+            baseline.null_mean_best_pattern_score,
+            baseline.null_std_dev_best_pattern_score,
+            baseline.pattern_score_empirical_p_value
         ));
         output.push_str(&format!("note: {}\n", baseline.note));
     }
@@ -792,7 +802,8 @@ fn print_key_material_explanation(explanation: &KeyMaterialExplanation) {
         explanation.match_rate
     );
     println!(
-        "pattern: distinct_values={} span_coverage={} longest_run={} repeated_values={} ({:.2})",
+        "pattern: score={} distinct_values={} span_coverage={} longest_run={} repeated_values={} ({:.2})",
+        explanation.pattern_metrics.pattern_score,
         explanation.pattern_metrics.distinct_matched_values,
         explanation.pattern_metrics.span_coverage,
         explanation.pattern_metrics.longest_contiguous_match_run,
