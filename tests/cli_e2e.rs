@@ -314,7 +314,7 @@ fn explain_key_prints_matching_positions_and_modulo_caveat() {
         .stdout(predicate::str::contains("offset: 5"))
         .stdout(predicate::str::contains("matches: 5/24"))
         .stdout(predicate::str::contains(
-            "pattern: distinct_values=4 span_coverage=2 longest_run=2 repeated_values=1 (0.20)",
+            "pattern: score=546 distinct_values=4 span_coverage=2 longest_run=2 repeated_values=1 (0.20)",
         ))
         .stdout(predicate::str::contains("A1Z26OneBased emits A=1"))
         .stdout(predicate::str::contains(
@@ -352,6 +352,7 @@ fn explain_key_json_is_parseable() {
     assert_eq!(json["transform"], "a1-z26-one-based");
     assert_eq!(json["offset"], 5);
     assert_eq!(json["exact_mod26_matches"], 5);
+    assert_eq!(json["pattern_metrics"]["pattern_score"], 546);
     assert_eq!(json["pattern_metrics"]["distinct_matched_values"], 4);
     assert_eq!(json["pattern_metrics"]["span_coverage"], 2);
     assert_eq!(json["pattern_metrics"]["longest_contiguous_match_run"], 2);
@@ -390,6 +391,7 @@ fn pattern_metrics_penalize_repeated_short_material_matches() {
 
     let json: Value = serde_json::from_slice(&output).unwrap();
     assert_eq!(json["exact_mod26_matches"], 5);
+    assert_eq!(json["pattern_metrics"]["pattern_score"], 508);
     assert_eq!(json["pattern_metrics"]["distinct_matched_values"], 2);
     assert_eq!(json["pattern_metrics"]["span_coverage"], 2);
     assert_eq!(json["pattern_metrics"]["longest_contiguous_match_run"], 1);
@@ -422,6 +424,7 @@ fn batch_test_keys_prints_ranked_markdown() {
         .stdout(predicate::str::contains("Batch Key Material Results"))
         .stdout(predicate::str::contains("BERLINWORLDCLOCK"))
         .stdout(predicate::str::contains("WELTZEITUHR"))
+        .stdout(predicate::str::contains("Pattern Score"))
         .stdout(predicate::str::contains("Distinct Values"))
         .stdout(predicate::str::contains("Repeated Values"))
         .stdout(predicate::str::contains("Empirical P"))
@@ -466,11 +469,13 @@ fn batch_test_keys_batch_baseline_controls_candidate_file_surface() {
     assert_eq!(json["batch_baseline"]["candidate_count"], 2);
     assert_eq!(json["batch_baseline"]["promoted_candidate"], false);
     assert!(json["batch_baseline"]["empirical_p_value"].is_number());
+    assert!(json["batch_baseline"]["observed_best_pattern_score"].is_number());
+    assert!(json["batch_baseline"]["pattern_score_empirical_p_value"].is_number());
     assert!(
         json["batch_baseline"]["note"]
             .as_str()
             .unwrap()
-            .contains("candidate-file search surface")
+            .contains("composite pattern score")
     );
 }
 
@@ -519,6 +524,7 @@ fn batch_test_keys_json_is_ranked_and_non_promotional() {
     }));
     assert!(results.iter().all(|result| {
         result["best_pattern_metrics"]["distinct_matched_values"].is_number()
+            && result["best_pattern_metrics"]["pattern_score"].is_number()
             && result["best_pattern_metrics"]["span_coverage"].is_number()
             && result["best_pattern_metrics"]["repeated_value_count"].is_number()
     }));

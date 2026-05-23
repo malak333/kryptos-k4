@@ -115,6 +115,10 @@ pub struct BatchKeyMaterialBaseline {
     pub null_mean_best_matches: f64,
     pub null_std_dev_best_matches: f64,
     pub empirical_p_value: f64,
+    pub observed_best_pattern_score: i64,
+    pub null_mean_best_pattern_score: f64,
+    pub null_std_dev_best_pattern_score: f64,
+    pub pattern_score_empirical_p_value: f64,
     pub iterations: usize,
     pub seed: u64,
     pub candidate_count: usize,
@@ -176,6 +180,7 @@ pub struct KeyMaterialOffsetResult {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct KeyMaterialPatternMetrics {
+    pub pattern_score: i64,
     pub distinct_matched_values: usize,
     pub span_coverage: usize,
     pub longest_contiguous_match_run: usize,
@@ -393,6 +398,11 @@ pub fn batch_test_key_material_with_batch_baseline(
         .map(|result| result.best_matches)
         .max()
         .unwrap_or(0);
+    let observed_best_pattern_score = results
+        .iter()
+        .map(|result| result.best_pattern_metrics.pattern_score)
+        .max()
+        .unwrap_or(0);
     let batch_baseline = if batch_baseline_iterations == 0 {
         None
     } else {
@@ -400,6 +410,7 @@ pub fn batch_test_key_material_with_batch_baseline(
             candidates,
             alphabet,
             observed_best_matches,
+            observed_best_pattern_score,
             batch_baseline_iterations,
             seed,
         )?)
@@ -421,6 +432,7 @@ fn run_batch_baseline(
     candidates: &[BatchKeyMaterialCandidate],
     alphabet: AlphabetKind,
     observed_best_matches: usize,
+    observed_best_pattern_score: i64,
     iterations: usize,
     seed: u64,
 ) -> Result<BatchKeyMaterialBaseline> {
@@ -434,38 +446,54 @@ fn run_batch_baseline(
 
     let mut rng = ChaCha8Rng::seed_from_u64(seed);
     let mut null_best_matches = Vec::with_capacity(iterations);
+    let mut null_best_pattern_scores = Vec::with_capacity(iterations);
     for _ in 0..iterations {
-        let mut iteration_best = 0usize;
+        let mut iteration_best_matches = 0usize;
+        let mut iteration_best_pattern_score = i64::MIN;
         for values in &candidate_values {
             let mut shuffled = values.clone();
             shuffled.shuffle(&mut rng);
-            let best = score_all_offsets(&shuffled, alphabet)?
-                .first()
-                .map(|result| result.exact_mod26_matches)
-                .unwrap_or(0);
-            iteration_best = iteration_best.max(best);
+            for result in score_all_offsets(&shuffled, alphabet)? {
+                iteration_best_matches = iteration_best_matches.max(result.exact_mod26_matches);
+                iteration_best_pattern_score =
+                    iteration_best_pattern_score.max(result.pattern_metrics.pattern_score);
+            }
         }
-        null_best_matches.push(iteration_best);
+        null_best_matches.push(iteration_best_matches);
+        null_best_pattern_scores.push(iteration_best_pattern_score);
     }
 
     let null_mean_best_matches = mean(&null_best_matches);
     let null_std_dev_best_matches = std_dev(&null_best_matches, null_mean_best_matches);
+    let null_mean_best_pattern_score = mean_i64(&null_best_pattern_scores);
+    let null_std_dev_best_pattern_score =
+        std_dev_i64(&null_best_pattern_scores, null_mean_best_pattern_score);
     let at_least_observed = null_best_matches
         .iter()
         .filter(|count| **count >= observed_best_matches)
         .count();
     let empirical_p_value = (at_least_observed as f64 + 1.0) / (iterations as f64 + 1.0);
+    let pattern_at_least_observed = null_best_pattern_scores
+        .iter()
+        .filter(|score| **score >= observed_best_pattern_score)
+        .count();
+    let pattern_score_empirical_p_value =
+        (pattern_at_least_observed as f64 + 1.0) / (iterations as f64 + 1.0);
 
     Ok(BatchKeyMaterialBaseline {
         observed_best_matches,
         null_mean_best_matches,
         null_std_dev_best_matches,
         empirical_p_value,
+        observed_best_pattern_score,
+        null_mean_best_pattern_score,
+        null_std_dev_best_pattern_score,
+        pattern_score_empirical_p_value,
         iterations,
         seed,
         candidate_count: candidates.len(),
         promoted_candidate: false,
-        note: "Seeded batch-level null over the best shuffled score across all candidate rows; this controls the candidate-file search surface, not the full hypothesis space.",
+        note: "Seeded batch-level null over the best shuffled match count and composite pattern score across all candidate rows; this controls the candidate-file search surface, not the full hypothesis space.",
     })
 }
 
@@ -746,6 +774,22 @@ fn std_dev(values: &[usize], mean: f64) -> f64 {
     variance.sqrt()
 }
 
+fn mean_i64(values: &[i64]) -> f64 {
+    values.iter().sum::<i64>() as f64 / values.len() as f64
+}
+
+fn std_dev_i64(values: &[i64], mean: f64) -> f64 {
+    let variance = values
+        .iter()
+        .map(|value| {
+            let delta = *value as f64 - mean;
+            delta * delta
+        })
+        .sum::<f64>()
+        / values.len() as f64;
+    variance.sqrt()
+}
+
 fn score_key_material_with_offset(
     expanded_to_k4: &[u8],
     alphabet: AlphabetKind,
@@ -864,8 +908,14 @@ fn calculate_pattern_metrics(span_results: &[KeyMaterialSpanResult]) -> KeyMater
     } else {
         repeated_value_count as f64 / match_count as f64
     };
+    let pattern_score = (match_count as i64 * 100)
+        + (distinct_matched_values as i64 * 10)
+        + (span_coverage as i64 * 5)
+        + (longest_contiguous_match_run as i64 * 2)
+        - (repeated_value_count as i64 * 8);
 
     KeyMaterialPatternMetrics {
+        pattern_score,
         distinct_matched_values,
         span_coverage,
         longest_contiguous_match_run,

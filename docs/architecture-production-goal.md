@@ -92,7 +92,7 @@ flowchart TD
 - Every factual source in the plan is registered in Rust and documented in the source packet.
 - Every finding includes source inputs, transformation steps, baseline comparison, interpretation, and next test.
 - Every command has E2E coverage for success paths and important guardrails.
-- Proposed key material and cyclic phase offsets are evaluated only against public known-plaintext spans, explained with exact matching positions and descriptive pattern metrics when requested, compared to seeded shuffled-value and best-of-candidate-file controls when requested, and remain non-promotional unless future independently justified evidence changes the release boundary.
+- Proposed key material and cyclic phase offsets are evaluated only against public known-plaintext spans, explained with exact matching positions, descriptive pattern metrics, and composite pattern scores when requested, compared to seeded shuffled-value and best-of-candidate-file controls when requested, and remain non-promotional unless future independently justified evidence changes the release boundary.
 - Background experiment loops are local, stoppable, and artifact-producing; they automate repeatable scoring but do not autonomously claim or promote a K4 solution.
 - Historical result summaries compare completed batch runs and candidate stability before any candidate family is expanded.
 - `cargo fmt --check`, `cargo clippy --locked --all-targets --all-features -- -D warnings`, `cargo test --locked --all-targets --all-features`, `cargo build --locked --release`, and `cargo run --locked -- release-check` pass locally.
