@@ -23,7 +23,7 @@ The CLI implements the first production slice:
 - adjacent-span analysis and generic mod-10 recurrence screening with random-baseline warnings;
 - seeded null-distribution baselines with add-one empirical p-values and Holm adjustment;
 - targeted raw key-fragment filtering by anchor/span, alphabet, and derivation mode;
-- proposed key-material checks, exact match explanations, cyclic offset sweeps, seeded shuffled-value sweep baselines, CSV-driven batch runs, and batch-level best-of-candidate-file null controls against public span-derived additive fragments at actual K4 positions;
+- proposed key-material checks, exact match explanations, descriptive pattern metrics, cyclic offset sweeps, seeded shuffled-value sweep baselines, CSV-driven batch runs, and batch-level best-of-candidate-file null controls against public span-derived additive fragments at actual K4 positions;
 - pre-registered contextual candidate sequences for H4/H5;
 - bounded named route/permutation screens for H3;
 - ranked hypothesis reporting;
@@ -44,8 +44,8 @@ The integration tests in `tests/cli_e2e.rs` execute the compiled CLI and verify:
 - key-fragment filters are mutually exclusive for anchors/spans and fail clearly on empty results;
 - baseline output is deterministic for a fixed seed and includes p-value fields without promoting candidates.
 - test-key output compares proposed material against public spans in Markdown/JSON, ranks cyclic phase offsets when requested, attaches seeded sweep baselines when requested, and rejects material that cannot produce numeric values;
-- explain-key output prints exact matching positions for one candidate/offset, includes one-based modulo caveats when relevant, and stays non-promotional;
-- batch-test-keys output ranks CSV candidate rows, can attach both per-candidate sweep baselines and candidate-file-level best-score baselines, writes optional summary/results/input/command artifacts, and keeps every row non-promotional;
+- explain-key output prints exact matching positions for one candidate/offset, includes one-based modulo caveats and descriptive pattern metrics when relevant, and stays non-promotional;
+- batch-test-keys output ranks CSV candidate rows, can attach both per-candidate sweep baselines and candidate-file-level best-score baselines, includes pattern metrics for each best offset, writes optional summary/results/input/command artifacts, and keeps every row non-promotional;
 - summarize-key-runs scans completed batch result folders, ranks individual rows and candidate stability, and keeps repeated low p-values scoped as follow-up leads rather than solution evidence;
 - candidate-sequence output includes family, source IDs, transform metadata, and no promoted candidates;
 - route output uses only small named route families and emits no plaintext guesses.

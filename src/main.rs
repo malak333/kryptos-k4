@@ -610,15 +610,15 @@ fn render_batch_key_material_summary(run: &BatchKeyMaterialRun) -> String {
         run.seed,
         run.promoted_candidate
     ));
-    output.push_str("| Rank | Material | Transform | Best Offset | Matches | Match Rate | Empirical P | Promoted |\n");
-    output.push_str("| --- | --- | --- | --- | --- | --- | --- | --- |\n");
+    output.push_str("| Rank | Material | Transform | Best Offset | Matches | Match Rate | Distinct Values | Span Coverage | Longest Run | Repeated Values | Empirical P | Promoted |\n");
+    output.push_str("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n");
     for (index, result) in run.results.iter().enumerate() {
         let empirical_p = result
             .empirical_p_value
             .map(|value| format!("{value:.4}"))
             .unwrap_or_else(|| "n/a".to_string());
         output.push_str(&format!(
-            "| {} | `{}` | {:?} | {} | {}/{} | {:.4} | {} | {} |\n",
+            "| {} | `{}` | {:?} | {} | {}/{} | {:.4} | {} | {} | {} | {} ({:.2}) | {} | {} |\n",
             index + 1,
             result.material,
             result.transform,
@@ -626,6 +626,11 @@ fn render_batch_key_material_summary(run: &BatchKeyMaterialRun) -> String {
             result.best_matches,
             result.compared_fragment_count,
             result.best_match_rate,
+            result.best_pattern_metrics.distinct_matched_values,
+            result.best_pattern_metrics.span_coverage,
+            result.best_pattern_metrics.longest_contiguous_match_run,
+            result.best_pattern_metrics.repeated_value_count,
+            result.best_pattern_metrics.repeated_value_rate,
             empirical_p,
             result.promoted_candidate
         ));
@@ -785,6 +790,14 @@ fn print_key_material_explanation(explanation: &KeyMaterialExplanation) {
         explanation.exact_mod26_matches,
         explanation.compared_fragment_count,
         explanation.match_rate
+    );
+    println!(
+        "pattern: distinct_values={} span_coverage={} longest_run={} repeated_values={} ({:.2})",
+        explanation.pattern_metrics.distinct_matched_values,
+        explanation.pattern_metrics.span_coverage,
+        explanation.pattern_metrics.longest_contiguous_match_run,
+        explanation.pattern_metrics.repeated_value_count,
+        explanation.pattern_metrics.repeated_value_rate
     );
     if let Some(caveat) = explanation.transform_caveat {
         println!("modulo caveat: {caveat}");

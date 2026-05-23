@@ -7,7 +7,7 @@ use rand::seq::SliceRandom;
 use rand_chacha::{ChaCha8Rng, rand_core::SeedableRng};
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::BTreeMap,
+    collections::{BTreeMap, BTreeSet},
     fs,
     path::{Path, PathBuf},
 };
@@ -39,6 +39,7 @@ pub struct KeyMaterialExplanation {
     pub compared_fragment_count: usize,
     pub exact_mod26_matches: usize,
     pub match_rate: f64,
+    pub pattern_metrics: KeyMaterialPatternMetrics,
     pub span_results: Vec<KeyMaterialSpanResult>,
     pub transform_caveat: Option<&'static str>,
     pub promoted_candidate: bool,
@@ -129,6 +130,7 @@ pub struct BatchKeyMaterialResult {
     pub best_matches: usize,
     pub compared_fragment_count: usize,
     pub best_match_rate: f64,
+    pub best_pattern_metrics: KeyMaterialPatternMetrics,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub empirical_p_value: Option<f64>,
     pub promoted_candidate: bool,
@@ -168,7 +170,18 @@ pub struct KeyMaterialOffsetResult {
     pub compared_fragment_count: usize,
     pub exact_mod26_matches: usize,
     pub match_rate: f64,
+    pub pattern_metrics: KeyMaterialPatternMetrics,
     pub span_results: Vec<KeyMaterialSpanResult>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct KeyMaterialPatternMetrics {
+    pub distinct_matched_values: usize,
+    pub span_coverage: usize,
+    pub longest_contiguous_match_run: usize,
+    pub repeated_value_count: usize,
+    pub repeated_value_rate: f64,
+    pub note: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -259,6 +272,7 @@ pub fn explain_key_material(
         compared_fragment_count: result.compared_fragment_count,
         exact_mod26_matches: result.exact_mod26_matches,
         match_rate: result.match_rate,
+        pattern_metrics: result.pattern_metrics,
         span_results: result.span_results,
         transform_caveat: transform.modulo_caveat(),
         promoted_candidate: false,
@@ -353,6 +367,7 @@ pub fn batch_test_key_material_with_batch_baseline(
             best_matches: best.exact_mod26_matches,
             compared_fragment_count: best.compared_fragment_count,
             best_match_rate: best.match_rate,
+            best_pattern_metrics: best.pattern_metrics.clone(),
             empirical_p_value: sweep
                 .baseline
                 .as_ref()
@@ -799,14 +814,65 @@ fn score_key_material_with_offset(
     } else {
         exact_mod26_matches as f64 / compared_fragment_count as f64
     };
+    let pattern_metrics = calculate_pattern_metrics(&span_results);
 
     Ok(KeyMaterialOffsetResult {
         offset,
         compared_fragment_count,
         exact_mod26_matches,
         match_rate,
+        pattern_metrics,
         span_results,
     })
+}
+
+fn calculate_pattern_metrics(span_results: &[KeyMaterialSpanResult]) -> KeyMaterialPatternMetrics {
+    let mut matched_values = BTreeSet::new();
+    let mut positions = Vec::new();
+    let mut match_count = 0usize;
+    let mut span_coverage = 0usize;
+
+    for span in span_results {
+        if !span.matches.is_empty() {
+            span_coverage += 1;
+        }
+        for key_match in &span.matches {
+            matched_values.insert(key_match.observed_key_value);
+            positions.push(key_match.position_one_based);
+            match_count += 1;
+        }
+    }
+
+    positions.sort_unstable();
+    let mut longest_contiguous_match_run = 0usize;
+    let mut current_run = 0usize;
+    let mut previous_position = None;
+    for position in positions {
+        current_run = if previous_position == Some(position.saturating_sub(1)) {
+            current_run + 1
+        } else {
+            1
+        };
+        longest_contiguous_match_run = longest_contiguous_match_run.max(current_run);
+        previous_position = Some(position);
+    }
+
+    let distinct_matched_values = matched_values.len();
+    let repeated_value_count = match_count.saturating_sub(distinct_matched_values);
+    let repeated_value_rate = if match_count == 0 {
+        0.0
+    } else {
+        repeated_value_count as f64 / match_count as f64
+    };
+
+    KeyMaterialPatternMetrics {
+        distinct_matched_values,
+        span_coverage,
+        longest_contiguous_match_run,
+        repeated_value_count,
+        repeated_value_rate,
+        note: "Pattern metrics are descriptive controls for repeated values and clustering; they are not promotion criteria.".to_string(),
+    }
 }
 
 impl CandidateTransform {
