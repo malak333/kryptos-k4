@@ -1,8 +1,8 @@
 use crate::{FragmentMode, K4_CIPHERTEXT, analyze_known_plaintext_spans};
 use anyhow::Result;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum CandidateSequenceFamily {
     BerlinWorldClock,
@@ -11,7 +11,7 @@ pub enum CandidateSequenceFamily {
     BerlinWall1989,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum CandidateTransform {
     A1Z26ZeroBased,

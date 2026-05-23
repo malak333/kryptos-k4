@@ -410,6 +410,100 @@ fn batch_test_keys_writes_output_directory_artifacts() {
 }
 
 #[test]
+fn summarize_key_runs_ranks_historical_result_folders() {
+    let temp = tempfile::tempdir().unwrap();
+    let input_path = temp.path().join("candidates.csv");
+    let run_one = temp.path().join("lane").join("run-one");
+    let run_two = temp.path().join("lane").join("run-two");
+    std::fs::write(
+        &input_path,
+        "material,transform\nBERLINWORLDCLOCK,a1-z26-zero-based\nWELTZEITUHR,a1-z26-one-based\n",
+    )
+    .unwrap();
+
+    for (seed, output_dir) in [("42", &run_one), ("43", &run_two)] {
+        Command::cargo_bin("kryptos-k4")
+            .unwrap()
+            .args([
+                "batch-test-keys",
+                "--input",
+                input_path.to_str().unwrap(),
+                "--sweep-baseline-iterations",
+                "10",
+                "--seed",
+                seed,
+                "--output-dir",
+                output_dir.to_str().unwrap(),
+            ])
+            .assert()
+            .success();
+    }
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "summarize-key-runs",
+            "--input-dir",
+            temp.path().join("lane").to_str().unwrap(),
+            "--top",
+            "3",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Batch Key Run History"))
+        .stdout(predicate::str::contains("result files: 2"))
+        .stdout(predicate::str::contains("Candidate Stability"))
+        .stdout(predicate::str::contains("WELTZEITUHR"))
+        .stdout(predicate::str::contains("not a claimed solution"));
+}
+
+#[test]
+fn summarize_key_runs_json_is_parseable() {
+    let temp = tempfile::tempdir().unwrap();
+    let input_path = temp.path().join("candidates.csv");
+    let output_dir = temp.path().join("lane").join("run");
+    std::fs::write(&input_path, "CLOCK,a1-z26-zero-based\n").unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "batch-test-keys",
+            "--input",
+            input_path.to_str().unwrap(),
+            "--sweep-baseline-iterations",
+            "10",
+            "--seed",
+            "42",
+            "--output-dir",
+            output_dir.to_str().unwrap(),
+        ])
+        .assert()
+        .success();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "summarize-key-runs",
+            "--input-dir",
+            temp.path().join("lane").to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["scanned_result_files"], 1);
+    assert_eq!(json["run_count"], 1);
+    assert_eq!(json["promoted_candidate"], false);
+    assert_eq!(json["candidate_summaries"][0]["material"], "CLOCK");
+    assert!(json["top_results"][0]["empirical_p_value"].is_number());
+}
+
+#[test]
 fn batch_test_keys_rejects_invalid_transform() {
     let temp = tempfile::tempdir().unwrap();
     let input_path = temp.path().join("candidates.csv");

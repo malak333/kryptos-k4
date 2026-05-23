@@ -11,7 +11,7 @@ flowchart TD
 
     Cli --> Facts["facts / anchors / sources"]
     Cli --> Constraints["constraints / key-fragments"]
-    Cli --> KeyTest["test-key / batch-test-keys"]
+    Cli --> KeyTest["test-key / batch-test-keys / summarize-key-runs"]
     Cli --> Baseline["baseline controls"]
     Cli --> Candidates["candidate-sequences"]
     Cli --> Routes["routes"]
@@ -41,6 +41,7 @@ flowchart TD
     Data --> ResearchPlan["kryptos-k4-research-plan.md scope, hypotheses, next tests"]
     ReportModel --> GeneratedReport["notes/k4-report.md generated release report"]
     BatchLoop --> BatchArtifacts["results/key-tests ignored local artifacts"]
+    KeyTest --> BatchArtifacts
     FindingsModel --> ReportModel
     ReleaseModel --> GeneratedReport
     ReleaseModel --> SourcePacket
@@ -56,6 +57,7 @@ flowchart TD
 - Constraint, key-material test, baseline, candidate, route, findings, report, export, and release-check commands are implemented.
 - Candidate, route, and baseline outputs carry non-promotion boundaries and next-test metadata.
 - `test-key` and `batch-test-keys` compare proposed material against public span-derived additive fragments at actual K4 positions, can sweep cyclic phase offsets, can run seeded shuffled-value sweep baselines, and never promote candidates.
+- `summarize-key-runs` scans historical batch result folders and ranks both individual run rows and per-candidate p-value stability.
 - Background wrapper scripts can run repeated `batch-test-keys` experiments with explicit flags, timestamped local artifacts, latest-result pointers, and optional macOS keep-awake support.
 - Local release verification is implemented without GitHub Actions.
 - E2E tests execute the compiled CLI and validate command outputs.
