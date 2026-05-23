@@ -5,7 +5,12 @@ use crate::{
 use anyhow::{Result, bail};
 use rand::seq::SliceRandom;
 use rand_chacha::{ChaCha8Rng, rand_core::SeedableRng};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use std::{
+    collections::BTreeMap,
+    fs,
+    path::{Path, PathBuf},
+};
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct KeyMaterialTest {
@@ -21,6 +26,50 @@ pub struct KeyMaterialTest {
     pub span_results: Vec<KeyMaterialSpanResult>,
     pub promoted_candidate: bool,
     pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct BatchKeyRunHistory {
+    pub input_dir: String,
+    pub scanned_result_files: usize,
+    pub run_count: usize,
+    pub candidate_result_count: usize,
+    pub top_results: Vec<BatchKeyRunHistoryEntry>,
+    pub candidate_summaries: Vec<BatchKeyRunCandidateSummary>,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct BatchKeyRunHistoryEntry {
+    pub results_path: String,
+    pub run_dir: String,
+    pub seed: u64,
+    pub baseline_iterations: usize,
+    pub candidate_count: usize,
+    pub material: String,
+    pub transform: CandidateTransform,
+    pub best_offset: usize,
+    pub best_matches: usize,
+    pub compared_fragment_count: usize,
+    pub best_match_rate: f64,
+    pub empirical_p_value: Option<f64>,
+    pub promoted_candidate: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct BatchKeyRunCandidateSummary {
+    pub material: String,
+    pub transform: CandidateTransform,
+    pub run_count: usize,
+    pub best_empirical_p_value: Option<f64>,
+    pub worst_empirical_p_value: Option<f64>,
+    pub mean_empirical_p_value: Option<f64>,
+    pub best_matches: usize,
+    pub best_offset: usize,
+    pub best_seed: u64,
+    pub best_results_path: String,
+    pub promoted_candidate: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -243,6 +292,203 @@ pub fn batch_test_key_material(
         promoted_candidate: false,
         note: "Batch key-material run over public known-plaintext spans only; ranked results are exploratory and not decryption claims.",
     })
+}
+
+pub fn summarize_batch_key_material_runs(
+    input_dir: &Path,
+    top: usize,
+) -> Result<BatchKeyRunHistory> {
+    let mut result_paths = Vec::new();
+    collect_results_json_paths(input_dir, &mut result_paths)?;
+    result_paths.sort();
+
+    if result_paths.is_empty() {
+        bail!("no results.json files found under {}", input_dir.display());
+    }
+
+    let mut all_entries = Vec::new();
+    for path in &result_paths {
+        let text = fs::read_to_string(path)?;
+        let run: BatchKeyMaterialRunForHistory = serde_json::from_str(&text)?;
+        let run_dir = path
+            .parent()
+            .map(|parent| parent.display().to_string())
+            .unwrap_or_else(|| ".".to_string());
+        for result in run.results {
+            all_entries.push(BatchKeyRunHistoryEntry {
+                results_path: path.display().to_string(),
+                run_dir: run_dir.clone(),
+                seed: run.seed,
+                baseline_iterations: run.baseline_iterations,
+                candidate_count: run.candidate_count,
+                material: result.material,
+                transform: result.transform,
+                best_offset: result.best_offset,
+                best_matches: result.best_matches,
+                compared_fragment_count: result.compared_fragment_count,
+                best_match_rate: result.best_match_rate,
+                empirical_p_value: result.empirical_p_value,
+                promoted_candidate: result.promoted_candidate,
+            });
+        }
+    }
+
+    all_entries.sort_by(compare_history_entries);
+    let candidate_summaries = summarize_history_candidates(&all_entries);
+    let top_results = all_entries.into_iter().take(top).collect();
+
+    Ok(BatchKeyRunHistory {
+        input_dir: input_dir.display().to_string(),
+        scanned_result_files: result_paths.len(),
+        run_count: result_paths.len(),
+        candidate_result_count: candidate_summaries
+            .iter()
+            .map(|summary| summary.run_count)
+            .sum(),
+        top_results,
+        candidate_summaries,
+        promoted_candidate: false,
+        note: "Historical batch key-material summary only; repeated low p-values are leads for follow-up, not decryption claims.",
+    })
+}
+
+#[derive(Debug, Deserialize)]
+struct BatchKeyMaterialRunForHistory {
+    baseline_iterations: usize,
+    seed: u64,
+    candidate_count: usize,
+    results: Vec<BatchKeyMaterialResultForHistory>,
+}
+
+#[derive(Debug, Deserialize)]
+struct BatchKeyMaterialResultForHistory {
+    material: String,
+    transform: CandidateTransform,
+    best_offset: usize,
+    best_matches: usize,
+    compared_fragment_count: usize,
+    best_match_rate: f64,
+    empirical_p_value: Option<f64>,
+    promoted_candidate: bool,
+}
+
+fn collect_results_json_paths(input_dir: &Path, paths: &mut Vec<PathBuf>) -> Result<()> {
+    if !input_dir.exists() {
+        bail!("input directory does not exist: {}", input_dir.display());
+    }
+
+    for entry in fs::read_dir(input_dir)? {
+        let entry = entry?;
+        let file_type = entry.file_type()?;
+        if file_type.is_symlink() {
+            continue;
+        }
+        let path = entry.path();
+        if file_type.is_dir() {
+            collect_results_json_paths(&path, paths)?;
+        } else if file_type.is_file()
+            && path.file_name().and_then(|name| name.to_str()) == Some("results.json")
+        {
+            paths.push(path);
+        }
+    }
+    Ok(())
+}
+
+fn compare_history_entries(
+    left: &BatchKeyRunHistoryEntry,
+    right: &BatchKeyRunHistoryEntry,
+) -> std::cmp::Ordering {
+    let left_p = left.empirical_p_value.unwrap_or(f64::INFINITY);
+    let right_p = right.empirical_p_value.unwrap_or(f64::INFINITY);
+    left_p
+        .total_cmp(&right_p)
+        .then_with(|| right.best_matches.cmp(&left.best_matches))
+        .then_with(|| left.material.cmp(&right.material))
+        .then_with(|| left.transform_label().cmp(right.transform_label()))
+        .then_with(|| left.seed.cmp(&right.seed))
+}
+
+fn summarize_history_candidates(
+    entries: &[BatchKeyRunHistoryEntry],
+) -> Vec<BatchKeyRunCandidateSummary> {
+    let mut grouped: BTreeMap<(String, CandidateTransform), Vec<&BatchKeyRunHistoryEntry>> =
+        BTreeMap::new();
+    for entry in entries {
+        grouped
+            .entry((entry.material.clone(), entry.transform))
+            .or_default()
+            .push(entry);
+    }
+
+    let mut summaries = Vec::new();
+    for ((material, transform), entries) in grouped {
+        let best = entries
+            .iter()
+            .copied()
+            .min_by(|left, right| compare_history_entries(left, right))
+            .expect("group contains at least one entry");
+        let p_values: Vec<f64> = entries
+            .iter()
+            .filter_map(|entry| entry.empirical_p_value)
+            .collect();
+        let best_empirical_p_value = p_values.iter().copied().min_by(f64::total_cmp);
+        let worst_empirical_p_value = p_values.iter().copied().max_by(f64::total_cmp);
+        let mean_empirical_p_value = if p_values.is_empty() {
+            None
+        } else {
+            Some(p_values.iter().sum::<f64>() / p_values.len() as f64)
+        };
+
+        summaries.push(BatchKeyRunCandidateSummary {
+            material,
+            transform,
+            run_count: entries.len(),
+            best_empirical_p_value,
+            worst_empirical_p_value,
+            mean_empirical_p_value,
+            best_matches: best.best_matches,
+            best_offset: best.best_offset,
+            best_seed: best.seed,
+            best_results_path: best.results_path.clone(),
+            promoted_candidate: false,
+        });
+    }
+
+    summaries.sort_by(|left, right| {
+        let left_p = left.best_empirical_p_value.unwrap_or(f64::INFINITY);
+        let right_p = right.best_empirical_p_value.unwrap_or(f64::INFINITY);
+        left_p
+            .total_cmp(&right_p)
+            .then_with(|| right.best_matches.cmp(&left.best_matches))
+            .then_with(|| left.material.cmp(&right.material))
+            .then_with(|| left.transform_label().cmp(right.transform_label()))
+    });
+    summaries
+}
+
+impl BatchKeyRunHistoryEntry {
+    fn transform_label(&self) -> &'static str {
+        self.transform.label()
+    }
+}
+
+impl BatchKeyRunCandidateSummary {
+    fn transform_label(&self) -> &'static str {
+        self.transform.label()
+    }
+}
+
+impl CandidateTransform {
+    fn label(self) -> &'static str {
+        match self {
+            CandidateTransform::A1Z26ZeroBased => "a1-z26-zero-based",
+            CandidateTransform::A1Z26OneBased => "a1-z26-one-based",
+            CandidateTransform::DecimalDigits => "decimal-digits",
+            CandidateTransform::Compass8Point => "compass8-point",
+            CandidateTransform::Compass16Point => "compass16-point",
+        }
+    }
 }
 
 fn score_all_offsets(

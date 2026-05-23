@@ -45,6 +45,7 @@ The integration tests in `tests/cli_e2e.rs` execute the compiled CLI and verify:
 - baseline output is deterministic for a fixed seed and includes p-value fields without promoting candidates.
 - test-key output compares proposed material against public spans in Markdown/JSON, ranks cyclic phase offsets when requested, attaches seeded sweep baselines when requested, and rejects material that cannot produce numeric values;
 - batch-test-keys output ranks CSV candidate rows, writes optional summary/results/input/command artifacts, and keeps every row non-promotional;
+- summarize-key-runs scans completed batch result folders, ranks individual rows and candidate stability, and keeps repeated low p-values scoped as follow-up leads rather than solution evidence;
 - candidate-sequence output includes family, source IDs, transform metadata, and no promoted candidates;
 - route output uses only small named route families and emits no plaintext guesses.
 - findings output includes evidence inputs, baseline comparison, next-test fields, and non-promotion flags in Markdown and JSON.

@@ -33,6 +33,7 @@ cargo run -- test-key --material ALEXANDERPLATZ --format json
 cargo run -- test-key --material BERLINWORLDCLOCK --sweep-offsets --top 5
 cargo run -- test-key --material BERLINWORLDCLOCK --sweep-offsets --sweep-baseline-iterations 1000 --seed 42
 cargo run -- batch-test-keys --input experiments/k4-candidates.csv --sweep-baseline-iterations 1000 --seed 42 --output-dir results/key-tests/latest
+cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --top 20
 cargo run -- baseline --target spans --iterations 1000 --seed 42
 cargo run -- baseline --target spans --iterations 1000 --seed 42 --format json
 cargo run -- candidate-sequences
@@ -80,6 +81,13 @@ scripts/stop-key-batch-loop.sh --out-root results/key-tests/berlin-clock
 
 The loop writes timestamped folders under `results/key-tests/`, updates `results/key-tests/latest`, and copies the newest ranked table to `results/key-tests/latest-summary.md`. The `results/` tree is ignored by git. These background runs automate scoring and baseline checks over registered candidates; they do not claim or guarantee a K4 solution.
 
+Summarize a completed lane:
+
+```bash
+cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --top 20
+cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --format json
+```
+
 ## Commands
 
 | Command | Output |
@@ -91,6 +99,7 @@ The loop writes timestamped folders under `results/key-tests/`, updates `results
 | `key-fragments` | Raw derived key-fragment rows with anchor/span/alphabet/mode filters. |
 | `test-key` | Proposed key material transformed and compared against public span additive fragments at true K4 positions, with optional cyclic offset sweep and seeded sweep baseline. |
 | `batch-test-keys` | CSV-driven key-material batch runner with ranked Markdown/JSON summaries and optional output artifacts. |
+| `summarize-key-runs` | Historical scanner for batch result folders, ranking individual runs and per-candidate p-value stability. |
 | `baseline` | Seeded false-positive controls for the generic recurrence screen. |
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |
 | `routes` | Small named route/permutation screens with fixed baselines. |

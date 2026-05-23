@@ -31,6 +31,7 @@ flowchart TD
         JsonReport["JSON report"]
         BatchArtifacts["Batch experiment artifacts"]
         LatestSummary["Latest ranked summary pointer"]
+        HistorySummary["Historical result summary"]
         DataExports["Machine-readable exports"]
         HumanCli["Human-readable CLI output"]
     end
@@ -72,6 +73,7 @@ flowchart TD
     BackgroundRunner --> KeyMaterialChecks
     BackgroundRunner --> BatchArtifacts
     BackgroundRunner --> LatestSummary
+    BatchArtifacts --> HistorySummary
     DataModel --> DataExports
     CLI --> HumanCli
 
@@ -92,6 +94,7 @@ flowchart TD
 - Every command has E2E coverage for success paths and important guardrails.
 - Proposed key material and cyclic phase offsets are evaluated only against public known-plaintext spans, compared to seeded shuffled-value controls when requested, and remain non-promotional unless future independently justified evidence changes the release boundary.
 - Background experiment loops are local, stoppable, and artifact-producing; they automate repeatable scoring but do not autonomously claim or promote a K4 solution.
+- Historical result summaries compare completed batch runs and candidate stability before any candidate family is expanded.
 - `cargo fmt --check`, `cargo clippy --locked --all-targets --all-features -- -D warnings`, `cargo test --locked --all-targets --all-features`, `cargo build --locked --release`, and `cargo run --locked -- release-check` pass locally.
 - Releases remain manual and local-gated; no GitHub Actions or Dependabot policy drift.
 

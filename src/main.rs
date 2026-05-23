@@ -2,12 +2,12 @@ use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 use kryptos_k4::{
     AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, BatchKeyMaterialCandidate,
-    BatchKeyMaterialRun, CandidateTransform, FragmentMode, K4_CIPHERTEXT, KeyMaterialOffsetSweep,
-    KeyMaterialTest, ReportFormat, analyze_constraints, analyze_known_plaintext_spans,
-    batch_test_key_material, build_report, candidate_sequences, findings, hypotheses,
-    known_anchors, render_report, run_baseline, run_release_checks, run_route_experiments,
-    score_candidate_sequences, sources, sweep_key_material_offsets_with_baseline,
-    test_key_material,
+    BatchKeyMaterialRun, BatchKeyRunHistory, CandidateTransform, FragmentMode, K4_CIPHERTEXT,
+    KeyMaterialOffsetSweep, KeyMaterialTest, ReportFormat, analyze_constraints,
+    analyze_known_plaintext_spans, batch_test_key_material, build_report, candidate_sequences,
+    findings, hypotheses, known_anchors, render_report, run_baseline, run_release_checks,
+    run_route_experiments, score_candidate_sequences, sources, summarize_batch_key_material_runs,
+    sweep_key_material_offsets_with_baseline, test_key_material,
 };
 use std::{
     fs,
@@ -92,6 +92,18 @@ enum Command {
         /// Optional directory for input.csv, results.json, summary.md, and command.txt.
         #[arg(long)]
         output_dir: Option<PathBuf>,
+        /// Output format for stdout.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Summarize historical batch-test result folders.
+    SummarizeKeyRuns {
+        /// Directory to scan recursively for results.json files.
+        #[arg(long)]
+        input_dir: PathBuf,
+        /// Maximum individual result rows to print.
+        #[arg(long, default_value_t = 20)]
+        top: usize,
         /// Output format for stdout.
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
@@ -331,6 +343,11 @@ fn main() -> Result<()> {
             output_dir,
             format,
         )?,
+        Command::SummarizeKeyRuns {
+            input_dir,
+            top,
+            format,
+        } => print_summarize_key_runs(input_dir, top, format)?,
         Command::Baseline {
             target,
             alphabet,
@@ -360,6 +377,75 @@ fn main() -> Result<()> {
     }
 
     Ok(())
+}
+
+fn print_summarize_key_runs(input_dir: PathBuf, top: usize, format: OutputFormat) -> Result<()> {
+    let history = summarize_batch_key_material_runs(&input_dir, top)?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&history)?),
+        OutputFormat::Markdown => print_batch_key_run_history(&history),
+    }
+    Ok(())
+}
+
+fn print_batch_key_run_history(history: &BatchKeyRunHistory) {
+    println!("# Batch Key Run History\n");
+    println!("This is not a claimed solution.\n");
+    println!("input dir: `{}`", history.input_dir);
+    println!("result files: {}", history.scanned_result_files);
+    println!("candidate result rows: {}", history.candidate_result_count);
+    println!("promoted: {}", history.promoted_candidate);
+    println!("note: {}\n", history.note);
+
+    println!("## Best Individual Results\n");
+    println!(
+        "| Rank | Material | Transform | Seed | Offset | Matches | Match Rate | Empirical P | Results | Promoted |"
+    );
+    println!("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |");
+    for (index, result) in history.top_results.iter().enumerate() {
+        println!(
+            "| {} | `{}` | {:?} | {} | {} | {}/{} | {:.4} | {} | `{}` | {} |",
+            index + 1,
+            result.material,
+            result.transform,
+            result.seed,
+            result.best_offset,
+            result.best_matches,
+            result.compared_fragment_count,
+            result.best_match_rate,
+            format_optional_p(result.empirical_p_value),
+            result.run_dir,
+            result.promoted_candidate
+        );
+    }
+
+    println!("\n## Candidate Stability\n");
+    println!(
+        "| Rank | Material | Transform | Runs | Best P | Mean P | Worst P | Best Matches | Best Seed | Best Offset | Promoted |"
+    );
+    println!("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |");
+    for (index, summary) in history.candidate_summaries.iter().enumerate() {
+        println!(
+            "| {} | `{}` | {:?} | {} | {} | {} | {} | {} | {} | {} | {} |",
+            index + 1,
+            summary.material,
+            summary.transform,
+            summary.run_count,
+            format_optional_p(summary.best_empirical_p_value),
+            format_optional_p(summary.mean_empirical_p_value),
+            format_optional_p(summary.worst_empirical_p_value),
+            summary.best_matches,
+            summary.best_seed,
+            summary.best_offset,
+            summary.promoted_candidate
+        );
+    }
+}
+
+fn format_optional_p(value: Option<f64>) -> String {
+    value
+        .map(|value| format!("{value:.4}"))
+        .unwrap_or_else(|| "n/a".to_string())
 }
 
 fn print_batch_test_keys(
