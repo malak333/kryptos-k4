@@ -30,10 +30,11 @@ pub use data::{
 pub use findings::{Finding, findings};
 pub use hypotheses::{Hypothesis, hypotheses};
 pub use key_test::{
-    BatchKeyMaterialCandidate, BatchKeyMaterialResult, BatchKeyMaterialRun,
-    BatchKeyRunCandidateSummary, BatchKeyRunHistory, BatchKeyRunHistoryEntry, KeyMaterialMismatch,
-    KeyMaterialOffsetResult, KeyMaterialOffsetSweep, KeyMaterialSpanResult,
-    KeyMaterialSweepBaseline, KeyMaterialTest, batch_test_key_material,
+    BatchKeyMaterialBaseline, BatchKeyMaterialCandidate, BatchKeyMaterialResult,
+    BatchKeyMaterialRun, BatchKeyRunCandidateSummary, BatchKeyRunHistory, BatchKeyRunHistoryEntry,
+    KeyMaterialExplanation, KeyMaterialMatch, KeyMaterialMismatch, KeyMaterialOffsetResult,
+    KeyMaterialOffsetSweep, KeyMaterialSpanResult, KeyMaterialSweepBaseline, KeyMaterialTest,
+    batch_test_key_material, batch_test_key_material_with_batch_baseline, explain_key_material,
     summarize_batch_key_material_runs, sweep_key_material_offsets,
     sweep_key_material_offsets_with_baseline, test_key_material,
 };

@@ -11,6 +11,8 @@ Options:
   --input PATH              Candidate CSV input. Default: experiments/k4-candidates.csv
   --out-root DIR            Result root directory. Default: results/key-tests
   --iterations N            Sweep baseline iterations per candidate. Default: 10000
+  --batch-baseline-iterations N
+                            Best-of-candidate-file null iterations. Default: 0
   --seed-start N            First deterministic seed. Default: 42
   --runs N                  Number of batches to run. Use 0 for continuous. Default: 1
   --continuous              Alias for --runs 0
@@ -42,7 +44,7 @@ while [[ $# -gt 0 ]]; do
       usage
       exit 0
       ;;
-    --input|--iterations|--seed-start|--runs|--interval-seconds|--binary)
+    --input|--iterations|--batch-baseline-iterations|--seed-start|--runs|--interval-seconds|--binary)
       run_args+=("$1" "$2")
       shift 2
       ;;

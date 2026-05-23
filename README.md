@@ -11,7 +11,7 @@ This project is not a claimed K4 solution.
 - Source-provenance records for public facts.
 - Standard A-Z, Kryptos, and reversed Kryptos alphabet analysis.
 - Additive, subtractive, and Beaufort-style anchor-derived fragments.
-- Proposed key-material checks against public span-derived additive fragments.
+- Proposed key-material checks and explanations against public span-derived additive fragments.
 - Gromark-style recurrence screening over known-anchor fragments.
 - Seeded baseline controls, pre-registered contextual candidates, and bounded route screens.
 - Findings ledger tying observations to sources, transformations, baselines, interpretation, and next tests.
@@ -32,7 +32,8 @@ cargo run -- test-key --material WELTZEITUHR
 cargo run -- test-key --material ALEXANDERPLATZ --format json
 cargo run -- test-key --material BERLINWORLDCLOCK --sweep-offsets --top 5
 cargo run -- test-key --material BERLINWORLDCLOCK --sweep-offsets --sweep-baseline-iterations 1000 --seed 42
-cargo run -- batch-test-keys --input experiments/k4-candidates.csv --sweep-baseline-iterations 1000 --seed 42 --output-dir results/key-tests/latest
+cargo run -- explain-key --material WELTZEITUHR --transform a1-z26-one-based --offset 5
+cargo run -- batch-test-keys --input experiments/k4-candidates.csv --sweep-baseline-iterations 1000 --batch-baseline-iterations 1000 --seed 42 --output-dir results/key-tests/latest
 cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --top 20
 cargo run -- baseline --target spans --iterations 1000 --seed 42
 cargo run -- baseline --target spans --iterations 1000 --seed 42 --format json
@@ -74,6 +75,7 @@ scripts/start-key-batch-loop.sh \
   --input experiments/k4-candidates.csv \
   --out-root results/key-tests/berlin-clock \
   --iterations 100000 \
+  --batch-baseline-iterations 1000 \
   --continuous \
   --interval-seconds 300
 scripts/stop-key-batch-loop.sh --out-root results/key-tests/berlin-clock
@@ -98,7 +100,8 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `constraints --spans` | Adjacent public clues merged into known-plaintext spans before screening. |
 | `key-fragments` | Raw derived key-fragment rows with anchor/span/alphabet/mode filters. |
 | `test-key` | Proposed key material transformed and compared against public span additive fragments at true K4 positions, with optional cyclic offset sweep and seeded sweep baseline. |
-| `batch-test-keys` | CSV-driven key-material batch runner with ranked Markdown/JSON summaries and optional output artifacts. |
+| `explain-key` | Exact matching public-span positions for one key-material lead, including one-based modulo caveats when relevant. |
+| `batch-test-keys` | CSV-driven key-material batch runner with ranked Markdown/JSON summaries, optional output artifacts, and optional batch-level best-of-candidate-file null controls. |
 | `summarize-key-runs` | Historical scanner for batch result folders, ranking individual runs and per-candidate p-value stability. |
 | `baseline` | Seeded false-positive controls for the generic recurrence screen. |
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |

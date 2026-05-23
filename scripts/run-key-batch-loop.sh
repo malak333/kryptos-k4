@@ -11,6 +11,8 @@ Options:
   --input PATH              Candidate CSV input. Default: experiments/k4-candidates.csv
   --out-root DIR            Result root directory. Default: results/key-tests
   --iterations N            Sweep baseline iterations per candidate. Default: 10000
+  --batch-baseline-iterations N
+                            Best-of-candidate-file null iterations. Default: 0
   --seed-start N            First deterministic seed. Default: 42
   --runs N                  Number of batches to run. Use 0 for continuous. Default: 1
   --continuous              Alias for --runs 0
@@ -19,7 +21,7 @@ Options:
   -h, --help                Show this help.
 
 Environment variable fallbacks are also supported: INPUT, OUT_ROOT, ITERATIONS,
-SEED_START, RUNS, INTERVAL_SECONDS, and BINARY.
+BATCH_BASELINE_ITERATIONS, SEED_START, RUNS, INTERVAL_SECONDS, and BINARY.
 EOF
 }
 
@@ -35,6 +37,7 @@ require_non_negative_integer() {
 input="${INPUT:-experiments/k4-candidates.csv}"
 out_root="${OUT_ROOT:-results/key-tests}"
 iterations="${ITERATIONS:-10000}"
+batch_baseline_iterations="${BATCH_BASELINE_ITERATIONS:-0}"
 seed_start="${SEED_START:-42}"
 interval_seconds="${INTERVAL_SECONDS:-0}"
 runs="${RUNS:-1}"
@@ -52,6 +55,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --iterations)
       iterations="$2"
+      shift 2
+      ;;
+    --batch-baseline-iterations)
+      batch_baseline_iterations="$2"
       shift 2
       ;;
     --seed-start)
@@ -87,6 +94,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 require_non_negative_integer "--iterations" "$iterations"
+require_non_negative_integer "--batch-baseline-iterations" "$batch_baseline_iterations"
 require_non_negative_integer "--seed-start" "$seed_start"
 require_non_negative_integer "--runs" "$runs"
 require_non_negative_integer "--interval-seconds" "$interval_seconds"
@@ -106,6 +114,7 @@ while :; do
   "$binary" batch-test-keys \
     --input "$input" \
     --sweep-baseline-iterations "$iterations" \
+    --batch-baseline-iterations "$batch_baseline_iterations" \
     --seed "$seed" \
     --output-dir "$output_dir"
 
