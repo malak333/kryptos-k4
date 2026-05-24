@@ -85,6 +85,10 @@ scripts/stop-key-batch-loop.sh --out-root results/key-tests/berlin-clock
 
 The loop writes timestamped folders under `results/key-tests/`, updates `results/key-tests/latest`, and copies the newest ranked table to `results/key-tests/latest-summary.md`. The `results/` tree is ignored by git. These background runs automate scoring and baseline checks over registered candidates; they do not claim or guarantee a K4 solution.
 
+Candidate rows in `experiments/k4-candidates.csv` are documented in
+`experiments/k4-candidates.md`. Add new rows only with a public source ID and
+rationale so batch histories remain auditable.
+
 Summarize a completed lane:
 
 ```bash

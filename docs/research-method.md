@@ -24,6 +24,7 @@ The CLI implements the first production slice:
 - seeded null-distribution baselines with add-one empirical p-values and Holm adjustment;
 - targeted raw key-fragment filtering by anchor/span, alphabet, and derivation mode;
 - proposed key-material checks, exact match explanations, descriptive pattern metrics, composite pattern scores, cyclic offset sweeps, seeded shuffled-value sweep baselines, CSV-driven batch runs, and batch-level best-of-candidate-file null controls against public span-derived additive fragments at actual K4 positions;
+- a documented candidate-material registry that ties CSV rows to source IDs and rationale before batch testing;
 - pre-registered contextual candidate sequences for H4/H5;
 - bounded named route/permutation screens for H3;
 - ranked hypothesis reporting;

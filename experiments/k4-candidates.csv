@@ -37,3 +37,20 @@ BERLINWALL,a1-z26-zero-based
 BERLINWALL,a1-z26-one-based
 19891109,decimal-digits
 11091989,decimal-digits
+
+# CIA sculpture/chart/matrix family.
+KRYPTOS,a1-z26-zero-based
+KRYPTOS,a1-z26-one-based
+KRYPTOSSCULPTURE,a1-z26-zero-based
+KRYPTOSSCULPTURE,a1-z26-one-based
+VIGENERE,a1-z26-zero-based
+VIGENERE,a1-z26-one-based
+VIGENERETABLE,a1-z26-zero-based
+VIGENERETABLE,a1-z26-one-based
+MATRIX,a1-z26-zero-based
+MATRIX,a1-z26-one-based
+MATRIXCODING,a1-z26-zero-based
+MATRIXCODING,a1-z26-one-based
+NINETYSEVEN,a1-z26-zero-based
+NINETYSEVEN,a1-z26-one-based
+97,decimal-digits
