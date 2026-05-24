@@ -11,7 +11,7 @@ This project is not a claimed K4 solution.
 - Source-provenance records for public facts.
 - Standard A-Z, Kryptos, and reversed Kryptos alphabet analysis.
 - Additive, subtractive, and Beaufort-style anchor-derived fragments.
-- Proposed key-material checks, explanations, descriptive match-pattern metrics, and composite pattern-score controls against public span-derived additive fragments.
+- Proposed key-material checks, explanations, routed key-material screens, descriptive match-pattern metrics, and composite pattern-score controls against public span-derived additive fragments.
 - Gromark-style recurrence screening over known-anchor fragments.
 - Seeded baseline controls, pre-registered contextual candidates, and bounded route screens.
 - Findings ledger tying observations to sources, transformations, baselines, interpretation, and next tests.
@@ -34,6 +34,7 @@ cargo run -- test-key --material BERLINWORLDCLOCK --sweep-offsets --top 5
 cargo run -- test-key --material BERLINWORLDCLOCK --sweep-offsets --sweep-baseline-iterations 1000 --seed 42
 cargo run -- explain-key --material WELTZEITUHR --transform a1-z26-one-based --offset 5
 cargo run -- batch-test-keys --input experiments/k4-candidates.csv --sweep-baseline-iterations 1000 --batch-baseline-iterations 1000 --seed 42 --output-dir results/key-tests/latest
+cargo run -- batch-test-routed-keys --input experiments/k4-candidates.csv --sweep-baseline-iterations 1000 --batch-baseline-iterations 1000 --seed 42 --output-dir results/key-tests/routed-latest
 cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --top 20
 cargo run -- baseline --target spans --iterations 1000 --seed 42
 cargo run -- baseline --target spans --iterations 1000 --seed 42 --format json
@@ -102,6 +103,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `test-key` | Proposed key material transformed and compared against public span additive fragments at true K4 positions, with optional cyclic offset sweep and seeded sweep baseline. |
 | `explain-key` | Exact matching public-span positions for one key-material lead, including one-based modulo caveats, descriptive pattern metrics, and composite pattern score when relevant. |
 | `batch-test-keys` | CSV-driven key-material batch runner with ranked Markdown/JSON summaries, optional output artifacts, pattern metrics, and optional batch-level best-of-candidate-file null controls for both match count and composite pattern score. |
+| `batch-test-routed-keys` | CSV-driven routed key-material batch runner that applies registered route/permutation families before candidate scoring, with match-count and composite pattern-score null controls over the routed search surface. |
 | `summarize-key-runs` | Historical scanner for batch result folders, ranking individual runs and per-candidate p-value stability. |
 | `baseline` | Seeded false-positive controls for the generic recurrence screen. |
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |

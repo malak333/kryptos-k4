@@ -4,10 +4,10 @@ use kryptos_k4::{
     AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, BatchKeyMaterialCandidate,
     BatchKeyMaterialRun, BatchKeyRunHistory, CandidateTransform, FragmentMode, K4_CIPHERTEXT,
     KeyMaterialExplanation, KeyMaterialOffsetSweep, KeyMaterialTest, ReportFormat,
-    analyze_constraints, analyze_known_plaintext_spans,
-    batch_test_key_material_with_batch_baseline, build_report, candidate_sequences,
-    explain_key_material, findings, hypotheses, known_anchors, render_report, run_baseline,
-    run_release_checks, run_route_experiments, score_candidate_sequences, sources,
+    RoutedBatchKeyMaterialRun, analyze_constraints, analyze_known_plaintext_spans,
+    batch_test_key_material_with_batch_baseline, batch_test_routed_key_material, build_report,
+    candidate_sequences, explain_key_material, findings, hypotheses, known_anchors, render_report,
+    run_baseline, run_release_checks, run_route_experiments, score_candidate_sequences, sources,
     summarize_batch_key_material_runs, sweep_key_material_offsets_with_baseline, test_key_material,
 };
 use std::{
@@ -109,6 +109,30 @@ enum Command {
         #[arg(long, default_value_t = 0)]
         batch_baseline_iterations: usize,
         /// Seed for deterministic offset-sweep baseline controls.
+        #[arg(long, default_value_t = 42)]
+        seed: u64,
+        /// Optional directory for input.csv, results.json, summary.md, and command.txt.
+        #[arg(long)]
+        output_dir: Option<PathBuf>,
+        /// Output format for stdout.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Apply registered route/permutation families before scoring every candidate row in a CSV file.
+    BatchTestRoutedKeys {
+        /// CSV file with rows: material,transform. Header row is optional.
+        #[arg(long)]
+        input: PathBuf,
+        /// Alphabet used for public span-derived fragments.
+        #[arg(long, value_enum, default_value_t = CliAlphabet::Kryptos)]
+        alphabet: CliAlphabet,
+        /// Seeded shuffled-value null iterations for each routed candidate's best offset.
+        #[arg(long, default_value_t = 1_000)]
+        sweep_baseline_iterations: usize,
+        /// Seeded null iterations for the best score across all candidate rows, transforms, spans, and routes.
+        #[arg(long, default_value_t = 0)]
+        batch_baseline_iterations: usize,
+        /// Seed for deterministic routed offset-sweep baseline controls.
         #[arg(long, default_value_t = 42)]
         seed: u64,
         /// Optional directory for input.csv, results.json, summary.md, and command.txt.
@@ -388,6 +412,23 @@ fn main() -> Result<()> {
             output_dir,
             format,
         )?,
+        Command::BatchTestRoutedKeys {
+            input,
+            alphabet,
+            sweep_baseline_iterations,
+            batch_baseline_iterations,
+            seed,
+            output_dir,
+            format,
+        } => print_batch_test_routed_keys(
+            input,
+            alphabet,
+            sweep_baseline_iterations,
+            batch_baseline_iterations,
+            seed,
+            output_dir,
+            format,
+        )?,
         Command::SummarizeKeyRuns {
             input_dir,
             top,
@@ -528,6 +569,41 @@ fn print_batch_test_keys(
     Ok(())
 }
 
+fn print_batch_test_routed_keys(
+    input: PathBuf,
+    alphabet: CliAlphabet,
+    baseline_iterations: usize,
+    batch_baseline_iterations: usize,
+    seed: u64,
+    output_dir: Option<PathBuf>,
+    format: OutputFormat,
+) -> Result<()> {
+    let input_text = fs::read_to_string(&input)?;
+    let candidates = parse_batch_candidates(&input_text)?;
+    let run = batch_test_routed_key_material(
+        &candidates,
+        alphabet.into(),
+        baseline_iterations,
+        seed,
+        batch_baseline_iterations,
+    )?;
+
+    if let Some(output_dir) = output_dir {
+        write_routed_batch_outputs(&output_dir, &input_text, &run)?;
+        println!(
+            "Wrote routed batch key-material results to {}",
+            output_dir.display()
+        );
+    } else {
+        match format {
+            OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&run)?),
+            OutputFormat::Markdown => print_routed_batch_key_material_summary(&run),
+        }
+    }
+
+    Ok(())
+}
+
 fn parse_batch_candidates(input: &str) -> Result<Vec<BatchKeyMaterialCandidate>> {
     let mut candidates = Vec::new();
     for (index, line) in input.lines().enumerate() {
@@ -594,6 +670,36 @@ fn write_batch_outputs(
     Ok(())
 }
 
+fn write_routed_batch_outputs(
+    output_dir: &Path,
+    input_text: &str,
+    run: &RoutedBatchKeyMaterialRun,
+) -> Result<()> {
+    fs::create_dir_all(output_dir)?;
+    fs::write(output_dir.join("input.csv"), input_text)?;
+    fs::write(
+        output_dir.join("results.json"),
+        serde_json::to_string_pretty(run)?,
+    )?;
+    fs::write(
+        output_dir.join("summary.md"),
+        render_routed_batch_key_material_summary(run),
+    )?;
+    fs::write(
+        output_dir.join("command.txt"),
+        format!(
+            "batch-test-routed-keys --input <input> --sweep-baseline-iterations {} --batch-baseline-iterations {} --seed {}\n",
+            run.baseline_iterations,
+            run.batch_baseline
+                .as_ref()
+                .map(|baseline| baseline.iterations)
+                .unwrap_or(0),
+            run.seed
+        ),
+    )?;
+    Ok(())
+}
+
 fn print_batch_key_material_summary(run: &BatchKeyMaterialRun) {
     print!("{}", render_batch_key_material_summary(run));
 }
@@ -640,6 +746,77 @@ fn render_batch_key_material_summary(run: &BatchKeyMaterialRun) -> String {
     }
     if let Some(baseline) = &run.batch_baseline {
         output.push_str("\n## Batch Baseline\n\n");
+        output.push_str(&format!(
+            "observed best: {} matches; null mean best: {:.2}; null sd: {:.2}; empirical p-value: {:.4}; iterations: {}; seed: {}; candidates: {}; promoted: {}\n\n",
+            baseline.observed_best_matches,
+            baseline.null_mean_best_matches,
+            baseline.null_std_dev_best_matches,
+            baseline.empirical_p_value,
+            baseline.iterations,
+            baseline.seed,
+            baseline.candidate_count,
+            baseline.promoted_candidate
+        ));
+        output.push_str(&format!(
+            "observed best pattern score: {}; null mean best pattern score: {:.2}; null sd: {:.2}; empirical p-value: {:.4}\n\n",
+            baseline.observed_best_pattern_score,
+            baseline.null_mean_best_pattern_score,
+            baseline.null_std_dev_best_pattern_score,
+            baseline.pattern_score_empirical_p_value
+        ));
+        output.push_str(&format!("note: {}\n", baseline.note));
+    }
+    output.push_str(&format!("\n{}\n", run.note));
+    output
+}
+
+fn print_routed_batch_key_material_summary(run: &RoutedBatchKeyMaterialRun) {
+    print!("{}", render_routed_batch_key_material_summary(run));
+}
+
+fn render_routed_batch_key_material_summary(run: &RoutedBatchKeyMaterialRun) -> String {
+    let mut output = String::new();
+    output.push_str("# Routed Batch Key Material Results\n\n");
+    output.push_str("This is not a claimed solution.\n\n");
+    output.push_str(&format!(
+        "alphabet: {:?}; candidates: {}; result rows: {}; baseline iterations: {}; seed: {}; promoted: {}\n\n",
+        run.alphabet,
+        run.candidate_count,
+        run.result_count,
+        run.baseline_iterations,
+        run.seed,
+        run.promoted_candidate
+    ));
+    output.push_str("| Rank | Target | Route | Material | Transform | Best Offset | Matches | Match Rate | Pattern Score | Distinct Values | Span Coverage | Longest Run | Repeated Values | Empirical P | Promoted |\n");
+    output.push_str("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n");
+    for (index, result) in run.results.iter().enumerate() {
+        let empirical_p = result
+            .empirical_p_value
+            .map(|value| format!("{value:.4}"))
+            .unwrap_or_else(|| "n/a".to_string());
+        output.push_str(&format!(
+            "| {} | {} | {:?} | `{}` | {:?} | {} | {}/{} | {:.4} | {} | {} | {} | {} | {} ({:.2}) | {} | {} |\n",
+            index + 1,
+            result.target_label,
+            result.route,
+            result.material,
+            result.transform,
+            result.best_offset,
+            result.best_matches,
+            result.compared_fragment_count,
+            result.best_match_rate,
+            result.best_pattern_metrics.pattern_score,
+            result.best_pattern_metrics.distinct_matched_values,
+            result.best_pattern_metrics.span_coverage,
+            result.best_pattern_metrics.longest_contiguous_match_run,
+            result.best_pattern_metrics.repeated_value_count,
+            result.best_pattern_metrics.repeated_value_rate,
+            empirical_p,
+            result.promoted_candidate
+        ));
+    }
+    if let Some(baseline) = &run.batch_baseline {
+        output.push_str("\n## Routed Batch Baseline\n\n");
         output.push_str(&format!(
             "observed best: {} matches; null mean best: {:.2}; null sd: {:.2}; empirical p-value: {:.4}; iterations: {}; seed: {}; candidates: {}; promoted: {}\n\n",
             baseline.observed_best_matches,

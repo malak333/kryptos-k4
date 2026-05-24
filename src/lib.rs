@@ -34,9 +34,10 @@ pub use key_test::{
     BatchKeyMaterialRun, BatchKeyRunCandidateSummary, BatchKeyRunHistory, BatchKeyRunHistoryEntry,
     KeyMaterialExplanation, KeyMaterialMatch, KeyMaterialMismatch, KeyMaterialOffsetResult,
     KeyMaterialOffsetSweep, KeyMaterialPatternMetrics, KeyMaterialSpanResult,
-    KeyMaterialSweepBaseline, KeyMaterialTest, batch_test_key_material,
-    batch_test_key_material_with_batch_baseline, explain_key_material,
-    summarize_batch_key_material_runs, sweep_key_material_offsets,
+    KeyMaterialSweepBaseline, KeyMaterialTest, RoutedBatchKeyMaterialResult,
+    RoutedBatchKeyMaterialRun, RoutedKeyMaterialOffsetSweep, batch_test_key_material,
+    batch_test_key_material_with_batch_baseline, batch_test_routed_key_material,
+    explain_key_material, summarize_batch_key_material_runs, sweep_key_material_offsets,
     sweep_key_material_offsets_with_baseline, test_key_material,
 };
 pub use release_check::{ReleaseCheck, run_release_checks};

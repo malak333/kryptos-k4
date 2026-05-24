@@ -569,6 +569,125 @@ fn batch_test_keys_writes_output_directory_artifacts() {
 }
 
 #[test]
+fn batch_test_routed_keys_prints_ranked_markdown() {
+    let temp = tempfile::tempdir().unwrap();
+    let input_path = temp.path().join("candidates.csv");
+    std::fs::write(
+        &input_path,
+        "material,transform\nWELTZEITUHR,a1-z26-one-based\nCLOCK,a1-z26-zero-based\n",
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "batch-test-routed-keys",
+            "--input",
+            input_path.to_str().unwrap(),
+            "--sweep-baseline-iterations",
+            "5",
+            "--batch-baseline-iterations",
+            "5",
+            "--seed",
+            "42",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Routed Batch Key Material Results",
+        ))
+        .stdout(predicate::str::contains("Target"))
+        .stdout(predicate::str::contains("Route"))
+        .stdout(predicate::str::contains("Pattern Score"))
+        .stdout(predicate::str::contains("Routed Batch Baseline"))
+        .stdout(predicate::str::contains("promoted: false"))
+        .stdout(predicate::str::contains("not a claimed solution"));
+}
+
+#[test]
+fn batch_test_routed_keys_json_is_parseable_and_non_promotional() {
+    let temp = tempfile::tempdir().unwrap();
+    let input_path = temp.path().join("candidates.csv");
+    std::fs::write(
+        &input_path,
+        "material,transform\nWELTZEITUHR,a1-z26-one-based\nCLOCK,a1-z26-zero-based\n",
+    )
+    .unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "batch-test-routed-keys",
+            "--input",
+            input_path.to_str().unwrap(),
+            "--sweep-baseline-iterations",
+            "5",
+            "--batch-baseline-iterations",
+            "5",
+            "--seed",
+            "42",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["candidate_count"], 2);
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(json["result_count"].as_u64().unwrap() > 0);
+    assert!(json["batch_baseline"]["pattern_score_empirical_p_value"].is_number());
+    let first = &json["results"].as_array().unwrap()[0];
+    assert!(first["target_label"].is_string());
+    assert!(first["route"].is_string());
+    assert!(first["best_pattern_metrics"]["pattern_score"].is_number());
+    assert_eq!(first["promoted_candidate"], false);
+}
+
+#[test]
+fn batch_test_routed_keys_writes_output_directory_artifacts() {
+    let temp = tempfile::tempdir().unwrap();
+    let input_path = temp.path().join("candidates.csv");
+    let output_dir = temp.path().join("routed-run");
+    std::fs::write(
+        &input_path,
+        "material,transform\nWELTZEITUHR,a1-z26-one-based\n",
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "batch-test-routed-keys",
+            "--input",
+            input_path.to_str().unwrap(),
+            "--sweep-baseline-iterations",
+            "5",
+            "--output-dir",
+            output_dir.to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Wrote routed batch key-material results",
+        ));
+
+    for file_name in ["input.csv", "results.json", "summary.md", "command.txt"] {
+        assert!(output_dir.join(file_name).exists());
+    }
+
+    let summary = std::fs::read_to_string(output_dir.join("summary.md")).unwrap();
+    assert!(summary.contains("Routed Batch Key Material Results"));
+    let results: Value =
+        serde_json::from_str(&std::fs::read_to_string(output_dir.join("results.json")).unwrap())
+            .unwrap();
+    assert_eq!(results["candidate_count"], 1);
+}
+
+#[test]
 fn summarize_key_runs_ranks_historical_result_folders() {
     let temp = tempfile::tempdir().unwrap();
     let input_path = temp.path().join("candidates.csv");
