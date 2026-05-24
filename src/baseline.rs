@@ -270,7 +270,7 @@ impl BaselineAlphabetScope {
         }
     }
 
-    fn allows(self, alphabet: AlphabetKind) -> bool {
+    pub(crate) fn allows(self, alphabet: AlphabetKind) -> bool {
         match self {
             Self::Standard => alphabet == AlphabetKind::Standard,
             Self::Kryptos => alphabet == AlphabetKind::Kryptos,

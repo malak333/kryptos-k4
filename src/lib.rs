@@ -7,6 +7,7 @@ pub mod data;
 pub mod findings;
 pub mod hypotheses;
 pub mod key_test;
+pub mod position_structure;
 pub mod release_check;
 pub mod report;
 pub mod routes;
@@ -40,6 +41,10 @@ pub use key_test::{
     batch_test_routed_key_material, explain_key_material, heldout_key_control,
     summarize_batch_key_material_runs, sweep_key_material_offsets,
     sweep_key_material_offsets_with_baseline, test_key_material,
+};
+pub use position_structure::{
+    PositionModulusScore, PositionStructureResult, PositionStructureRun,
+    run_position_structure_control,
 };
 pub use release_check::{ReleaseCheck, run_release_checks};
 pub use report::{Report, ReportFormat, build_report, render_report};

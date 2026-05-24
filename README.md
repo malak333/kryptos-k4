@@ -36,6 +36,7 @@ cargo run -- explain-key --material WELTZEITUHR --transform a1-z26-one-based --o
 cargo run -- batch-test-keys --input experiments/k4-candidates.csv --sweep-baseline-iterations 1000 --batch-baseline-iterations 1000 --seed 42 --output-dir results/key-tests/latest
 cargo run -- batch-test-routed-keys --input experiments/k4-candidates.csv --sweep-baseline-iterations 1000 --batch-baseline-iterations 1000 --seed 42 --output-dir results/key-tests/routed-latest
 cargo run -- heldout-key-control --input experiments/k4-candidates.csv --iterations 1000 --seed 42 --output-dir results/key-tests/heldout-control
+cargo run -- position-structure --target spans --alphabet all --iterations 1000 --seed 42
 cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --top 20
 cargo run -- baseline --target spans --iterations 1000 --seed 42
 cargo run -- baseline --target spans --iterations 1000 --seed 42 --format json
@@ -110,6 +111,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `batch-test-keys` | CSV-driven key-material batch runner with ranked Markdown/JSON summaries, optional output artifacts, pattern metrics, and optional batch-level best-of-candidate-file null controls for both match count and composite pattern score. |
 | `batch-test-routed-keys` | CSV-driven routed key-material batch runner that applies registered route/permutation families before candidate scoring, with match-count and composite pattern-score null controls over the routed search surface. |
 | `heldout-key-control` | Leave-one-public-group-out control that selects candidate material and offset on non-overlapping training groups, then scores the withheld anchor/span group against seeded null selection runs. |
+| `position-structure` | Candidate-independent residue/spacing structure control over public fragments, comparing fixed-position scores against seeded value shuffles. |
 | `summarize-key-runs` | Historical scanner for batch result folders, ranking individual runs and per-candidate p-value stability. |
 | `baseline` | Seeded false-positive controls for the generic recurrence screen. |
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |

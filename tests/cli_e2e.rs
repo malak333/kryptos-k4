@@ -971,6 +971,95 @@ fn baseline_markdown_mentions_p_values_and_solution_boundary() {
 }
 
 #[test]
+fn position_structure_markdown_mentions_candidate_independent_control() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "position-structure",
+            "--target",
+            "spans",
+            "--alphabet",
+            "kryptos",
+            "--iterations",
+            "25",
+            "--seed",
+            "67",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Position Structure Control"))
+        .stdout(predicate::str::contains("Best Modulus"))
+        .stdout(predicate::str::contains("Adjusted P"))
+        .stdout(predicate::str::contains("candidate-independent"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["position-structure", "--iterations", "0"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "position-structure iterations must be greater than zero",
+        ));
+}
+
+#[test]
+fn position_structure_json_is_deterministic_and_non_promotional() {
+    let args = [
+        "position-structure",
+        "--target",
+        "spans",
+        "--alphabet",
+        "kryptos",
+        "--iterations",
+        "50",
+        "--seed",
+        "67",
+        "--format",
+        "json",
+    ];
+    let first = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(args)
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let second = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(args)
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    assert_eq!(first, second);
+    let json: Value = serde_json::from_slice(&first).unwrap();
+    assert_eq!(json["target_scope"], "spans");
+    assert_eq!(json["alphabet_scope"], "kryptos");
+    assert_eq!(json["fragment_mode"], "additive-key");
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(
+        json["note"]
+            .as_str()
+            .unwrap()
+            .contains("candidate-independent")
+    );
+    assert!(
+        json["results"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|result| result["promoted_candidate"] == false
+                && result["modulus_results"].as_array().unwrap().len() == 12
+                && result["empirical_p_value"].is_number()
+                && result["adjusted_p_value"].is_number())
+    );
+}
+
+#[test]
 fn candidate_sequences_json_contains_registered_families() {
     let output = Command::cargo_bin("kryptos-k4")
         .unwrap()
