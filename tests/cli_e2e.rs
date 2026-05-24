@@ -688,6 +688,117 @@ fn batch_test_routed_keys_writes_output_directory_artifacts() {
 }
 
 #[test]
+fn heldout_key_control_prints_markdown_summary() {
+    let temp = tempfile::tempdir().unwrap();
+    let input_path = temp.path().join("candidates.csv");
+    std::fs::write(
+        &input_path,
+        "material,transform\nWELTZEITUHR,a1-z26-one-based\nCLOCK,a1-z26-zero-based\n",
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "heldout-key-control",
+            "--input",
+            input_path.to_str().unwrap(),
+            "--iterations",
+            "5",
+            "--seed",
+            "42",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Held-Out Key Control"))
+        .stdout(predicate::str::contains("Held-Out Matches"))
+        .stdout(predicate::str::contains("Fold Baselines"))
+        .stdout(predicate::str::contains("promoted: false"))
+        .stdout(predicate::str::contains("not a claimed solution"));
+}
+
+#[test]
+fn heldout_key_control_json_is_parseable_and_non_promotional() {
+    let temp = tempfile::tempdir().unwrap();
+    let input_path = temp.path().join("candidates.csv");
+    std::fs::write(
+        &input_path,
+        "material,transform\nWELTZEITUHR,a1-z26-one-based\nCLOCK,a1-z26-zero-based\n",
+    )
+    .unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "heldout-key-control",
+            "--input",
+            input_path.to_str().unwrap(),
+            "--iterations",
+            "5",
+            "--seed",
+            "42",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["candidate_count"], 2);
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(json["fold_count"].as_u64().unwrap() >= 4);
+    let first = &json["folds"].as_array().unwrap()[0];
+    assert!(first["heldout_label"].is_string());
+    assert!(first["selected_material"].is_string());
+    assert!(first["baseline"]["empirical_p_value"].is_number());
+    assert!(first["baseline"]["pattern_score_empirical_p_value"].is_number());
+    assert_eq!(first["promoted_candidate"], false);
+}
+
+#[test]
+fn heldout_key_control_writes_output_directory_artifacts() {
+    let temp = tempfile::tempdir().unwrap();
+    let input_path = temp.path().join("candidates.csv");
+    let output_dir = temp.path().join("heldout-run");
+    std::fs::write(
+        &input_path,
+        "material,transform\nWELTZEITUHR,a1-z26-one-based\n",
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "heldout-key-control",
+            "--input",
+            input_path.to_str().unwrap(),
+            "--iterations",
+            "5",
+            "--output-dir",
+            output_dir.to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Wrote held-out key-control results",
+        ));
+
+    for file_name in ["input.csv", "results.json", "summary.md", "command.txt"] {
+        assert!(output_dir.join(file_name).exists());
+    }
+
+    let summary = std::fs::read_to_string(output_dir.join("summary.md")).unwrap();
+    assert!(summary.contains("Held-Out Key Control"));
+    let results: Value =
+        serde_json::from_str(&std::fs::read_to_string(output_dir.join("results.json")).unwrap())
+            .unwrap();
+    assert_eq!(results["candidate_count"], 1);
+}
+
+#[test]
 fn summarize_key_runs_ranks_historical_result_folders() {
     let temp = tempfile::tempdir().unwrap();
     let input_path = temp.path().join("candidates.csv");

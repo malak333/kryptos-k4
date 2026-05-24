@@ -2,12 +2,13 @@ use anyhow::Result;
 use clap::{Parser, Subcommand, ValueEnum};
 use kryptos_k4::{
     AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, BatchKeyMaterialCandidate,
-    BatchKeyMaterialRun, BatchKeyRunHistory, CandidateTransform, FragmentMode, K4_CIPHERTEXT,
-    KeyMaterialExplanation, KeyMaterialOffsetSweep, KeyMaterialTest, ReportFormat,
-    RoutedBatchKeyMaterialRun, analyze_constraints, analyze_known_plaintext_spans,
-    batch_test_key_material_with_batch_baseline, batch_test_routed_key_material, build_report,
-    candidate_sequences, explain_key_material, findings, hypotheses, known_anchors, render_report,
-    run_baseline, run_release_checks, run_route_experiments, score_candidate_sequences, sources,
+    BatchKeyMaterialRun, BatchKeyRunHistory, CandidateTransform, FragmentMode,
+    HeldoutKeyControlRun, K4_CIPHERTEXT, KeyMaterialExplanation, KeyMaterialOffsetSweep,
+    KeyMaterialTest, ReportFormat, RoutedBatchKeyMaterialRun, analyze_constraints,
+    analyze_known_plaintext_spans, batch_test_key_material_with_batch_baseline,
+    batch_test_routed_key_material, build_report, candidate_sequences, explain_key_material,
+    findings, heldout_key_control, hypotheses, known_anchors, render_report, run_baseline,
+    run_release_checks, run_route_experiments, score_candidate_sequences, sources,
     summarize_batch_key_material_runs, sweep_key_material_offsets_with_baseline, test_key_material,
 };
 use std::{
@@ -133,6 +134,27 @@ enum Command {
         #[arg(long, default_value_t = 0)]
         batch_baseline_iterations: usize,
         /// Seed for deterministic routed offset-sweep baseline controls.
+        #[arg(long, default_value_t = 42)]
+        seed: u64,
+        /// Optional directory for input.csv, results.json, summary.md, and command.txt.
+        #[arg(long)]
+        output_dir: Option<PathBuf>,
+        /// Output format for stdout.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Select on non-overlapping public fragment groups, then score each held-out group.
+    HeldoutKeyControl {
+        /// CSV file with rows: material,transform. Header row is optional.
+        #[arg(long)]
+        input: PathBuf,
+        /// Alphabet used for public fragment groups.
+        #[arg(long, value_enum, default_value_t = CliAlphabet::Kryptos)]
+        alphabet: CliAlphabet,
+        /// Seeded null iterations that re-run training selection before scoring each held-out group.
+        #[arg(long, default_value_t = 10_000)]
+        iterations: usize,
+        /// Seed for deterministic held-out null controls.
         #[arg(long, default_value_t = 42)]
         seed: u64,
         /// Optional directory for input.csv, results.json, summary.md, and command.txt.
@@ -429,6 +451,14 @@ fn main() -> Result<()> {
             output_dir,
             format,
         )?,
+        Command::HeldoutKeyControl {
+            input,
+            alphabet,
+            iterations,
+            seed,
+            output_dir,
+            format,
+        } => print_heldout_key_control(input, alphabet, iterations, seed, output_dir, format)?,
         Command::SummarizeKeyRuns {
             input_dir,
             top,
@@ -604,6 +634,34 @@ fn print_batch_test_routed_keys(
     Ok(())
 }
 
+fn print_heldout_key_control(
+    input: PathBuf,
+    alphabet: CliAlphabet,
+    iterations: usize,
+    seed: u64,
+    output_dir: Option<PathBuf>,
+    format: OutputFormat,
+) -> Result<()> {
+    let input_text = fs::read_to_string(&input)?;
+    let candidates = parse_batch_candidates(&input_text)?;
+    let run = heldout_key_control(&candidates, alphabet.into(), iterations, seed)?;
+
+    if let Some(output_dir) = output_dir {
+        write_heldout_key_control_outputs(&output_dir, &input_text, &run)?;
+        println!(
+            "Wrote held-out key-control results to {}",
+            output_dir.display()
+        );
+    } else {
+        match format {
+            OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&run)?),
+            OutputFormat::Markdown => print_heldout_key_control_summary(&run),
+        }
+    }
+
+    Ok(())
+}
+
 fn parse_batch_candidates(input: &str) -> Result<Vec<BatchKeyMaterialCandidate>> {
     let mut candidates = Vec::new();
     for (index, line) in input.lines().enumerate() {
@@ -695,6 +753,31 @@ fn write_routed_batch_outputs(
                 .map(|baseline| baseline.iterations)
                 .unwrap_or(0),
             run.seed
+        ),
+    )?;
+    Ok(())
+}
+
+fn write_heldout_key_control_outputs(
+    output_dir: &Path,
+    input_text: &str,
+    run: &HeldoutKeyControlRun,
+) -> Result<()> {
+    fs::create_dir_all(output_dir)?;
+    fs::write(output_dir.join("input.csv"), input_text)?;
+    fs::write(
+        output_dir.join("results.json"),
+        serde_json::to_string_pretty(run)?,
+    )?;
+    fs::write(
+        output_dir.join("summary.md"),
+        render_heldout_key_control_summary(run),
+    )?;
+    fs::write(
+        output_dir.join("command.txt"),
+        format!(
+            "heldout-key-control --input <input> --iterations {} --seed {}\n",
+            run.iterations, run.seed
         ),
     )?;
     Ok(())
@@ -838,6 +921,75 @@ fn render_routed_batch_key_material_summary(run: &RoutedBatchKeyMaterialRun) -> 
         output.push_str(&format!("note: {}\n", baseline.note));
     }
     output.push_str(&format!("\n{}\n", run.note));
+    output
+}
+
+fn print_heldout_key_control_summary(run: &HeldoutKeyControlRun) {
+    print!("{}", render_heldout_key_control_summary(run));
+}
+
+fn render_heldout_key_control_summary(run: &HeldoutKeyControlRun) -> String {
+    let mut output = String::new();
+    output.push_str("# Held-Out Key Control\n\n");
+    output.push_str("This is not a claimed solution.\n\n");
+    output.push_str(&format!(
+        "alphabet: {:?}; candidates: {}; folds: {}; iterations: {}; seed: {}; promoted: {}\n\n",
+        run.alphabet,
+        run.candidate_count,
+        run.fold_count,
+        run.iterations,
+        run.seed,
+        run.promoted_candidate
+    ));
+    output.push_str("| Rank | Held-Out | Kind | Train Groups | Selected Material | Transform | Offset | Train Matches | Held-Out Matches | Held-Out Pattern Score | Held-Out P | Pattern P | Promoted |\n");
+    output.push_str(
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n",
+    );
+    for (index, fold) in run.folds.iter().enumerate() {
+        output.push_str(&format!(
+            "| {} | {} | {:?} | {} | `{}` | {:?} | {} | {}/{} | {}/{} | {} | {:.4} | {:.4} | {} |\n",
+            index + 1,
+            fold.heldout_label,
+            fold.heldout_kind,
+            fold.train_group_count,
+            fold.selected_material,
+            fold.selected_transform,
+            fold.selected_offset,
+            fold.train_matches,
+            fold.train_fragment_count,
+            fold.heldout_matches,
+            fold.heldout_fragment_count,
+            fold.heldout_pattern_metrics.pattern_score,
+            fold.baseline.empirical_p_value,
+            fold.baseline.pattern_score_empirical_p_value,
+            fold.promoted_candidate
+        ));
+    }
+
+    output.push_str("\n## Fold Baselines\n\n");
+    for fold in &run.folds {
+        output.push_str(&format!(
+            "- {} / {:?}: observed held-out {} matches; null mean {:.2}; null sd {:.2}; p={:.4}; observed pattern {}; null pattern mean {:.2}; pattern p={:.4}; selected `{}` {:?} offset {}; promoted: {}\n",
+            fold.heldout_label,
+            fold.heldout_kind,
+            fold.baseline.observed_heldout_matches,
+            fold.baseline.null_mean_heldout_matches,
+            fold.baseline.null_std_dev_heldout_matches,
+            fold.baseline.empirical_p_value,
+            fold.baseline.observed_heldout_pattern_score,
+            fold.baseline.null_mean_heldout_pattern_score,
+            fold.baseline.pattern_score_empirical_p_value,
+            fold.selected_material,
+            fold.selected_transform,
+            fold.selected_offset,
+            fold.baseline.promoted_candidate
+        ));
+    }
+    output.push('\n');
+    if let Some(first) = run.folds.first() {
+        output.push_str(&format!("note: {}\n\n", first.baseline.note));
+    }
+    output.push_str(&format!("{}\n", run.note));
     output
 }
 

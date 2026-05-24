@@ -1,5 +1,6 @@
 use crate::{
-    AlphabetKind, CandidateTransform, FragmentMode, analyze_known_plaintext_spans,
+    AlphabetKind, AnalysisTargetKind, CandidateTransform, FragmentMode, analyze_constraints,
+    analyze_known_plaintext_spans,
     candidates::{expand_to_k4, transform_values},
     routes::{RouteFamily, permutation, registered_route_families},
 };
@@ -120,6 +121,54 @@ pub struct RoutedBatchKeyMaterialRun {
     pub results: Vec<RoutedBatchKeyMaterialResult>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub batch_baseline: Option<BatchKeyMaterialBaseline>,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct HeldoutKeyControlRun {
+    pub alphabet: AlphabetKind,
+    pub iterations: usize,
+    pub seed: u64,
+    pub candidate_count: usize,
+    pub fold_count: usize,
+    pub folds: Vec<HeldoutKeyControlFold>,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct HeldoutKeyControlFold {
+    pub heldout_label: String,
+    pub heldout_kind: AnalysisTargetKind,
+    pub train_group_count: usize,
+    pub selected_material: String,
+    pub selected_transform: CandidateTransform,
+    pub selected_offset: usize,
+    pub train_matches: usize,
+    pub train_fragment_count: usize,
+    pub train_match_rate: f64,
+    pub train_pattern_metrics: KeyMaterialPatternMetrics,
+    pub heldout_matches: usize,
+    pub heldout_fragment_count: usize,
+    pub heldout_match_rate: f64,
+    pub heldout_pattern_metrics: KeyMaterialPatternMetrics,
+    pub baseline: HeldoutKeyControlBaseline,
+    pub promoted_candidate: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct HeldoutKeyControlBaseline {
+    pub observed_heldout_matches: usize,
+    pub null_mean_heldout_matches: f64,
+    pub null_std_dev_heldout_matches: f64,
+    pub empirical_p_value: f64,
+    pub observed_heldout_pattern_score: i64,
+    pub null_mean_heldout_pattern_score: f64,
+    pub null_std_dev_heldout_pattern_score: f64,
+    pub pattern_score_empirical_p_value: f64,
+    pub iterations: usize,
+    pub seed: u64,
     pub promoted_candidate: bool,
     pub note: &'static str,
 }
@@ -575,6 +624,106 @@ pub fn batch_test_routed_key_material(
     })
 }
 
+pub fn heldout_key_control(
+    candidates: &[BatchKeyMaterialCandidate],
+    alphabet: AlphabetKind,
+    iterations: usize,
+    seed: u64,
+) -> Result<HeldoutKeyControlRun> {
+    if candidates.is_empty() {
+        bail!("held-out key-control input did not contain any candidates");
+    }
+    if iterations == 0 {
+        bail!("held-out key-control iterations must be greater than zero");
+    }
+
+    let candidate_values: Vec<HeldoutCandidateValues> = candidates
+        .iter()
+        .map(|candidate| HeldoutCandidateValues {
+            material: candidate.material.clone(),
+            transform: candidate.transform,
+            values: transform_values(&candidate.material, candidate.transform),
+        })
+        .collect();
+    if candidate_values
+        .iter()
+        .any(|candidate| candidate.values.is_empty())
+    {
+        bail!("held-out key-control input contained a candidate without numeric values");
+    }
+
+    let groups = heldout_groups(alphabet)?;
+    if groups.len() < 2 {
+        bail!("held-out key-control requires at least two public fragment groups");
+    }
+
+    let mut folds = Vec::new();
+    for heldout in &groups {
+        let training_groups: Vec<&HeldoutGroup> = groups
+            .iter()
+            .filter(|group| group.label != heldout.label || group.kind != heldout.kind)
+            .filter(|group| !groups_overlap(group, heldout))
+            .collect();
+        if training_groups.is_empty() {
+            continue;
+        }
+
+        let selected = select_best_heldout_candidate(&candidate_values, &training_groups)?;
+        let heldout_score = score_values_on_heldout_groups(
+            &selected.values,
+            std::slice::from_ref(&heldout),
+            selected.offset,
+        )?;
+        let baseline = run_heldout_control_baseline(
+            &candidate_values,
+            &training_groups,
+            heldout,
+            &heldout_score,
+            iterations,
+            seed,
+        )?;
+
+        folds.push(HeldoutKeyControlFold {
+            heldout_label: heldout.label.clone(),
+            heldout_kind: heldout.kind,
+            train_group_count: training_groups.len(),
+            selected_material: selected.material,
+            selected_transform: selected.transform,
+            selected_offset: selected.offset,
+            train_matches: selected.train_score.exact_mod26_matches,
+            train_fragment_count: selected.train_score.compared_fragment_count,
+            train_match_rate: selected.train_score.match_rate,
+            train_pattern_metrics: selected.train_score.pattern_metrics,
+            heldout_matches: heldout_score.exact_mod26_matches,
+            heldout_fragment_count: heldout_score.compared_fragment_count,
+            heldout_match_rate: heldout_score.match_rate,
+            heldout_pattern_metrics: heldout_score.pattern_metrics,
+            baseline,
+            promoted_candidate: false,
+        });
+    }
+
+    folds.sort_by(|left, right| {
+        left.baseline
+            .empirical_p_value
+            .total_cmp(&right.baseline.empirical_p_value)
+            .then_with(|| right.heldout_matches.cmp(&left.heldout_matches))
+            .then_with(|| left.heldout_label.cmp(&right.heldout_label))
+            .then_with(|| kind_label(left.heldout_kind).cmp(kind_label(right.heldout_kind)))
+    });
+
+    Ok(HeldoutKeyControlRun {
+        alphabet,
+        iterations,
+        seed,
+        candidate_count: candidates.len(),
+        fold_count: folds.len(),
+        folds,
+        promoted_candidate: false,
+        note: "Held-out key-material control over public fragment groups only; selected leads must predict withheld public groups better than seeded null controls before follow-up.",
+    })
+}
+
 fn run_batch_baseline(
     candidates: &[BatchKeyMaterialCandidate],
     alphabet: AlphabetKind,
@@ -818,6 +967,31 @@ struct RoutedSweepSpec<'a> {
     seed: u64,
 }
 
+#[derive(Debug, Clone)]
+struct HeldoutGroup {
+    label: String,
+    kind: AnalysisTargetKind,
+    start_zero_based: usize,
+    end_zero_based_inclusive: usize,
+    fragments: Vec<crate::analysis::KeyFragment>,
+}
+
+#[derive(Debug, Clone)]
+struct HeldoutCandidateValues {
+    material: String,
+    transform: CandidateTransform,
+    values: Vec<u8>,
+}
+
+#[derive(Debug, Clone)]
+struct HeldoutSelection {
+    material: String,
+    transform: CandidateTransform,
+    values: Vec<u8>,
+    offset: usize,
+    train_score: KeyMaterialOffsetResult,
+}
+
 fn collect_results_json_paths(input_dir: &Path, paths: &mut Vec<PathBuf>) -> Result<()> {
     if !input_dir.exists() {
         bail!("input directory does not exist: {}", input_dir.display());
@@ -964,6 +1138,13 @@ fn route_label(route: RouteFamily) -> &'static str {
     }
 }
 
+fn kind_label(kind: AnalysisTargetKind) -> &'static str {
+    match kind {
+        AnalysisTargetKind::Anchor => "anchor",
+        AnalysisTargetKind::Span => "span",
+    }
+}
+
 impl CandidateTransform {
     fn label(self) -> &'static str {
         match self {
@@ -1014,6 +1195,228 @@ fn routed_targets(alphabet: AlphabetKind) -> Result<Vec<RoutedTarget>> {
         })
         .collect();
     Ok(targets)
+}
+
+fn heldout_groups(alphabet: AlphabetKind) -> Result<Vec<HeldoutGroup>> {
+    let mut analyses = analyze_constraints()?;
+    analyses.extend(analyze_known_plaintext_spans()?);
+    let mut groups: Vec<HeldoutGroup> = analyses
+        .into_iter()
+        .filter(|analysis| analysis.alphabet.kind == alphabet)
+        .map(|analysis| HeldoutGroup {
+            label: analysis.target.label,
+            kind: analysis.target.kind,
+            start_zero_based: analysis.target.start_zero_based,
+            end_zero_based_inclusive: analysis.target.end_zero_based_inclusive,
+            fragments: analysis
+                .fragments
+                .into_iter()
+                .filter(|fragment| fragment.mode == FragmentMode::AdditiveKey)
+                .collect(),
+        })
+        .filter(|group| !group.fragments.is_empty())
+        .collect();
+    groups.sort_by(|left, right| {
+        left.start_zero_based
+            .cmp(&right.start_zero_based)
+            .then_with(|| {
+                left.end_zero_based_inclusive
+                    .cmp(&right.end_zero_based_inclusive)
+            })
+            .then_with(|| kind_label(left.kind).cmp(kind_label(right.kind)))
+            .then_with(|| left.label.cmp(&right.label))
+    });
+    Ok(groups)
+}
+
+fn groups_overlap(left: &HeldoutGroup, right: &HeldoutGroup) -> bool {
+    left.start_zero_based <= right.end_zero_based_inclusive
+        && right.start_zero_based <= left.end_zero_based_inclusive
+}
+
+fn select_best_heldout_candidate(
+    candidates: &[HeldoutCandidateValues],
+    groups: &[&HeldoutGroup],
+) -> Result<HeldoutSelection> {
+    let mut best: Option<HeldoutSelection> = None;
+    for candidate in candidates {
+        for offset in 0..candidate.values.len() {
+            let score = score_values_on_heldout_groups(&candidate.values, groups, offset)?;
+            let selection = HeldoutSelection {
+                material: candidate.material.clone(),
+                transform: candidate.transform,
+                values: candidate.values.clone(),
+                offset,
+                train_score: score,
+            };
+            if best
+                .as_ref()
+                .is_none_or(|current| compare_heldout_selection(&selection, current).is_lt())
+            {
+                best = Some(selection);
+            }
+        }
+    }
+    best.ok_or_else(|| anyhow::anyhow!("no held-out candidate selection could be scored"))
+}
+
+fn compare_heldout_selection(
+    left: &HeldoutSelection,
+    right: &HeldoutSelection,
+) -> std::cmp::Ordering {
+    right
+        .train_score
+        .exact_mod26_matches
+        .cmp(&left.train_score.exact_mod26_matches)
+        .then_with(|| {
+            right
+                .train_score
+                .pattern_metrics
+                .pattern_score
+                .cmp(&left.train_score.pattern_metrics.pattern_score)
+        })
+        .then_with(|| left.material.cmp(&right.material))
+        .then_with(|| left.transform.label().cmp(right.transform.label()))
+        .then_with(|| left.offset.cmp(&right.offset))
+}
+
+fn run_heldout_control_baseline(
+    candidates: &[HeldoutCandidateValues],
+    training_groups: &[&HeldoutGroup],
+    heldout: &HeldoutGroup,
+    observed_heldout_score: &KeyMaterialOffsetResult,
+    iterations: usize,
+    seed: u64,
+) -> Result<HeldoutKeyControlBaseline> {
+    let mut rng = ChaCha8Rng::seed_from_u64(seed);
+    let mut null_heldout_matches = Vec::with_capacity(iterations);
+    let mut null_heldout_pattern_scores = Vec::with_capacity(iterations);
+
+    for _ in 0..iterations {
+        let shuffled_candidates: Vec<HeldoutCandidateValues> = candidates
+            .iter()
+            .map(|candidate| {
+                let mut values = candidate.values.clone();
+                values.shuffle(&mut rng);
+                HeldoutCandidateValues {
+                    material: candidate.material.clone(),
+                    transform: candidate.transform,
+                    values,
+                }
+            })
+            .collect();
+        let selected = select_best_heldout_candidate(&shuffled_candidates, training_groups)?;
+        let heldout_score = score_values_on_heldout_groups(
+            &selected.values,
+            std::slice::from_ref(&heldout),
+            selected.offset,
+        )?;
+        null_heldout_matches.push(heldout_score.exact_mod26_matches);
+        null_heldout_pattern_scores.push(heldout_score.pattern_metrics.pattern_score);
+    }
+
+    let null_mean_heldout_matches = mean(&null_heldout_matches);
+    let null_std_dev_heldout_matches = std_dev(&null_heldout_matches, null_mean_heldout_matches);
+    let null_mean_heldout_pattern_score = mean_i64(&null_heldout_pattern_scores);
+    let null_std_dev_heldout_pattern_score = std_dev_i64(
+        &null_heldout_pattern_scores,
+        null_mean_heldout_pattern_score,
+    );
+    let at_least_observed = null_heldout_matches
+        .iter()
+        .filter(|count| **count >= observed_heldout_score.exact_mod26_matches)
+        .count();
+    let empirical_p_value = (at_least_observed as f64 + 1.0) / (iterations as f64 + 1.0);
+    let pattern_at_least_observed = null_heldout_pattern_scores
+        .iter()
+        .filter(|score| **score >= observed_heldout_score.pattern_metrics.pattern_score)
+        .count();
+    let pattern_score_empirical_p_value =
+        (pattern_at_least_observed as f64 + 1.0) / (iterations as f64 + 1.0);
+
+    Ok(HeldoutKeyControlBaseline {
+        observed_heldout_matches: observed_heldout_score.exact_mod26_matches,
+        null_mean_heldout_matches,
+        null_std_dev_heldout_matches,
+        empirical_p_value,
+        observed_heldout_pattern_score: observed_heldout_score.pattern_metrics.pattern_score,
+        null_mean_heldout_pattern_score,
+        null_std_dev_heldout_pattern_score,
+        pattern_score_empirical_p_value,
+        iterations,
+        seed,
+        promoted_candidate: false,
+        note: "Seeded held-out null re-runs candidate and offset selection on training groups, then scores the withheld public group; still not a decryption claim.",
+    })
+}
+
+fn score_values_on_heldout_groups(
+    values: &[u8],
+    groups: &[&HeldoutGroup],
+    offset: usize,
+) -> Result<KeyMaterialOffsetResult> {
+    let mut span_results = Vec::new();
+
+    for group in groups {
+        let mut exact_mod26_matches = 0usize;
+        let mut matches = Vec::new();
+        let mut mismatches = Vec::new();
+        for fragment in &group.fragments {
+            let material_index = (fragment.position_zero_based + offset) % values.len();
+            let material_value = values[material_index] % 26;
+            if fragment.value == material_value {
+                exact_mod26_matches += 1;
+                matches.push(KeyMaterialMatch {
+                    position_one_based: fragment.position_one_based,
+                    plaintext: fragment.plaintext,
+                    ciphertext: fragment.ciphertext,
+                    observed_key_value: fragment.value,
+                    observed_key_symbol: fragment.symbol,
+                    material_value,
+                });
+            } else {
+                mismatches.push(KeyMaterialMismatch {
+                    position_one_based: fragment.position_one_based,
+                    plaintext: fragment.plaintext,
+                    ciphertext: fragment.ciphertext,
+                    observed_key_value: fragment.value,
+                    observed_key_symbol: fragment.symbol,
+                    material_value,
+                });
+            }
+        }
+        span_results.push(KeyMaterialSpanResult {
+            target_label: group.label.clone(),
+            compared_fragment_count: group.fragments.len(),
+            exact_mod26_matches,
+            matches,
+            mismatches,
+        });
+    }
+
+    let compared_fragment_count = span_results
+        .iter()
+        .map(|result| result.compared_fragment_count)
+        .sum();
+    let exact_mod26_matches = span_results
+        .iter()
+        .map(|result| result.exact_mod26_matches)
+        .sum();
+    let match_rate = if compared_fragment_count == 0 {
+        0.0
+    } else {
+        exact_mod26_matches as f64 / compared_fragment_count as f64
+    };
+    let pattern_metrics = calculate_pattern_metrics(&span_results);
+
+    Ok(KeyMaterialOffsetResult {
+        offset,
+        compared_fragment_count,
+        exact_mod26_matches,
+        match_rate,
+        pattern_metrics,
+        span_results,
+    })
 }
 
 fn sweep_routed_key_material_offsets(
@@ -1554,6 +1957,37 @@ mod tests {
                 || (pair[0].best_matches == pair[1].best_matches
                     && pair[0].best_pattern_metrics.pattern_score
                         >= pair[1].best_pattern_metrics.pattern_score)
+        }));
+    }
+
+    #[test]
+    fn heldout_key_control_selects_on_training_and_scores_withheld_groups() {
+        let run = heldout_key_control(
+            &[
+                BatchKeyMaterialCandidate {
+                    material: "WELTZEITUHR".to_string(),
+                    transform: CandidateTransform::A1Z26OneBased,
+                },
+                BatchKeyMaterialCandidate {
+                    material: "CLOCK".to_string(),
+                    transform: CandidateTransform::A1Z26ZeroBased,
+                },
+            ],
+            AlphabetKind::Kryptos,
+            5,
+            42,
+        )
+        .unwrap();
+
+        assert_eq!(run.candidate_count, 2);
+        assert!(run.fold_count >= 4);
+        assert!(!run.promoted_candidate);
+        assert!(run.folds.iter().all(|fold| !fold.promoted_candidate));
+        assert!(run.folds.iter().all(|fold| fold.train_group_count > 0));
+        assert!(run.folds.iter().all(|fold| {
+            fold.baseline.iterations == 5
+                && !fold.baseline.promoted_candidate
+                && fold.baseline.empirical_p_value > 0.0
         }));
     }
 }

@@ -32,12 +32,13 @@ pub use hypotheses::{Hypothesis, hypotheses};
 pub use key_test::{
     BatchKeyMaterialBaseline, BatchKeyMaterialCandidate, BatchKeyMaterialResult,
     BatchKeyMaterialRun, BatchKeyRunCandidateSummary, BatchKeyRunHistory, BatchKeyRunHistoryEntry,
-    KeyMaterialExplanation, KeyMaterialMatch, KeyMaterialMismatch, KeyMaterialOffsetResult,
-    KeyMaterialOffsetSweep, KeyMaterialPatternMetrics, KeyMaterialSpanResult,
-    KeyMaterialSweepBaseline, KeyMaterialTest, RoutedBatchKeyMaterialResult,
-    RoutedBatchKeyMaterialRun, RoutedKeyMaterialOffsetSweep, batch_test_key_material,
-    batch_test_key_material_with_batch_baseline, batch_test_routed_key_material,
-    explain_key_material, summarize_batch_key_material_runs, sweep_key_material_offsets,
+    HeldoutKeyControlBaseline, HeldoutKeyControlFold, HeldoutKeyControlRun, KeyMaterialExplanation,
+    KeyMaterialMatch, KeyMaterialMismatch, KeyMaterialOffsetResult, KeyMaterialOffsetSweep,
+    KeyMaterialPatternMetrics, KeyMaterialSpanResult, KeyMaterialSweepBaseline, KeyMaterialTest,
+    RoutedBatchKeyMaterialResult, RoutedBatchKeyMaterialRun, RoutedKeyMaterialOffsetSweep,
+    batch_test_key_material, batch_test_key_material_with_batch_baseline,
+    batch_test_routed_key_material, explain_key_material, heldout_key_control,
+    summarize_batch_key_material_runs, sweep_key_material_offsets,
     sweep_key_material_offsets_with_baseline, test_key_material,
 };
 pub use release_check::{ReleaseCheck, run_release_checks};
