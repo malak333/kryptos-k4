@@ -1374,6 +1374,44 @@ fn validate_preregistration_rejects_unchanged_template() {
 }
 
 #[test]
+fn validate_prediction_artifact_checks_committed_independent_target() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-prediction-artifact",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-period-v1.json",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Prediction Artifact Validation"))
+        .stdout(predicate::str::contains("valid: true"))
+        .stdout(predicate::str::contains("expected periods: 7"))
+        .stdout(predicate::str::contains("artifact periods: 7"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-prediction-artifact",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-period-v1.json",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["valid"], true);
+    assert_eq!(json["expected_period_count"], 7);
+    assert_eq!(json["artifact_period_count"], 7);
+    assert_eq!(json["promoted_candidate"], false);
+}
+
+#[test]
 fn candidate_sequences_json_contains_registered_families() {
     let output = Command::cargo_bin("kryptos-k4")
         .unwrap()

@@ -39,6 +39,7 @@ cargo run -- heldout-key-control --input experiments/k4-candidates.csv --iterati
 cargo run -- position-structure --target spans --alphabet all --iterations 1000 --seed 42
 cargo run -- structural-models --target spans --alphabet kryptos --iterations 1000 --seed 42
 cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-period-v1.json
+cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-v1.json
 cargo run -- period-prediction-plan --period 3
 cargo run -- period-prediction-plan --all
 cargo run -- period-prediction-plan --all --format json
@@ -126,6 +127,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `position-structure` | Candidate-independent residue/spacing structure control over public fragments, comparing fixed-position scores against seeded value shuffles. |
 | `structural-models` | Pre-registered period-model controls that score public fragments only after the model registry is fixed, with seeded nulls and Holm adjustment. |
 | `validate-preregistration` | Gate for proposed new lanes; rejects reuse of public anchor-derived fragments as discovery inputs or primary evidence. |
+| `validate-prediction-artifact` | Gate for committed independent prediction artifacts; checks the preregistration and deterministic generator output still match. |
 | `period-prediction-plan` | Emits non-anchor K4 position residue classes for one or all registered periods without scoring fragment values or candidate material. |
 | `summarize-key-runs` | Historical scanner for batch result folders, ranking individual runs and per-candidate p-value stability. |
 | `baseline` | Seeded false-positive controls for the generic recurrence screen. |

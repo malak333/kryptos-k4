@@ -18,6 +18,14 @@ cargo run --locked -- validate-preregistration \
   --input experiments/preregistrations/<lane-id>.json
 ```
 
+If the preregistration declares `prediction_artifact`, also validate the
+committed prediction target:
+
+```bash
+cargo run --locked -- validate-prediction-artifact \
+  --preregistration experiments/preregistrations/<lane-id>.json
+```
+
 The validator rejects lanes that reuse public anchor-derived fragments as
 discovery inputs or primary evidence. Those fragments can still be listed as
 controls after an independent target is defined. The validator also rejects

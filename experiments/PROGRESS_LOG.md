@@ -55,6 +55,8 @@ Command:
 ```bash
 cargo run --locked -- period-prediction-plan --period 3
 cargo run --locked -- period-prediction-plan --all
+cargo run --locked -- validate-prediction-artifact \
+  --preregistration experiments/preregistrations/non-anchor-position-period-v1.json
 ```
 
 Result summary:
@@ -68,6 +70,7 @@ Result summary:
 - promoted: false
 - committed prediction artifact:
   `experiments/predictions/non-anchor-position-period-v1.json`
+- prediction artifact validation: `valid: true`
 
 Interpretation: this makes the `non-anchor-position-period-v1` lane executable
 as a predeclared target. It does not use public anchor-derived key fragments as
