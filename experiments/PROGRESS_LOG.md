@@ -62,6 +62,11 @@ machine-readable preregistration, artifact, observation, period-evaluation, and
 release gates. This improves reproducibility but still contributes no K4
 plaintext or promoted candidate by itself.
 
+Follow-up documentation update: this gate is now represented in the findings
+ledger as `F7`, so the generated report records the v2 preregistration,
+committed artifact, and JSON gate boundary as a reproducibility finding rather
+than a cryptanalytic result.
+
 ## 2026-05-25: Preregistration Gate
 
 Command:

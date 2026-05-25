@@ -1948,6 +1948,21 @@ fn findings_json_is_parseable_and_non_promotional() {
                 .unwrap()
                 .contains("evidence-free prediction target")
     }));
+    assert!(json.as_array().unwrap().iter().any(|finding| {
+        finding["id"] == "F7"
+            && finding["title"]
+                .as_str()
+                .unwrap()
+                .contains("Machine-readable gates")
+            && finding["source_inputs"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|source| {
+                    source == "experiments/preregistrations/non-anchor-position-period-v2.json"
+                })
+            && finding["promoted_candidate"] == false
+    }));
 }
 
 #[test]
