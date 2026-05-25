@@ -35,7 +35,7 @@ This report uses public anchors only and is not a claimed solution. Production r
 | `routes` | Bounded named route experiments with identity, reverse, and seeded-random baselines in Markdown or JSON. |
 | `findings` | Reproducible findings ledger with sources, transformations, baselines, interpretation, and next tests in Markdown or JSON. |
 | `sources` | Source provenance records and allowed-use notes in Markdown or JSON. |
-| `release-check` | Local release preflight results, including no-GitHub-Actions, candidate CSV/registry alignment, preregistration and prediction-artifact validation, and source-packet/source-registry field and latest-access-date alignment gates in Markdown or JSON. |
+| `release-check` | Local release preflight results, including no-GitHub-Actions, candidate CSV/registry alignment, preregistration and prediction-artifact validation, findings source-input integrity, and source-packet/source-registry field and latest-access-date alignment gates in Markdown or JSON. |
 | `export-data` | Covered by the source data rendered here; the command writes ciphertext, anchor, and source JSON files. |
 
 ## Ciphertext
@@ -806,6 +806,7 @@ Local preflight only. This repo does not use GitHub Actions.
 - candidate-registry-aligned: true (Candidate CSV rows are represented in the candidate registry with source IDs and rationale. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/k4-candidates.csv; registry_path=/Users/michaelnobile/Antigravity/Ciphers/experiments/k4-candidates.md)
 - preregistrations-valid: true (Committed non-template preregistrations validate. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/preregistrations; checked=4)
 - prediction-artifacts-valid: true (Committed prediction artifacts match their preregistrations and deterministic generators. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/predictions; checked=3)
+- findings-source-inputs-valid: true (Findings source inputs resolve to registered sources, committed files, or known local command references. path=/Users/michaelnobile/Antigravity/Ciphers/src/findings.rs; checked=7)
 - source-packet-latest-access-date: true (Source packet includes latest registered source access date. path=/Users/michaelnobile/Antigravity/Ciphers/sources/source-packet.md; latest_access_date=2026-05-25)
 - source-packet-registry-aligned: true (Source packet matches every registered source ID, URL, type, and allowed-use boundary. path=/Users/michaelnobile/Antigravity/Ciphers/sources/source-packet.md)
 - no-plaintext-leakage-markers: true (No leaked/full-plaintext sentinel markers found in release-facing files.)

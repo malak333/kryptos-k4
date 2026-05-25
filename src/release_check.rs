@@ -1,4 +1,5 @@
 use crate::data::sources;
+use crate::findings::findings;
 use crate::preregistration::{
     LanePreregistration, validate_prediction_artifact_with_repo_root, validate_preregistration,
 };
@@ -29,13 +30,14 @@ const REQUIRED_RELEASE_FILES: [(&str, &str); 10] = [
 const REQUIRED_GENERATED_REPORTS: [(&str, &str); 1] =
     [("markdown-report-present", "notes/k4-report.md")];
 
-const REQUIRED_REPORT_MARKERS: [&str; 6] = [
+const REQUIRED_REPORT_MARKERS: [&str; 7] = [
     "`validate-prediction-artifact`",
     "`validate-period-observations`",
     "`evaluate-period-prediction`",
     "Independent non-anchor period targets are materialized before scoring",
     "evidence-free prediction target",
     "`position-structure`",
+    "findings-source-inputs-valid",
 ];
 
 const PLAINTEXT_LEAKAGE_SCAN_FILES: [&str; 4] = [
@@ -51,6 +53,8 @@ const PLAINTEXT_LEAKAGE_MARKERS: [&str; 4] = [
     "K4_ARCHIVE_PLAINTEXT",
     "K4_PRIVATE_ARCHIVE_PLAINTEXT",
 ];
+
+const FINDINGS_COMMAND_SOURCE_INPUTS: [&str; 1] = ["release-check"];
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct ReleaseCheck {
@@ -107,6 +111,7 @@ fn run_release_checks_inner(
     checks.push(check_candidate_registry_alignment(repo_root));
     checks.push(check_preregistrations_validate(repo_root));
     checks.push(check_prediction_artifacts_validate(repo_root));
+    checks.push(check_findings_source_inputs_validate(repo_root));
     checks.push(check_source_packet_latest_access_date(repo_root));
     checks.push(check_source_packet_registry_alignment(repo_root));
     checks.push(check_no_plaintext_leakage_markers(repo_root));
@@ -116,6 +121,50 @@ fn run_release_checks_inner(
     }
 
     Ok(checks)
+}
+
+fn check_findings_source_inputs_validate(repo_root: &Path) -> ReleaseCheck {
+    let registered_source_ids: std::collections::BTreeSet<_> =
+        sources().into_iter().map(|source| source.id).collect();
+    let registered_command_inputs: std::collections::BTreeSet<_> =
+        FINDINGS_COMMAND_SOURCE_INPUTS.into_iter().collect();
+    let all_findings = findings();
+    let mut mismatches = Vec::new();
+
+    for finding in &all_findings {
+        for source_input in finding.source_inputs {
+            let repo_relative_path = repo_root.join(source_input);
+            if !registered_source_ids.contains(source_input)
+                && !registered_command_inputs.contains(source_input)
+                && !repo_relative_path.exists()
+            {
+                mismatches.push(format!("{}:{source_input}:unknown", finding.id));
+            }
+        }
+    }
+
+    ReleaseCheck {
+        name: "findings-source-inputs-valid",
+        passed: !all_findings.is_empty() && mismatches.is_empty(),
+        detail: if !all_findings.is_empty() && mismatches.is_empty() {
+            format!(
+                "Findings source inputs resolve to registered sources, committed files, or known local command references. path={}; checked={}",
+                repo_root.join("src/findings.rs").display(),
+                all_findings.len()
+            )
+        } else if all_findings.is_empty() {
+            format!(
+                "No findings are registered. path={}",
+                repo_root.join("src/findings.rs").display()
+            )
+        } else {
+            format!(
+                "Findings source inputs include unknown references. path={}; mismatches={}",
+                repo_root.join("src/findings.rs").display(),
+                mismatches.join(", ")
+            )
+        },
+    }
 }
 
 fn check_preregistrations_validate(repo_root: &Path) -> ReleaseCheck {
