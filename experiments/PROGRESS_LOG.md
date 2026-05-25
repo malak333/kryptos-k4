@@ -3,6 +3,19 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-25: Observation Source-Use Gate
+
+The period-observation path now rejects registered sources whose `allowed_use`
+boundary is not compatible with scored independent position evidence.
+`public-anchor-summary`, `public-clue-context`, and `archive-context-only`
+sources remain valid context/control sources, but they cannot be used as scored
+observation evidence for `validate-period-observations` or
+`evaluate-period-prediction --positions-file`.
+
+Interpretation: future non-anchor position evidence must be both source-backed
+and source-policy compatible before it can be scored against committed period
+prediction artifacts.
+
 ## 2026-05-25: Preregistration Gate
 
 Command:

@@ -616,19 +616,33 @@ fn validate_period_prediction_observation_fields(
         errors.push("positions_file must include at least one one-based K4 position".to_string());
     }
 
-    let registered_sources: HashSet<_> = sources().into_iter().map(|source| source.id).collect();
+    let registered_sources: std::collections::BTreeMap<_, _> = sources()
+        .into_iter()
+        .map(|source| (source.id, source))
+        .collect();
     for source_id in &observations.source_ids {
-        if !source_id.trim().is_empty()
-            && !contains_template_placeholder(source_id)
-            && !registered_sources.contains(source_id.as_str())
-        {
-            errors.push(format!(
-                "positions_file source_id `{source_id}` is not registered"
-            ));
+        if !source_id.trim().is_empty() && !contains_template_placeholder(source_id) {
+            let Some(source) = registered_sources.get(source_id.as_str()) else {
+                errors.push(format!(
+                    "positions_file source_id `{source_id}` is not registered"
+                ));
+                continue;
+            };
+
+            if !period_observation_source_use_is_allowed(source.allowed_use) {
+                errors.push(format!(
+                    "positions_file source_id `{source_id}` has allowed_use `{}` and cannot be scored as independent position evidence",
+                    source.allowed_use
+                ));
+            }
         }
     }
 
     errors
+}
+
+fn period_observation_source_use_is_allowed(allowed_use: &str) -> bool {
+    matches!(allowed_use, "public-facts-only" | "methodology-context")
 }
 
 fn load_period_prediction_observations(path: &Path) -> Result<PeriodPredictionObservationInput> {

@@ -22,7 +22,7 @@ This report uses public anchors only and is not a claimed solution. Production r
 | `structural-models` | Pre-registered period-model controls over public fragment positions. |
 | `validate-preregistration` | Research-lane gate for future source evidence or independent prediction targets. |
 | `validate-prediction-artifact` | Gate confirming committed independent prediction artifacts still match their preregistration and deterministic generator. |
-| `validate-period-observations` | Gate for source-backed independent position observations and optional prediction-artifact preregistration validation before period prediction scoring. |
+| `validate-period-observations` | Gate for source-backed independent position observations, source allowed-use compatibility, and optional prediction-artifact preregistration validation before period prediction scoring. |
 | `period-prediction-plan` | Non-anchor residue-class target emission for a registered period, without scoring public fragment values. |
 | `evaluate-period-prediction` | Independent-position evaluator for committed period prediction artifacts with best-of-period null controls, source-backed observation-file input, and optional artifact preregistration validation. |
 | `baseline` | Seeded false-positive controls for anchors and spans across all supported alphabets. |

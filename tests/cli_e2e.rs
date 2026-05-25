@@ -1663,6 +1663,39 @@ fn evaluate_period_prediction_rejects_unregistered_position_file_source() {
 }
 
 #[test]
+fn validate_period_observations_rejects_anchor_or_archive_context_sources() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("observations.json");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "bad-source-use-test",
+  "source_ids": ["elonka-kryptos", "kryptosbot-sanborn-papers-2026"],
+  "positions_one_based": [1, 4, 7],
+  "rationale": "Synthetic CLI test fixture for source allowed-use validation."
+}"#,
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-period-observations",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-period-v1.json",
+            "--input",
+            observations_path.to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("public-anchor-summary"))
+        .stdout(predicate::str::contains("archive-context-only"))
+        .stderr(predicate::str::contains(
+            "period observations failed validation",
+        ));
+}
+
+#[test]
 fn evaluate_period_prediction_rejects_public_anchor_positions() {
     Command::cargo_bin("kryptos-k4")
         .unwrap()

@@ -85,3 +85,9 @@ The candidate CSV and candidate registry must also stay aligned. Candidate words
 remain stopped-lane exploratory inputs unless they are represented in
 `experiments/k4-candidates.md` with registered source IDs and rationale, then
 survive the current batch, routed, and held-out controls.
+
+Source-backed period observation files are stricter than general source
+registration: `validate-period-observations` rejects public-anchor summary,
+public-clue context, and archive-context-only sources as scored independent
+position evidence. Those sources can still document context or controls, but not
+the held-out target being scored.
