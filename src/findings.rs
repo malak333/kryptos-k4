@@ -150,7 +150,9 @@ pub fn findings() -> Vec<Finding> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::data::sources;
     use std::collections::HashSet;
+    use std::path::Path;
 
     #[test]
     fn findings_are_unique_and_non_promotional() {
@@ -164,5 +166,25 @@ mod tests {
                 .iter()
                 .all(|finding| !finding.source_inputs.is_empty())
         );
+    }
+
+    #[test]
+    fn finding_source_inputs_are_registered_files_or_commands() {
+        let registered_source_ids: HashSet<_> =
+            sources().into_iter().map(|source| source.id).collect();
+        let registered_commands = HashSet::from(["release-check"]);
+
+        for finding in findings() {
+            for source_input in finding.source_inputs {
+                assert!(
+                    registered_source_ids.contains(source_input)
+                        || registered_commands.contains(source_input)
+                        || Path::new(source_input).exists(),
+                    "finding {} references unknown source input `{}`",
+                    finding.id,
+                    source_input
+                );
+            }
+        }
     }
 }
