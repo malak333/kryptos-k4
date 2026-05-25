@@ -391,6 +391,7 @@ struct PeriodPredictionObservationFile {
 struct PeriodPredictionObservationInput {
     id: Option<String>,
     source_ids: Vec<String>,
+    rationale: Option<String>,
     positions_one_based: Vec<usize>,
 }
 
@@ -399,6 +400,7 @@ struct PeriodPredictionObservationValidation {
     artifact_path: String,
     observation_id: String,
     observation_source_ids: Vec<String>,
+    observation_rationale: String,
     observed_position_count: usize,
     observed_positions_one_based: Vec<usize>,
     valid: bool,
@@ -552,11 +554,29 @@ fn parse_position_list(input: &str) -> std::result::Result<Vec<usize>, String> {
     }
 }
 
-fn load_period_prediction_observations(path: &Path) -> Result<PeriodPredictionObservationInput> {
+fn contains_template_placeholder(value: &str) -> bool {
+    let normalized = value.to_ascii_lowercase();
+    normalized.contains("replace-with")
+        || normalized.contains("replace with")
+        || normalized.contains("explain why")
+        || normalized.contains("describe the")
+        || normalized.contains("define the")
+}
+
+fn read_period_prediction_observation_file(path: &Path) -> Result<PeriodPredictionObservationFile> {
     let input = fs::read_to_string(path)?;
-    let observations: PeriodPredictionObservationFile = serde_json::from_str(&input)?;
+    Ok(serde_json::from_str(&input)?)
+}
+
+fn validate_period_prediction_observation_fields(
+    observations: &PeriodPredictionObservationFile,
+) -> Vec<String> {
+    let mut errors = Vec::new();
     if observations.id.trim().is_empty() {
-        anyhow::bail!("positions_file id must not be empty");
+        errors.push("positions_file id must not be empty".to_string());
+    }
+    if contains_template_placeholder(&observations.id) {
+        errors.push("positions_file id still contains template placeholder text".to_string());
     }
     if observations.source_ids.is_empty()
         || observations
@@ -564,25 +584,52 @@ fn load_period_prediction_observations(path: &Path) -> Result<PeriodPredictionOb
             .iter()
             .any(|source_id| source_id.trim().is_empty())
     {
-        anyhow::bail!("positions_file must include at least one registered source_id");
+        errors.push("positions_file must include at least one registered source_id".to_string());
+    }
+    for source_id in &observations.source_ids {
+        if contains_template_placeholder(source_id) {
+            errors.push(
+                "positions_file source_ids still contain template placeholder text".to_string(),
+            );
+        }
     }
     if observations.rationale.trim().is_empty() {
-        anyhow::bail!("positions_file rationale must not be empty");
+        errors.push("positions_file rationale must not be empty".to_string());
+    }
+    if contains_template_placeholder(&observations.rationale) {
+        errors
+            .push("positions_file rationale still contains template placeholder text".to_string());
     }
     if observations.positions_one_based.is_empty() {
-        anyhow::bail!("positions_file must include at least one one-based K4 position");
+        errors.push("positions_file must include at least one one-based K4 position".to_string());
     }
 
     let registered_sources: HashSet<_> = sources().into_iter().map(|source| source.id).collect();
     for source_id in &observations.source_ids {
-        if !registered_sources.contains(source_id.as_str()) {
-            anyhow::bail!("positions_file source_id `{source_id}` is not registered");
+        if !source_id.trim().is_empty()
+            && !contains_template_placeholder(source_id)
+            && !registered_sources.contains(source_id.as_str())
+        {
+            errors.push(format!(
+                "positions_file source_id `{source_id}` is not registered"
+            ));
         }
+    }
+
+    errors
+}
+
+fn load_period_prediction_observations(path: &Path) -> Result<PeriodPredictionObservationInput> {
+    let observations = read_period_prediction_observation_file(path)?;
+    let errors = validate_period_prediction_observation_fields(&observations);
+    if !errors.is_empty() {
+        anyhow::bail!(errors.join("; "));
     }
 
     Ok(PeriodPredictionObservationInput {
         id: Some(observations.id),
         source_ids: observations.source_ids,
+        rationale: Some(observations.rationale),
         positions_one_based: observations.positions_one_based,
     })
 }
@@ -1903,9 +1950,9 @@ fn validate_period_observations(
     artifact_path: &Path,
     input_path: &Path,
 ) -> Result<PeriodPredictionObservationValidation> {
-    let observations = load_period_prediction_observations(input_path)?;
-    let observation_id = observations.id.unwrap_or_default();
-    let mut errors = Vec::new();
+    let observations = read_period_prediction_observation_file(input_path)?;
+    let observation_id = observations.id.clone();
+    let mut errors = validate_period_prediction_observation_fields(&observations);
     let non_anchor_positions = load_period_prediction_artifact_positions(artifact_path)?;
 
     let mut seen = HashSet::new();
@@ -1926,6 +1973,7 @@ fn validate_period_observations(
         artifact_path: artifact_path.display().to_string(),
         observation_id,
         observation_source_ids: observations.source_ids,
+        observation_rationale: observations.rationale,
         observed_position_count: observations.positions_one_based.len(),
         observed_positions_one_based: observations.positions_one_based,
         valid: errors.is_empty(),
@@ -1943,6 +1991,10 @@ fn print_period_observation_validation(validation: &PeriodPredictionObservationV
     println!(
         "observation sources: {}",
         validation.observation_source_ids.join(", ")
+    );
+    println!(
+        "observation rationale: {}",
+        validation.observation_rationale
     );
     println!(
         "observed positions: {}",
@@ -2048,6 +2100,7 @@ fn print_evaluate_period_prediction(
         (Some(positions), None) => PeriodPredictionObservationInput {
             id: None,
             source_ids: Vec::new(),
+            rationale: None,
             positions_one_based: parse_position_list(&positions).map_err(anyhow::Error::msg)?,
         },
         (None, Some(path)) => load_period_prediction_observations(&path)?,
@@ -2061,6 +2114,7 @@ fn print_evaluate_period_prediction(
     )?;
     evaluation.observation_id = observation_input.id;
     evaluation.observation_source_ids = observation_input.source_ids;
+    evaluation.observation_rationale = observation_input.rationale;
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&evaluation)?),
         OutputFormat::Markdown => print_period_prediction_evaluation(&evaluation),
@@ -2080,6 +2134,9 @@ fn print_period_prediction_evaluation(evaluation: &PeriodPredictionEvaluation) {
             "observation sources: {}",
             evaluation.observation_source_ids.join(", ")
         );
+    }
+    if let Some(observation_rationale) = &evaluation.observation_rationale {
+        println!("observation rationale: {observation_rationale}");
     }
     println!(
         "observed positions: {}",

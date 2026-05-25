@@ -97,7 +97,9 @@ Evaluator input hardened: `evaluate-period-prediction` now also accepts
 evidence source-backed instead of only accepting ad hoc comma-separated inputs.
 `validate-period-observations` now checks those files before scoring, rejecting
 unregistered source IDs, duplicate positions, and positions outside the
-committed non-anchor prediction artifact.
+committed non-anchor prediction artifact. It also rejects unchanged template
+placeholder text and carries observation rationale into validation/evaluation
+output.
 
 Concrete follow-up lane registered:
 `experiments/preregistrations/non-anchor-position-period-followup-v1.json`

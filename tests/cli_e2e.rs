@@ -1501,6 +1501,10 @@ fn evaluate_period_prediction_accepts_source_backed_position_file() {
     let json: Value = serde_json::from_slice(&output).unwrap();
     assert_eq!(json["observation_id"], "synthetic-non-anchor-test");
     assert_eq!(json["observation_source_ids"][0], "cia-artifact");
+    assert_eq!(
+        json["observation_rationale"],
+        "Synthetic CLI test fixture for the observation-file input path."
+    );
     assert_eq!(json["best_period"], 3);
     assert_eq!(json["promoted_candidate"], false);
 }
@@ -1541,6 +1545,10 @@ fn validate_period_observations_accepts_source_backed_non_anchor_positions() {
     assert_eq!(json["valid"], true);
     assert_eq!(json["observation_id"], "synthetic-validation-test");
     assert_eq!(json["observation_source_ids"][0], "cia-artifact");
+    assert_eq!(
+        json["observation_rationale"],
+        "Synthetic CLI test fixture for observation validation."
+    );
     assert_eq!(json["observed_position_count"], 3);
     assert_eq!(json["promoted_candidate"], false);
 }
@@ -1573,6 +1581,25 @@ fn validate_period_observations_rejects_anchor_and_duplicate_positions() {
         .failure()
         .stdout(predicate::str::contains("duplicate position `1`"))
         .stdout(predicate::str::contains("position `22`"))
+        .stderr(predicate::str::contains(
+            "period observations failed validation",
+        ));
+}
+
+#[test]
+fn validate_period_observations_rejects_template_placeholders() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-period-observations",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-period-v1.json",
+            "--input",
+            "experiments/position-observations-template.json",
+        ])
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("template placeholder text"))
         .stderr(predicate::str::contains(
             "period observations failed validation",
         ));

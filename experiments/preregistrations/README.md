@@ -50,6 +50,9 @@ cargo run --locked -- validate-period-observations \
   --input <source-backed-observations.json>
 ```
 
+The template intentionally fails validation until every `replace-with...` field
+and the explanatory rationale are replaced.
+
 Required JSON fields:
 
 - `id`
