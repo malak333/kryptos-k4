@@ -153,6 +153,7 @@ pub struct SpacingPredictionPlan {
     pub modulus: usize,
     pub non_anchor_position_count: usize,
     pub anchor_position_count: usize,
+    pub positions_one_based: Vec<usize>,
     pub residues: Vec<SpacingResiduePrediction>,
     pub promoted_candidate: bool,
     pub source_inputs: String,
@@ -205,6 +206,47 @@ pub struct PeriodResidueHit {
     pub residue: usize,
     pub hits: usize,
     pub matching_positions_one_based: Vec<usize>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct SpacingPredictionEvaluation {
+    pub artifact_path: String,
+    pub observation_id: Option<String>,
+    pub observation_source_ids: Vec<String>,
+    pub observation_rationale: Option<String>,
+    pub source_backed_observation: bool,
+    pub observation_warning: Option<&'static str>,
+    pub observed_position_count: usize,
+    pub observed_pair_count: usize,
+    pub observed_positions_one_based: Vec<usize>,
+    pub best_modulus: usize,
+    pub best_residue: usize,
+    pub best_hits: usize,
+    pub best_hit_rate: f64,
+    pub null_mean_best_hits: f64,
+    pub null_std_dev_best_hits: f64,
+    pub empirical_p_value: f64,
+    pub iterations: usize,
+    pub seed: u64,
+    pub modulus_results: Vec<SpacingPredictionEvaluationResult>,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct SpacingPredictionEvaluationResult {
+    pub modulus: usize,
+    pub best_residue: usize,
+    pub best_hits: usize,
+    pub best_hit_rate: f64,
+    pub residue_hits: Vec<SpacingResidueHit>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct SpacingResidueHit {
+    pub residue: usize,
+    pub hits: usize,
+    pub matching_pairs_one_based: Vec<[usize; 2]>,
 }
 
 #[derive(Debug, Clone)]
@@ -471,6 +513,7 @@ pub fn build_spacing_prediction_plan(modulus: usize) -> Result<SpacingPrediction
         modulus,
         non_anchor_position_count: non_anchor_positions.len(),
         anchor_position_count: anchor_positions.len(),
+        positions_one_based: non_anchor_positions,
         residues,
         promoted_candidate: false,
         source_inputs: "K4 ciphertext length and public anchor positions only; no fragment values, candidate words, routes, or public anchor-derived key fragments are scored.".to_string(),
@@ -573,6 +616,91 @@ pub fn evaluate_period_prediction_positions(
         period_results,
         promoted_candidate: false,
         note: "Period prediction evaluation scores independent non-anchor positions against a committed artifact with a best-of-period null; it is not a claimed solution.",
+    })
+}
+
+pub fn evaluate_spacing_prediction_positions(
+    artifact_path: impl AsRef<std::path::Path>,
+    observed_positions_one_based: Vec<usize>,
+    iterations: usize,
+    seed: u64,
+) -> Result<SpacingPredictionEvaluation> {
+    if observed_positions_one_based.len() < 2 {
+        bail!("spacing prediction evaluation requires at least two observed positions");
+    }
+    if iterations == 0 {
+        bail!("spacing prediction evaluation iterations must be greater than zero");
+    }
+
+    let artifact_path = artifact_path.as_ref();
+    let artifact = std::fs::read_to_string(artifact_path)?;
+    let plans: SpacingPredictionPlanSet = serde_json::from_str(&artifact)?;
+    let non_anchor_universe = spacing_position_universe(&plans)?;
+    let universe: HashSet<_> = non_anchor_universe.iter().copied().collect();
+    let mut seen = HashSet::new();
+    for position in &observed_positions_one_based {
+        if !seen.insert(*position) {
+            bail!("observed positions must be unique");
+        }
+        if !universe.contains(position) {
+            bail!(
+                "observed positions must be one-based non-anchor K4 positions from the spacing prediction artifact"
+            );
+        }
+    }
+
+    let observed_pair_count = pair_count(observed_positions_one_based.len());
+    let mut modulus_results =
+        score_spacing_prediction_positions(&plans, &observed_positions_one_based);
+    modulus_results.sort_by(|left, right| {
+        right
+            .best_hits
+            .cmp(&left.best_hits)
+            .then_with(|| left.modulus.cmp(&right.modulus))
+    });
+    let best = modulus_results
+        .first()
+        .ok_or_else(|| anyhow::anyhow!("spacing prediction artifact does not contain any plans"))?;
+
+    let null_best_hits = spacing_prediction_null_distribution(
+        &plans,
+        &non_anchor_universe,
+        observed_positions_one_based.len(),
+        iterations,
+        seed,
+    )?;
+    let null_mean_best_hits = mean_usize(&null_best_hits);
+    let null_std_dev_best_hits = std_dev_usize(&null_best_hits, null_mean_best_hits);
+    let at_least_observed = null_best_hits
+        .iter()
+        .filter(|score| **score >= best.best_hits)
+        .count();
+    let empirical_p_value = (at_least_observed as f64 + 1.0) / (iterations as f64 + 1.0);
+
+    Ok(SpacingPredictionEvaluation {
+        artifact_path: artifact_path.display().to_string(),
+        observation_id: None,
+        observation_source_ids: Vec::new(),
+        observation_rationale: None,
+        source_backed_observation: false,
+        observation_warning: Some(
+            "Ad hoc --positions input is diagnostic only; use --positions-file with validated source IDs before treating observations as evidence.",
+        ),
+        observed_position_count: observed_positions_one_based.len(),
+        observed_pair_count,
+        observed_positions_one_based,
+        best_modulus: best.modulus,
+        best_residue: best.best_residue,
+        best_hits: best.best_hits,
+        best_hit_rate: best.best_hit_rate,
+        null_mean_best_hits,
+        null_std_dev_best_hits,
+        empirical_p_value,
+        iterations,
+        seed,
+        modulus_results,
+        promoted_candidate: false,
+        note: "Spacing prediction evaluation scores independent non-anchor positions against a committed spacing artifact with a best-of-modulus null; it is not a claimed solution.",
     })
 }
 
@@ -912,6 +1040,17 @@ fn non_anchor_position_universe(plans: &PeriodPredictionPlanSet) -> Result<Vec<u
     Ok(positions)
 }
 
+fn spacing_position_universe(plans: &SpacingPredictionPlanSet) -> Result<Vec<usize>> {
+    let first = plans
+        .plans
+        .first()
+        .ok_or_else(|| anyhow::anyhow!("spacing prediction artifact does not contain any plans"))?;
+    let mut positions = first.positions_one_based.clone();
+    positions.sort_unstable();
+    positions.dedup();
+    Ok(positions)
+}
+
 fn score_period_prediction_positions(
     plans: &PeriodPredictionPlanSet,
     observed_positions_one_based: &[usize],
@@ -983,6 +1122,98 @@ fn period_prediction_null_distribution(
         distribution.push(best_hits);
     }
     Ok(distribution)
+}
+
+fn score_spacing_prediction_positions(
+    plans: &SpacingPredictionPlanSet,
+    observed_positions_one_based: &[usize],
+) -> Vec<SpacingPredictionEvaluationResult> {
+    let mut observed_positions = observed_positions_one_based.to_vec();
+    observed_positions.sort_unstable();
+    let observed_pairs = unordered_pairs(&observed_positions);
+    let observed_pair_count = observed_pairs.len();
+
+    plans
+        .plans
+        .iter()
+        .map(|plan| {
+            let mut residue_hits: Vec<_> = plan
+                .residues
+                .iter()
+                .map(|residue| {
+                    let matching_pairs_one_based: Vec<_> = observed_pairs
+                        .iter()
+                        .copied()
+                        .filter(|pair| (pair[1] - pair[0]) % plan.modulus == residue.residue)
+                        .collect();
+                    SpacingResidueHit {
+                        residue: residue.residue,
+                        hits: matching_pairs_one_based.len(),
+                        matching_pairs_one_based,
+                    }
+                })
+                .collect();
+            residue_hits.sort_by_key(|hit| hit.residue);
+            let best = residue_hits
+                .iter()
+                .max_by(|left, right| {
+                    left.hits
+                        .cmp(&right.hits)
+                        .then_with(|| right.residue.cmp(&left.residue))
+                })
+                .expect("plans contain at least one residue");
+            SpacingPredictionEvaluationResult {
+                modulus: plan.modulus,
+                best_residue: best.residue,
+                best_hits: best.hits,
+                best_hit_rate: best.hits as f64 / observed_pair_count as f64,
+                residue_hits,
+            }
+        })
+        .collect()
+}
+
+fn spacing_prediction_null_distribution(
+    plans: &SpacingPredictionPlanSet,
+    non_anchor_universe: &[usize],
+    observed_position_count: usize,
+    iterations: usize,
+    seed: u64,
+) -> Result<Vec<usize>> {
+    if observed_position_count > non_anchor_universe.len() {
+        bail!("observed position count exceeds non-anchor spacing prediction universe");
+    }
+
+    let mut rng = ChaCha8Rng::seed_from_u64(seed);
+    let mut distribution = Vec::with_capacity(iterations);
+    for _ in 0..iterations {
+        let mut sampled = non_anchor_universe.to_vec();
+        sampled.shuffle(&mut rng);
+        sampled.truncate(observed_position_count);
+        let best_hits = score_spacing_prediction_positions(plans, &sampled)
+            .iter()
+            .map(|result| result.best_hits)
+            .max()
+            .ok_or_else(|| {
+                anyhow::anyhow!("spacing prediction artifact does not contain any plans")
+            })?;
+        distribution.push(best_hits);
+    }
+    Ok(distribution)
+}
+
+fn pair_count(position_count: usize) -> usize {
+    position_count.saturating_sub(1) * position_count / 2
+}
+
+fn unordered_pairs(positions: &[usize]) -> Vec<[usize; 2]> {
+    let mut pairs = Vec::with_capacity(pair_count(positions.len()));
+    for (left_index, left) in positions.iter().enumerate() {
+        for right in positions.iter().skip(left_index + 1) {
+            pairs.push([*left, *right]);
+        }
+    }
+    pairs
 }
 
 fn mean_usize(values: &[usize]) -> f64 {

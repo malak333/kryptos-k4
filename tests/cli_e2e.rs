@@ -1689,6 +1689,147 @@ fn evaluate_period_prediction_accepts_source_backed_position_file() {
 }
 
 #[test]
+fn evaluate_spacing_prediction_scores_independent_position_set() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-spacing-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-spacing-v1.json",
+            "--positions",
+            "1,3,5",
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Spacing Prediction Evaluation"))
+        .stdout(predicate::str::contains("best: modulus 2 residue 0"))
+        .stdout(predicate::str::contains("promoted: false"))
+        .stdout(predicate::str::contains("not a claimed solution"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-spacing-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-spacing-v1.json",
+            "--positions",
+            "1,3,5",
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["observed_position_count"], 3);
+    assert_eq!(json["observed_pair_count"], 3);
+    assert_eq!(json["source_backed_observation"], false);
+    assert!(
+        json["observation_warning"]
+            .as_str()
+            .unwrap()
+            .contains("diagnostic")
+    );
+    assert_eq!(json["best_modulus"], 2);
+    assert_eq!(json["best_residue"], 0);
+    assert_eq!(json["best_hits"], 3);
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(json["empirical_p_value"].is_number());
+}
+
+#[test]
+fn evaluate_spacing_prediction_accepts_source_backed_position_file() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("observations.json");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "synthetic-spacing-test",
+  "source_ids": ["cia-artifact"],
+  "positions_one_based": [1, 3, 5],
+  "rationale": "Synthetic CLI test fixture for the spacing observation-file input path."
+}"#,
+    )
+    .unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-spacing-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-spacing-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-spacing-v1.json",
+            "--positions-file",
+            observations_path.to_str().unwrap(),
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["observation_id"], "synthetic-spacing-test");
+    assert_eq!(json["observation_source_ids"][0], "cia-artifact");
+    assert_eq!(json["source_backed_observation"], true);
+    assert_eq!(json["observation_warning"], Value::Null);
+    assert_eq!(
+        json["observation_rationale"],
+        "Synthetic CLI test fixture for the spacing observation-file input path."
+    );
+    assert_eq!(json["best_modulus"], 2);
+    assert_eq!(json["promoted_candidate"], false);
+}
+
+#[test]
+fn evaluate_spacing_prediction_requires_preregistration_for_position_file() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("observations.json");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "synthetic-spacing-test",
+  "source_ids": ["cia-artifact"],
+  "positions_one_based": [1, 3, 5],
+  "rationale": "Synthetic CLI test fixture for preregistration enforcement."
+}"#,
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-spacing-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-spacing-v1.json",
+            "--positions-file",
+            observations_path.to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "--positions-file requires --preregistration",
+        ));
+}
+
+#[test]
 fn validate_period_observations_accepts_source_backed_non_anchor_positions() {
     let temp = tempfile::tempdir().unwrap();
     let observations_path = temp.path().join("observations.json");

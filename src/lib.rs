@@ -46,12 +46,13 @@ pub use key_test::{
 pub use position_structure::{
     PeriodPredictionEvaluation, PeriodPredictionEvaluationResult, PeriodPredictionPlan,
     PeriodPredictionPlanSet, PeriodResidueHit, PeriodResiduePrediction, PositionModulusScore,
-    PositionStructureResult, PositionStructureRun, SpacingPredictionPlan, SpacingPredictionPlanSet,
-    SpacingResiduePrediction, StructuralModel, StructuralModelResult, StructuralModelRun,
-    build_all_period_prediction_plans, build_all_spacing_prediction_plans,
+    PositionStructureResult, PositionStructureRun, SpacingPredictionEvaluation,
+    SpacingPredictionEvaluationResult, SpacingPredictionPlan, SpacingPredictionPlanSet,
+    SpacingResidueHit, SpacingResiduePrediction, StructuralModel, StructuralModelResult,
+    StructuralModelRun, build_all_period_prediction_plans, build_all_spacing_prediction_plans,
     build_period_prediction_plan, build_spacing_prediction_plan,
-    evaluate_period_prediction_positions, registered_structural_models,
-    run_position_structure_control, run_structural_model_control,
+    evaluate_period_prediction_positions, evaluate_spacing_prediction_positions,
+    registered_structural_models, run_position_structure_control, run_structural_model_control,
 };
 pub use preregistration::{
     EvidenceKind, LanePreregistration, PredictionArtifactValidation, PreregistrationValidation,

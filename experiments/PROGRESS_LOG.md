@@ -238,6 +238,12 @@ route, or fragment-value scoring. The deterministic artifact
 validation pass. This lane is a future-evidence target only, not a K4 solve or
 promotion claim.
 
+Spacing evaluator added: `evaluate-spacing-prediction` scores independent
+non-anchor observation positions against the committed spacing artifact with a
+best-of-modulus seeded null. Direct `--positions` input is diagnostic; scored
+source-backed use requires `--positions-file` plus the spacing preregistration
+so the artifact is validated before evaluation.
+
 2026 archive-research context registered:
 `kryptosbot-sanborn-papers-2026` was added to the source registry after checking
 the public KryptosBot Sanborn papers archive page. It is explicitly

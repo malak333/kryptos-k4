@@ -6,16 +6,18 @@ use kryptos_k4::{
     HeldoutKeyControlRun, K4_CIPHERTEXT, KeyMaterialExplanation, KeyMaterialOffsetSweep,
     KeyMaterialTest, PeriodPredictionEvaluation, PeriodPredictionPlan, PeriodPredictionPlanSet,
     PositionStructureRun, PredictionArtifactValidation, PreregistrationValidation, ReportFormat,
-    RoutedBatchKeyMaterialRun, StructuralModelRun, analyze_constraints,
-    analyze_known_plaintext_spans, batch_test_key_material_with_batch_baseline,
-    batch_test_routed_key_material, build_all_period_prediction_plans,
-    build_all_spacing_prediction_plans, build_period_prediction_plan, build_report,
-    candidate_sequences, evaluate_period_prediction_positions, explain_key_material, findings,
-    heldout_key_control, hypotheses, known_anchors, load_and_validate_preregistration,
-    render_report, run_baseline, run_position_structure_control, run_release_checks,
-    run_route_experiments, run_structural_model_control, score_candidate_sequences, sources,
-    summarize_batch_key_material_runs, sweep_key_material_offsets_with_baseline, test_key_material,
-    validate_prediction_artifact, validation_exit_result,
+    RoutedBatchKeyMaterialRun, SpacingPredictionEvaluation, StructuralModelRun,
+    analyze_constraints, analyze_known_plaintext_spans,
+    batch_test_key_material_with_batch_baseline, batch_test_routed_key_material,
+    build_all_period_prediction_plans, build_all_spacing_prediction_plans,
+    build_period_prediction_plan, build_report, candidate_sequences,
+    evaluate_period_prediction_positions, evaluate_spacing_prediction_positions,
+    explain_key_material, findings, heldout_key_control, hypotheses, known_anchors,
+    load_and_validate_preregistration, render_report, run_baseline, run_position_structure_control,
+    run_release_checks, run_route_experiments, run_structural_model_control,
+    score_candidate_sequences, sources, summarize_batch_key_material_runs,
+    sweep_key_material_offsets_with_baseline, test_key_material, validate_prediction_artifact,
+    validation_exit_result,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -332,6 +334,38 @@ enum Command {
         )]
         positions_file: Option<PathBuf>,
         /// Seeded null iterations for best-of-period position concentration.
+        #[arg(long, default_value_t = 10_000)]
+        iterations: usize,
+        /// Seed for deterministic null controls.
+        #[arg(long, default_value_t = 42)]
+        seed: u64,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Evaluate independent non-anchor positions against a committed spacing prediction artifact.
+    EvaluateSpacingPrediction {
+        /// JSON artifact emitted by spacing-prediction-plan --format json.
+        #[arg(long)]
+        artifact: PathBuf,
+        /// Optional preregistration file used to validate the prediction artifact before scoring.
+        #[arg(long)]
+        preregistration: Option<PathBuf>,
+        /// Comma-separated one-based K4 positions to evaluate. Positions must be non-anchor positions.
+        #[arg(
+            long,
+            conflicts_with = "positions_file",
+            required_unless_present = "positions_file"
+        )]
+        positions: Option<String>,
+        /// JSON file with source IDs and one-based non-anchor K4 positions.
+        #[arg(
+            long,
+            conflicts_with = "positions",
+            required_unless_present = "positions"
+        )]
+        positions_file: Option<PathBuf>,
+        /// Seeded null iterations for best-of-modulus spacing concentration.
         #[arg(long, default_value_t = 10_000)]
         iterations: usize,
         /// Seed for deterministic null controls.
@@ -842,6 +876,23 @@ fn main() -> Result<()> {
             seed,
             format,
         } => print_evaluate_period_prediction(
+            artifact,
+            preregistration,
+            positions,
+            positions_file,
+            iterations,
+            seed,
+            format,
+        )?,
+        Command::EvaluateSpacingPrediction {
+            artifact,
+            preregistration,
+            positions,
+            positions_file,
+            iterations,
+            seed,
+            format,
+        } => print_evaluate_spacing_prediction(
             artifact,
             preregistration,
             positions,
@@ -2231,6 +2282,12 @@ fn print_evaluate_period_prediction(
     let has_preregistration = preregistration.is_some();
     if let Some(preregistration) = preregistration {
         let artifact_validation = validate_prediction_artifact(&preregistration)?;
+        if artifact_validation.artifact_kind != "period" {
+            anyhow::bail!(
+                "preregistration `{}` does not declare a period prediction artifact",
+                artifact_validation.preregistration_id
+            );
+        }
         if artifact_validation.artifact_path != artifact.display().to_string() {
             anyhow::bail!(
                 "artifact `{}` does not match preregistration artifact `{}`",
@@ -2274,6 +2331,71 @@ fn print_evaluate_period_prediction(
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&evaluation)?),
         OutputFormat::Markdown => print_period_prediction_evaluation(&evaluation),
+    }
+    Ok(())
+}
+
+fn print_evaluate_spacing_prediction(
+    artifact: PathBuf,
+    preregistration: Option<PathBuf>,
+    positions: Option<String>,
+    positions_file: Option<PathBuf>,
+    iterations: usize,
+    seed: u64,
+    format: OutputFormat,
+) -> Result<()> {
+    let has_preregistration = preregistration.is_some();
+    if let Some(preregistration) = preregistration {
+        let artifact_validation = validate_prediction_artifact(&preregistration)?;
+        if artifact_validation.artifact_kind != "spacing" {
+            anyhow::bail!(
+                "preregistration `{}` does not declare a spacing prediction artifact",
+                artifact_validation.preregistration_id
+            );
+        }
+        if artifact_validation.artifact_path != artifact.display().to_string() {
+            anyhow::bail!(
+                "artifact `{}` does not match preregistration artifact `{}`",
+                artifact.display(),
+                artifact_validation.artifact_path
+            );
+        }
+        if !artifact_validation.valid {
+            anyhow::bail!("prediction artifact failed validation");
+        }
+    }
+    if positions_file.is_some() && !has_preregistration {
+        anyhow::bail!(
+            "--positions-file requires --preregistration so the committed spacing prediction artifact is validated before scoring source-backed observations"
+        );
+    }
+
+    let observation_input = match (positions, positions_file) {
+        (Some(positions), None) => PeriodPredictionObservationInput {
+            id: None,
+            source_ids: Vec::new(),
+            rationale: None,
+            positions_one_based: parse_position_list(&positions).map_err(anyhow::Error::msg)?,
+        },
+        (None, Some(path)) => load_period_prediction_observations(&path)?,
+        _ => anyhow::bail!("provide exactly one of --positions or --positions-file"),
+    };
+    let mut evaluation = evaluate_spacing_prediction_positions(
+        artifact,
+        observation_input.positions_one_based,
+        iterations,
+        seed,
+    )?;
+    evaluation.observation_id = observation_input.id;
+    evaluation.observation_source_ids = observation_input.source_ids;
+    evaluation.observation_rationale = observation_input.rationale;
+    if !evaluation.observation_source_ids.is_empty() {
+        evaluation.source_backed_observation = true;
+        evaluation.observation_warning = None;
+    }
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&evaluation)?),
+        OutputFormat::Markdown => print_spacing_prediction_evaluation(&evaluation),
     }
     Ok(())
 }
@@ -2342,6 +2464,75 @@ fn print_period_prediction_evaluation(evaluation: &PeriodPredictionEvaluation) {
             result.best_residue,
             result.best_hits,
             evaluation.observed_position_count,
+            result.best_hit_rate
+        );
+    }
+}
+
+fn print_spacing_prediction_evaluation(evaluation: &SpacingPredictionEvaluation) {
+    println!("# Spacing Prediction Evaluation\n");
+    println!("This is not a claimed solution.\n");
+    println!("artifact: `{}`", evaluation.artifact_path);
+    if let Some(observation_id) = &evaluation.observation_id {
+        println!("observation id: `{observation_id}`");
+    }
+    if !evaluation.observation_source_ids.is_empty() {
+        println!(
+            "observation sources: {}",
+            evaluation.observation_source_ids.join(", ")
+        );
+    }
+    if let Some(observation_rationale) = &evaluation.observation_rationale {
+        println!("observation rationale: {observation_rationale}");
+    }
+    println!(
+        "source-backed observation: {}",
+        evaluation.source_backed_observation
+    );
+    if let Some(observation_warning) = evaluation.observation_warning {
+        println!("warning: {observation_warning}");
+    }
+    println!(
+        "observed positions: {}",
+        evaluation
+            .observed_positions_one_based
+            .iter()
+            .map(|position| position.to_string())
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
+    println!(
+        "observed position count: {}; observed pair count: {}",
+        evaluation.observed_position_count, evaluation.observed_pair_count
+    );
+    println!(
+        "best: modulus {} residue {} with {}/{} pair hits ({:.4})",
+        evaluation.best_modulus,
+        evaluation.best_residue,
+        evaluation.best_hits,
+        evaluation.observed_pair_count,
+        evaluation.best_hit_rate
+    );
+    println!(
+        "best-of-modulus null: mean {:.2}; sd {:.2}; empirical p-value {:.4}; iterations {}; seed {}",
+        evaluation.null_mean_best_hits,
+        evaluation.null_std_dev_best_hits,
+        evaluation.empirical_p_value,
+        evaluation.iterations,
+        evaluation.seed
+    );
+    println!("promoted: {}", evaluation.promoted_candidate);
+    println!("note: {}\n", evaluation.note);
+
+    println!("| Modulus | Best Residue | Pair Hits | Hit Rate |");
+    println!("| --- | --- | --- | --- |");
+    for result in &evaluation.modulus_results {
+        println!(
+            "| {} | {} | {}/{} | {:.4} |",
+            result.modulus,
+            result.best_residue,
+            result.best_hits,
+            evaluation.observed_pair_count,
             result.best_hit_rate
         );
     }

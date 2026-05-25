@@ -30,6 +30,7 @@ This report uses public anchors only and is not a claimed solution. Production r
 | `period-prediction-plan` | Non-anchor residue-class target emission for a registered period, without scoring public fragment values, in Markdown or JSON. |
 | `spacing-prediction-plan` | Non-anchor spacing residue-class target emission for registered moduli, without scoring fragment values or candidate words, in Markdown or JSON. |
 | `evaluate-period-prediction` | Independent-position evaluator for committed period prediction artifacts with best-of-period null controls, diagnostic/source-backed observation status, source-backed observation-file input that requires preregistration-backed artifact validation, and Markdown/JSON output. |
+| `evaluate-spacing-prediction` | Independent-position evaluator for committed spacing prediction artifacts with best-of-modulus null controls, diagnostic/source-backed observation status, source-backed observation-file input that requires preregistration-backed artifact validation, and Markdown/JSON output. |
 | `baseline` | Seeded false-positive controls for anchors and spans across all supported alphabets in Markdown or JSON. |
 | `hypotheses` | Ranked source-grounded hypotheses with facts, assumptions, falsification tests, and risks in Markdown or JSON. |
 | `candidate-sequences` | Pre-registered contextual sequences and score results in Markdown or JSON. |

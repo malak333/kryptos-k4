@@ -52,6 +52,16 @@ cargo run --locked -- validate-period-observations \
   --input <source-backed-observations.json>
 ```
 
+For spacing lanes, use the same source-backed observation-file format, but score
+against the committed spacing artifact:
+
+```bash
+cargo run --locked -- evaluate-spacing-prediction \
+  --artifact experiments/predictions/non-anchor-position-spacing-v1.json \
+  --preregistration experiments/preregistrations/non-anchor-position-spacing-v1.json \
+  --positions-file <source-backed-observations.json>
+```
+
 Observation source IDs must be registered and must have an `allowed_use`
 boundary compatible with scored independent position evidence. Sources marked
 `public-anchor-summary`, `public-clue-context`, `methodology-context`, or
