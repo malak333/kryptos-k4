@@ -29,6 +29,21 @@ fn constraints_command_prints_alphabet_fragments() {
         .stdout(predicate::str::contains("BERLIN / Standard"))
         .stdout(predicate::str::contains("BERLIN / Kryptos"))
         .stdout(predicate::str::contains("recurrence:"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["constraints", "--spans", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert!(json.as_array().unwrap().iter().any(|analysis| {
+        analysis["target"]["label"] == "EASTNORTHEAST"
+            && analysis["target"]["kind"] == "span"
+            && analysis["recurrence"]["promoted_candidate"] == false
+    }));
 }
 
 #[test]
@@ -42,6 +57,39 @@ fn span_constraints_include_adjacent_clues_and_warnings() {
         .stdout(predicate::str::contains("BERLINCLOCK / Standard"))
         .stdout(predicate::str::contains("promoted: false"))
         .stdout(predicate::str::contains("Exploratory only"));
+}
+
+#[test]
+fn key_fragments_json_is_parseable_and_filterable() {
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "key-fragments",
+            "--span",
+            "BERLINCLOCK",
+            "--alphabet",
+            "kryptos",
+            "--mode",
+            "additive-key",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    let rows = json.as_array().unwrap();
+    assert_eq!(rows.len(), 11);
+    assert!(rows.iter().all(|row| {
+        row["target_kind"] == "span"
+            && row["target_label"] == "BERLINCLOCK"
+            && row["alphabet"] == "kryptos"
+            && row["mode"] == "additive-key"
+            && row["promoted_candidate"] == false
+    }));
 }
 
 #[test]

@@ -1,0 +1,28 @@
+{
+  "id": "non-anchor-position-period-v2",
+  "title": "Non-anchor position-period prediction follow-up",
+  "hypothesis_family": "position-period-prediction",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane predeclares a position-only period target before adding or scoring any candidate key material. It does not reuse public anchor-derived additive fragments as discovery evidence or primary evidence.",
+  "prediction_target": "Future independently obtained non-anchor K4 position observations should fall into predeclared residue classes for the registered period set before any candidate-word, route, or key-material scoring is performed.",
+  "prediction_artifact": "experiments/predictions/non-anchor-position-period-v2.json",
+  "discovery_inputs": [
+    "Registered period set selected before evaluation",
+    "Absolute K4 position numbers only",
+    "Deterministic residue-class emission rule fixed before observing new evidence"
+  ],
+  "evaluation_inputs": [
+    "Future source-documented non-anchor K4 position observations",
+    "A committed held-out non-anchor position set not derived from public anchors"
+  ],
+  "controls": [
+    "seeded shuffle baseline",
+    "best-of-period null control",
+    "multiple-comparison correction",
+    "duplicate-position rejection",
+    "public-anchor-position rejection"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

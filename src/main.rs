@@ -50,6 +50,9 @@ enum Command {
         /// Analyze merged adjacent known-plaintext spans instead of individual anchors.
         #[arg(long)]
         spans: bool,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
     },
     /// Print one row per derived key fragment, with optional filters.
     KeyFragments {
@@ -65,6 +68,9 @@ enum Command {
         /// Filter by derivation mode.
         #[arg(long, value_enum)]
         mode: Option<CliFragmentMode>,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
     },
     /// Test proposed key material against public span-derived additive fragments.
     TestKey {
@@ -388,6 +394,21 @@ enum OutputFormat {
     Json,
 }
 
+#[derive(Debug, Serialize)]
+struct KeyFragmentRow {
+    target_kind: &'static str,
+    target_label: String,
+    alphabet: AlphabetKind,
+    position_zero_based: usize,
+    position_one_based: usize,
+    plaintext: char,
+    ciphertext: char,
+    mode: FragmentMode,
+    value: u8,
+    symbol: char,
+    promoted_candidate: bool,
+}
+
 #[derive(Debug, Deserialize)]
 struct PeriodPredictionObservationFile {
     id: String,
@@ -677,13 +698,14 @@ fn main() -> Result<()> {
     match cli.command {
         Command::Facts { format } => print_facts(format)?,
         Command::Anchors { format } => print_anchors(format)?,
-        Command::Constraints { spans } => print_constraints(spans)?,
+        Command::Constraints { spans, format } => print_constraints(spans, format)?,
         Command::KeyFragments {
             anchor,
             span,
             alphabet,
             mode,
-        } => print_key_fragments(anchor, span, alphabet, mode)?,
+            format,
+        } => print_key_fragments(anchor, span, alphabet, mode, format)?,
         Command::TestKey {
             material,
             transform,
@@ -1563,34 +1585,39 @@ fn print_anchors(format: OutputFormat) -> Result<()> {
     Ok(())
 }
 
-fn print_constraints(spans: bool) -> Result<()> {
+fn print_constraints(spans: bool, format: OutputFormat) -> Result<()> {
     let analyses = if spans {
         analyze_known_plaintext_spans()?
     } else {
         analyze_constraints()?
     };
 
-    for analysis in analyses {
-        println!("{} / {:?}", analysis.target.label, analysis.alphabet.kind);
-        for fragment in analysis.fragments {
-            println!(
-                "  pos {:>2}: {}->{} {:?} value {:>2} symbol {}",
-                fragment.position_one_based,
-                fragment.plaintext,
-                fragment.ciphertext,
-                fragment.mode,
-                fragment.value,
-                fragment.symbol
-            );
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&analyses)?),
+        OutputFormat::Markdown => {
+            for analysis in analyses {
+                println!("{} / {:?}", analysis.target.label, analysis.alphabet.kind);
+                for fragment in analysis.fragments {
+                    println!(
+                        "  pos {:>2}: {}->{} {:?} value {:>2} symbol {}",
+                        fragment.position_one_based,
+                        fragment.plaintext,
+                        fragment.ciphertext,
+                        fragment.mode,
+                        fragment.value,
+                        fragment.symbol
+                    );
+                }
+                println!(
+                    "  recurrence: {}/{} generic mod-10 triples matched; expected random {:.1}; promoted: {}; warning: {}",
+                    analysis.recurrence.gromark_sum_matches,
+                    analysis.recurrence.contiguous_pairs_checked,
+                    analysis.recurrence.expected_random_matches,
+                    analysis.recurrence.promoted_candidate,
+                    analysis.recurrence.sample_warning
+                );
+            }
         }
-        println!(
-            "  recurrence: {}/{} generic mod-10 triples matched; expected random {:.1}; promoted: {}; warning: {}",
-            analysis.recurrence.gromark_sum_matches,
-            analysis.recurrence.contiguous_pairs_checked,
-            analysis.recurrence.expected_random_matches,
-            analysis.recurrence.promoted_candidate,
-            analysis.recurrence.sample_warning
-        );
     }
     Ok(())
 }
@@ -1600,6 +1627,7 @@ fn print_key_fragments(
     span: Option<String>,
     alphabet: Option<CliAlphabet>,
     mode: Option<CliFragmentMode>,
+    format: OutputFormat,
 ) -> Result<()> {
     let alphabet_filter = alphabet.map(AlphabetKind::from);
     let mode_filter = mode.map(FragmentMode::from);
@@ -1621,7 +1649,7 @@ fn print_key_fragments(
         (all, "target", None)
     };
 
-    let mut rows_printed = 0usize;
+    let mut rows = Vec::new();
     for analysis in analyses {
         if target_filter
             .as_ref()
@@ -1643,24 +1671,45 @@ fn print_key_fragments(
                 continue;
             }
 
-            rows_printed += 1;
-            println!(
-                "{} {} / {:?} | pos {} | {}->{} | {:?} | value {} | symbol {}",
+            let row = KeyFragmentRow {
                 target_kind,
-                analysis.target.label,
-                analysis.alphabet.kind,
-                fragment.position_one_based,
-                fragment.plaintext,
-                fragment.ciphertext,
-                fragment.mode,
-                fragment.value,
-                fragment.symbol
-            );
+                target_label: analysis.target.label.clone(),
+                alphabet: analysis.alphabet.kind,
+                position_zero_based: fragment.position_zero_based,
+                position_one_based: fragment.position_one_based,
+                plaintext: fragment.plaintext,
+                ciphertext: fragment.ciphertext,
+                mode: fragment.mode,
+                value: fragment.value,
+                symbol: fragment.symbol,
+                promoted_candidate: false,
+            };
+            rows.push(row);
         }
     }
 
-    if rows_printed == 0 {
+    if rows.is_empty() {
         anyhow::bail!("no key-fragment rows matched the requested {filter_kind} filters");
+    }
+
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&rows)?),
+        OutputFormat::Markdown => {
+            for row in rows {
+                println!(
+                    "{} {} / {:?} | pos {} | {}->{} | {:?} | value {} | symbol {}",
+                    row.target_kind,
+                    row.target_label,
+                    row.alphabet,
+                    row.position_one_based,
+                    row.plaintext,
+                    row.ciphertext,
+                    row.mode,
+                    row.value,
+                    row.symbol
+                );
+            }
+        }
     }
 
     Ok(())

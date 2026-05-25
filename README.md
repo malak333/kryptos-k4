@@ -24,9 +24,9 @@ This project is not a claimed K4 solution.
 ```bash
 cargo run -- facts --format json
 cargo run -- anchors --format json
-cargo run -- constraints
-cargo run -- constraints --spans
-cargo run -- key-fragments --span BERLINCLOCK --alphabet kryptos --mode additive-key
+cargo run -- constraints --format json
+cargo run -- constraints --spans --format json
+cargo run -- key-fragments --span BERLINCLOCK --alphabet kryptos --mode additive-key --format json
 cargo run -- test-key --material BERLINWORLDCLOCK
 cargo run -- test-key --material WELTZEITUHR
 cargo run -- test-key --material ALEXANDERPLATZ --format json
@@ -40,6 +40,8 @@ cargo run -- position-structure --target spans --alphabet all --iterations 1000 
 cargo run -- structural-models --target spans --alphabet kryptos --iterations 1000 --seed 42
 cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-period-v1.json
 cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-v1.json
+cargo run -- validate-preregistration --input experiments/preregistrations/new-lane-id.json
+cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/new-lane-id.json
 cargo run -- period-prediction-plan --period 3
 cargo run -- period-prediction-plan --all
 cargo run -- period-prediction-plan --all --format json
@@ -113,6 +115,13 @@ committed evidence-free prediction artifact is
 artifact only with `period-prediction-plan --all --format json`; it must remain
 free of fragment values, candidate key material, and claimed plaintext.
 
+The follow-up independent prediction lane in
+`experiments/preregistrations/new-lane-id.json` carries the stable lane id
+`non-anchor-position-period-v2` and has its own committed artifact at
+`experiments/predictions/non-anchor-position-period-v2.json`. It uses the same
+evidence-free position-period generator and exists to keep future non-anchor
+position evidence separate from the already mined public-anchor fragments.
+
 Summarize a completed lane:
 
 ```bash
@@ -126,9 +135,9 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | --- | --- |
 | `facts` | K4 ciphertext length, ciphertext, and evidence boundary in Markdown or JSON. |
 | `anchors` | Public known-plaintext anchors with 0-based and 1-based positions plus source IDs in Markdown or JSON. |
-| `constraints` | Anchor-derived fragments for supported alphabets. |
-| `constraints --spans` | Adjacent public clues merged into known-plaintext spans before screening. |
-| `key-fragments` | Raw derived key-fragment rows with anchor/span/alphabet/mode filters. |
+| `constraints` | Anchor-derived fragments for supported alphabets in Markdown or JSON. |
+| `constraints --spans` | Adjacent public clues merged into known-plaintext spans before screening in Markdown or JSON. |
+| `key-fragments` | Raw derived key-fragment rows with anchor/span/alphabet/mode filters in Markdown or JSON. |
 | `test-key` | Proposed key material transformed and compared against public span additive fragments at true K4 positions, with optional cyclic offset sweep and seeded sweep baseline. |
 | `explain-key` | Exact matching public-span positions for one key-material lead, including one-based modulo caveats, descriptive pattern metrics, and composite pattern score when relevant. |
 | `batch-test-keys` | CSV-driven key-material batch runner with ranked Markdown/JSON summaries, optional output artifacts, pattern metrics, and optional batch-level best-of-candidate-file null controls for both match count and composite pattern score. |

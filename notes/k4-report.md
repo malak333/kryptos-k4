@@ -14,8 +14,8 @@ This report uses public anchors only and is not a claimed solution. Production r
 | --- | --- |
 | `facts` | Ciphertext length, ciphertext, and evidence boundary in Markdown or JSON. |
 | `anchors` | Public known-plaintext anchors with positions, source IDs, confidence, claim type, and notes in Markdown or JSON. |
-| `constraints` | Per-anchor key fragments across supported alphabets and modes, with recurrence screens. |
-| `key-fragments` | The same fragment rows are rendered in full for anchors and adjacent spans. |
+| `constraints` | Per-anchor key fragments across supported alphabets and modes, with recurrence screens in Markdown or JSON. |
+| `key-fragments` | The same fragment rows are rendered in full for anchors and adjacent spans in Markdown or JSON. |
 | `test-key` | Proposed key material is transformed and compared against public span additive fragments at true K4 positions, with optional cyclic offset sweep and seeded sweep baseline. |
 | `batch-test-keys` | CSV candidate rows are ranked with the same public-fragment checks and optional output artifacts. |
 | `position-structure` | Candidate-independent residue/spacing control over public fragment positions. |
@@ -792,8 +792,8 @@ Local preflight only. This repo does not use GitHub Actions.
 - lockfile-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/Ciphers/Cargo.lock)
 - markdown-report-present: true (Generated release report must be present. path=/Users/michaelnobile/Antigravity/Ciphers/notes/k4-report.md)
 - candidate-registry-aligned: true (Candidate CSV rows are represented in the candidate registry with source IDs and rationale. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/k4-candidates.csv; registry_path=/Users/michaelnobile/Antigravity/Ciphers/experiments/k4-candidates.md)
-- preregistrations-valid: true (Committed non-template preregistrations validate. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/preregistrations; checked=3)
-- prediction-artifacts-valid: true (Committed prediction artifacts match their preregistrations and deterministic generators. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/predictions; checked=2)
+- preregistrations-valid: true (Committed non-template preregistrations validate. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/preregistrations; checked=4)
+- prediction-artifacts-valid: true (Committed prediction artifacts match their preregistrations and deterministic generators. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/predictions; checked=3)
 - source-packet-latest-access-date: true (Source packet includes latest registered source access date. path=/Users/michaelnobile/Antigravity/Ciphers/sources/source-packet.md; latest_access_date=2026-05-25)
 - source-packet-registry-aligned: true (Source packet matches every registered source ID, URL, type, and allowed-use boundary. path=/Users/michaelnobile/Antigravity/Ciphers/sources/source-packet.md)
 - no-plaintext-leakage-markers: true (No leaked/full-plaintext sentinel markers found in release-facing files.)
