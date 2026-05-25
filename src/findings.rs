@@ -80,6 +80,25 @@ pub fn findings() -> Vec<Finding> {
             next_test: "Only add route families that are named, deterministic, and justified before seeing their score.",
             promoted_candidate: false,
         },
+        Finding {
+            id: "F5",
+            title: "Independent non-anchor period targets are materialized before scoring",
+            related_hypothesis: "H3",
+            source_inputs: &[
+                "experiments/preregistrations/non-anchor-position-period-v1.json",
+                "experiments/predictions/non-anchor-position-period-v1.json",
+            ],
+            transformation_steps: &[
+                "validate the non-anchor position-period preregistration",
+                "emit all registered period residue classes before observing independent evidence",
+                "compare the committed prediction artifact against deterministic generator output",
+            ],
+            output_summary: "The current artifact locks seven registered periods, excludes 24 public-anchor positions, and emits 73 non-anchor K4 positions per period.",
+            baseline_comparison: "The artifact has no score yet; future evidence must use held-out or best-of-period controls before interpretation.",
+            interpretation: "This is an evidence-free prediction target, not a positive signal or a K4 solution claim.",
+            next_test: "Use validate-prediction-artifact before evaluating any future independent evidence against the committed residue classes.",
+            promoted_candidate: false,
+        },
     ]
 }
 

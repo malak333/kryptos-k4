@@ -1550,6 +1550,17 @@ fn findings_json_is_parseable_and_non_promotional() {
     );
     assert_eq!(json[0]["id"], "F1");
     assert!(json[0]["transformation_steps"].as_array().unwrap().len() >= 3);
+    assert!(json.as_array().unwrap().iter().any(|finding| {
+        finding["id"] == "F5"
+            && finding["output_summary"]
+                .as_str()
+                .unwrap()
+                .contains("seven registered periods")
+            && finding["interpretation"]
+                .as_str()
+                .unwrap()
+                .contains("evidence-free prediction target")
+    }));
 }
 
 #[test]
@@ -1662,6 +1673,8 @@ fn markdown_report_can_be_written_to_file() {
     assert!(report.contains("## Known Anchors"));
     assert!(report.contains("## Ranked Hypotheses"));
     assert!(report.contains("## Findings Ledger"));
+    assert!(report.contains("validate-prediction-artifact"));
+    assert!(report.contains("Independent non-anchor period targets"));
 }
 
 #[test]
@@ -1691,6 +1704,13 @@ fn json_report_is_parseable() {
     assert_eq!(
         json["span_constraints"][0]["recurrence"]["promoted_candidate"],
         false
+    );
+    assert!(
+        json["findings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|finding| { finding["id"] == "F5" && finding["promoted_candidate"] == false })
     );
 }
 

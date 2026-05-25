@@ -82,6 +82,10 @@ The committed artifact is intentionally evidence-free: it contains K4 position
 classes only, excludes public-anchor positions, and does not include fragment
 values or candidate key material.
 
+Follow-up documentation update: this lane is now represented in the findings
+ledger as `F5`, so the generated report records the artifact and validation
+gate instead of only the older public-anchor-derived lanes.
+
 ## Existing Completed 100k Controls
 
 ### Pattern Score Candidate Batch
