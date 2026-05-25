@@ -95,6 +95,8 @@ flowchart TD
 - Proposed key material and cyclic phase offsets are evaluated only against public known-plaintext spans, explained with exact matching positions, descriptive pattern metrics, and composite pattern scores when requested, compared to seeded shuffled-value and best-of-candidate-file controls when requested, and remain non-promotional unless future independently justified evidence changes the release boundary.
 - Background experiment loops are local, stoppable, and artifact-producing; they automate repeatable scoring but do not autonomously claim or promote a K4 solution.
 - Historical result summaries compare completed batch runs and candidate stability before any candidate family is expanded.
+- Independent prediction lanes require preregistration, committed prediction-artifact validation, source-backed observation validation, and period-evaluation controls before any result is interpreted.
+- Observation templates remain non-scorable, and source `allowed_use` boundaries prevent context-only sources from becoming scored evidence.
 - `cargo fmt --check`, `cargo clippy --locked --all-targets --all-features -- -D warnings`, `cargo test --locked --all-targets --all-features`, `cargo build --locked --release`, and `cargo run --locked -- release-check` pass locally.
 - Releases remain manual and local-gated; no GitHub Actions or Dependabot policy drift.
 

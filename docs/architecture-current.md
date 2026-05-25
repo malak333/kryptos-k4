@@ -12,6 +12,9 @@ flowchart TD
     Cli --> Facts["facts / anchors / sources"]
     Cli --> Constraints["constraints / key-fragments"]
     Cli --> KeyTest["test-key / explain-key / batch-test-keys / summarize-key-runs"]
+    Cli --> PositionStructure["position-structure / structural-models"]
+    Cli --> PeriodTargets["validate-preregistration / period-prediction-plan / validate-prediction-artifact"]
+    Cli --> PeriodObservations["validate-period-observations / evaluate-period-prediction"]
     Cli --> Baseline["baseline controls"]
     Cli --> Candidates["candidate-sequences"]
     Cli --> Routes["routes"]
@@ -29,6 +32,10 @@ flowchart TD
     KeyTest --> KeyTestModel["src/key_test.rs proposed material checks"]
     KeyTest --> CandidateModel["src/candidates.rs transforms"]
     KeyTest --> Analysis["src/analysis.rs anchor/span fragments"]
+    PositionStructure --> PositionModel["src/position_structure.rs residue, spacing, and period models"]
+    PeriodTargets --> PositionModel
+    PeriodObservations --> PositionModel
+    PeriodObservations --> SourcePolicy["source allowed-use gates"]
     Baseline --> Analysis["src/analysis.rs anchor/span fragments"]
     Candidates --> CandidateModel["src/candidates.rs pre-registered contextual material"]
     Routes --> RouteModel["src/routes.rs bounded named route families"]
@@ -38,6 +45,7 @@ flowchart TD
     Release --> ReleaseModel["src/release_check.rs local release gates"]
 
     Data --> SourcePacket["sources/source-packet.md quote-free source summaries"]
+    Data --> SourcePolicy
     Data --> ResearchPlan["kryptos-k4-research-plan.md scope, hypotheses, next tests"]
     ReportModel --> GeneratedReport["notes/k4-report.md generated release report"]
     BatchLoop --> BatchArtifacts["results/key-tests ignored local artifacts"]
@@ -58,8 +66,10 @@ flowchart TD
 - Candidate, route, and baseline outputs carry non-promotion boundaries and next-test metadata.
 - `test-key`, `explain-key`, and `batch-test-keys` compare proposed material against public span-derived additive fragments at actual K4 positions, can sweep cyclic phase offsets, can print exact matching rows, can report descriptive pattern metrics and composite pattern scores, can run seeded shuffled-value and candidate-file-level baselines, and never promote candidates.
 - `summarize-key-runs` scans historical batch result folders and ranks both individual run rows and per-candidate p-value stability.
+- Preregistration, prediction-artifact, observation-file, and period-prediction gates keep independent non-anchor position targets separate from public-anchor-derived fragments before scoring.
+- Observation files must cite source IDs with a scored-evidence-compatible `allowed_use`; public anchor, clue context, methodology context, and archive context sources remain non-scored context.
 - Background wrapper scripts can run repeated `batch-test-keys` experiments with explicit flags, timestamped local artifacts, latest-result pointers, and optional macOS keep-awake support.
-- Local release verification is implemented without GitHub Actions.
+- Local release verification is implemented without GitHub Actions and also guards committed prediction artifacts, source-input references, and the intentionally non-scorable observation template.
 - E2E tests execute the compiled CLI and validate command outputs.
 
 ## Keep Updated

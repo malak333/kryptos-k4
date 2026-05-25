@@ -25,7 +25,8 @@ The CLI implements the first production slice:
 - adjacent-span analysis and generic mod-10 recurrence screening with random-baseline warnings;
 - candidate-independent residue/spacing structure controls over fixed public-fragment positions;
 - pre-registered structural model controls that evaluate fixed period models before adding new key material;
-- preregistration validation for any future lane that would add candidate material, transforms, routes, or structural tests;
+- preregistration validation for any future lane that would add candidate material, transforms, routes, structural tests, or independent prediction targets;
+- committed non-anchor period prediction artifacts and source-backed observation validation before any independent position evidence is scored;
 - seeded null-distribution baselines with add-one empirical p-values and Holm adjustment;
 - targeted raw key-fragment filtering by anchor/span, alphabet, and derivation mode;
 - proposed key-material checks, exact match explanations, descriptive pattern metrics, composite pattern scores, cyclic offset sweeps, seeded shuffled-value sweep baselines, CSV-driven batch runs, and batch-level best-of-candidate-file null controls against public span-derived additive fragments at actual K4 positions;
@@ -56,7 +57,10 @@ The integration tests in `tests/cli_e2e.rs` execute the compiled CLI and verify:
 - position-structure output compares observed public-fragment residue/spacing scores against seeded shuffles without using candidate key material;
 - structural-models output evaluates a fixed registry of period models with seeded nulls and Holm adjustment before any candidate-word expansion;
 - validate-preregistration rejects new lanes that reuse public anchor-derived fragments as discovery inputs or primary evidence;
+- validate-prediction-artifact checks committed independent prediction artifacts against the deterministic generator;
+- validate-period-observations rejects unregistered source IDs, disallowed source-use boundaries, duplicate positions, public-anchor positions, and unchanged observation templates before scoring;
 - period-prediction-plan emits predeclared non-anchor residue-class targets from K4 positions only, without scoring public fragment values or candidate material;
+- evaluate-period-prediction scores only explicit non-anchor position inputs or source-backed observation files, with seeded best-of-period controls and non-promotion flags;
 - experiments/PROGRESS_LOG.md records command-backed negative controls and active gates so weak lanes are not repeatedly rerun as evidence;
 - candidate-sequence output includes family, source IDs, transform metadata, and no promoted candidates;
 - route output uses only small named route families and emits no plaintext guesses.
@@ -77,7 +81,7 @@ target/release/kryptos-k4 --help
 
 Then create the tag and release manually with `git` and `gh release create`.
 
-The `release-check` command verifies the no-Actions/no-Dependabot policy, required release docs, generated Markdown report presence, candidate CSV/registry alignment, committed preregistration validity, committed prediction-artifact validity, source-packet/source-registry field alignment, latest source access-date metadata, and absence of explicit leaked/full-plaintext sentinel markers before release.
+The `release-check` command verifies the no-Actions/no-Dependabot policy, required release docs, generated Markdown report presence, candidate CSV/registry alignment, committed preregistration validity, committed prediction-artifact validity, intentionally non-scorable observation-template status, findings source-input integrity, source-packet/source-registry field alignment, latest source access-date metadata, and absence of explicit leaked/full-plaintext sentinel markers before release.
 
 The source packet and `src/data.rs` source registry must stay aligned. Archive-sale reporting and community archive-research pages are historical or preregistration context only; they must not introduce archive-discovered plaintext, private auction material, or unregistered community interpretations into the data model, reports, exports, or tests.
 
@@ -88,11 +92,10 @@ survive the current batch, routed, and held-out controls.
 
 Source-backed period observation files are stricter than general source
 registration: `validate-period-observations` rejects public-anchor summary,
-public-clue context, and archive-context-only sources as scored independent
-position evidence. Those sources can still document context or controls, but not
-the held-out target being scored.
+public-clue context, methodology context, and archive-context-only sources as
+scored independent position evidence. Those sources can still document context
+or controls, but not the held-out target being scored.
 
 Public methodology-context sources can document why a search family is stopped
 or why a null control is required. They still do not supply plaintext,
-candidate rows, or scored observations unless a separate preregistration defines
-that evidence boundary before scoring.
+candidate rows, or scored observations.
