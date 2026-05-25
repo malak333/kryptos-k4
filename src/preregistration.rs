@@ -1,7 +1,8 @@
-use crate::sources;
+use crate::{build_all_period_prediction_plans, sources};
 use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use std::path::Path;
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -35,6 +36,19 @@ pub struct PreregistrationValidation {
     pub valid: bool,
     pub errors: Vec<String>,
     pub warnings: Vec<String>,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct PredictionArtifactValidation {
+    pub preregistration_id: String,
+    pub artifact_path: String,
+    pub valid: bool,
+    pub errors: Vec<String>,
+    pub warnings: Vec<String>,
+    pub expected_period_count: usize,
+    pub artifact_period_count: Option<usize>,
     pub promoted_candidate: bool,
     pub note: &'static str,
 }
@@ -212,11 +226,79 @@ fn mentions_public_anchor_fragments(input: &str) -> bool {
         || normalized.contains("known-plaintext fragment")
 }
 
-pub fn load_and_validate_preregistration(
-    path: &std::path::Path,
-) -> Result<PreregistrationValidation> {
+pub fn load_and_validate_preregistration(path: &Path) -> Result<PreregistrationValidation> {
     let input = std::fs::read_to_string(path)?;
     validate_preregistration(&input)
+}
+
+pub fn validate_prediction_artifact(
+    preregistration_path: &Path,
+) -> Result<PredictionArtifactValidation> {
+    validate_prediction_artifact_with_repo_root(preregistration_path, Path::new("."))
+}
+
+pub fn validate_prediction_artifact_with_repo_root(
+    preregistration_path: &Path,
+    repo_root: &Path,
+) -> Result<PredictionArtifactValidation> {
+    let input = std::fs::read_to_string(preregistration_path)?;
+    let registration: LanePreregistration = serde_json::from_str(&input)?;
+    let preregistration_validation = validate_preregistration(&input)?;
+    let expected = build_all_period_prediction_plans()?;
+    let expected_value = serde_json::to_value(&expected)?;
+    let mut errors = preregistration_validation.errors;
+    let warnings = preregistration_validation.warnings;
+
+    let artifact_path = registration.prediction_artifact.clone().unwrap_or_default();
+    let mut artifact_period_count = None;
+    if artifact_path.trim().is_empty() {
+        errors.push("preregistration does not declare prediction_artifact".to_string());
+    } else {
+        let resolved_artifact_path = resolve_repo_relative_path(repo_root, &artifact_path);
+        match std::fs::read_to_string(&resolved_artifact_path) {
+            Ok(artifact) => match serde_json::from_str::<serde_json::Value>(&artifact) {
+                Ok(artifact_value) => {
+                    artifact_period_count = artifact_value
+                        .get("period_count")
+                        .and_then(serde_json::Value::as_u64)
+                        .map(|value| value as usize);
+                    if artifact_value != expected_value {
+                        errors.push(
+                            "prediction artifact does not match deterministic all-period prediction plan output"
+                                .to_string(),
+                        );
+                    }
+                }
+                Err(error) => {
+                    errors.push(format!("prediction_artifact is not valid JSON: {error}"));
+                }
+            },
+            Err(error) => {
+                errors.push(format!("prediction_artifact could not be read: {error}"));
+            }
+        }
+    }
+
+    Ok(PredictionArtifactValidation {
+        preregistration_id: registration.id,
+        artifact_path,
+        valid: errors.is_empty(),
+        errors,
+        warnings,
+        expected_period_count: expected.period_count,
+        artifact_period_count,
+        promoted_candidate: false,
+        note: "Prediction artifact validation checks a committed independent target against its preregistration and deterministic generator; it is not a claimed solution.",
+    })
+}
+
+fn resolve_repo_relative_path(repo_root: &Path, path: &str) -> std::path::PathBuf {
+    let path = Path::new(path);
+    if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        repo_root.join(path)
+    }
 }
 
 pub fn validation_exit_result(validation: &PreregistrationValidation) -> Result<()> {

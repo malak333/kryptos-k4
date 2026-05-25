@@ -52,8 +52,9 @@ pub use position_structure::{
     run_position_structure_control, run_structural_model_control,
 };
 pub use preregistration::{
-    EvidenceKind, LanePreregistration, PreregistrationValidation,
-    load_and_validate_preregistration, validate_preregistration, validation_exit_result,
+    EvidenceKind, LanePreregistration, PredictionArtifactValidation, PreregistrationValidation,
+    load_and_validate_preregistration, validate_prediction_artifact,
+    validate_prediction_artifact_with_repo_root, validate_preregistration, validation_exit_result,
 };
 pub use release_check::{ReleaseCheck, run_release_checks, run_release_checks_for_report};
 pub use report::{Report, ReportFormat, build_report, render_report};

@@ -1,4 +1,7 @@
 use crate::data::sources;
+use crate::preregistration::{
+    LanePreregistration, validate_prediction_artifact_with_repo_root, validate_preregistration,
+};
 use anyhow::{Result, bail};
 use serde::Serialize;
 use std::fs;
@@ -102,6 +105,8 @@ fn run_release_checks_inner(
         checks.push(check_generated_report_markers(repo_root));
     }
     checks.push(check_candidate_registry_alignment(repo_root));
+    checks.push(check_preregistrations_validate(repo_root));
+    checks.push(check_prediction_artifacts_validate(repo_root));
     checks.push(check_source_packet_latest_access_date(repo_root));
     checks.push(check_source_packet_registry_alignment(repo_root));
     checks.push(check_no_plaintext_leakage_markers(repo_root));
@@ -111,6 +116,134 @@ fn run_release_checks_inner(
     }
 
     Ok(checks)
+}
+
+fn check_preregistrations_validate(repo_root: &Path) -> ReleaseCheck {
+    let preregistrations = committed_preregistration_paths(repo_root);
+    let mut mismatches = Vec::new();
+
+    for path in &preregistrations {
+        match fs::read_to_string(path) {
+            Ok(input) => match validate_preregistration(&input) {
+                Ok(validation) => {
+                    if !validation.valid {
+                        mismatches.push(format!(
+                            "{}:{}",
+                            path.display(),
+                            validation.errors.join("|")
+                        ));
+                    }
+                }
+                Err(error) => mismatches.push(format!("{}:{error}", path.display())),
+            },
+            Err(error) => mismatches.push(format!("{}:{error}", path.display())),
+        }
+    }
+
+    ReleaseCheck {
+        name: "preregistrations-valid",
+        passed: !preregistrations.is_empty() && mismatches.is_empty(),
+        detail: if !preregistrations.is_empty() && mismatches.is_empty() {
+            format!(
+                "Committed non-template preregistrations validate. path={}; checked={}",
+                repo_root.join("experiments/preregistrations").display(),
+                preregistrations.len()
+            )
+        } else if preregistrations.is_empty() {
+            format!(
+                "No committed non-template preregistrations found. path={}",
+                repo_root.join("experiments/preregistrations").display()
+            )
+        } else {
+            format!(
+                "Committed preregistrations failed validation. path={}; mismatches={}",
+                repo_root.join("experiments/preregistrations").display(),
+                mismatches.join(", ")
+            )
+        },
+    }
+}
+
+fn check_prediction_artifacts_validate(repo_root: &Path) -> ReleaseCheck {
+    let preregistrations = committed_preregistration_paths(repo_root);
+    let mut checked = 0usize;
+    let mut mismatches = Vec::new();
+
+    for path in &preregistrations {
+        let input = match fs::read_to_string(path) {
+            Ok(input) => input,
+            Err(error) => {
+                mismatches.push(format!("{}:{error}", path.display()));
+                continue;
+            }
+        };
+        let registration: LanePreregistration = match serde_json::from_str(&input) {
+            Ok(registration) => registration,
+            Err(error) => {
+                mismatches.push(format!("{}:{error}", path.display()));
+                continue;
+            }
+        };
+        if registration.prediction_artifact.is_none() {
+            continue;
+        }
+
+        checked += 1;
+        match validate_prediction_artifact_with_repo_root(path, repo_root) {
+            Ok(validation) => {
+                if !validation.valid {
+                    mismatches.push(format!(
+                        "{}:{}",
+                        path.display(),
+                        validation.errors.join("|")
+                    ));
+                }
+            }
+            Err(error) => mismatches.push(format!("{}:{error}", path.display())),
+        }
+    }
+
+    ReleaseCheck {
+        name: "prediction-artifacts-valid",
+        passed: checked > 0 && mismatches.is_empty(),
+        detail: if checked > 0 && mismatches.is_empty() {
+            format!(
+                "Committed prediction artifacts match their preregistrations and deterministic generators. path={}; checked={checked}",
+                repo_root.join("experiments/predictions").display(),
+            )
+        } else if checked == 0 {
+            format!(
+                "No committed preregistrations declare prediction artifacts. path={}",
+                repo_root.join("experiments/preregistrations").display()
+            )
+        } else {
+            format!(
+                "Committed prediction artifacts failed validation. path={}; mismatches={}",
+                repo_root.join("experiments/predictions").display(),
+                mismatches.join(", ")
+            )
+        },
+    }
+}
+
+fn committed_preregistration_paths(repo_root: &Path) -> Vec<std::path::PathBuf> {
+    let dir = repo_root.join("experiments/preregistrations");
+    let mut paths = fs::read_dir(&dir)
+        .ok()
+        .into_iter()
+        .flat_map(|entries| entries.filter_map(|entry| entry.ok()))
+        .map(|entry| entry.path())
+        .filter(|path| {
+            path.extension()
+                .is_some_and(|extension| extension == "json")
+        })
+        .filter(|path| {
+            path.file_name().and_then(|name| name.to_str())
+                != Some("independent-lane-template.json")
+        })
+        .collect::<Vec<_>>();
+    paths.sort();
+    paths
 }
 
 fn check_candidate_registry_alignment(repo_root: &Path) -> ReleaseCheck {
@@ -383,6 +516,7 @@ fn check_no_plaintext_leakage_markers(repo_root: &Path) -> ReleaseCheck {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::build_all_period_prediction_plans;
     use std::fs;
     use tempfile::TempDir;
 
@@ -481,9 +615,55 @@ mod tests {
         assert!(run_release_checks(temp.path()).is_err());
     }
 
+    #[test]
+    fn release_checks_fail_when_preregistration_is_invalid() {
+        let temp = release_ready_temp_dir();
+        fs::write(
+            temp.path()
+                .join("experiments/preregistrations/invalid-lane.json"),
+            r#"{
+  "id": "replace-with-lane-id",
+  "title": "Replace with lane title",
+  "hypothesis_family": "replace-with-family",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "Explain why this lane is independent.",
+  "prediction_target": "Define the independent target.",
+  "discovery_inputs": ["Describe the rule."],
+  "evaluation_inputs": ["Describe the target."],
+  "controls": ["seeded shuffle baseline"],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}"#,
+        )
+        .unwrap();
+
+        assert!(run_release_checks(temp.path()).is_err());
+    }
+
+    #[test]
+    fn release_checks_fail_when_prediction_artifact_is_stale() {
+        let temp = release_ready_temp_dir();
+        fs::write(
+            temp.path()
+                .join("experiments/predictions/non-anchor-position-period-v1.json"),
+            r#"{"period_count":1,"periods":[]}"#,
+        )
+        .unwrap();
+
+        assert!(run_release_checks(temp.path()).is_err());
+    }
+
     fn release_ready_temp_dir() -> TempDir {
         let temp = TempDir::new().unwrap();
-        for directory in ["docs", "sources", "notes", "experiments"] {
+        for directory in [
+            "docs",
+            "sources",
+            "notes",
+            "experiments",
+            "experiments/preregistrations",
+            "experiments/predictions",
+        ] {
             fs::create_dir_all(temp.path().join(directory)).unwrap();
         }
         for (_, relative_path) in REQUIRED_RELEASE_FILES {
@@ -502,6 +682,18 @@ mod tests {
         fs::write(
             temp.path().join("sources/source-packet.md"),
             source_packet_fixture(),
+        )
+        .unwrap();
+        fs::write(
+            temp.path()
+                .join("experiments/preregistrations/non-anchor-position-period-v1.json"),
+            preregistration_fixture(),
+        )
+        .unwrap();
+        fs::write(
+            temp.path()
+                .join("experiments/predictions/non-anchor-position-period-v1.json"),
+            serde_json::to_string_pretty(&build_all_period_prediction_plans().unwrap()).unwrap(),
         )
         .unwrap();
         for (_, relative_path) in REQUIRED_GENERATED_REPORTS {
@@ -547,5 +739,34 @@ mod tests {
 
     fn candidate_registry_fixture() -> String {
         "# K4 Candidate Key-Material Registry\n\nSource IDs: `cia-artifact`\n\nRationale: source-backed test fixture.\n\nRows:\n\n- `KRYPTOS`, A1/Z26 zero-based\n".to_string()
+    }
+
+    fn preregistration_fixture() -> String {
+        r#"{
+  "id": "non-anchor-position-period-v1",
+  "title": "Non-anchor position period prediction",
+  "hypothesis_family": "position-period-prediction",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane predeclares a structural position rule before any key-material scoring, and it does not use public anchor-derived additive fragments as discovery evidence or primary evaluation evidence.",
+  "prediction_target": "Independently obtained non-anchor K4 position observations should concentrate in predeclared residue classes for the registered period set before any candidate-word tuning is performed.",
+  "prediction_artifact": "experiments/predictions/non-anchor-position-period-v1.json",
+  "discovery_inputs": [
+    "Predeclared period-residue rule over non-anchor K4 positions only.",
+    "Registered period set {2,3,4,5,7,8,13} emitted before any observation scoring."
+  ],
+  "evaluation_inputs": [
+    "Source-backed non-anchor position observations that are not public EAST, NORTHEAST, BERLIN, or CLOCK anchor fragments.",
+    "Observation files that declare source IDs, one-based positions, and rationale before evaluation."
+  ],
+  "controls": [
+    "seeded shuffle baseline over non-anchor positions",
+    "best-of-period null control across registered periods",
+    "multiple-comparison correction for the registered period set"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}"#
+        .to_string()
     }
 }

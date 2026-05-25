@@ -4,8 +4,8 @@ use kryptos_k4::{
     AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, BatchKeyMaterialCandidate,
     BatchKeyMaterialRun, BatchKeyRunHistory, CandidateTransform, FragmentMode,
     HeldoutKeyControlRun, K4_CIPHERTEXT, KeyMaterialExplanation, KeyMaterialOffsetSweep,
-    KeyMaterialTest, LanePreregistration, PeriodPredictionEvaluation, PeriodPredictionPlan,
-    PeriodPredictionPlanSet, PositionStructureRun, PreregistrationValidation, ReportFormat,
+    KeyMaterialTest, PeriodPredictionEvaluation, PeriodPredictionPlan, PeriodPredictionPlanSet,
+    PositionStructureRun, PredictionArtifactValidation, PreregistrationValidation, ReportFormat,
     RoutedBatchKeyMaterialRun, StructuralModelRun, analyze_constraints,
     analyze_known_plaintext_spans, batch_test_key_material_with_batch_baseline,
     batch_test_routed_key_material, build_all_period_prediction_plans,
@@ -15,7 +15,7 @@ use kryptos_k4::{
     run_position_structure_control, run_release_checks, run_route_experiments,
     run_structural_model_control, score_candidate_sequences, sources,
     summarize_batch_key_material_runs, sweep_key_material_offsets_with_baseline, test_key_material,
-    validate_preregistration, validation_exit_result,
+    validate_prediction_artifact, validation_exit_result,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -374,19 +374,6 @@ enum Command {
 enum OutputFormat {
     Markdown,
     Json,
-}
-
-#[derive(Debug, Serialize)]
-struct PredictionArtifactValidation {
-    preregistration_id: String,
-    artifact_path: String,
-    valid: bool,
-    errors: Vec<String>,
-    warnings: Vec<String>,
-    expected_period_count: usize,
-    artifact_period_count: Option<usize>,
-    promoted_candidate: bool,
-    note: &'static str,
 }
 
 #[derive(Debug, Deserialize)]
@@ -1868,59 +1855,6 @@ fn print_validate_prediction_artifact(
     } else {
         anyhow::bail!("prediction artifact failed validation")
     }
-}
-
-fn validate_prediction_artifact(
-    preregistration_path: &Path,
-) -> Result<PredictionArtifactValidation> {
-    let input = fs::read_to_string(preregistration_path)?;
-    let registration: LanePreregistration = serde_json::from_str(&input)?;
-    let preregistration_validation = validate_preregistration(&input)?;
-    let expected = build_all_period_prediction_plans()?;
-    let expected_value = serde_json::to_value(&expected)?;
-    let mut errors = preregistration_validation.errors;
-    let warnings = preregistration_validation.warnings;
-
-    let artifact_path = registration.prediction_artifact.clone().unwrap_or_default();
-    let mut artifact_period_count = None;
-    if artifact_path.trim().is_empty() {
-        errors.push("preregistration does not declare prediction_artifact".to_string());
-    } else {
-        match fs::read_to_string(&artifact_path) {
-            Ok(artifact) => match serde_json::from_str::<serde_json::Value>(&artifact) {
-                Ok(artifact_value) => {
-                    artifact_period_count = artifact_value
-                        .get("period_count")
-                        .and_then(serde_json::Value::as_u64)
-                        .map(|value| value as usize);
-                    if artifact_value != expected_value {
-                        errors.push(
-                            "prediction artifact does not match deterministic all-period prediction plan output"
-                                .to_string(),
-                        );
-                    }
-                }
-                Err(error) => {
-                    errors.push(format!("prediction_artifact is not valid JSON: {error}"));
-                }
-            },
-            Err(error) => {
-                errors.push(format!("prediction_artifact could not be read: {error}"));
-            }
-        }
-    }
-
-    Ok(PredictionArtifactValidation {
-        preregistration_id: registration.id,
-        artifact_path,
-        valid: errors.is_empty(),
-        errors,
-        warnings,
-        expected_period_count: expected.period_count,
-        artifact_period_count,
-        promoted_candidate: false,
-        note: "Prediction artifact validation checks a committed independent target against its preregistration and deterministic generator; it is not a claimed solution.",
-    })
 }
 
 fn print_prediction_artifact_validation(validation: &PredictionArtifactValidation) {

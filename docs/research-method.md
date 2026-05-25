@@ -77,7 +77,7 @@ target/release/kryptos-k4 --help
 
 Then create the tag and release manually with `git` and `gh release create`.
 
-The `release-check` command verifies the no-Actions/no-Dependabot policy, required release docs, generated Markdown report presence, candidate CSV/registry alignment, source-packet/source-registry field alignment, latest source access-date metadata, and absence of explicit leaked/full-plaintext sentinel markers before release.
+The `release-check` command verifies the no-Actions/no-Dependabot policy, required release docs, generated Markdown report presence, candidate CSV/registry alignment, committed preregistration validity, committed prediction-artifact validity, source-packet/source-registry field alignment, latest source access-date metadata, and absence of explicit leaked/full-plaintext sentinel markers before release.
 
 The source packet and `src/data.rs` source registry must stay aligned. Archive-sale reporting and community archive-research pages are historical or preregistration context only; they must not introduce archive-discovered plaintext, private auction material, or unregistered community interpretations into the data model, reports, exports, or tests.
 
