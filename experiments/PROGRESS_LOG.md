@@ -279,6 +279,14 @@ passed. The command is a file-creation guard only; the resulting file must still
 pass `validate-period-observations` or `validate-spacing-observations` with the
 matching preregistration and prediction artifact before scoring.
 
+Observation source eligibility report added:
+`observation-sources` lists every registered source and marks whether its
+`allowed_use` boundary can support scored independent position observations.
+Current eligible sources are the primary public-facts-only CIA source records;
+public-anchor summaries, public-clue context, methodology context, and archive
+context remain ineligible for scoring and can only support rationale or
+stopped-lane documentation.
+
 Spacing evaluator added: `evaluate-spacing-prediction` scores independent
 non-anchor observation positions against the committed spacing artifact with a
 best-of-modulus seeded null. Direct `--positions` input is diagnostic; scored

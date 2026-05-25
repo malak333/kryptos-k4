@@ -28,6 +28,7 @@ This report uses public anchors only and is not a claimed solution. Production r
 | `validate-prediction-artifact` | Gate confirming committed independent prediction artifacts still match their preregistration and deterministic generator in Markdown or JSON. |
 | `independent-lane-status` | Operational summary of preregistered independent lanes, artifact validity, and the next source-backed observation gate in Markdown or JSON. |
 | `init-position-observations` | Guarded source-backed observation-file creator that writes registered-source non-anchor positions only, without scoring, in Markdown or JSON. |
+| `observation-sources` | Focused source-use report for scored independent position observations, separating eligible public-facts sources from context-only sources in Markdown or JSON. |
 | `validate-period-observations` | Gate for source-backed independent position observations, source allowed-use compatibility, and optional prediction-artifact preregistration validation before period prediction scoring in Markdown or JSON. |
 | `validate-spacing-observations` | Gate for source-backed independent position observations, source allowed-use compatibility, and optional prediction-artifact preregistration validation before spacing prediction scoring in Markdown or JSON. |
 | `period-prediction-plan` | Non-anchor residue-class target emission for a registered period, without scoring public fragment values, in Markdown or JSON. |

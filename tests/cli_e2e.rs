@@ -179,6 +179,7 @@ fn facts_hypotheses_sources_and_help_are_covered() {
         .stdout(predicate::str::contains("validate-spacing-observations"))
         .stdout(predicate::str::contains("independent-lane-status"))
         .stdout(predicate::str::contains("init-position-observations"))
+        .stdout(predicate::str::contains("observation-sources"))
         .stdout(predicate::str::contains("evaluate-period-prediction"))
         .stdout(predicate::str::contains("evaluate-spacing-prediction"));
 }
@@ -1743,6 +1744,39 @@ fn init_position_observations_rejects_anchor_positions_and_disallowed_sources() 
         .assert()
         .failure()
         .stderr(predicate::str::contains("cannot be scored"));
+}
+
+#[test]
+fn observation_sources_reports_scoring_eligible_sources() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .arg("observation-sources")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Observation Sources"))
+        .stdout(predicate::str::contains("eligible sources: 2"))
+        .stdout(predicate::str::contains("cia-artifact"))
+        .stdout(predicate::str::contains("elonka-kryptos"))
+        .stdout(predicate::str::contains("context-only"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["observation-sources", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["eligible_count"], 2);
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(json["sources"].as_array().unwrap().iter().any(|source| {
+        source["id"] == "cia-artifact" && source["eligible_for_scored_observations"] == true
+    }));
+    assert!(json["sources"].as_array().unwrap().iter().any(|source| {
+        source["id"] == "elonka-kryptos" && source["eligible_for_scored_observations"] == false
+    }));
 }
 
 #[test]

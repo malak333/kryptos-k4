@@ -99,6 +99,8 @@ source registration: `validate-period-observations` and
 context, methodology context, and archive-context-only sources as scored
 independent position evidence. Those sources can still document context or
 controls, but not the held-out target being scored.
+Run `observation-sources` before creating an observation file to see which
+registered sources are eligible for scored independent position observations.
 Use `init-position-observations` to create the JSON file for a future
 source-backed observation; it refuses placeholders, duplicate positions, public
 anchor positions, out-of-range positions, disallowed source uses, and accidental

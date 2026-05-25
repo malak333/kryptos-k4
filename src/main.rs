@@ -454,6 +454,12 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
     },
+    /// Print sources eligible for scored independent position observations.
+    ObservationSources {
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Run local release preflight checks. Does not use GitHub Actions.
     ReleaseCheck {
         /// Output format.
@@ -538,6 +544,24 @@ struct PositionObservationScaffoldReport {
     errors: Vec<String>,
     promoted_candidate: bool,
     note: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct ObservationSourceEligibilityReport {
+    eligible_count: usize,
+    ineligible_count: usize,
+    sources: Vec<ObservationSourceEligibility>,
+    promoted_candidate: bool,
+    note: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct ObservationSourceEligibility {
+    id: &'static str,
+    label: &'static str,
+    allowed_use: &'static str,
+    eligible_for_scored_observations: bool,
+    reason: String,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -1074,6 +1098,7 @@ fn main() -> Result<()> {
         Command::Routes { format } => print_routes(format)?,
         Command::Findings { format } => print_findings(format)?,
         Command::Sources { format } => print_sources(format)?,
+        Command::ObservationSources { format } => print_observation_sources(format)?,
         Command::ReleaseCheck { format } => print_release_check(format)?,
         Command::ExportData { directory } => export_data(directory)?,
         Command::Report { format, output } => {
@@ -3029,6 +3054,68 @@ fn print_sources(format: OutputFormat) -> Result<()> {
                     source.accessed_at,
                     source.allowed_use,
                     source.use_note
+                );
+            }
+        }
+    }
+    Ok(())
+}
+
+fn observation_source_eligibility_report() -> ObservationSourceEligibilityReport {
+    let sources: Vec<_> = sources()
+        .into_iter()
+        .map(|source| {
+            let eligible = period_observation_source_use_is_allowed(source.allowed_use);
+            let reason = if eligible {
+                "allowed_use supports scored independent position observations".to_string()
+            } else {
+                format!(
+                    "allowed_use `{}` is context-only for observation scoring",
+                    source.allowed_use
+                )
+            };
+            ObservationSourceEligibility {
+                id: source.id,
+                label: source.label,
+                allowed_use: source.allowed_use,
+                eligible_for_scored_observations: eligible,
+                reason,
+            }
+        })
+        .collect();
+    let eligible_count = sources
+        .iter()
+        .filter(|source| source.eligible_for_scored_observations)
+        .count();
+    ObservationSourceEligibilityReport {
+        eligible_count,
+        ineligible_count: sources.len() - eligible_count,
+        sources,
+        promoted_candidate: false,
+        note: "Observation-source eligibility is a source-use boundary for future evidence; it is not a claimed solution.",
+    }
+}
+
+fn print_observation_sources(format: OutputFormat) -> Result<()> {
+    let report = observation_source_eligibility_report();
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&report)?),
+        OutputFormat::Markdown => {
+            println!("# Observation Sources\n");
+            println!("This is not a claimed solution.\n");
+            println!("eligible sources: {}", report.eligible_count);
+            println!("ineligible sources: {}", report.ineligible_count);
+            println!("promoted: {}", report.promoted_candidate);
+            println!("note: {}\n", report.note);
+            println!("| Source ID | Allowed Use | Eligible | Reason |");
+            println!("| --- | --- | --- | --- |");
+            for source in &report.sources {
+                println!(
+                    "| `{}` | {} | {} | {} |",
+                    source.id,
+                    source.allowed_use,
+                    source.eligible_for_scored_observations,
+                    source.reason
                 );
             }
         }

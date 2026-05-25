@@ -74,6 +74,8 @@ cargo run -- release-check --format json
 cargo run -- hypotheses --format json
 cargo run -- sources
 cargo run -- sources --format json
+cargo run -- observation-sources
+cargo run -- observation-sources --format json
 cargo run -- export-data --directory data
 cargo run -- report --format markdown --output notes/k4-report.md
 cargo run -- report --format json
@@ -212,6 +214,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `release-check` | Local release preflight in Markdown or JSON confirming no hosted automation, required docs, generated report presence, candidate CSV/registry alignment, preregistration and prediction-artifact validity, independent-lane readiness, non-scorable observation template status, findings source-input integrity, source-packet/source-registry field and latest-access-date alignment, and plaintext-leakage sentinel absence. |
 | `hypotheses` | Ranked source-grounded hypothesis register in Markdown or JSON. |
 | `sources` | Source provenance records in Markdown or JSON for source-policy audits. |
+| `observation-sources` | Focused source-use report showing which registered sources may support scored independent position observations and why other sources are context-only. |
 | `export-data` | Machine-readable JSON for ciphertext, anchors, and sources. |
 | `report` | Full Markdown or JSON report. |
 
