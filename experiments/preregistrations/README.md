@@ -71,8 +71,7 @@ Current independent period lanes:
   derived from the template,
   with committed artifact
   `experiments/predictions/non-anchor-position-period-diagnostic-v1.json`
-- `new-lane-id.json`, a populated follow-up lane whose stable id is
-  `non-anchor-position-period-v2`,
+- `non-anchor-position-period-v2.json`, a populated follow-up lane
   with committed artifact
   `experiments/predictions/non-anchor-position-period-v2.json`
 

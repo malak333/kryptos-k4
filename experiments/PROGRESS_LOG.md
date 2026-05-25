@@ -43,7 +43,7 @@ Command:
 cargo run --locked -- validate-preregistration \
   --input experiments/preregistrations/non-anchor-position-period-v1.json
 cargo run --locked -- validate-preregistration \
-  --input experiments/preregistrations/new-lane-id.json
+  --input experiments/preregistrations/non-anchor-position-period-v2.json
 ```
 
 Result:
@@ -55,7 +55,7 @@ Result:
 
 Interpretation: the proposed `non-anchor-position-period-v1` lane is allowed as
 a preregistered independent target, but it does not provide evidence by itself.
-The follow-up file `new-lane-id.json` now carries the stable lane id
+The follow-up file `non-anchor-position-period-v2.json` carries the stable lane id
 `non-anchor-position-period-v2`, explicitly declares non-anchor position-period
 prediction as its family, and keeps public anchor-derived fragments out of both
 discovery inputs and primary evidence.
@@ -96,7 +96,7 @@ cargo run --locked -- period-prediction-plan --all
 cargo run --locked -- validate-prediction-artifact \
   --preregistration experiments/preregistrations/non-anchor-position-period-v1.json
 cargo run --locked -- validate-prediction-artifact \
-  --preregistration experiments/preregistrations/new-lane-id.json
+  --preregistration experiments/preregistrations/non-anchor-position-period-v2.json
 ```
 
 Result summary:

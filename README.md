@@ -40,8 +40,8 @@ cargo run -- position-structure --target spans --alphabet all --iterations 1000 
 cargo run -- structural-models --target spans --alphabet kryptos --iterations 1000 --seed 42
 cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-period-v1.json
 cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-v1.json
-cargo run -- validate-preregistration --input experiments/preregistrations/new-lane-id.json
-cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/new-lane-id.json
+cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-period-v2.json
+cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-v2.json
 cargo run -- period-prediction-plan --period 3
 cargo run -- period-prediction-plan --all
 cargo run -- period-prediction-plan --all --format json
@@ -116,7 +116,7 @@ artifact only with `period-prediction-plan --all --format json`; it must remain
 free of fragment values, candidate key material, and claimed plaintext.
 
 The follow-up independent prediction lane in
-`experiments/preregistrations/new-lane-id.json` carries the stable lane id
+`experiments/preregistrations/non-anchor-position-period-v2.json` carries the stable lane id
 `non-anchor-position-period-v2` and has its own committed artifact at
 `experiments/predictions/non-anchor-position-period-v2.json`. It uses the same
 evidence-free position-period generator and exists to keep future non-anchor

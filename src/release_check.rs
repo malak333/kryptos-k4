@@ -133,6 +133,14 @@ fn check_preregistrations_validate(repo_root: &Path) -> ReleaseCheck {
                             validation.errors.join("|")
                         ));
                     }
+                    let file_stem = path.file_stem().and_then(|name| name.to_str());
+                    if file_stem != Some(validation.id.as_str()) {
+                        mismatches.push(format!(
+                            "{}:filename must match preregistration id `{}`",
+                            path.display(),
+                            validation.id
+                        ));
+                    }
                 }
                 Err(error) => mismatches.push(format!("{}:{error}", path.display())),
             },
@@ -638,6 +646,20 @@ mod tests {
   "uses_public_anchor_fragments_for_discovery": false,
   "uses_public_anchor_fragments_as_primary_evidence": false
 }"#,
+        )
+        .unwrap();
+
+        assert!(run_release_checks(temp.path()).is_err());
+    }
+
+    #[test]
+    fn release_checks_fail_when_preregistration_filename_does_not_match_id() {
+        let temp = release_ready_temp_dir();
+        fs::rename(
+            temp.path()
+                .join("experiments/preregistrations/non-anchor-position-period-v1.json"),
+            temp.path()
+                .join("experiments/preregistrations/new-lane-id.json"),
         )
         .unwrap();
 
