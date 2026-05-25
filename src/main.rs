@@ -34,9 +34,17 @@ struct Cli {
 #[derive(Debug, Subcommand)]
 enum Command {
     /// Print core public K4 facts and evidence boundary.
-    Facts,
+    Facts {
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Print public known-plaintext anchors with positions and source IDs.
-    Anchors,
+    Anchors {
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Print derived constraint fragments for anchors or adjacent spans.
     Constraints {
         /// Analyze merged adjacent known-plaintext spans instead of individual anchors.
@@ -667,8 +675,8 @@ fn main() -> Result<()> {
     let cli = Cli::parse();
 
     match cli.command {
-        Command::Facts => print_facts(),
-        Command::Anchors => print_anchors(),
+        Command::Facts { format } => print_facts(format)?,
+        Command::Anchors { format } => print_anchors(format)?,
         Command::Constraints { spans } => print_constraints(spans)?,
         Command::KeyFragments {
             anchor,
@@ -1513,26 +1521,46 @@ fn print_key_material_explanation(explanation: &KeyMaterialExplanation) {
     }
 }
 
-fn print_facts() {
-    println!("K4 ciphertext length: {}", K4_CIPHERTEXT.len());
-    println!("K4 ciphertext: {K4_CIPHERTEXT}");
-    println!("Evidence boundary: public anchors only; no claimed full plaintext.");
+fn print_facts(format: OutputFormat) -> Result<()> {
+    let facts = serde_json::json!({
+        "ciphertext_length": K4_CIPHERTEXT.len(),
+        "ciphertext": K4_CIPHERTEXT,
+        "evidence_boundary": "public anchors only; no claimed full plaintext",
+        "promoted_candidate": false,
+    });
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&facts)?),
+        OutputFormat::Markdown => {
+            println!("K4 ciphertext length: {}", K4_CIPHERTEXT.len());
+            println!("K4 ciphertext: {K4_CIPHERTEXT}");
+            println!("Evidence boundary: public anchors only; no claimed full plaintext.");
+        }
+    }
+
+    Ok(())
 }
 
-fn print_anchors() {
-    for anchor in known_anchors() {
-        println!(
-            "{} => {} | 0-based {}-{} | 1-based {}-{} | sources: {} | confidence: {}",
-            anchor.ciphertext,
-            anchor.plaintext,
-            anchor.start_zero_based,
-            anchor.end_zero_based_inclusive,
-            anchor.start_one_based(),
-            anchor.end_one_based_inclusive(),
-            anchor.source_ids.join(","),
-            anchor.confidence
-        );
+fn print_anchors(format: OutputFormat) -> Result<()> {
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&known_anchors())?),
+        OutputFormat::Markdown => {
+            for anchor in known_anchors() {
+                println!(
+                    "{} => {} | 0-based {}-{} | 1-based {}-{} | sources: {} | confidence: {}",
+                    anchor.ciphertext,
+                    anchor.plaintext,
+                    anchor.start_zero_based,
+                    anchor.end_zero_based_inclusive,
+                    anchor.start_one_based(),
+                    anchor.end_one_based_inclusive(),
+                    anchor.source_ids.join(","),
+                    anchor.confidence
+                );
+            }
+        }
     }
+
+    Ok(())
 }
 
 fn print_constraints(spans: bool) -> Result<()> {

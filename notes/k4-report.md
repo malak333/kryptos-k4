@@ -12,8 +12,8 @@ This report uses public anchors only and is not a claimed solution. Production r
 
 | Feature | Included result |
 | --- | --- |
-| `facts` | Ciphertext length, ciphertext, and evidence boundary. |
-| `anchors` | Public known-plaintext anchors with positions, source IDs, confidence, claim type, and notes. |
+| `facts` | Ciphertext length, ciphertext, and evidence boundary in Markdown or JSON. |
+| `anchors` | Public known-plaintext anchors with positions, source IDs, confidence, claim type, and notes in Markdown or JSON. |
 | `constraints` | Per-anchor key fragments across supported alphabets and modes, with recurrence screens. |
 | `key-fragments` | The same fragment rows are rendered in full for anchors and adjacent spans. |
 | `test-key` | Proposed key material is transformed and compared against public span additive fragments at true K4 positions, with optional cyclic offset sweep and seeded sweep baseline. |

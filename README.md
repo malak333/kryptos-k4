@@ -22,8 +22,8 @@ This project is not a claimed K4 solution.
 ## Usage
 
 ```bash
-cargo run -- facts
-cargo run -- anchors
+cargo run -- facts --format json
+cargo run -- anchors --format json
 cargo run -- constraints
 cargo run -- constraints --spans
 cargo run -- key-fragments --span BERLINCLOCK --alphabet kryptos --mode additive-key
@@ -124,8 +124,8 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 
 | Command | Output |
 | --- | --- |
-| `facts` | K4 ciphertext length, ciphertext, and evidence boundary. |
-| `anchors` | Public known-plaintext anchors with 0-based and 1-based positions plus source IDs. |
+| `facts` | K4 ciphertext length, ciphertext, and evidence boundary in Markdown or JSON. |
+| `anchors` | Public known-plaintext anchors with 0-based and 1-based positions plus source IDs in Markdown or JSON. |
 | `constraints` | Anchor-derived fragments for supported alphabets. |
 | `constraints --spans` | Adjacent public clues merged into known-plaintext spans before screening. |
 | `key-fragments` | Raw derived key-fragment rows with anchor/span/alphabet/mode filters. |

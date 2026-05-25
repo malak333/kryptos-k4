@@ -53,6 +53,30 @@ fn facts_hypotheses_sources_and_help_are_covered() {
         .success()
         .stdout(predicate::str::contains("K4 ciphertext length: 97"));
 
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["facts", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["ciphertext_length"], 97);
+    assert_eq!(json["promoted_candidate"], false);
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["anchors", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json[0]["plaintext"], "EAST");
+    assert_eq!(json[0]["source_ids"][0], "elonka-kryptos");
+
     Command::cargo_bin("kryptos-k4")
         .unwrap()
         .arg("hypotheses")
