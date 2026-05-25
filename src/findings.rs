@@ -238,6 +238,7 @@ pub fn findings() -> Vec<Finding> {
 mod tests {
     use super::*;
     use crate::data::sources;
+    use crate::preregistration::summarize_independent_lanes;
     use std::collections::HashSet;
     use std::path::Path;
 
@@ -273,5 +274,22 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn independent_lane_status_finding_matches_committed_lane_count() {
+        let report = summarize_independent_lanes(Path::new("experiments/preregistrations"))
+            .expect("independent lane status should summarize committed preregistrations");
+        let finding = findings()
+            .into_iter()
+            .find(|finding| finding.id == "F10")
+            .expect("F10 should describe independent lane status");
+
+        assert!(finding.output_summary.contains(&format!(
+            "{} lanes, {} ready for source-backed observations, {} invalid lanes",
+            report.lane_count, report.ready_for_source_backed_observations, report.invalid_lanes
+        )));
+        assert!(!report.promoted_candidate);
+        assert!(!finding.promoted_candidate);
     }
 }
