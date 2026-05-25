@@ -16,6 +16,10 @@ Interpretation: future non-anchor position evidence must be both source-backed
 and source-policy compatible before it can be scored against committed period
 prediction artifacts.
 
+Template hardening follow-up: `experiments/position-observations-template.json`
+now leaves `positions_one_based` empty so a copied template cannot accidentally
+score synthetic example positions such as period-3-friendly non-anchor rows.
+
 ## 2026-05-25: Preregistration Gate
 
 Command:
