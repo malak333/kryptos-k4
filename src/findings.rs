@@ -225,7 +225,7 @@ pub fn findings() -> Vec<Finding> {
                 "validate each preregistration and declared prediction artifact",
                 "report lane readiness and the next observation validator or evaluator command",
             ],
-            output_summary: "The lane-status command reports 7 lanes, 7 ready for source-backed observations, 0 invalid lanes, and promoted false.",
+            output_summary: "The lane-status command reports 10 lanes, 10 ready for source-backed observations, 0 invalid lanes, and promoted false.",
             baseline_comparison: "This is an operational gate summary rather than a statistical cryptanalytic baseline.",
             interpretation: "All current independent prediction lanes are ready for future source-backed observation files, but no observation has been scored and no candidate is promoted.",
             next_test: "Use independent-lane-status before adding any observation file, then run the family-specific observation validator and evaluator named by the lane status output.",
