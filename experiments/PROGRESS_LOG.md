@@ -18,13 +18,25 @@ Follow-up: this boundary is now represented in the findings ledger as `F6`,
 so the generated report records the methodology source as a stopped-lane
 discipline finding rather than only as source metadata.
 
+## 2026-05-25: Methodology Context Scoring Gate
+
+The period-observation validator now rejects `methodology-context` sources as
+scored independent position evidence. Methodology pages can still justify
+stopped lanes, controls, or preregistration rationale, but they cannot supply
+the scored non-anchor positions for `validate-period-observations` or
+`evaluate-period-prediction --positions-file`.
+
+Interpretation: source-backed future evidence must come from a source boundary
+compatible with scored position observations. Methodology-only sources remain
+context, not evidence.
+
 ## 2026-05-25: Observation Source-Use Gate
 
 The period-observation path now rejects registered sources whose `allowed_use`
 boundary is not compatible with scored independent position evidence.
-`public-anchor-summary`, `public-clue-context`, and `archive-context-only`
-sources remain valid context/control sources, but they cannot be used as scored
-observation evidence for `validate-period-observations` or
+`public-anchor-summary`, `public-clue-context`, `methodology-context`, and
+`archive-context-only` sources remain valid context/control sources, but they
+cannot be used as scored observation evidence for `validate-period-observations` or
 `evaluate-period-prediction --positions-file`.
 
 Interpretation: future non-anchor position evidence must be both source-backed

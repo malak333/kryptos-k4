@@ -68,9 +68,10 @@ cargo run -- report --format json
 
 Observation files must cite registered sources whose `allowed_use` boundary is
 compatible with scored independent position evidence. Public-anchor summary,
-public-clue context, and archive-context-only sources are rejected for scoring.
-The observation template intentionally has an empty `positions_one_based` list,
-so copied lanes cannot accidentally score synthetic example positions.
+public-clue context, methodology context, and archive-context-only sources are
+rejected for scoring. The observation template intentionally has an empty
+`positions_one_based` list, so copied lanes cannot accidentally score synthetic
+example positions.
 
 ## Background Batch Runs
 

@@ -1755,7 +1755,7 @@ fn validate_period_observations_rejects_anchor_or_archive_context_sources() {
         &observations_path,
         r#"{
   "id": "bad-source-use-test",
-  "source_ids": ["elonka-kryptos", "kryptosbot-sanborn-papers-2026"],
+  "source_ids": ["elonka-kryptos", "kryptosbot-sanborn-papers-2026", "kryptosbot-methodology-2026"],
   "positions_one_based": [1, 4, 7],
   "rationale": "Synthetic CLI test fixture for source allowed-use validation."
 }"#,
@@ -1775,6 +1775,7 @@ fn validate_period_observations_rejects_anchor_or_archive_context_sources() {
         .failure()
         .stdout(predicate::str::contains("public-anchor-summary"))
         .stdout(predicate::str::contains("archive-context-only"))
+        .stdout(predicate::str::contains("methodology-context"))
         .stderr(predicate::str::contains(
             "period observations failed validation",
         ));

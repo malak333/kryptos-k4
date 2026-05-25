@@ -54,8 +54,9 @@ cargo run --locked -- validate-period-observations \
 
 Observation source IDs must be registered and must have an `allowed_use`
 boundary compatible with scored independent position evidence. Sources marked
-`public-anchor-summary`, `public-clue-context`, or `archive-context-only` can be
-used for context or controls, but not as scored observation evidence.
+`public-anchor-summary`, `public-clue-context`, `methodology-context`, or
+`archive-context-only` can be used for context or controls, but not as scored
+observation evidence.
 
 The template intentionally fails validation until every `replace-with...` field,
 the explanatory rationale, and the empty `positions_one_based` list are

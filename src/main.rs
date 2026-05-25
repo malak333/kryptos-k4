@@ -662,7 +662,7 @@ fn validate_period_prediction_observation_fields(
 }
 
 fn period_observation_source_use_is_allowed(allowed_use: &str) -> bool {
-    matches!(allowed_use, "public-facts-only" | "methodology-context")
+    matches!(allowed_use, "public-facts-only")
 }
 
 fn load_period_prediction_observations(path: &Path) -> Result<PeriodPredictionObservationInput> {
