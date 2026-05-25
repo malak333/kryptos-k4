@@ -171,10 +171,10 @@ same non-anchor, position-only prediction boundary and exists to lock the next
 period target before any source-backed observation scoring.
 
 The latest populated period lane,
-`experiments/preregistrations/non-anchor-position-period-v5.json`, replaces the
-temporary copied filename with stable lane id `non-anchor-position-period-v5`
+`experiments/preregistrations/non-anchor-position-period-v7.json`, replaces the
+temporary copied filename with stable lane id `non-anchor-position-period-v7`
 and has a matching deterministic artifact at
-`experiments/predictions/non-anchor-position-period-v5.json`. It remains a
+`experiments/predictions/non-anchor-position-period-v7.json`. It remains a
 pre-scoring independent prediction target; it adds no candidate material and
 does not reuse public-anchor fragments as evidence.
 

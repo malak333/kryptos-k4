@@ -1395,6 +1395,7 @@ fn committed_period_prediction_artifact_matches_cli_output() {
         "experiments/predictions/non-anchor-position-period-v4.json",
         "experiments/predictions/non-anchor-position-period-v5.json",
         "experiments/predictions/non-anchor-position-period-v6.json",
+        "experiments/predictions/non-anchor-position-period-v7.json",
     ] {
         let fixture: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
 
@@ -1559,6 +1560,7 @@ fn validate_prediction_artifact_checks_committed_independent_target() {
         "experiments/preregistrations/non-anchor-position-period-v4.json",
         "experiments/preregistrations/non-anchor-position-period-v5.json",
         "experiments/preregistrations/non-anchor-position-period-v6.json",
+        "experiments/preregistrations/non-anchor-position-period-v7.json",
     ] {
         Command::cargo_bin("kryptos-k4")
             .unwrap()
@@ -1620,9 +1622,9 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Independent Lane Status"))
-        .stdout(predicate::str::contains("lanes: 9"))
+        .stdout(predicate::str::contains("lanes: 10"))
         .stdout(predicate::str::contains(
-            "ready for source-backed observations: 9",
+            "ready for source-backed observations: 10",
         ))
         .stdout(predicate::str::contains("invalid lanes: 0"))
         .stdout(predicate::str::contains(
@@ -1642,8 +1644,8 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["lane_count"], 9);
-    assert_eq!(json["ready_for_source_backed_observations"], 9);
+    assert_eq!(json["lane_count"], 10);
+    assert_eq!(json["ready_for_source_backed_observations"], 10);
     assert_eq!(json["invalid_lanes"], 0);
     assert_eq!(json["promoted_candidate"], false);
     assert!(json["lanes"].as_array().unwrap().iter().all(|lane| {
