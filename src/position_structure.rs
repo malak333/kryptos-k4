@@ -1,12 +1,12 @@
 use crate::{
-    AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, FragmentMode, analyze_constraints,
-    analyze_known_plaintext_spans,
+    AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, FragmentMode, K4_CIPHERTEXT,
+    analyze_constraints, analyze_known_plaintext_spans, known_anchors,
 };
 use anyhow::{Result, bail};
 use rand::seq::SliceRandom;
 use rand_chacha::{ChaCha8Rng, rand_core::SeedableRng};
 use serde::Serialize;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 const MIN_FRAGMENTS_FOR_PROMOTION: usize = 20;
 const DEFAULT_MIN_MODULUS: usize = 2;
@@ -111,6 +111,25 @@ pub struct StructuralModel {
     pub kind: &'static str,
     pub period: usize,
     pub rationale: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct PeriodPredictionPlan {
+    pub period: usize,
+    pub non_anchor_position_count: usize,
+    pub anchor_position_count: usize,
+    pub residues: Vec<PeriodResiduePrediction>,
+    pub promoted_candidate: bool,
+    pub source_inputs: &'static str,
+    pub prediction_rule: &'static str,
+    pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct PeriodResiduePrediction {
+    pub residue: usize,
+    pub position_count: usize,
+    pub positions_one_based: Vec<usize>,
 }
 
 #[derive(Debug, Clone)]
@@ -269,6 +288,50 @@ pub fn registered_structural_models() -> Vec<StructuralModel> {
             rationale: "Thirteen-lane model pre-registered as a bounded span/grid-width check, not inferred from key material.",
         },
     ]
+}
+
+pub fn build_period_prediction_plan(period: usize) -> Result<PeriodPredictionPlan> {
+    if !registered_structural_models()
+        .iter()
+        .any(|model| model.period == period)
+    {
+        bail!("period must be one of the registered structural model periods");
+    }
+
+    let anchor_positions: HashSet<usize> = known_anchors()
+        .iter()
+        .flat_map(|anchor| anchor.start_zero_based..=anchor.end_zero_based_inclusive)
+        .collect();
+    let non_anchor_positions: Vec<usize> = (0..K4_CIPHERTEXT.len())
+        .filter(|position| !anchor_positions.contains(position))
+        .collect();
+    let mut residues: Vec<PeriodResiduePrediction> = (0..period)
+        .map(|residue| {
+            let positions_one_based: Vec<usize> = non_anchor_positions
+                .iter()
+                .copied()
+                .filter(|position| position % period == residue)
+                .map(|position| position + 1)
+                .collect();
+            PeriodResiduePrediction {
+                residue,
+                position_count: positions_one_based.len(),
+                positions_one_based,
+            }
+        })
+        .collect();
+    residues.sort_by_key(|prediction| prediction.residue);
+
+    Ok(PeriodPredictionPlan {
+        period,
+        non_anchor_position_count: non_anchor_positions.len(),
+        anchor_position_count: anchor_positions.len(),
+        residues,
+        promoted_candidate: false,
+        source_inputs: "K4 ciphertext length and public anchor positions only; no fragment values, candidate words, or public anchor-derived key fragments are scored.",
+        prediction_rule: "Group every non-anchor K4 position by zero-based position modulo the registered period; future independent evidence must be evaluated against these residue classes without retuning.",
+        note: "Period prediction plan only; this emits a predeclared target for future independent evidence and is not a decryption claim.",
+    })
 }
 
 fn push_results(
@@ -719,6 +782,33 @@ mod tests {
             run.results
                 .iter()
                 .all(|result| result.source_inputs.contains("targets="))
+        );
+    }
+
+    #[test]
+    fn period_prediction_plan_excludes_public_anchor_positions() {
+        let plan = build_period_prediction_plan(3).unwrap();
+
+        assert_eq!(plan.period, 3);
+        assert_eq!(plan.anchor_position_count, 24);
+        assert_eq!(plan.non_anchor_position_count, K4_CIPHERTEXT.len() - 24);
+        assert!(!plan.promoted_candidate);
+        assert_eq!(plan.residues.len(), 3);
+        assert_eq!(
+            plan.residues
+                .iter()
+                .map(|residue| residue.position_count)
+                .sum::<usize>(),
+            plan.non_anchor_position_count
+        );
+        assert!(
+            plan.residues
+                .iter()
+                .flat_map(|residue| residue.positions_one_based.iter())
+                .all(|position| !known_anchors().iter().any(|anchor| {
+                    *position >= anchor.start_one_based()
+                        && *position <= anchor.end_one_based_inclusive()
+                }))
         );
     }
 }

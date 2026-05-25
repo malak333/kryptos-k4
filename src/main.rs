@@ -4,13 +4,14 @@ use kryptos_k4::{
     AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, BatchKeyMaterialCandidate,
     BatchKeyMaterialRun, BatchKeyRunHistory, CandidateTransform, FragmentMode,
     HeldoutKeyControlRun, K4_CIPHERTEXT, KeyMaterialExplanation, KeyMaterialOffsetSweep,
-    KeyMaterialTest, PositionStructureRun, PreregistrationValidation, ReportFormat,
-    RoutedBatchKeyMaterialRun, StructuralModelRun, analyze_constraints,
+    KeyMaterialTest, PeriodPredictionPlan, PositionStructureRun, PreregistrationValidation,
+    ReportFormat, RoutedBatchKeyMaterialRun, StructuralModelRun, analyze_constraints,
     analyze_known_plaintext_spans, batch_test_key_material_with_batch_baseline,
-    batch_test_routed_key_material, build_report, candidate_sequences, explain_key_material,
-    findings, heldout_key_control, hypotheses, known_anchors, load_and_validate_preregistration,
-    render_report, run_baseline, run_position_structure_control, run_release_checks,
-    run_route_experiments, run_structural_model_control, score_candidate_sequences, sources,
+    batch_test_routed_key_material, build_period_prediction_plan, build_report,
+    candidate_sequences, explain_key_material, findings, heldout_key_control, hypotheses,
+    known_anchors, load_and_validate_preregistration, render_report, run_baseline,
+    run_position_structure_control, run_release_checks, run_route_experiments,
+    run_structural_model_control, score_candidate_sequences, sources,
     summarize_batch_key_material_runs, sweep_key_material_offsets_with_baseline, test_key_material,
     validation_exit_result,
 };
@@ -244,6 +245,15 @@ enum Command {
         /// JSON preregistration file to validate.
         #[arg(long)]
         input: PathBuf,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Emit a predeclared non-anchor residue-class target for future independent evidence.
+    PeriodPredictionPlan {
+        /// Registered period to use for the residue-class prediction.
+        #[arg(long)]
+        period: usize,
         /// Output format.
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
@@ -543,6 +553,9 @@ fn main() -> Result<()> {
         } => print_structural_models(target, alphabet, mode, iterations, seed, format)?,
         Command::ValidatePreregistration { input, format } => {
             print_validate_preregistration(input, format)?
+        }
+        Command::PeriodPredictionPlan { period, format } => {
+            print_period_prediction_plan(period, format)?
         }
         Command::Hypotheses => print_hypotheses(),
         Command::CandidateSequences { format } => print_candidate_sequences(format)?,
@@ -1573,6 +1586,45 @@ fn print_preregistration_validation(validation: &PreregistrationValidation) {
             println!("- {warning}");
         }
         println!();
+    }
+}
+
+fn print_period_prediction_plan(period: usize, format: OutputFormat) -> Result<()> {
+    let plan = build_period_prediction_plan(period)?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&plan)?),
+        OutputFormat::Markdown => print_period_prediction_plan_markdown(&plan),
+    }
+    Ok(())
+}
+
+fn print_period_prediction_plan_markdown(plan: &PeriodPredictionPlan) {
+    println!("# Period Prediction Plan\n");
+    println!("This is not a claimed solution.\n");
+    println!("period: {}", plan.period);
+    println!("non-anchor positions: {}", plan.non_anchor_position_count);
+    println!(
+        "public-anchor positions excluded: {}",
+        plan.anchor_position_count
+    );
+    println!("promoted: {}", plan.promoted_candidate);
+    println!("source inputs: {}", plan.source_inputs);
+    println!("prediction rule: {}", plan.prediction_rule);
+    println!("note: {}\n", plan.note);
+
+    println!("| Residue | Non-Anchor Position Count | Positions One-Based |");
+    println!("| --- | --- | --- |");
+    for residue in &plan.residues {
+        let positions = residue
+            .positions_one_based
+            .iter()
+            .map(|position| position.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        println!(
+            "| {} | {} | {} |",
+            residue.residue, residue.position_count, positions
+        );
     }
 }
 

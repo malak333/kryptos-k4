@@ -1143,6 +1143,62 @@ fn structural_models_json_is_deterministic_and_non_promotional() {
 }
 
 #[test]
+fn period_prediction_plan_emits_non_anchor_residue_classes() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["period-prediction-plan", "--period", "3"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Period Prediction Plan"))
+        .stdout(predicate::str::contains("period: 3"))
+        .stdout(predicate::str::contains("non-anchor positions: 73"))
+        .stdout(predicate::str::contains(
+            "public-anchor positions excluded: 24",
+        ))
+        .stdout(predicate::str::contains("not a claimed solution"));
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["period-prediction-plan", "--period", "6"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "period must be one of the registered structural model periods",
+        ));
+}
+
+#[test]
+fn period_prediction_plan_json_is_parseable_and_non_promotional() {
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "period-prediction-plan",
+            "--period",
+            "3",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["period"], 3);
+    assert_eq!(json["non_anchor_position_count"], 73);
+    assert_eq!(json["anchor_position_count"], 24);
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(
+        json["source_inputs"]
+            .as_str()
+            .unwrap()
+            .contains("no fragment values")
+    );
+    assert_eq!(json["residues"].as_array().unwrap().len(), 3);
+}
+
+#[test]
 fn validate_preregistration_accepts_independent_prediction_target() {
     let temp = tempfile::tempdir().unwrap();
     let input_path = temp.path().join("lane.json");

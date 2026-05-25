@@ -48,6 +48,28 @@ candidate-independent structure on public span fragments. Do not expand a
 period lane from this public-fragment result. The only defensible use of the
 period registry is as a preregistered rule for an independent future target.
 
+## 2026-05-25: Non-Anchor Period Prediction Plan
+
+Command:
+
+```bash
+cargo run --locked -- period-prediction-plan --period 3
+```
+
+Result summary:
+
+- period: `3`
+- public-anchor positions excluded: `24`
+- non-anchor positions emitted as prediction targets: `73`
+- fragment values scored: none
+- candidate material scored: none
+- promoted: false
+
+Interpretation: this makes the `non-anchor-position-period-v1` lane executable
+as a predeclared target. It does not use public anchor-derived key fragments as
+evidence. Future independent evidence can be compared to these residue classes
+without retuning the period or residue assignment.
+
 ## Existing Completed 100k Controls
 
 ### Pattern Score Candidate Batch
