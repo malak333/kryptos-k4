@@ -18,6 +18,11 @@ This report uses public anchors only and is not a claimed solution. Production r
 | `key-fragments` | The same fragment rows are rendered in full for anchors and adjacent spans. |
 | `test-key` | Proposed key material is transformed and compared against public span additive fragments at true K4 positions, with optional cyclic offset sweep and seeded sweep baseline. |
 | `batch-test-keys` | CSV candidate rows are ranked with the same public-fragment checks and optional output artifacts. |
+| `position-structure` | Candidate-independent residue/spacing control over public fragment positions. |
+| `structural-models` | Pre-registered period-model controls over public fragment positions. |
+| `validate-preregistration` | Research-lane gate for future source evidence or independent prediction targets. |
+| `validate-prediction-artifact` | Gate confirming committed independent prediction artifacts still match their preregistration and deterministic generator. |
+| `period-prediction-plan` | Non-anchor residue-class target emission for a registered period, without scoring public fragment values. |
 | `baseline` | Seeded false-positive controls for anchors and spans across all supported alphabets. |
 | `hypotheses` | Ranked source-grounded hypotheses with facts, assumptions, falsification tests, and risks. |
 | `candidate-sequences` | Pre-registered contextual sequences and score results. |
@@ -747,6 +752,14 @@ Findings are reproducible research observations, not promoted solution claims.
   - Baseline: Each route result is shown beside identity, reverse, and seeded-random baselines.
   - Interpretation: The route lane is an exploratory guardrail against unconstrained permutation search.
   - Next test: Only add route families that are named, deterministic, and justified before seeing their score.
+  - Promoted: false
+- **F5 Independent non-anchor period targets are materialized before scoring (H3)**
+  - Sources: `experiments/preregistrations/non-anchor-position-period-v1.json`, `experiments/predictions/non-anchor-position-period-v1.json`
+  - Steps: validate the non-anchor position-period preregistration; emit all registered period residue classes before observing independent evidence; compare the committed prediction artifact against deterministic generator output
+  - Output: The current artifact locks seven registered periods, excludes 24 public-anchor positions, and emits 73 non-anchor K4 positions per period.
+  - Baseline: The artifact has no score yet; future evidence must use held-out or best-of-period controls before interpretation.
+  - Interpretation: This is an evidence-free prediction target, not a positive signal or a K4 solution claim.
+  - Next test: Use validate-prediction-artifact before evaluating any future independent evidence against the committed residue classes.
   - Promoted: false
 
 ## Release Check
