@@ -44,6 +44,8 @@ cargo run -- validate-preregistration --input experiments/preregistrations/non-a
 cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-v2.json --format json
 cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-period-v3.json --format json
 cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-v3.json --format json
+cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-period-v4.json --format json
+cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-v4.json --format json
 cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-spacing-v1.json --format json
 cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-spacing-v1.json --format json
 cargo run -- period-prediction-plan --period 3
@@ -143,6 +145,13 @@ matching committed artifact at
 `experiments/predictions/non-anchor-position-period-v3.json`. It is another
 pre-scoring position-period target for future non-anchor evidence, not a
 candidate-word, route, or public-anchor mining result.
+
+The follow-up lane in
+`experiments/preregistrations/non-anchor-position-period-v4.json` has a
+matching committed artifact at
+`experiments/predictions/non-anchor-position-period-v4.json`. It keeps the
+same non-anchor, position-only prediction boundary and exists to lock the next
+period target before any source-backed observation scoring.
 
 Summarize a completed lane:
 

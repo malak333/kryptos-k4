@@ -247,6 +247,15 @@ emitted by `period-prediction-plan --all --format json`. Both preregistration
 and artifact validation pass. This is a pre-scoring target for future
 source-backed non-anchor observations only.
 
+Additional independent period lane populated:
+`experiments/preregistrations/non-anchor-position-period-v4.json` carries
+stable lane id `non-anchor-position-period-v4` and keeps the same position-only,
+non-anchor prediction boundary. Its deterministic artifact at
+`experiments/predictions/non-anchor-position-period-v4.json` is emitted by
+`period-prediction-plan --all --format json`. Both preregistration and artifact
+validation pass. This lane adds no candidate material and contributes no scored
+evidence until source-backed non-anchor observations exist.
+
 Spacing evaluator added: `evaluate-spacing-prediction` scores independent
 non-anchor observation positions against the committed spacing artifact with a
 best-of-modulus seeded null. Direct `--positions` input is diagnostic; scored

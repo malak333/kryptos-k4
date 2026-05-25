@@ -1388,6 +1388,7 @@ fn committed_period_prediction_artifact_matches_cli_output() {
         "experiments/predictions/non-anchor-position-period-diagnostic-v1.json",
         "experiments/predictions/non-anchor-position-period-v2.json",
         "experiments/predictions/non-anchor-position-period-v3.json",
+        "experiments/predictions/non-anchor-position-period-v4.json",
     ] {
         let fixture: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
 
@@ -1548,7 +1549,7 @@ fn validate_prediction_artifact_checks_committed_independent_target() {
         "experiments/preregistrations/non-anchor-position-period-diagnostic-v1.json",
         "experiments/preregistrations/non-anchor-position-period-v2.json",
         "experiments/preregistrations/non-anchor-position-period-v3.json",
-        "experiments/preregistrations/non-anchor-position-spacing-v1.json",
+        "experiments/preregistrations/non-anchor-position-period-v4.json",
     ] {
         Command::cargo_bin("kryptos-k4")
             .unwrap()
@@ -1565,6 +1566,21 @@ fn validate_prediction_artifact_checks_committed_independent_target() {
             .stdout(predicate::str::contains("artifact periods: 7"))
             .stdout(predicate::str::contains("promoted: false"));
     }
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-prediction-artifact",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-spacing-v1.json",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Prediction Artifact Validation"))
+        .stdout(predicate::str::contains("valid: true"))
+        .stdout(predicate::str::contains("expected moduli: 7"))
+        .stdout(predicate::str::contains("artifact moduli: 7"))
+        .stdout(predicate::str::contains("promoted: false"));
 
     let output = Command::cargo_bin("kryptos-k4")
         .unwrap()

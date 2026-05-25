@@ -2040,10 +2040,18 @@ fn print_prediction_artifact_validation(validation: &PredictionArtifactValidatio
         Some(plan_count) => println!("artifact plans: {plan_count}"),
         None => println!("artifact plans: unavailable"),
     }
-    println!("expected periods: {}", validation.expected_period_count);
+    let unit_label = match validation.artifact_kind.as_str() {
+        "spacing" => "moduli",
+        "period" => "periods",
+        _ => "units",
+    };
+    println!(
+        "expected {unit_label}: {}",
+        validation.expected_period_count
+    );
     match validation.artifact_period_count {
-        Some(period_count) => println!("artifact periods: {period_count}"),
-        None => println!("artifact periods: unavailable"),
+        Some(period_count) => println!("artifact {unit_label}: {period_count}"),
+        None => println!("artifact {unit_label}: unavailable"),
     }
     println!("promoted: {}", validation.promoted_candidate);
     println!("note: {}\n", validation.note);

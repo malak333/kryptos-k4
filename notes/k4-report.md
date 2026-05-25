@@ -765,7 +765,7 @@ Findings are reproducible research observations, not promoted solution claims.
   - Next test: Only add route families that are named, deterministic, and justified before seeing their score.
   - Promoted: false
 - **F5 Independent non-anchor period targets are materialized before scoring (H3)**
-  - Sources: `experiments/preregistrations/non-anchor-position-period-v1.json`, `experiments/predictions/non-anchor-position-period-v1.json`, `experiments/preregistrations/non-anchor-position-period-diagnostic-v1.json`, `experiments/predictions/non-anchor-position-period-diagnostic-v1.json`, `experiments/preregistrations/non-anchor-position-period-v2.json`, `experiments/predictions/non-anchor-position-period-v2.json`, `experiments/preregistrations/non-anchor-position-period-v3.json`, `experiments/predictions/non-anchor-position-period-v3.json`
+  - Sources: `experiments/preregistrations/non-anchor-position-period-v1.json`, `experiments/predictions/non-anchor-position-period-v1.json`, `experiments/preregistrations/non-anchor-position-period-diagnostic-v1.json`, `experiments/predictions/non-anchor-position-period-diagnostic-v1.json`, `experiments/preregistrations/non-anchor-position-period-v2.json`, `experiments/predictions/non-anchor-position-period-v2.json`, `experiments/preregistrations/non-anchor-position-period-v3.json`, `experiments/predictions/non-anchor-position-period-v3.json`, `experiments/preregistrations/non-anchor-position-period-v4.json`, `experiments/predictions/non-anchor-position-period-v4.json`
   - Steps: validate each non-anchor position-period preregistration; emit all registered period residue classes before observing independent evidence; compare each committed prediction artifact against deterministic generator output
   - Output: The committed artifacts lock seven registered periods, exclude 24 public-anchor positions, and emit 73 non-anchor K4 positions per period.
   - Baseline: The artifacts have no score yet; future evidence must use held-out or best-of-period controls before interpretation.
@@ -781,9 +781,9 @@ Findings are reproducible research observations, not promoted solution claims.
   - Next test: Only reopen a stopped search family with a lane-specific preregistration that fixes the cipher family, transform set, target, and multiple-comparison control before scoring.
   - Promoted: false
 - **F7 Machine-readable gates protect future independent evidence (H3)**
-  - Sources: `experiments/preregistrations/non-anchor-position-period-v2.json`, `experiments/predictions/non-anchor-position-period-v2.json`, `experiments/preregistrations/non-anchor-position-period-v3.json`, `experiments/predictions/non-anchor-position-period-v3.json`, `experiments/PROGRESS_LOG.md`, `release-check`
-  - Steps: validate the v2 and v3 preregistrations with JSON output; validate the committed v2 and v3 prediction artifacts with JSON output; run release-check in JSON mode and require every local preflight gate to pass
-  - Output: The v2 and v3 preregistrations and artifacts validate as non-promotional, and release-check JSON reports every local gate as passed.
+  - Sources: `experiments/preregistrations/non-anchor-position-period-v2.json`, `experiments/predictions/non-anchor-position-period-v2.json`, `experiments/preregistrations/non-anchor-position-period-v3.json`, `experiments/predictions/non-anchor-position-period-v3.json`, `experiments/preregistrations/non-anchor-position-period-v4.json`, `experiments/predictions/non-anchor-position-period-v4.json`, `experiments/PROGRESS_LOG.md`, `release-check`
+  - Steps: validate the v2, v3, and v4 preregistrations with JSON output; validate the committed v2, v3, and v4 prediction artifacts with JSON output; run release-check in JSON mode and require every local preflight gate to pass
+  - Output: The v2, v3, and v4 preregistrations and artifacts validate as non-promotional, and release-check JSON reports every local gate as passed.
   - Baseline: This is a reproducibility gate, not a scored cryptanalytic baseline; it prevents stale or unregistered evidence from being interpreted as a signal.
   - Interpretation: Future evidence can be audited by tools before scoring, but the gate result itself provides no plaintext and promotes no candidate.
   - Next test: Before any new non-anchor observation is scored, run the JSON preregistration, prediction-artifact, observation, evaluation, and release gates and archive the exact outputs.
@@ -823,8 +823,8 @@ Local preflight only. This repo does not use GitHub Actions.
 - lockfile-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/Ciphers/Cargo.lock)
 - markdown-report-present: true (Generated release report must be present. path=/Users/michaelnobile/Antigravity/Ciphers/notes/k4-report.md)
 - candidate-registry-aligned: true (Candidate CSV rows are represented in the candidate registry with source IDs and rationale. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/k4-candidates.csv; registry_path=/Users/michaelnobile/Antigravity/Ciphers/experiments/k4-candidates.md)
-- preregistrations-valid: true (Committed non-template preregistrations validate. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/preregistrations; checked=6)
-- prediction-artifacts-valid: true (Committed prediction artifacts match their preregistrations and deterministic generators. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/predictions; checked=5)
+- preregistrations-valid: true (Committed non-template preregistrations validate. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/preregistrations; checked=7)
+- prediction-artifacts-valid: true (Committed prediction artifacts match their preregistrations and deterministic generators. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/predictions; checked=6)
 - position-observation-template-guarded: true (Position observation template remains intentionally non-scorable. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/position-observations-template.json)
 - findings-source-inputs-valid: true (Findings source inputs resolve to registered sources, committed files, or known local command references. path=/Users/michaelnobile/Antigravity/Ciphers/src/findings.rs; checked=9)
 - source-packet-latest-access-date: true (Source packet includes latest registered source access date. path=/Users/michaelnobile/Antigravity/Ciphers/sources/source-packet.md; latest_access_date=2026-05-25)
