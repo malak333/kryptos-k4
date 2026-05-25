@@ -38,6 +38,7 @@ cargo run -- batch-test-routed-keys --input experiments/k4-candidates.csv --swee
 cargo run -- heldout-key-control --input experiments/k4-candidates.csv --iterations 1000 --seed 42 --output-dir results/key-tests/heldout-control
 cargo run -- position-structure --target spans --alphabet all --iterations 1000 --seed 42
 cargo run -- structural-models --target spans --alphabet kryptos --iterations 1000 --seed 42
+cargo run -- validate-preregistration --input experiments/preregistrations/independent-lane-template.json
 cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --top 20
 cargo run -- baseline --target spans --iterations 1000 --seed 42
 cargo run -- baseline --target spans --iterations 1000 --seed 42 --format json
@@ -114,6 +115,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `heldout-key-control` | Leave-one-public-group-out control that selects candidate material and offset on non-overlapping training groups, then scores the withheld anchor/span group against seeded null selection runs. |
 | `position-structure` | Candidate-independent residue/spacing structure control over public fragments, comparing fixed-position scores against seeded value shuffles. |
 | `structural-models` | Pre-registered period-model controls that score public fragments only after the model registry is fixed, with seeded nulls and Holm adjustment. |
+| `validate-preregistration` | Gate for proposed new lanes; rejects reuse of public anchor-derived fragments as discovery inputs or primary evidence. |
 | `summarize-key-runs` | Historical scanner for batch result folders, ranking individual runs and per-candidate p-value stability. |
 | `baseline` | Seeded false-positive controls for the generic recurrence screen. |
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |
@@ -174,5 +176,5 @@ Excluded:
 - Paid/private archive material.
 - Community claims used as proof.
 
-See [docs/research-method.md](docs/research-method.md) and [kryptos-k4-research-plan.md](kryptos-k4-research-plan.md).
+See [docs/research-method.md](docs/research-method.md), [experiments/STOPPED_LANES.md](experiments/STOPPED_LANES.md), and [kryptos-k4-research-plan.md](kryptos-k4-research-plan.md).
 Implementation diagrams are tracked in [docs/architecture-current.md](docs/architecture-current.md) and [docs/architecture-production-goal.md](docs/architecture-production-goal.md).

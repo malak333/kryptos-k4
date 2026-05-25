@@ -1143,6 +1143,100 @@ fn structural_models_json_is_deterministic_and_non_promotional() {
 }
 
 #[test]
+fn validate_preregistration_accepts_independent_prediction_target() {
+    let temp = tempfile::tempdir().unwrap();
+    let input_path = temp.path().join("lane.json");
+    std::fs::write(
+        &input_path,
+        r#"{
+  "id": "independent-target-v1",
+  "title": "Independent target",
+  "hypothesis_family": "structural-routing",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "Tests a target before adding candidate material.",
+  "prediction_target": "Predict a non-anchor position class.",
+  "discovery_inputs": ["pre-declared structural rule"],
+  "evaluation_inputs": ["withheld non-anchor prediction target"],
+  "controls": ["seeded shuffle baseline"],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}"#,
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-preregistration",
+            "--input",
+            input_path.to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Preregistration Validation"))
+        .stdout(predicate::str::contains("valid: true"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-preregistration",
+            "--input",
+            input_path.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["valid"], true);
+    assert_eq!(json["promoted_candidate"], false);
+}
+
+#[test]
+fn validate_preregistration_rejects_public_anchor_reuse() {
+    let temp = tempfile::tempdir().unwrap();
+    let input_path = temp.path().join("lane.json");
+    std::fs::write(
+        &input_path,
+        r#"{
+  "id": "bad-anchor-reuse",
+  "title": "Bad anchor reuse",
+  "hypothesis_family": "candidate-mining",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "Reuses public anchors.",
+  "prediction_target": "Public anchor fragments score higher.",
+  "discovery_inputs": ["public anchor-derived fragments"],
+  "evaluation_inputs": ["public anchor fragments"],
+  "controls": ["seeded shuffle baseline"],
+  "uses_public_anchor_fragments_for_discovery": true,
+  "uses_public_anchor_fragments_as_primary_evidence": true
+}"#,
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-preregistration",
+            "--input",
+            input_path.to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("valid: false"))
+        .stdout(predicate::str::contains("public anchor-derived fragments"))
+        .stderr(predicate::str::contains(
+            "preregistration failed validation",
+        ));
+}
+
+#[test]
 fn candidate_sequences_json_contains_registered_families() {
     let output = Command::cargo_bin("kryptos-k4")
         .unwrap()

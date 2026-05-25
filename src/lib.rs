@@ -8,6 +8,7 @@ pub mod findings;
 pub mod hypotheses;
 pub mod key_test;
 pub mod position_structure;
+pub mod preregistration;
 pub mod release_check;
 pub mod report;
 pub mod routes;
@@ -46,6 +47,10 @@ pub use position_structure::{
     PositionModulusScore, PositionStructureResult, PositionStructureRun, StructuralModel,
     StructuralModelResult, StructuralModelRun, registered_structural_models,
     run_position_structure_control, run_structural_model_control,
+};
+pub use preregistration::{
+    EvidenceKind, LanePreregistration, PreregistrationValidation,
+    load_and_validate_preregistration, validate_preregistration, validation_exit_result,
 };
 pub use release_check::{ReleaseCheck, run_release_checks};
 pub use report::{Report, ReportFormat, build_report, render_report};

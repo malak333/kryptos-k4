@@ -4,13 +4,15 @@ use kryptos_k4::{
     AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, BatchKeyMaterialCandidate,
     BatchKeyMaterialRun, BatchKeyRunHistory, CandidateTransform, FragmentMode,
     HeldoutKeyControlRun, K4_CIPHERTEXT, KeyMaterialExplanation, KeyMaterialOffsetSweep,
-    KeyMaterialTest, PositionStructureRun, ReportFormat, RoutedBatchKeyMaterialRun,
-    StructuralModelRun, analyze_constraints, analyze_known_plaintext_spans,
-    batch_test_key_material_with_batch_baseline, batch_test_routed_key_material, build_report,
-    candidate_sequences, explain_key_material, findings, heldout_key_control, hypotheses,
-    known_anchors, render_report, run_baseline, run_position_structure_control, run_release_checks,
+    KeyMaterialTest, PositionStructureRun, PreregistrationValidation, ReportFormat,
+    RoutedBatchKeyMaterialRun, StructuralModelRun, analyze_constraints,
+    analyze_known_plaintext_spans, batch_test_key_material_with_batch_baseline,
+    batch_test_routed_key_material, build_report, candidate_sequences, explain_key_material,
+    findings, heldout_key_control, hypotheses, known_anchors, load_and_validate_preregistration,
+    render_report, run_baseline, run_position_structure_control, run_release_checks,
     run_route_experiments, run_structural_model_control, score_candidate_sequences, sources,
     summarize_batch_key_material_runs, sweep_key_material_offsets_with_baseline, test_key_material,
+    validation_exit_result,
 };
 use std::{
     fs,
@@ -233,6 +235,15 @@ enum Command {
         /// Seed for deterministic null controls.
         #[arg(long, default_value_t = 42)]
         seed: u64,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Validate a preregistered lane before adding new candidates or structural tests.
+    ValidatePreregistration {
+        /// JSON preregistration file to validate.
+        #[arg(long)]
+        input: PathBuf,
         /// Output format.
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
@@ -530,6 +541,9 @@ fn main() -> Result<()> {
             seed,
             format,
         } => print_structural_models(target, alphabet, mode, iterations, seed, format)?,
+        Command::ValidatePreregistration { input, format } => {
+            print_validate_preregistration(input, format)?
+        }
         Command::Hypotheses => print_hypotheses(),
         Command::CandidateSequences { format } => print_candidate_sequences(format)?,
         Command::Routes { format } => print_routes(format)?,
@@ -1520,6 +1534,45 @@ fn print_structural_model_summary(run: &StructuralModelRun) {
             result.adjusted_p_value,
             result.promoted_candidate
         );
+    }
+}
+
+fn print_validate_preregistration(input: PathBuf, format: OutputFormat) -> Result<()> {
+    let validation = load_and_validate_preregistration(&input)?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&validation)?),
+        OutputFormat::Markdown => print_preregistration_validation(&validation),
+    }
+    validation_exit_result(&validation)
+}
+
+fn print_preregistration_validation(validation: &PreregistrationValidation) {
+    println!("# Preregistration Validation\n");
+    println!("This is not a claimed solution.\n");
+    println!("id: `{}`", validation.id);
+    println!("title: {}", validation.title);
+    println!("valid: {}", validation.valid);
+    println!("promoted: {}", validation.promoted_candidate);
+    println!("note: {}\n", validation.note);
+
+    if validation.errors.is_empty() {
+        println!("## Errors\n\nnone\n");
+    } else {
+        println!("## Errors\n");
+        for error in &validation.errors {
+            println!("- {error}");
+        }
+        println!();
+    }
+
+    if validation.warnings.is_empty() {
+        println!("## Warnings\n\nnone\n");
+    } else {
+        println!("## Warnings\n");
+        for warning in &validation.warnings {
+            println!("- {warning}");
+        }
+        println!();
     }
 }
 

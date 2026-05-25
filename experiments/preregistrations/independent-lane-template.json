@@ -1,0 +1,21 @@
+{
+  "id": "replace-with-lane-id",
+  "title": "Replace with lane title",
+  "hypothesis_family": "replace-with-family",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "Explain why this lane is not another search over public anchor-derived fragments.",
+  "prediction_target": "Define the independent target before running any scoring command.",
+  "discovery_inputs": [
+    "Describe the non-anchor discovery input or pre-declared structural rule."
+  ],
+  "evaluation_inputs": [
+    "Describe the independent evaluation target."
+  ],
+  "controls": [
+    "seeded shuffle baseline",
+    "multiple-comparison correction"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

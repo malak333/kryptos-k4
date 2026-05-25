@@ -23,6 +23,7 @@ The CLI implements the first production slice:
 - adjacent-span analysis and generic mod-10 recurrence screening with random-baseline warnings;
 - candidate-independent residue/spacing structure controls over fixed public-fragment positions;
 - pre-registered structural model controls that evaluate fixed period models before adding new key material;
+- preregistration validation for any future lane that would add candidate material, transforms, routes, or structural tests;
 - seeded null-distribution baselines with add-one empirical p-values and Holm adjustment;
 - targeted raw key-fragment filtering by anchor/span, alphabet, and derivation mode;
 - proposed key-material checks, exact match explanations, descriptive pattern metrics, composite pattern scores, cyclic offset sweeps, seeded shuffled-value sweep baselines, CSV-driven batch runs, and batch-level best-of-candidate-file null controls against public span-derived additive fragments at actual K4 positions;
@@ -52,6 +53,7 @@ The integration tests in `tests/cli_e2e.rs` execute the compiled CLI and verify:
 - summarize-key-runs scans completed batch result folders, ranks individual rows and candidate stability, and keeps repeated low p-values scoped as follow-up leads rather than solution evidence;
 - position-structure output compares observed public-fragment residue/spacing scores against seeded shuffles without using candidate key material;
 - structural-models output evaluates a fixed registry of period models with seeded nulls and Holm adjustment before any candidate-word expansion;
+- validate-preregistration rejects new lanes that reuse public anchor-derived fragments as discovery inputs or primary evidence;
 - candidate-sequence output includes family, source IDs, transform metadata, and no promoted candidates;
 - route output uses only small named route families and emits no plaintext guesses.
 - findings output includes evidence inputs, baseline comparison, next-test fields, and non-promotion flags in Markdown and JSON.
