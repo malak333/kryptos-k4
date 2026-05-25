@@ -765,7 +765,7 @@ Findings are reproducible research observations, not promoted solution claims.
   - Next test: Only add route families that are named, deterministic, and justified before seeing their score.
   - Promoted: false
 - **F5 Independent non-anchor period targets are materialized before scoring (H3)**
-  - Sources: `experiments/preregistrations/non-anchor-position-period-v1.json`, `experiments/predictions/non-anchor-position-period-v1.json`, `experiments/preregistrations/non-anchor-position-period-diagnostic-v1.json`, `experiments/predictions/non-anchor-position-period-diagnostic-v1.json`, `experiments/preregistrations/non-anchor-position-period-v2.json`, `experiments/predictions/non-anchor-position-period-v2.json`
+  - Sources: `experiments/preregistrations/non-anchor-position-period-v1.json`, `experiments/predictions/non-anchor-position-period-v1.json`, `experiments/preregistrations/non-anchor-position-period-diagnostic-v1.json`, `experiments/predictions/non-anchor-position-period-diagnostic-v1.json`, `experiments/preregistrations/non-anchor-position-period-v2.json`, `experiments/predictions/non-anchor-position-period-v2.json`, `experiments/preregistrations/non-anchor-position-period-v3.json`, `experiments/predictions/non-anchor-position-period-v3.json`
   - Steps: validate each non-anchor position-period preregistration; emit all registered period residue classes before observing independent evidence; compare each committed prediction artifact against deterministic generator output
   - Output: The committed artifacts lock seven registered periods, exclude 24 public-anchor positions, and emit 73 non-anchor K4 positions per period.
   - Baseline: The artifacts have no score yet; future evidence must use held-out or best-of-period controls before interpretation.
@@ -781,9 +781,9 @@ Findings are reproducible research observations, not promoted solution claims.
   - Next test: Only reopen a stopped search family with a lane-specific preregistration that fixes the cipher family, transform set, target, and multiple-comparison control before scoring.
   - Promoted: false
 - **F7 Machine-readable gates protect future independent evidence (H3)**
-  - Sources: `experiments/preregistrations/non-anchor-position-period-v2.json`, `experiments/predictions/non-anchor-position-period-v2.json`, `experiments/PROGRESS_LOG.md`, `release-check`
-  - Steps: validate the v2 preregistration with JSON output; validate the committed v2 prediction artifact with JSON output; run release-check in JSON mode and require every local preflight gate to pass
-  - Output: The v2 preregistration and artifact validate as non-promotional, and release-check JSON reports every local gate as passed.
+  - Sources: `experiments/preregistrations/non-anchor-position-period-v2.json`, `experiments/predictions/non-anchor-position-period-v2.json`, `experiments/preregistrations/non-anchor-position-period-v3.json`, `experiments/predictions/non-anchor-position-period-v3.json`, `experiments/PROGRESS_LOG.md`, `release-check`
+  - Steps: validate the v2 and v3 preregistrations with JSON output; validate the committed v2 and v3 prediction artifacts with JSON output; run release-check in JSON mode and require every local preflight gate to pass
+  - Output: The v2 and v3 preregistrations and artifacts validate as non-promotional, and release-check JSON reports every local gate as passed.
   - Baseline: This is a reproducibility gate, not a scored cryptanalytic baseline; it prevents stale or unregistered evidence from being interpreted as a signal.
   - Interpretation: Future evidence can be audited by tools before scoring, but the gate result itself provides no plaintext and promotes no candidate.
   - Next test: Before any new non-anchor observation is scored, run the JSON preregistration, prediction-artifact, observation, evaluation, and release gates and archive the exact outputs.
