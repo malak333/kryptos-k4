@@ -42,12 +42,20 @@ cargo run -- validate-preregistration --input experiments/preregistrations/non-a
 cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-v1.json
 cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-period-v2.json --format json
 cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-v2.json --format json
+cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-period-v3.json --format json
+cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-v3.json --format json
+cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-spacing-v1.json --format json
+cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-spacing-v1.json --format json
 cargo run -- period-prediction-plan --period 3
 cargo run -- period-prediction-plan --all
 cargo run -- period-prediction-plan --all --format json
+cargo run -- spacing-prediction-plan
+cargo run -- spacing-prediction-plan --format json
 cargo run -- evaluate-period-prediction --artifact experiments/predictions/non-anchor-position-period-v1.json --positions 1,4,7 --iterations 1000 --seed 67
 cargo run -- validate-period-observations --artifact experiments/predictions/non-anchor-position-period-v1.json --preregistration experiments/preregistrations/non-anchor-position-period-v1.json --input <source-backed-observations.json> --format json
 cargo run -- evaluate-period-prediction --artifact experiments/predictions/non-anchor-position-period-v1.json --preregistration experiments/preregistrations/non-anchor-position-period-v1.json --positions-file <source-backed-observations.json> --iterations 1000 --seed 67 --format json
+cargo run -- validate-spacing-observations --artifact experiments/predictions/non-anchor-position-spacing-v1.json --preregistration experiments/preregistrations/non-anchor-position-spacing-v1.json --input <source-backed-observations.json> --format json
+cargo run -- evaluate-spacing-prediction --artifact experiments/predictions/non-anchor-position-spacing-v1.json --preregistration experiments/preregistrations/non-anchor-position-spacing-v1.json --positions-file <source-backed-observations.json> --iterations 1000 --seed 67 --format json
 cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --top 20
 cargo run -- baseline --target spans --iterations 1000 --seed 42
 cargo run -- baseline --target spans --iterations 1000 --seed 42 --format json
@@ -115,7 +123,7 @@ Candidate rows in `experiments/k4-candidates.csv` are documented in
 `experiments/k4-candidates.md`. Add new rows only with a public source ID and
 rationale so batch histories remain auditable.
 
-The current independent prediction lane is preregistered in
+The first independent period prediction lane is preregistered in
 `experiments/preregistrations/non-anchor-position-period-v1.json`, and its
 committed evidence-free prediction artifact is
 `experiments/predictions/non-anchor-position-period-v1.json`. Regenerate that
