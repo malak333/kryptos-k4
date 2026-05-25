@@ -1,3 +1,4 @@
+use crate::data::sources;
 use anyhow::{Result, bail};
 use serde::Serialize;
 use std::fs;
@@ -98,6 +99,7 @@ fn run_release_checks_inner(
     if require_current_report {
         checks.push(check_generated_report_markers(repo_root));
     }
+    checks.push(check_source_packet_registry_alignment(repo_root));
     checks.push(check_no_plaintext_leakage_markers(repo_root));
 
     if checks.iter().any(|check| !check.passed) {
@@ -105,6 +107,34 @@ fn run_release_checks_inner(
     }
 
     Ok(checks)
+}
+
+fn check_source_packet_registry_alignment(repo_root: &Path) -> ReleaseCheck {
+    let relative_path = "sources/source-packet.md";
+    let path = repo_root.join(relative_path);
+    let contents = fs::read_to_string(&path).unwrap_or_default();
+    let missing_sources: Vec<_> = sources()
+        .into_iter()
+        .map(|source| source.id)
+        .filter(|source_id| !contents.contains(&format!("`{source_id}`")))
+        .collect();
+
+    ReleaseCheck {
+        name: "source-packet-registry-aligned",
+        passed: missing_sources.is_empty(),
+        detail: if missing_sources.is_empty() {
+            format!(
+                "Source packet lists every registered source ID. path={}",
+                path.display()
+            )
+        } else {
+            format!(
+                "Source packet is missing registered source IDs. path={}; missing={}",
+                path.display(),
+                missing_sources.join(", ")
+            )
+        },
+    }
 }
 
 fn check_exists(
@@ -236,6 +266,18 @@ mod tests {
         assert!(run_release_checks(temp.path()).is_err());
     }
 
+    #[test]
+    fn release_checks_fail_when_source_packet_omits_registered_source() {
+        let temp = release_ready_temp_dir();
+        fs::write(
+            temp.path().join("sources/source-packet.md"),
+            "`cia-artifact` only",
+        )
+        .unwrap();
+
+        assert!(run_release_checks(temp.path()).is_err());
+    }
+
     fn release_ready_temp_dir() -> TempDir {
         let temp = TempDir::new().unwrap();
         for directory in ["docs", "sources", "notes"] {
@@ -244,6 +286,15 @@ mod tests {
         for (_, relative_path) in REQUIRED_RELEASE_FILES {
             fs::write(temp.path().join(relative_path), "release file").unwrap();
         }
+        fs::write(
+            temp.path().join("sources/source-packet.md"),
+            sources()
+                .into_iter()
+                .map(|source| format!("`{}`", source.id))
+                .collect::<Vec<_>>()
+                .join("\n"),
+        )
+        .unwrap();
         for (_, relative_path) in REQUIRED_GENERATED_REPORTS {
             fs::write(
                 temp.path().join(relative_path),

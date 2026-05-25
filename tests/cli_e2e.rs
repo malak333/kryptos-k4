@@ -1861,7 +1861,7 @@ fn release_check_json_exposes_all_local_preflight_gates() {
         .map(|check| check["name"].as_str().unwrap())
         .collect();
 
-    assert!(checks.len() >= 12);
+    assert!(checks.len() >= 13);
     assert!(checks.iter().all(|check| check["passed"] == true));
     for expected_name in [
         "github-actions-disabled",
@@ -1875,6 +1875,7 @@ fn release_check_json_exposes_all_local_preflight_gates() {
         "license-present",
         "lockfile-present",
         "markdown-report-present",
+        "source-packet-registry-aligned",
         "no-plaintext-leakage-markers",
     ] {
         assert!(names.contains(expected_name));

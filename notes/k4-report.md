@@ -780,4 +780,5 @@ Local preflight only. This repo does not use GitHub Actions.
 - license-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/Ciphers/LICENSE)
 - lockfile-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/Ciphers/Cargo.lock)
 - markdown-report-present: true (Generated release report must be present. path=/Users/michaelnobile/Antigravity/Ciphers/notes/k4-report.md)
+- source-packet-registry-aligned: true (Source packet lists every registered source ID. path=/Users/michaelnobile/Antigravity/Ciphers/sources/source-packet.md)
 - no-plaintext-leakage-markers: true (No leaked/full-plaintext sentinel markers found in release-facing files.)
