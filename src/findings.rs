@@ -140,6 +140,12 @@ pub fn findings() -> Vec<Finding> {
             title: "Machine-readable gates protect future independent evidence",
             related_hypothesis: "H3",
             source_inputs: &[
+                "experiments/preregistrations/non-anchor-position-period-v1.json",
+                "experiments/predictions/non-anchor-position-period-v1.json",
+                "experiments/preregistrations/non-anchor-position-period-diagnostic-v1.json",
+                "experiments/predictions/non-anchor-position-period-diagnostic-v1.json",
+                "experiments/preregistrations/non-anchor-position-period-followup-v1.json",
+                "experiments/predictions/non-anchor-position-period-followup-v1.json",
                 "experiments/preregistrations/non-anchor-position-period-v2.json",
                 "experiments/predictions/non-anchor-position-period-v2.json",
                 "experiments/preregistrations/non-anchor-position-period-v3.json",
@@ -152,17 +158,17 @@ pub fn findings() -> Vec<Finding> {
                 "experiments/predictions/non-anchor-position-period-v6.json",
                 "experiments/preregistrations/non-anchor-position-period-v7.json",
                 "experiments/predictions/non-anchor-position-period-v7.json",
-                "experiments/preregistrations/non-anchor-position-period-followup-v1.json",
-                "experiments/predictions/non-anchor-position-period-followup-v1.json",
+                "experiments/preregistrations/non-anchor-position-spacing-v1.json",
+                "experiments/predictions/non-anchor-position-spacing-v1.json",
                 "experiments/PROGRESS_LOG.md",
                 "release-check",
             ],
             transformation_steps: &[
-                "validate the follow-up and v2 through v7 preregistrations with JSON output",
-                "validate the committed follow-up and v2 through v7 prediction artifacts with JSON output",
+                "validate every committed independent-lane preregistration with JSON output",
+                "validate every committed independent-lane prediction artifact with JSON output",
                 "run release-check in JSON mode and require every local preflight gate to pass",
             ],
-            output_summary: "The follow-up and v2 through v7 preregistrations and artifacts validate as non-promotional, and release-check JSON reports every local gate as passed.",
+            output_summary: "All committed independent-lane preregistrations and artifacts validate as non-promotional, and release-check JSON reports every local gate as passed.",
             baseline_comparison: "This is a reproducibility gate, not a scored cryptanalytic baseline; it prevents stale or unregistered evidence from being interpreted as a signal.",
             interpretation: "Future evidence can be audited by tools before scoring, but the gate result itself provides no plaintext and promotes no candidate.",
             next_test: "Before any new non-anchor observation is scored, run the JSON preregistration, prediction-artifact, observation, evaluation, and release gates and archive the exact outputs.",
@@ -319,7 +325,40 @@ mod tests {
         assert!(!finding.promoted_candidate);
     }
 
+    #[test]
+    fn gate_finding_covers_committed_independent_lane_artifacts() {
+        let expected_sources = committed_independent_lane_files("experiments/preregistrations")
+            .into_iter()
+            .chain(committed_independent_lane_files("experiments/predictions"))
+            .collect::<HashSet<_>>();
+        let finding = findings()
+            .into_iter()
+            .find(|finding| finding.id == "F7")
+            .expect("F7 should describe independent evidence gates");
+        let finding_sources = finding
+            .source_inputs
+            .iter()
+            .copied()
+            .collect::<HashSet<_>>();
+
+        for expected_source in expected_sources {
+            assert!(
+                finding_sources.contains(expected_source.as_str()),
+                "F7 is missing committed independent-lane source input `{expected_source}`"
+            );
+        }
+        assert!(!finding.promoted_candidate);
+    }
+
     fn committed_period_files(directory: &str) -> Vec<String> {
+        committed_prediction_files(directory, "non-anchor-position-period")
+    }
+
+    fn committed_independent_lane_files(directory: &str) -> Vec<String> {
+        committed_prediction_files(directory, "non-anchor-position-")
+    }
+
+    fn committed_prediction_files(directory: &str, prefix: &str) -> Vec<String> {
         fs::read_dir(directory)
             .unwrap_or_else(|error| panic!("failed to read {directory}: {error}"))
             .map(|entry| {
@@ -330,7 +369,7 @@ mod tests {
             .filter(|path| {
                 path.file_name()
                     .and_then(|name| name.to_str())
-                    .is_some_and(|name| name.starts_with("non-anchor-position-period"))
+                    .is_some_and(|name| name.starts_with(prefix))
                     && path
                         .extension()
                         .is_some_and(|extension| extension == "json")
