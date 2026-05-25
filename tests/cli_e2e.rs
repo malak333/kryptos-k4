@@ -60,6 +60,19 @@ fn facts_hypotheses_sources_and_help_are_covered() {
         .success()
         .stdout(predicate::str::contains("Gromark-like"));
 
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["hypotheses", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json[0]["id"], "H1");
+    assert_eq!(json[0]["priority"], 1);
+    assert_eq!(json[4]["id"], "H5");
+
     Command::cargo_bin("kryptos-k4")
         .unwrap()
         .arg("sources")

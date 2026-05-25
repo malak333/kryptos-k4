@@ -322,7 +322,11 @@ enum Command {
         format: OutputFormat,
     },
     /// Print ranked source-grounded hypotheses.
-    Hypotheses,
+    Hypotheses {
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Print pre-registered contextual candidate sequences.
     CandidateSequences {
         /// Output format.
@@ -809,7 +813,7 @@ fn main() -> Result<()> {
             seed,
             format,
         )?,
-        Command::Hypotheses => print_hypotheses(),
+        Command::Hypotheses { format } => print_hypotheses(format)?,
         Command::CandidateSequences { format } => print_candidate_sequences(format)?,
         Command::Routes { format } => print_routes(format)?,
         Command::Findings { format } => print_findings(format)?,
@@ -2194,17 +2198,24 @@ fn print_period_prediction_evaluation(evaluation: &PeriodPredictionEvaluation) {
     }
 }
 
-fn print_hypotheses() {
-    for hypothesis in hypotheses() {
-        println!(
-            "{}. {} ({})\n   test: {}\n   risk: {}",
-            hypothesis.priority,
-            hypothesis.name,
-            hypothesis.id,
-            hypothesis.falsification_test,
-            hypothesis.risk
-        );
+fn print_hypotheses(format: OutputFormat) -> Result<()> {
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&hypotheses())?),
+        OutputFormat::Markdown => {
+            for hypothesis in hypotheses() {
+                println!(
+                    "{}. {} ({})\n   test: {}\n   risk: {}",
+                    hypothesis.priority,
+                    hypothesis.name,
+                    hypothesis.id,
+                    hypothesis.falsification_test,
+                    hypothesis.risk
+                );
+            }
+        }
     }
+
+    Ok(())
 }
 
 fn print_candidate_sequences(format: OutputFormat) -> Result<()> {
