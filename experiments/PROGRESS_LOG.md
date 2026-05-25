@@ -86,6 +86,17 @@ Follow-up documentation update: this lane is now represented in the findings
 ledger as `F5`, so the generated report records the artifact and validation
 gate instead of only the older public-anchor-derived lanes.
 
+Evaluator added: `evaluate-period-prediction` can now score a future
+independent set of one-based non-anchor K4 positions against the committed
+artifact with a seeded best-of-period null. It rejects public-anchor positions
+and remains non-promotional.
+
+Concrete follow-up lane registered:
+`experiments/preregistrations/new-lane-id.json` now uses the stable id
+`non-anchor-position-period-followup-v1` and predeclares future independent
+non-anchor position observations as the evaluation surface. It intentionally has
+no source IDs and validates only as a pure independent prediction target.
+
 ## Existing Completed 100k Controls
 
 ### Pattern Score Candidate Batch

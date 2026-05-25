@@ -4,13 +4,14 @@ use kryptos_k4::{
     AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, BatchKeyMaterialCandidate,
     BatchKeyMaterialRun, BatchKeyRunHistory, CandidateTransform, FragmentMode,
     HeldoutKeyControlRun, K4_CIPHERTEXT, KeyMaterialExplanation, KeyMaterialOffsetSweep,
-    KeyMaterialTest, LanePreregistration, PeriodPredictionPlan, PeriodPredictionPlanSet,
-    PositionStructureRun, PreregistrationValidation, ReportFormat, RoutedBatchKeyMaterialRun,
-    StructuralModelRun, analyze_constraints, analyze_known_plaintext_spans,
-    batch_test_key_material_with_batch_baseline, batch_test_routed_key_material,
-    build_all_period_prediction_plans, build_period_prediction_plan, build_report,
-    candidate_sequences, explain_key_material, findings, heldout_key_control, hypotheses,
-    known_anchors, load_and_validate_preregistration, render_report, run_baseline,
+    KeyMaterialTest, LanePreregistration, PeriodPredictionEvaluation, PeriodPredictionPlan,
+    PeriodPredictionPlanSet, PositionStructureRun, PreregistrationValidation, ReportFormat,
+    RoutedBatchKeyMaterialRun, StructuralModelRun, analyze_constraints,
+    analyze_known_plaintext_spans, batch_test_key_material_with_batch_baseline,
+    batch_test_routed_key_material, build_all_period_prediction_plans,
+    build_period_prediction_plan, build_report, candidate_sequences,
+    evaluate_period_prediction_positions, explain_key_material, findings, heldout_key_control,
+    hypotheses, known_anchors, load_and_validate_preregistration, render_report, run_baseline,
     run_position_structure_control, run_release_checks, run_route_experiments,
     run_structural_model_control, score_candidate_sequences, sources,
     summarize_batch_key_material_runs, sweep_key_material_offsets_with_baseline, test_key_material,
@@ -272,6 +273,24 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
     },
+    /// Evaluate independent non-anchor positions against a committed period prediction artifact.
+    EvaluatePeriodPrediction {
+        /// JSON artifact emitted by period-prediction-plan --all --format json.
+        #[arg(long)]
+        artifact: PathBuf,
+        /// Comma-separated one-based K4 positions to evaluate. Positions must be non-anchor positions.
+        #[arg(long)]
+        positions: String,
+        /// Seeded null iterations for best-of-period position concentration.
+        #[arg(long, default_value_t = 10_000)]
+        iterations: usize,
+        /// Seed for deterministic null controls.
+        #[arg(long, default_value_t = 42)]
+        seed: u64,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Print ranked source-grounded hypotheses.
     Hypotheses,
     /// Print pre-registered contextual candidate sequences.
@@ -463,6 +482,24 @@ impl From<CliCandidateTransform> for CandidateTransform {
     }
 }
 
+fn parse_position_list(input: &str) -> std::result::Result<Vec<usize>, String> {
+    let positions: Result<Vec<_>, _> = input
+        .split(',')
+        .map(str::trim)
+        .filter(|part| !part.is_empty())
+        .map(|part| {
+            part.parse::<usize>()
+                .map_err(|_| format!("invalid one-based position `{part}`"))
+        })
+        .collect();
+    let positions = positions?;
+    if positions.is_empty() {
+        Err("positions must include at least one one-based K4 position".to_string())
+    } else {
+        Ok(positions)
+    }
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
@@ -590,6 +627,13 @@ fn main() -> Result<()> {
             all,
             format,
         } => print_period_prediction_plan(period, all, format)?,
+        Command::EvaluatePeriodPrediction {
+            artifact,
+            positions,
+            iterations,
+            seed,
+            format,
+        } => print_evaluate_period_prediction(artifact, positions, iterations, seed, format)?,
         Command::Hypotheses => print_hypotheses(),
         Command::CandidateSequences { format } => print_candidate_sequences(format)?,
         Command::Routes { format } => print_routes(format)?,
@@ -1788,6 +1832,72 @@ fn print_period_prediction_plan_markdown(plan: &PeriodPredictionPlan) {
         println!(
             "| {} | {} | {} |",
             residue.residue, residue.position_count, positions
+        );
+    }
+}
+
+fn print_evaluate_period_prediction(
+    artifact: PathBuf,
+    positions: String,
+    iterations: usize,
+    seed: u64,
+    format: OutputFormat,
+) -> Result<()> {
+    let positions = parse_position_list(&positions).map_err(anyhow::Error::msg)?;
+    let evaluation = evaluate_period_prediction_positions(artifact, positions, iterations, seed)?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&evaluation)?),
+        OutputFormat::Markdown => print_period_prediction_evaluation(&evaluation),
+    }
+    Ok(())
+}
+
+fn print_period_prediction_evaluation(evaluation: &PeriodPredictionEvaluation) {
+    println!("# Period Prediction Evaluation\n");
+    println!("This is not a claimed solution.\n");
+    println!("artifact: `{}`", evaluation.artifact_path);
+    println!(
+        "observed positions: {}",
+        evaluation
+            .observed_positions_one_based
+            .iter()
+            .map(|position| position.to_string())
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
+    println!(
+        "observed position count: {}",
+        evaluation.observed_position_count
+    );
+    println!(
+        "best: period {} residue {} with {}/{} hits ({:.4})",
+        evaluation.best_period,
+        evaluation.best_residue,
+        evaluation.best_hits,
+        evaluation.observed_position_count,
+        evaluation.best_hit_rate
+    );
+    println!(
+        "best-of-period null: mean {:.2}; sd {:.2}; empirical p-value {:.4}; iterations {}; seed {}",
+        evaluation.null_mean_best_hits,
+        evaluation.null_std_dev_best_hits,
+        evaluation.empirical_p_value,
+        evaluation.iterations,
+        evaluation.seed
+    );
+    println!("promoted: {}", evaluation.promoted_candidate);
+    println!("note: {}\n", evaluation.note);
+
+    println!("| Period | Best Residue | Hits | Hit Rate |");
+    println!("| --- | --- | --- | --- |");
+    for result in &evaluation.period_results {
+        println!(
+            "| {} | {} | {}/{} | {:.4} |",
+            result.period,
+            result.best_residue,
+            result.best_hits,
+            evaluation.observed_position_count,
+            result.best_hit_rate
         );
     }
 }

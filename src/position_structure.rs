@@ -5,7 +5,7 @@ use crate::{
 use anyhow::{Result, bail};
 use rand::seq::SliceRandom;
 use rand_chacha::{ChaCha8Rng, rand_core::SeedableRng};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
 const MIN_FRAGMENTS_FOR_PROMOTION: usize = 20;
@@ -113,31 +113,66 @@ pub struct StructuralModel {
     pub rationale: &'static str,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PeriodPredictionPlan {
     pub period: usize,
     pub non_anchor_position_count: usize,
     pub anchor_position_count: usize,
     pub residues: Vec<PeriodResiduePrediction>,
     pub promoted_candidate: bool,
-    pub source_inputs: &'static str,
-    pub prediction_rule: &'static str,
-    pub note: &'static str,
+    pub source_inputs: String,
+    pub prediction_rule: String,
+    pub note: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PeriodPredictionPlanSet {
     pub period_count: usize,
     pub plans: Vec<PeriodPredictionPlan>,
     pub promoted_candidate: bool,
-    pub note: &'static str,
+    pub note: String,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PeriodResiduePrediction {
     pub residue: usize,
     pub position_count: usize,
     pub positions_one_based: Vec<usize>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct PeriodPredictionEvaluation {
+    pub artifact_path: String,
+    pub observed_position_count: usize,
+    pub observed_positions_one_based: Vec<usize>,
+    pub best_period: usize,
+    pub best_residue: usize,
+    pub best_hits: usize,
+    pub best_hit_rate: f64,
+    pub null_mean_best_hits: f64,
+    pub null_std_dev_best_hits: f64,
+    pub empirical_p_value: f64,
+    pub iterations: usize,
+    pub seed: u64,
+    pub period_results: Vec<PeriodPredictionEvaluationResult>,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct PeriodPredictionEvaluationResult {
+    pub period: usize,
+    pub best_residue: usize,
+    pub best_hits: usize,
+    pub best_hit_rate: f64,
+    pub residue_hits: Vec<PeriodResidueHit>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct PeriodResidueHit {
+    pub residue: usize,
+    pub hits: usize,
+    pub matching_positions_one_based: Vec<usize>,
 }
 
 #[derive(Debug, Clone)]
@@ -336,9 +371,9 @@ pub fn build_period_prediction_plan(period: usize) -> Result<PeriodPredictionPla
         anchor_position_count: anchor_positions.len(),
         residues,
         promoted_candidate: false,
-        source_inputs: "K4 ciphertext length and public anchor positions only; no fragment values, candidate words, or public anchor-derived key fragments are scored.",
-        prediction_rule: "Group every non-anchor K4 position by zero-based position modulo the registered period; future independent evidence must be evaluated against these residue classes without retuning.",
-        note: "Period prediction plan only; this emits a predeclared target for future independent evidence and is not a decryption claim.",
+        source_inputs: "K4 ciphertext length and public anchor positions only; no fragment values, candidate words, or public anchor-derived key fragments are scored.".to_string(),
+        prediction_rule: "Group every non-anchor K4 position by zero-based position modulo the registered period; future independent evidence must be evaluated against these residue classes without retuning.".to_string(),
+        note: "Period prediction plan only; this emits a predeclared target for future independent evidence and is not a decryption claim.".to_string(),
     })
 }
 
@@ -352,7 +387,83 @@ pub fn build_all_period_prediction_plans() -> Result<PeriodPredictionPlanSet> {
         period_count: plans.len(),
         plans,
         promoted_candidate: false,
-        note: "All-period prediction plan set only; future independent evidence must control the best-of-period search surface before any interpretation.",
+        note: "All-period prediction plan set only; future independent evidence must control the best-of-period search surface before any interpretation.".to_string(),
+    })
+}
+
+pub fn evaluate_period_prediction_positions(
+    artifact_path: impl AsRef<std::path::Path>,
+    observed_positions_one_based: Vec<usize>,
+    iterations: usize,
+    seed: u64,
+) -> Result<PeriodPredictionEvaluation> {
+    if observed_positions_one_based.is_empty() {
+        bail!("period prediction evaluation requires at least one observed position");
+    }
+    if iterations == 0 {
+        bail!("period prediction evaluation iterations must be greater than zero");
+    }
+
+    let artifact_path = artifact_path.as_ref();
+    let artifact = std::fs::read_to_string(artifact_path)?;
+    let plans: PeriodPredictionPlanSet = serde_json::from_str(&artifact)?;
+    let non_anchor_universe = non_anchor_position_universe(&plans)?;
+    let universe: HashSet<_> = non_anchor_universe.iter().copied().collect();
+    let mut seen = HashSet::new();
+    for position in &observed_positions_one_based {
+        if !seen.insert(*position) {
+            bail!("observed positions must be unique");
+        }
+        if !universe.contains(position) {
+            bail!(
+                "observed positions must be one-based non-anchor K4 positions from the prediction artifact"
+            );
+        }
+    }
+
+    let mut period_results =
+        score_period_prediction_positions(&plans, &observed_positions_one_based);
+    period_results.sort_by(|left, right| {
+        right
+            .best_hits
+            .cmp(&left.best_hits)
+            .then_with(|| left.period.cmp(&right.period))
+    });
+    let best = period_results
+        .first()
+        .ok_or_else(|| anyhow::anyhow!("prediction artifact does not contain any plans"))?;
+
+    let null_best_hits = period_prediction_null_distribution(
+        &plans,
+        &non_anchor_universe,
+        observed_positions_one_based.len(),
+        iterations,
+        seed,
+    )?;
+    let null_mean_best_hits = mean_usize(&null_best_hits);
+    let null_std_dev_best_hits = std_dev_usize(&null_best_hits, null_mean_best_hits);
+    let at_least_observed = null_best_hits
+        .iter()
+        .filter(|score| **score >= best.best_hits)
+        .count();
+    let empirical_p_value = (at_least_observed as f64 + 1.0) / (iterations as f64 + 1.0);
+
+    Ok(PeriodPredictionEvaluation {
+        artifact_path: artifact_path.display().to_string(),
+        observed_position_count: observed_positions_one_based.len(),
+        observed_positions_one_based,
+        best_period: best.period,
+        best_residue: best.best_residue,
+        best_hits: best.best_hits,
+        best_hit_rate: best.best_hit_rate,
+        null_mean_best_hits,
+        null_std_dev_best_hits,
+        empirical_p_value,
+        iterations,
+        seed,
+        period_results,
+        promoted_candidate: false,
+        note: "Period prediction evaluation scores independent non-anchor positions against a committed artifact with a best-of-period null; it is not a claimed solution.",
     })
 }
 
@@ -677,6 +788,110 @@ fn null_distribution(positions: &[usize], values: &[u8], iterations: usize, seed
         .collect()
 }
 
+fn non_anchor_position_universe(plans: &PeriodPredictionPlanSet) -> Result<Vec<usize>> {
+    let first = plans
+        .plans
+        .first()
+        .ok_or_else(|| anyhow::anyhow!("prediction artifact does not contain any plans"))?;
+    let mut positions: Vec<_> = first
+        .residues
+        .iter()
+        .flat_map(|residue| residue.positions_one_based.iter().copied())
+        .collect();
+    positions.sort_unstable();
+    positions.dedup();
+    Ok(positions)
+}
+
+fn score_period_prediction_positions(
+    plans: &PeriodPredictionPlanSet,
+    observed_positions_one_based: &[usize],
+) -> Vec<PeriodPredictionEvaluationResult> {
+    let observed: HashSet<_> = observed_positions_one_based.iter().copied().collect();
+    plans
+        .plans
+        .iter()
+        .map(|plan| {
+            let mut residue_hits: Vec<_> = plan
+                .residues
+                .iter()
+                .map(|residue| {
+                    let matching_positions_one_based: Vec<_> = residue
+                        .positions_one_based
+                        .iter()
+                        .copied()
+                        .filter(|position| observed.contains(position))
+                        .collect();
+                    PeriodResidueHit {
+                        residue: residue.residue,
+                        hits: matching_positions_one_based.len(),
+                        matching_positions_one_based,
+                    }
+                })
+                .collect();
+            residue_hits.sort_by_key(|hit| hit.residue);
+            let best = residue_hits
+                .iter()
+                .max_by(|left, right| {
+                    left.hits
+                        .cmp(&right.hits)
+                        .then_with(|| right.residue.cmp(&left.residue))
+                })
+                .expect("plans contain at least one residue");
+            PeriodPredictionEvaluationResult {
+                period: plan.period,
+                best_residue: best.residue,
+                best_hits: best.hits,
+                best_hit_rate: best.hits as f64 / observed_positions_one_based.len() as f64,
+                residue_hits,
+            }
+        })
+        .collect()
+}
+
+fn period_prediction_null_distribution(
+    plans: &PeriodPredictionPlanSet,
+    non_anchor_universe: &[usize],
+    observed_position_count: usize,
+    iterations: usize,
+    seed: u64,
+) -> Result<Vec<usize>> {
+    if observed_position_count > non_anchor_universe.len() {
+        bail!("observed position count exceeds non-anchor prediction universe");
+    }
+
+    let mut rng = ChaCha8Rng::seed_from_u64(seed);
+    let mut distribution = Vec::with_capacity(iterations);
+    for _ in 0..iterations {
+        let mut sampled = non_anchor_universe.to_vec();
+        sampled.shuffle(&mut rng);
+        sampled.truncate(observed_position_count);
+        let best_hits = score_period_prediction_positions(plans, &sampled)
+            .iter()
+            .map(|result| result.best_hits)
+            .max()
+            .ok_or_else(|| anyhow::anyhow!("prediction artifact does not contain any plans"))?;
+        distribution.push(best_hits);
+    }
+    Ok(distribution)
+}
+
+fn mean_usize(values: &[usize]) -> f64 {
+    values.iter().sum::<usize>() as f64 / values.len() as f64
+}
+
+fn std_dev_usize(values: &[usize], mean: f64) -> f64 {
+    let variance = values
+        .iter()
+        .map(|value| {
+            let delta = *value as f64 - mean;
+            delta * delta
+        })
+        .sum::<f64>()
+        / values.len() as f64;
+    variance.sqrt()
+}
+
 fn mean_i64(values: &[i64]) -> f64 {
     values.iter().sum::<i64>() as f64 / values.len() as f64
 }
@@ -846,5 +1061,40 @@ mod tests {
                 .iter()
                 .all(|plan| plan.non_anchor_position_count == K4_CIPHERTEXT.len() - 24)
         );
+    }
+
+    #[test]
+    fn period_prediction_evaluation_scores_non_anchor_positions_without_promotion() {
+        let temp = tempfile::NamedTempFile::new().unwrap();
+        std::fs::write(
+            temp.path(),
+            serde_json::to_string(&build_all_period_prediction_plans().unwrap()).unwrap(),
+        )
+        .unwrap();
+
+        let evaluation =
+            evaluate_period_prediction_positions(temp.path(), vec![1, 4, 7], 100, 67).unwrap();
+
+        assert_eq!(evaluation.observed_position_count, 3);
+        assert_eq!(evaluation.best_period, 3);
+        assert_eq!(evaluation.best_hits, 3);
+        assert!(evaluation.empirical_p_value > 0.0);
+        assert!(!evaluation.promoted_candidate);
+    }
+
+    #[test]
+    fn period_prediction_evaluation_rejects_anchor_positions() {
+        let temp = tempfile::NamedTempFile::new().unwrap();
+        std::fs::write(
+            temp.path(),
+            serde_json::to_string(&build_all_period_prediction_plans().unwrap()).unwrap(),
+        )
+        .unwrap();
+
+        let error = evaluate_period_prediction_positions(temp.path(), vec![22], 100, 67)
+            .unwrap_err()
+            .to_string();
+
+        assert!(error.contains("non-anchor K4 positions"));
     }
 }

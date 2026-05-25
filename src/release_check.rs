@@ -23,8 +23,9 @@ const REQUIRED_RELEASE_FILES: [(&str, &str); 8] = [
 const REQUIRED_GENERATED_REPORTS: [(&str, &str); 1] =
     [("markdown-report-present", "notes/k4-report.md")];
 
-const REQUIRED_REPORT_MARKERS: [&str; 4] = [
+const REQUIRED_REPORT_MARKERS: [&str; 5] = [
     "`validate-prediction-artifact`",
+    "`evaluate-period-prediction`",
     "Independent non-anchor period targets are materialized before scoring",
     "evidence-free prediction target",
     "`position-structure`",
@@ -52,6 +53,17 @@ pub struct ReleaseCheck {
 }
 
 pub fn run_release_checks(repo_root: impl AsRef<Path>) -> Result<Vec<ReleaseCheck>> {
+    run_release_checks_inner(repo_root, true)
+}
+
+pub fn run_release_checks_for_report(repo_root: impl AsRef<Path>) -> Result<Vec<ReleaseCheck>> {
+    run_release_checks_inner(repo_root, false)
+}
+
+fn run_release_checks_inner(
+    repo_root: impl AsRef<Path>,
+    require_current_report: bool,
+) -> Result<Vec<ReleaseCheck>> {
     let repo_root = repo_root.as_ref();
     let mut checks = vec![
         check_absent(
@@ -82,7 +94,9 @@ pub fn run_release_checks(repo_root: impl AsRef<Path>) -> Result<Vec<ReleaseChec
         )
     }));
 
-    checks.push(check_generated_report_markers(repo_root));
+    if require_current_report {
+        checks.push(check_generated_report_markers(repo_root));
+    }
     checks.push(check_no_plaintext_leakage_markers(repo_root));
 
     if checks.iter().any(|check| !check.passed) {

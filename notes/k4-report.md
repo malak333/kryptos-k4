@@ -23,6 +23,7 @@ This report uses public anchors only and is not a claimed solution. Production r
 | `validate-preregistration` | Research-lane gate for future source evidence or independent prediction targets. |
 | `validate-prediction-artifact` | Gate confirming committed independent prediction artifacts still match their preregistration and deterministic generator. |
 | `period-prediction-plan` | Non-anchor residue-class target emission for a registered period, without scoring public fragment values. |
+| `evaluate-period-prediction` | Independent-position evaluator for committed period prediction artifacts with best-of-period null controls. |
 | `baseline` | Seeded false-positive controls for anchors and spans across all supported alphabets. |
 | `hypotheses` | Ranked source-grounded hypotheses with facts, assumptions, falsification tests, and risks. |
 | `candidate-sequences` | Pre-registered contextual sequences and score results. |

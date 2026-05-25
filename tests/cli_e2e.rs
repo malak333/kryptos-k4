@@ -1412,6 +1412,75 @@ fn validate_prediction_artifact_checks_committed_independent_target() {
 }
 
 #[test]
+fn evaluate_period_prediction_scores_independent_position_set() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-period-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-period-v1.json",
+            "--positions",
+            "1,4,7",
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Period Prediction Evaluation"))
+        .stdout(predicate::str::contains("best: period 3 residue 0"))
+        .stdout(predicate::str::contains("promoted: false"))
+        .stdout(predicate::str::contains("not a claimed solution"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-period-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-period-v1.json",
+            "--positions",
+            "1,4,7",
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["observed_position_count"], 3);
+    assert_eq!(json["best_period"], 3);
+    assert_eq!(json["best_residue"], 0);
+    assert_eq!(json["best_hits"], 3);
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(json["empirical_p_value"].is_number());
+}
+
+#[test]
+fn evaluate_period_prediction_rejects_public_anchor_positions() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-period-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-period-v1.json",
+            "--positions",
+            "22",
+            "--iterations",
+            "100",
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("non-anchor K4 positions"));
+}
+
+#[test]
 fn candidate_sequences_json_contains_registered_families() {
     let output = Command::cargo_bin("kryptos-k4")
         .unwrap()
@@ -1674,6 +1743,7 @@ fn markdown_report_can_be_written_to_file() {
     assert!(report.contains("## Ranked Hypotheses"));
     assert!(report.contains("## Findings Ledger"));
     assert!(report.contains("validate-prediction-artifact"));
+    assert!(report.contains("evaluate-period-prediction"));
     assert!(report.contains("Independent non-anchor period targets"));
 }
 

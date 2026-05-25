@@ -44,15 +44,17 @@ pub use key_test::{
     sweep_key_material_offsets_with_baseline, test_key_material,
 };
 pub use position_structure::{
-    PeriodPredictionPlan, PeriodPredictionPlanSet, PeriodResiduePrediction, PositionModulusScore,
+    PeriodPredictionEvaluation, PeriodPredictionEvaluationResult, PeriodPredictionPlan,
+    PeriodPredictionPlanSet, PeriodResidueHit, PeriodResiduePrediction, PositionModulusScore,
     PositionStructureResult, PositionStructureRun, StructuralModel, StructuralModelResult,
     StructuralModelRun, build_all_period_prediction_plans, build_period_prediction_plan,
-    registered_structural_models, run_position_structure_control, run_structural_model_control,
+    evaluate_period_prediction_positions, registered_structural_models,
+    run_position_structure_control, run_structural_model_control,
 };
 pub use preregistration::{
     EvidenceKind, LanePreregistration, PreregistrationValidation,
     load_and_validate_preregistration, validate_preregistration, validation_exit_result,
 };
-pub use release_check::{ReleaseCheck, run_release_checks};
+pub use release_check::{ReleaseCheck, run_release_checks, run_release_checks_for_report};
 pub use report::{Report, ReportFormat, build_report, render_report};
 pub use routes::{RouteExperiment, RouteFamily, registered_route_families, run_route_experiments};
