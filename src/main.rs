@@ -388,7 +388,7 @@ enum Command {
         /// Seed for deterministic null controls.
         #[arg(long, default_value_t = 42)]
         seed: u64,
-        /// Optional directory for result.json, summary.md, and command.txt.
+        /// Optional directory for artifact.json, preregistration.json, input, result.json, summary.md, and command.txt.
         #[arg(long)]
         output_dir: Option<PathBuf>,
         /// Output format.
@@ -423,7 +423,7 @@ enum Command {
         /// Seed for deterministic null controls.
         #[arg(long, default_value_t = 42)]
         seed: u64,
-        /// Optional directory for result.json, summary.md, and command.txt.
+        /// Optional directory for artifact.json, preregistration.json, input, result.json, summary.md, and command.txt.
         #[arg(long)]
         output_dir: Option<PathBuf>,
         /// Output format.
@@ -1419,10 +1419,10 @@ fn write_heldout_key_control_outputs(
 fn write_period_prediction_evaluation_outputs(
     output_dir: &Path,
     evaluation: &PeriodPredictionEvaluation,
-    archive_input: &EvaluationArchiveInput,
+    archive: &EvaluationArchiveContext,
 ) -> Result<()> {
     fs::create_dir_all(output_dir)?;
-    write_evaluation_archive_input(output_dir, archive_input)?;
+    write_evaluation_archive_context(output_dir, archive)?;
     fs::write(
         output_dir.join("result.json"),
         serde_json::to_string_pretty(evaluation)?,
@@ -1433,9 +1433,11 @@ fn write_period_prediction_evaluation_outputs(
     )?;
     fs::write(
         output_dir.join("command.txt"),
-        format!(
-            "evaluate-period-prediction --artifact {} --iterations {} --seed {}\n",
-            evaluation.artifact_path, evaluation.iterations, evaluation.seed
+        render_archived_evaluation_command(
+            "evaluate-period-prediction",
+            archive,
+            evaluation.iterations,
+            evaluation.seed,
         ),
     )?;
     Ok(())
@@ -1444,10 +1446,10 @@ fn write_period_prediction_evaluation_outputs(
 fn write_spacing_prediction_evaluation_outputs(
     output_dir: &Path,
     evaluation: &SpacingPredictionEvaluation,
-    archive_input: &EvaluationArchiveInput,
+    archive: &EvaluationArchiveContext,
 ) -> Result<()> {
     fs::create_dir_all(output_dir)?;
-    write_evaluation_archive_input(output_dir, archive_input)?;
+    write_evaluation_archive_context(output_dir, archive)?;
     fs::write(
         output_dir.join("result.json"),
         serde_json::to_string_pretty(evaluation)?,
@@ -1458,12 +1460,20 @@ fn write_spacing_prediction_evaluation_outputs(
     )?;
     fs::write(
         output_dir.join("command.txt"),
-        format!(
-            "evaluate-spacing-prediction --artifact {} --iterations {} --seed {}\n",
-            evaluation.artifact_path, evaluation.iterations, evaluation.seed
+        render_archived_evaluation_command(
+            "evaluate-spacing-prediction",
+            archive,
+            evaluation.iterations,
+            evaluation.seed,
         ),
     )?;
     Ok(())
+}
+
+struct EvaluationArchiveContext {
+    artifact: PathBuf,
+    preregistration: Option<PathBuf>,
+    input: EvaluationArchiveInput,
 }
 
 enum EvaluationArchiveInput {
@@ -1471,24 +1481,37 @@ enum EvaluationArchiveInput {
     PositionsFile(PathBuf),
 }
 
-fn evaluation_archive_input(
+fn evaluation_archive_context(
+    artifact: &Path,
+    preregistration: &Option<PathBuf>,
     positions: &Option<String>,
     positions_file: &Option<PathBuf>,
-) -> EvaluationArchiveInput {
-    if let Some(positions) = positions {
-        return EvaluationArchiveInput::Positions(positions.clone());
+) -> EvaluationArchiveContext {
+    let input = if let Some(positions) = positions {
+        EvaluationArchiveInput::Positions(positions.clone())
+    } else if let Some(path) = positions_file {
+        EvaluationArchiveInput::PositionsFile(path.clone())
+    } else {
+        EvaluationArchiveInput::Positions(String::new())
+    };
+
+    EvaluationArchiveContext {
+        artifact: artifact.to_path_buf(),
+        preregistration: preregistration.clone(),
+        input,
     }
-    if let Some(path) = positions_file {
-        return EvaluationArchiveInput::PositionsFile(path.clone());
-    }
-    EvaluationArchiveInput::Positions(String::new())
 }
 
-fn write_evaluation_archive_input(
+fn write_evaluation_archive_context(
     output_dir: &Path,
-    archive_input: &EvaluationArchiveInput,
+    archive: &EvaluationArchiveContext,
 ) -> Result<()> {
-    match archive_input {
+    fs::copy(&archive.artifact, output_dir.join("artifact.json"))?;
+    if let Some(preregistration) = &archive.preregistration {
+        fs::copy(preregistration, output_dir.join("preregistration.json"))?;
+    }
+
+    match &archive.input {
         EvaluationArchiveInput::Positions(positions) => {
             fs::write(output_dir.join("input-positions.txt"), positions)?;
         }
@@ -1497,6 +1520,28 @@ fn write_evaluation_archive_input(
         }
     }
     Ok(())
+}
+
+fn render_archived_evaluation_command(
+    command_name: &str,
+    archive: &EvaluationArchiveContext,
+    iterations: usize,
+    seed: u64,
+) -> String {
+    let mut command = format!("{command_name} --artifact artifact.json");
+    if archive.preregistration.is_some() {
+        command.push_str(" --preregistration preregistration.json");
+    }
+    match &archive.input {
+        EvaluationArchiveInput::Positions(positions) => {
+            command.push_str(&format!(" --positions {positions}"));
+        }
+        EvaluationArchiveInput::PositionsFile(_) => {
+            command.push_str(" --positions-file observations.json");
+        }
+    }
+    command.push_str(&format!(" --iterations {iterations} --seed {seed}\n"));
+    command
 }
 
 fn print_batch_key_material_summary(run: &BatchKeyMaterialRun) {
@@ -2796,8 +2841,8 @@ fn print_evaluate_period_prediction(options: PeriodPredictionEvaluationOptions) 
         format,
     } = options;
     let has_preregistration = preregistration.is_some();
-    if let Some(preregistration) = preregistration {
-        let artifact_validation = validate_prediction_artifact(&preregistration)?;
+    if let Some(preregistration) = &preregistration {
+        let artifact_validation = validate_prediction_artifact(preregistration)?;
         if artifact_validation.artifact_kind != "period" {
             anyhow::bail!(
                 "preregistration `{}` does not declare a period prediction artifact",
@@ -2821,7 +2866,8 @@ fn print_evaluate_period_prediction(options: PeriodPredictionEvaluationOptions) 
         );
     }
 
-    let archive_input = evaluation_archive_input(&positions, &positions_file);
+    let archive =
+        evaluation_archive_context(&artifact, &preregistration, &positions, &positions_file);
     let observation_input = match (positions, positions_file) {
         (Some(positions), None) => PeriodPredictionObservationInput {
             id: None,
@@ -2833,7 +2879,7 @@ fn print_evaluate_period_prediction(options: PeriodPredictionEvaluationOptions) 
         _ => anyhow::bail!("provide exactly one of --positions or --positions-file"),
     };
     let mut evaluation = evaluate_period_prediction_positions(
-        artifact,
+        artifact.clone(),
         observation_input.positions_one_based,
         iterations,
         seed,
@@ -2846,7 +2892,7 @@ fn print_evaluate_period_prediction(options: PeriodPredictionEvaluationOptions) 
         evaluation.observation_warning = None;
     }
     if let Some(output_dir) = output_dir {
-        write_period_prediction_evaluation_outputs(&output_dir, &evaluation, &archive_input)?;
+        write_period_prediction_evaluation_outputs(&output_dir, &evaluation, &archive)?;
     }
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&evaluation)?),
@@ -2867,8 +2913,8 @@ fn print_evaluate_spacing_prediction(options: SpacingPredictionEvaluationOptions
         format,
     } = options;
     let has_preregistration = preregistration.is_some();
-    if let Some(preregistration) = preregistration {
-        let artifact_validation = validate_prediction_artifact(&preregistration)?;
+    if let Some(preregistration) = &preregistration {
+        let artifact_validation = validate_prediction_artifact(preregistration)?;
         if artifact_validation.artifact_kind != "spacing" {
             anyhow::bail!(
                 "preregistration `{}` does not declare a spacing prediction artifact",
@@ -2892,7 +2938,8 @@ fn print_evaluate_spacing_prediction(options: SpacingPredictionEvaluationOptions
         );
     }
 
-    let archive_input = evaluation_archive_input(&positions, &positions_file);
+    let archive =
+        evaluation_archive_context(&artifact, &preregistration, &positions, &positions_file);
     let observation_input = match (positions, positions_file) {
         (Some(positions), None) => PeriodPredictionObservationInput {
             id: None,
@@ -2904,7 +2951,7 @@ fn print_evaluate_spacing_prediction(options: SpacingPredictionEvaluationOptions
         _ => anyhow::bail!("provide exactly one of --positions or --positions-file"),
     };
     let mut evaluation = evaluate_spacing_prediction_positions(
-        artifact,
+        artifact.clone(),
         observation_input.positions_one_based,
         iterations,
         seed,
@@ -2917,7 +2964,7 @@ fn print_evaluate_spacing_prediction(options: SpacingPredictionEvaluationOptions
         evaluation.observation_warning = None;
     }
     if let Some(output_dir) = output_dir {
-        write_spacing_prediction_evaluation_outputs(&output_dir, &evaluation, &archive_input)?;
+        write_spacing_prediction_evaluation_outputs(&output_dir, &evaluation, &archive)?;
     }
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&evaluation)?),

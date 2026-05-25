@@ -1783,6 +1783,9 @@ fn observation_sources_reports_scoring_eligible_sources() {
 
 #[test]
 fn evaluate_period_prediction_scores_independent_position_set() {
+    let temp = tempfile::tempdir().unwrap();
+    let output_dir = temp.path().join("period-diagnostic-output");
+
     Command::cargo_bin("kryptos-k4")
         .unwrap()
         .args([
@@ -1815,6 +1818,8 @@ fn evaluate_period_prediction_scores_independent_position_set() {
             "100",
             "--seed",
             "67",
+            "--output-dir",
+            output_dir.to_str().unwrap(),
             "--format",
             "json",
         ])
@@ -1837,6 +1842,12 @@ fn evaluate_period_prediction_scores_independent_position_set() {
     assert_eq!(json["best_hits"], 3);
     assert_eq!(json["promoted_candidate"], false);
     assert!(json["empirical_p_value"].is_number());
+    assert_eq!(
+        std::fs::read_to_string(output_dir.join("input-positions.txt")).unwrap(),
+        "1,4,7"
+    );
+    assert!(output_dir.join("artifact.json").exists());
+    assert!(!output_dir.join("preregistration.json").exists());
 }
 
 #[test]
@@ -1893,7 +1904,9 @@ fn evaluate_period_prediction_accepts_source_backed_position_file() {
     assert_eq!(json["promoted_candidate"], false);
 
     for file_name in [
+        "artifact.json",
         "observations.json",
+        "preregistration.json",
         "result.json",
         "summary.md",
         "command.txt",
@@ -1912,6 +1925,10 @@ fn evaluate_period_prediction_accepts_source_backed_position_file() {
     let archived_summary = std::fs::read_to_string(output_dir.join("summary.md")).unwrap();
     assert!(archived_summary.contains("Period Prediction Evaluation"));
     assert!(archived_summary.contains("source-backed observation: true"));
+    let archived_command = std::fs::read_to_string(output_dir.join("command.txt")).unwrap();
+    assert!(archived_command.contains("--artifact artifact.json"));
+    assert!(archived_command.contains("--preregistration preregistration.json"));
+    assert!(archived_command.contains("--positions-file observations.json"));
 }
 
 #[test]
@@ -2027,7 +2044,9 @@ fn evaluate_spacing_prediction_accepts_source_backed_position_file() {
     assert_eq!(json["promoted_candidate"], false);
 
     for file_name in [
+        "artifact.json",
         "observations.json",
+        "preregistration.json",
         "result.json",
         "summary.md",
         "command.txt",
@@ -2046,6 +2065,10 @@ fn evaluate_spacing_prediction_accepts_source_backed_position_file() {
     let archived_summary = std::fs::read_to_string(output_dir.join("summary.md")).unwrap();
     assert!(archived_summary.contains("Spacing Prediction Evaluation"));
     assert!(archived_summary.contains("source-backed observation: true"));
+    let archived_command = std::fs::read_to_string(output_dir.join("command.txt")).unwrap();
+    assert!(archived_command.contains("--artifact artifact.json"));
+    assert!(archived_command.contains("--preregistration preregistration.json"));
+    assert!(archived_command.contains("--positions-file observations.json"));
 }
 
 #[test]

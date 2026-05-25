@@ -66,7 +66,8 @@ cargo run --locked -- evaluate-period-prediction \
 
 For spacing lanes, use the same source-backed observation-file format, but score
 against the committed spacing artifact. The `--output-dir` archive contains the
-scored `observations.json`, `result.json`, `summary.md`, and `command.txt`.
+scored `artifact.json`, `preregistration.json`, `observations.json`,
+`result.json`, `summary.md`, and `command.txt`.
 
 ```bash
 cargo run --locked -- validate-spacing-observations \
