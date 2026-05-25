@@ -35,6 +35,33 @@ Template hardening follow-up: `experiments/position-observations-template.json`
 now leaves `positions_one_based` empty so a copied template cannot accidentally
 score synthetic example positions such as period-3-friendly non-anchor rows.
 
+## 2026-05-25: Machine-Readable Validation Gates
+
+The future-evidence path now has documented JSON output for the gate commands
+that matter before any independent observation is interpreted:
+
+```bash
+cargo run --locked -- validate-preregistration \
+  --input experiments/preregistrations/non-anchor-position-period-v2.json \
+  --format json
+cargo run --locked -- validate-prediction-artifact \
+  --preregistration experiments/preregistrations/non-anchor-position-period-v2.json \
+  --format json
+cargo run --locked -- release-check --format json
+```
+
+Result summary:
+
+- preregistration validation: `valid: true`, `promoted_candidate: false`
+- prediction artifact validation: `valid: true`, `expected_period_count: 7`,
+  `artifact_period_count: 7`, `promoted_candidate: false`
+- release-check JSON: every local preflight check reports `passed: true`
+
+Interpretation: future non-anchor evidence can now be audited through
+machine-readable preregistration, artifact, observation, period-evaluation, and
+release gates. This improves reproducibility but still contributes no K4
+plaintext or promoted candidate by itself.
+
 ## 2026-05-25: Preregistration Gate
 
 Command:

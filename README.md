@@ -40,14 +40,14 @@ cargo run -- position-structure --target spans --alphabet all --iterations 1000 
 cargo run -- structural-models --target spans --alphabet kryptos --iterations 1000 --seed 42
 cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-period-v1.json
 cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-v1.json
-cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-period-v2.json
-cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-v2.json
+cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-period-v2.json --format json
+cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-v2.json --format json
 cargo run -- period-prediction-plan --period 3
 cargo run -- period-prediction-plan --all
 cargo run -- period-prediction-plan --all --format json
 cargo run -- evaluate-period-prediction --artifact experiments/predictions/non-anchor-position-period-v1.json --positions 1,4,7 --iterations 1000 --seed 67
-cargo run -- validate-period-observations --artifact experiments/predictions/non-anchor-position-period-v1.json --preregistration experiments/preregistrations/non-anchor-position-period-v1.json --input <source-backed-observations.json>
-cargo run -- evaluate-period-prediction --artifact experiments/predictions/non-anchor-position-period-v1.json --preregistration experiments/preregistrations/non-anchor-position-period-v1.json --positions-file <source-backed-observations.json> --iterations 1000 --seed 67
+cargo run -- validate-period-observations --artifact experiments/predictions/non-anchor-position-period-v1.json --preregistration experiments/preregistrations/non-anchor-position-period-v1.json --input <source-backed-observations.json> --format json
+cargo run -- evaluate-period-prediction --artifact experiments/predictions/non-anchor-position-period-v1.json --preregistration experiments/preregistrations/non-anchor-position-period-v1.json --positions-file <source-backed-observations.json> --iterations 1000 --seed 67 --format json
 cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --top 20
 cargo run -- baseline --target spans --iterations 1000 --seed 42
 cargo run -- baseline --target spans --iterations 1000 --seed 42 --format json
@@ -57,7 +57,7 @@ cargo run -- routes
 cargo run -- routes --format json
 cargo run -- findings
 cargo run -- findings --format json
-cargo run -- release-check
+cargo run -- release-check --format json
 cargo run -- hypotheses --format json
 cargo run -- sources
 cargo run -- sources --format json
@@ -145,17 +145,17 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `heldout-key-control` | Leave-one-public-group-out control that selects candidate material and offset on non-overlapping training groups, then scores the withheld anchor/span group against seeded null selection runs. |
 | `position-structure` | Candidate-independent residue/spacing structure control over public fragments, comparing fixed-position scores against seeded value shuffles. |
 | `structural-models` | Pre-registered period-model controls that score public fragments only after the model registry is fixed, with seeded nulls and Holm adjustment. |
-| `validate-preregistration` | Gate for proposed new lanes; rejects reuse of public anchor-derived fragments as discovery inputs or primary evidence. |
-| `validate-prediction-artifact` | Gate for committed independent prediction artifacts; checks the preregistration and deterministic generator output still match. |
-| `validate-period-observations` | Gate for source-backed independent position observations; can also validate the prediction artifact preregistration, and rejects unregistered or disallowed source IDs, duplicates, and public-anchor positions before scoring. |
-| `period-prediction-plan` | Emits non-anchor K4 position residue classes for one or all registered periods without scoring fragment values or candidate material. |
-| `evaluate-period-prediction` | Scores independently supplied one-based non-anchor positions against a committed period prediction artifact with a best-of-period null control; accepts quick `--positions` input or a source-backed `--positions-file` JSON record, with optional artifact preregistration validation. |
+| `validate-preregistration` | Gate for proposed new lanes in Markdown or JSON; rejects reuse of public anchor-derived fragments as discovery inputs or primary evidence. |
+| `validate-prediction-artifact` | Gate for committed independent prediction artifacts in Markdown or JSON; checks the preregistration and deterministic generator output still match. |
+| `validate-period-observations` | Gate for source-backed independent position observations in Markdown or JSON; can also validate the prediction artifact preregistration, and rejects unregistered or disallowed source IDs, duplicates, and public-anchor positions before scoring. |
+| `period-prediction-plan` | Emits non-anchor K4 position residue classes for one or all registered periods in Markdown or JSON without scoring fragment values or candidate material. |
+| `evaluate-period-prediction` | Scores independently supplied one-based non-anchor positions against a committed period prediction artifact with a best-of-period null control in Markdown or JSON; accepts quick `--positions` input or a source-backed `--positions-file` JSON record, with optional artifact preregistration validation. |
 | `summarize-key-runs` | Historical scanner for batch result folders, ranking individual runs and per-candidate p-value stability. |
 | `baseline` | Seeded false-positive controls for the generic recurrence screen. |
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |
 | `routes` | Small named route/permutation screens with fixed baselines. |
 | `findings` | Findings ledger with evidence inputs, transformations, baselines, interpretation, and next tests. |
-| `release-check` | Local release preflight confirming no hosted automation, required docs, generated report presence, candidate CSV/registry alignment, preregistration and prediction-artifact validity, source-packet/source-registry field and latest-access-date alignment, and plaintext-leakage sentinel absence. |
+| `release-check` | Local release preflight in Markdown or JSON confirming no hosted automation, required docs, generated report presence, candidate CSV/registry alignment, preregistration and prediction-artifact validity, source-packet/source-registry field and latest-access-date alignment, and plaintext-leakage sentinel absence. |
 | `hypotheses` | Ranked source-grounded hypothesis register in Markdown or JSON. |
 | `sources` | Source provenance records in Markdown or JSON for source-policy audits. |
 | `export-data` | Machine-readable JSON for ciphertext, anchors, and sources. |

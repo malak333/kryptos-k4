@@ -16,22 +16,26 @@ This report uses public anchors only and is not a claimed solution. Production r
 | `anchors` | Public known-plaintext anchors with positions, source IDs, confidence, claim type, and notes in Markdown or JSON. |
 | `constraints` | Per-anchor key fragments across supported alphabets and modes, with recurrence screens in Markdown or JSON. |
 | `key-fragments` | The same fragment rows are rendered in full for anchors and adjacent spans in Markdown or JSON. |
-| `test-key` | Proposed key material is transformed and compared against public span additive fragments at true K4 positions, with optional cyclic offset sweep and seeded sweep baseline. |
-| `batch-test-keys` | CSV candidate rows are ranked with the same public-fragment checks and optional output artifacts. |
-| `position-structure` | Candidate-independent residue/spacing control over public fragment positions. |
-| `structural-models` | Pre-registered period-model controls over public fragment positions. |
-| `validate-preregistration` | Research-lane gate for future source evidence or independent prediction targets. |
-| `validate-prediction-artifact` | Gate confirming committed independent prediction artifacts still match their preregistration and deterministic generator. |
-| `validate-period-observations` | Gate for source-backed independent position observations, source allowed-use compatibility, and optional prediction-artifact preregistration validation before period prediction scoring. |
-| `period-prediction-plan` | Non-anchor residue-class target emission for a registered period, without scoring public fragment values. |
-| `evaluate-period-prediction` | Independent-position evaluator for committed period prediction artifacts with best-of-period null controls, source-backed observation-file input, and optional artifact preregistration validation. |
-| `baseline` | Seeded false-positive controls for anchors and spans across all supported alphabets. |
+| `test-key` | Proposed key material is transformed and compared against public span additive fragments at true K4 positions, with optional cyclic offset sweep and seeded sweep baseline in Markdown or JSON. |
+| `explain-key` | Exact matching public-span positions, modulo caveats, descriptive pattern metrics, and composite pattern score in Markdown or JSON. |
+| `batch-test-keys` | CSV candidate rows are ranked with the same public-fragment checks, optional output artifacts, and batch-level controls in Markdown or JSON. |
+| `batch-test-routed-keys` | Registered route/permutation families are applied before candidate scoring, with routed search-surface controls in Markdown or JSON. |
+| `heldout-key-control` | Leave-one-public-group-out candidate selection and withheld-group scoring with seeded null controls in Markdown or JSON. |
+| `summarize-key-runs` | Historical scanner for batch result folders, ranking individual runs and per-candidate p-value stability in Markdown or JSON. |
+| `position-structure` | Candidate-independent residue/spacing control over public fragment positions in Markdown or JSON. |
+| `structural-models` | Pre-registered period-model controls over public fragment positions in Markdown or JSON. |
+| `validate-preregistration` | Research-lane gate for future source evidence or independent prediction targets in Markdown or JSON. |
+| `validate-prediction-artifact` | Gate confirming committed independent prediction artifacts still match their preregistration and deterministic generator in Markdown or JSON. |
+| `validate-period-observations` | Gate for source-backed independent position observations, source allowed-use compatibility, and optional prediction-artifact preregistration validation before period prediction scoring in Markdown or JSON. |
+| `period-prediction-plan` | Non-anchor residue-class target emission for a registered period, without scoring public fragment values, in Markdown or JSON. |
+| `evaluate-period-prediction` | Independent-position evaluator for committed period prediction artifacts with best-of-period null controls, source-backed observation-file input, and optional artifact preregistration validation in Markdown or JSON. |
+| `baseline` | Seeded false-positive controls for anchors and spans across all supported alphabets in Markdown or JSON. |
 | `hypotheses` | Ranked source-grounded hypotheses with facts, assumptions, falsification tests, and risks in Markdown or JSON. |
-| `candidate-sequences` | Pre-registered contextual sequences and score results. |
-| `routes` | Bounded named route experiments with identity, reverse, and seeded-random baselines. |
-| `findings` | Reproducible findings ledger with sources, transformations, baselines, interpretation, and next tests. |
+| `candidate-sequences` | Pre-registered contextual sequences and score results in Markdown or JSON. |
+| `routes` | Bounded named route experiments with identity, reverse, and seeded-random baselines in Markdown or JSON. |
+| `findings` | Reproducible findings ledger with sources, transformations, baselines, interpretation, and next tests in Markdown or JSON. |
 | `sources` | Source provenance records and allowed-use notes in Markdown or JSON. |
-| `release-check` | Local release preflight results, including no-GitHub-Actions, candidate CSV/registry alignment, preregistration and prediction-artifact validation, and source-packet/source-registry field and latest-access-date alignment gates. |
+| `release-check` | Local release preflight results, including no-GitHub-Actions, candidate CSV/registry alignment, preregistration and prediction-artifact validation, and source-packet/source-registry field and latest-access-date alignment gates in Markdown or JSON. |
 | `export-data` | Covered by the source data rendered here; the command writes ciphertext, anchor, and source JSON files. |
 
 ## Ciphertext
