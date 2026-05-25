@@ -13,6 +13,8 @@ Reason: repeated `batch-test-keys`, `batch-test-routed-keys`, and
 produce a promoted candidate. The held-out controls selected apparent training
 leads but scored zero held-out matches across the public groups.
 
+Latest evidence is summarized in `experiments/PROGRESS_LOG.md`.
+
 Do not restart this lane by adding more candidate words unless a preregistration
 passes `validate-preregistration`.
 
@@ -23,6 +25,8 @@ Status: stopped.
 Reason: source-documented additions such as `KRYPTOS`, `VIGENERE`,
 `VIGENERETABLE`, `MATRIX`, `MATRIXCODING`, `NINETYSEVEN`, and `97` did not
 survive batch-level or held-out controls.
+
+Latest evidence is summarized in `experiments/PROGRESS_LOG.md`.
 
 Do not expand this lane by adding more source-adjacent strings unless the new
 rows are tied to a different evidence target, not only the same public
@@ -35,6 +39,8 @@ Status: stopped for current registered models.
 Reason: `position-structure` and `structural-models` did not show meaningful
 candidate-independent structure on public spans after seeded null controls and
 multiple-comparison correction.
+
+Latest evidence is summarized in `experiments/PROGRESS_LOG.md`.
 
 Future structural work must define the model before looking at the public
 fragment-derived scores and must pass preregistration.

@@ -176,5 +176,5 @@ Excluded:
 - Paid/private archive material.
 - Community claims used as proof.
 
-See [docs/research-method.md](docs/research-method.md), [experiments/STOPPED_LANES.md](experiments/STOPPED_LANES.md), and [kryptos-k4-research-plan.md](kryptos-k4-research-plan.md).
+See [docs/research-method.md](docs/research-method.md), [experiments/PROGRESS_LOG.md](experiments/PROGRESS_LOG.md), [experiments/STOPPED_LANES.md](experiments/STOPPED_LANES.md), and [kryptos-k4-research-plan.md](kryptos-k4-research-plan.md).
 Implementation diagrams are tracked in [docs/architecture-current.md](docs/architecture-current.md) and [docs/architecture-production-goal.md](docs/architecture-production-goal.md).
