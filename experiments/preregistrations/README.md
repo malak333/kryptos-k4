@@ -31,16 +31,18 @@ discovery inputs or primary evidence. Those fragments can still be listed as
 controls after an independent target is defined. The validator also rejects
 unchanged template placeholder text.
 
-For future period-prediction evidence, copy
-`experiments/position-observations-template.json` to a lane-specific file and
-replace the observation id, registered source IDs, positions, and rationale
-before running:
+For future period-prediction evidence, first check which registered sources can
+support scored observations, then use the guarded scaffold command to create a
+lane-specific observation file:
 
 ```bash
-cargo run --locked -- evaluate-period-prediction \
-  --artifact experiments/predictions/non-anchor-position-period-v1.json \
-  --preregistration experiments/preregistrations/non-anchor-position-period-v1.json \
-  --positions-file <source-backed-observations.json>
+cargo run --locked -- observation-sources
+cargo run --locked -- init-position-observations \
+  --id <observation-id> \
+  --source-id <registered-public-facts-source-id> \
+  --positions <comma-separated-non-anchor-positions> \
+  --rationale "<why these positions are independent observations>" \
+  --output <source-backed-observations.json>
 ```
 
 Validate the observation file first:
@@ -50,6 +52,15 @@ cargo run --locked -- validate-period-observations \
   --artifact experiments/predictions/non-anchor-position-period-v1.json \
   --preregistration experiments/preregistrations/non-anchor-position-period-v1.json \
   --input <source-backed-observations.json>
+```
+
+Then score it:
+
+```bash
+cargo run --locked -- evaluate-period-prediction \
+  --artifact experiments/predictions/non-anchor-position-period-v1.json \
+  --preregistration experiments/preregistrations/non-anchor-position-period-v1.json \
+  --positions-file <source-backed-observations.json>
 ```
 
 For spacing lanes, use the same source-backed observation-file format, but score
