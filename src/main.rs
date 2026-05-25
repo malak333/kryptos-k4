@@ -262,6 +262,18 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
     },
+    /// Validate source-backed non-anchor position observations before scoring them.
+    ValidatePeriodObservations {
+        /// JSON artifact emitted by period-prediction-plan --all --format json.
+        #[arg(long)]
+        artifact: PathBuf,
+        /// JSON file with source IDs and one-based non-anchor K4 positions.
+        #[arg(long)]
+        input: PathBuf,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Emit a predeclared non-anchor residue-class target for future independent evidence.
     PeriodPredictionPlan {
         /// Registered period to use for the residue-class prediction.
@@ -380,6 +392,19 @@ struct PeriodPredictionObservationInput {
     id: Option<String>,
     source_ids: Vec<String>,
     positions_one_based: Vec<usize>,
+}
+
+#[derive(Debug, Serialize)]
+struct PeriodPredictionObservationValidation {
+    artifact_path: String,
+    observation_id: String,
+    observation_source_ids: Vec<String>,
+    observed_position_count: usize,
+    observed_positions_one_based: Vec<usize>,
+    valid: bool,
+    errors: Vec<String>,
+    promoted_candidate: bool,
+    note: &'static str,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -562,6 +587,18 @@ fn load_period_prediction_observations(path: &Path) -> Result<PeriodPredictionOb
     })
 }
 
+fn load_period_prediction_artifact_positions(path: &Path) -> Result<HashSet<usize>> {
+    let input = fs::read_to_string(path)?;
+    let plans: PeriodPredictionPlanSet = serde_json::from_str(&input)?;
+    let positions = plans
+        .plans
+        .into_iter()
+        .flat_map(|plan| plan.residues)
+        .flat_map(|residue| residue.positions_one_based)
+        .collect();
+    Ok(positions)
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
@@ -684,6 +721,11 @@ fn main() -> Result<()> {
             preregistration,
             format,
         } => print_validate_prediction_artifact(preregistration, format)?,
+        Command::ValidatePeriodObservations {
+            artifact,
+            input,
+            format,
+        } => print_validate_period_observations(artifact, input, format)?,
         Command::PeriodPredictionPlan {
             period,
             all,
@@ -1837,6 +1879,94 @@ fn print_prediction_artifact_validation(validation: &PredictionArtifactValidatio
             println!("- {warning}");
         }
         println!();
+    }
+}
+
+fn print_validate_period_observations(
+    artifact: PathBuf,
+    input: PathBuf,
+    format: OutputFormat,
+) -> Result<()> {
+    let validation = validate_period_observations(&artifact, &input)?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&validation)?),
+        OutputFormat::Markdown => print_period_observation_validation(&validation),
+    }
+    if validation.valid {
+        Ok(())
+    } else {
+        anyhow::bail!("period observations failed validation")
+    }
+}
+
+fn validate_period_observations(
+    artifact_path: &Path,
+    input_path: &Path,
+) -> Result<PeriodPredictionObservationValidation> {
+    let observations = load_period_prediction_observations(input_path)?;
+    let observation_id = observations.id.unwrap_or_default();
+    let mut errors = Vec::new();
+    let non_anchor_positions = load_period_prediction_artifact_positions(artifact_path)?;
+
+    let mut seen = HashSet::new();
+    for position in &observations.positions_one_based {
+        if !seen.insert(*position) {
+            errors.push(format!(
+                "positions_one_based contains duplicate position `{position}`"
+            ));
+        }
+        if !non_anchor_positions.contains(position) {
+            errors.push(format!(
+                "position `{position}` is not in the prediction artifact non-anchor universe"
+            ));
+        }
+    }
+
+    Ok(PeriodPredictionObservationValidation {
+        artifact_path: artifact_path.display().to_string(),
+        observation_id,
+        observation_source_ids: observations.source_ids,
+        observed_position_count: observations.positions_one_based.len(),
+        observed_positions_one_based: observations.positions_one_based,
+        valid: errors.is_empty(),
+        errors,
+        promoted_candidate: false,
+        note: "Period observation validation checks source-backed non-anchor positions before scoring; it is not a claimed solution.",
+    })
+}
+
+fn print_period_observation_validation(validation: &PeriodPredictionObservationValidation) {
+    println!("# Period Observation Validation\n");
+    println!("This is not a claimed solution.\n");
+    println!("artifact: `{}`", validation.artifact_path);
+    println!("observation id: `{}`", validation.observation_id);
+    println!(
+        "observation sources: {}",
+        validation.observation_source_ids.join(", ")
+    );
+    println!(
+        "observed positions: {}",
+        validation
+            .observed_positions_one_based
+            .iter()
+            .map(|position| position.to_string())
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
+    println!(
+        "observed position count: {}",
+        validation.observed_position_count
+    );
+    println!("valid: {}", validation.valid);
+    println!("promoted: {}", validation.promoted_candidate);
+    println!("note: {}\n", validation.note);
+    println!("## Errors\n");
+    if validation.errors.is_empty() {
+        println!("none");
+    } else {
+        for error in &validation.errors {
+            println!("- {error}");
+        }
     }
 }
 

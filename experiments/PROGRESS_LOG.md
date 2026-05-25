@@ -95,6 +95,9 @@ Evaluator input hardened: `evaluate-period-prediction` now also accepts
 `--positions-file`, a JSON observation record with registered `source_ids`,
 `positions_one_based`, and rationale. This keeps future non-anchor position
 evidence source-backed instead of only accepting ad hoc comma-separated inputs.
+`validate-period-observations` now checks those files before scoring, rejecting
+unregistered source IDs, duplicate positions, and positions outside the
+committed non-anchor prediction artifact.
 
 Concrete follow-up lane registered:
 `experiments/preregistrations/non-anchor-position-period-followup-v1.json`

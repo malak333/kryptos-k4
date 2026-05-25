@@ -1506,6 +1506,79 @@ fn evaluate_period_prediction_accepts_source_backed_position_file() {
 }
 
 #[test]
+fn validate_period_observations_accepts_source_backed_non_anchor_positions() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("observations.json");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "synthetic-validation-test",
+  "source_ids": ["cia-artifact"],
+  "positions_one_based": [1, 4, 7],
+  "rationale": "Synthetic CLI test fixture for observation validation."
+}"#,
+    )
+    .unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-period-observations",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-period-v1.json",
+            "--input",
+            observations_path.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["valid"], true);
+    assert_eq!(json["observation_id"], "synthetic-validation-test");
+    assert_eq!(json["observation_source_ids"][0], "cia-artifact");
+    assert_eq!(json["observed_position_count"], 3);
+    assert_eq!(json["promoted_candidate"], false);
+}
+
+#[test]
+fn validate_period_observations_rejects_anchor_and_duplicate_positions() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("observations.json");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "bad-position-test",
+  "source_ids": ["cia-artifact"],
+  "positions_one_based": [1, 1, 22],
+  "rationale": "Synthetic CLI test fixture for observation validation failures."
+}"#,
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-period-observations",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-period-v1.json",
+            "--input",
+            observations_path.to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("duplicate position `1`"))
+        .stdout(predicate::str::contains("position `22`"))
+        .stderr(predicate::str::contains(
+            "period observations failed validation",
+        ));
+}
+
+#[test]
 fn evaluate_period_prediction_rejects_unregistered_position_file_source() {
     let temp = tempfile::tempdir().unwrap();
     let observations_path = temp.path().join("observations.json");

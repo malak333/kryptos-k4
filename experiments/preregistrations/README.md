@@ -42,6 +42,14 @@ cargo run --locked -- evaluate-period-prediction \
   --positions-file <source-backed-observations.json>
 ```
 
+Validate the observation file first:
+
+```bash
+cargo run --locked -- validate-period-observations \
+  --artifact experiments/predictions/non-anchor-position-period-v1.json \
+  --input <source-backed-observations.json>
+```
+
 Required JSON fields:
 
 - `id`

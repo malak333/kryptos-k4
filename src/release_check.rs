@@ -23,8 +23,9 @@ const REQUIRED_RELEASE_FILES: [(&str, &str); 8] = [
 const REQUIRED_GENERATED_REPORTS: [(&str, &str); 1] =
     [("markdown-report-present", "notes/k4-report.md")];
 
-const REQUIRED_REPORT_MARKERS: [&str; 5] = [
+const REQUIRED_REPORT_MARKERS: [&str; 6] = [
     "`validate-prediction-artifact`",
+    "`validate-period-observations`",
     "`evaluate-period-prediction`",
     "Independent non-anchor period targets are materialized before scoring",
     "evidence-free prediction target",
