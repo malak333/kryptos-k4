@@ -81,7 +81,8 @@ Current independent period lanes:
 - `non-anchor-position-period-v1.json` with committed artifact
   `experiments/predictions/non-anchor-position-period-v1.json`
 - `non-anchor-position-period-followup-v1.json` for future source-backed
-  non-anchor observations
+  non-anchor observations, with committed artifact
+  `experiments/predictions/non-anchor-position-period-followup-v1.json`
 - `non-anchor-position-period-diagnostic-v1.json`, a populated diagnostic lane
   derived from the template,
   with committed artifact

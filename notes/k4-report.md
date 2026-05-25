@@ -26,6 +26,7 @@ This report uses public anchors only and is not a claimed solution. Production r
 | `structural-models` | Pre-registered period-model controls over public fragment positions in Markdown or JSON. |
 | `validate-preregistration` | Research-lane gate for future source evidence or independent prediction targets in Markdown or JSON. |
 | `validate-prediction-artifact` | Gate confirming committed independent prediction artifacts still match their preregistration and deterministic generator in Markdown or JSON. |
+| `independent-lane-status` | Operational summary of preregistered independent lanes, artifact validity, and the next source-backed observation gate in Markdown or JSON. |
 | `validate-period-observations` | Gate for source-backed independent position observations, source allowed-use compatibility, and optional prediction-artifact preregistration validation before period prediction scoring in Markdown or JSON. |
 | `validate-spacing-observations` | Gate for source-backed independent position observations, source allowed-use compatibility, and optional prediction-artifact preregistration validation before spacing prediction scoring in Markdown or JSON. |
 | `period-prediction-plan` | Non-anchor residue-class target emission for a registered period, without scoring public fragment values, in Markdown or JSON. |
@@ -38,7 +39,7 @@ This report uses public anchors only and is not a claimed solution. Production r
 | `routes` | Bounded named route experiments with identity, reverse, and seeded-random baselines in Markdown or JSON. |
 | `findings` | Reproducible findings ledger with sources, transformations, baselines, interpretation, and next tests in Markdown or JSON. |
 | `sources` | Source provenance records and allowed-use notes in Markdown or JSON. |
-| `release-check` | Local release preflight results, including no-GitHub-Actions, candidate CSV/registry alignment, preregistration and prediction-artifact validation, non-scorable observation template status, findings source-input integrity, and source-packet/source-registry field and latest-access-date alignment gates in Markdown or JSON. |
+| `release-check` | Local release preflight results, including no-GitHub-Actions, candidate CSV/registry alignment, preregistration and prediction-artifact validation, independent-lane readiness, non-scorable observation template status, findings source-input integrity, and source-packet/source-registry field and latest-access-date alignment gates in Markdown or JSON. |
 | `export-data` | Covered by the source data rendered here; the command writes ciphertext, anchor, and source JSON files. |
 
 ## Ciphertext
@@ -765,7 +766,7 @@ Findings are reproducible research observations, not promoted solution claims.
   - Next test: Only add route families that are named, deterministic, and justified before seeing their score.
   - Promoted: false
 - **F5 Independent non-anchor period targets are materialized before scoring (H3)**
-  - Sources: `experiments/preregistrations/non-anchor-position-period-v1.json`, `experiments/predictions/non-anchor-position-period-v1.json`, `experiments/preregistrations/non-anchor-position-period-diagnostic-v1.json`, `experiments/predictions/non-anchor-position-period-diagnostic-v1.json`, `experiments/preregistrations/non-anchor-position-period-v2.json`, `experiments/predictions/non-anchor-position-period-v2.json`, `experiments/preregistrations/non-anchor-position-period-v3.json`, `experiments/predictions/non-anchor-position-period-v3.json`, `experiments/preregistrations/non-anchor-position-period-v4.json`, `experiments/predictions/non-anchor-position-period-v4.json`
+  - Sources: `experiments/preregistrations/non-anchor-position-period-v1.json`, `experiments/predictions/non-anchor-position-period-v1.json`, `experiments/preregistrations/non-anchor-position-period-diagnostic-v1.json`, `experiments/predictions/non-anchor-position-period-diagnostic-v1.json`, `experiments/preregistrations/non-anchor-position-period-followup-v1.json`, `experiments/predictions/non-anchor-position-period-followup-v1.json`, `experiments/preregistrations/non-anchor-position-period-v2.json`, `experiments/predictions/non-anchor-position-period-v2.json`, `experiments/preregistrations/non-anchor-position-period-v3.json`, `experiments/predictions/non-anchor-position-period-v3.json`, `experiments/preregistrations/non-anchor-position-period-v4.json`, `experiments/predictions/non-anchor-position-period-v4.json`
   - Steps: validate each non-anchor position-period preregistration; emit all registered period residue classes before observing independent evidence; compare each committed prediction artifact against deterministic generator output
   - Output: The committed artifacts lock seven registered periods, exclude 24 public-anchor positions, and emit 73 non-anchor K4 positions per period.
   - Baseline: The artifacts have no score yet; future evidence must use held-out or best-of-period controls before interpretation.
@@ -781,9 +782,9 @@ Findings are reproducible research observations, not promoted solution claims.
   - Next test: Only reopen a stopped search family with a lane-specific preregistration that fixes the cipher family, transform set, target, and multiple-comparison control before scoring.
   - Promoted: false
 - **F7 Machine-readable gates protect future independent evidence (H3)**
-  - Sources: `experiments/preregistrations/non-anchor-position-period-v2.json`, `experiments/predictions/non-anchor-position-period-v2.json`, `experiments/preregistrations/non-anchor-position-period-v3.json`, `experiments/predictions/non-anchor-position-period-v3.json`, `experiments/preregistrations/non-anchor-position-period-v4.json`, `experiments/predictions/non-anchor-position-period-v4.json`, `experiments/PROGRESS_LOG.md`, `release-check`
-  - Steps: validate the v2, v3, and v4 preregistrations with JSON output; validate the committed v2, v3, and v4 prediction artifacts with JSON output; run release-check in JSON mode and require every local preflight gate to pass
-  - Output: The v2, v3, and v4 preregistrations and artifacts validate as non-promotional, and release-check JSON reports every local gate as passed.
+  - Sources: `experiments/preregistrations/non-anchor-position-period-v2.json`, `experiments/predictions/non-anchor-position-period-v2.json`, `experiments/preregistrations/non-anchor-position-period-v3.json`, `experiments/predictions/non-anchor-position-period-v3.json`, `experiments/preregistrations/non-anchor-position-period-v4.json`, `experiments/predictions/non-anchor-position-period-v4.json`, `experiments/preregistrations/non-anchor-position-period-followup-v1.json`, `experiments/predictions/non-anchor-position-period-followup-v1.json`, `experiments/PROGRESS_LOG.md`, `release-check`
+  - Steps: validate the follow-up, v2, v3, and v4 preregistrations with JSON output; validate the committed follow-up, v2, v3, and v4 prediction artifacts with JSON output; run release-check in JSON mode and require every local preflight gate to pass
+  - Output: The follow-up, v2, v3, and v4 preregistrations and artifacts validate as non-promotional, and release-check JSON reports every local gate as passed.
   - Baseline: This is a reproducibility gate, not a scored cryptanalytic baseline; it prevents stale or unregistered evidence from being interpreted as a signal.
   - Interpretation: Future evidence can be audited by tools before scoring, but the gate result itself provides no plaintext and promotes no candidate.
   - Next test: Before any new non-anchor observation is scored, run the JSON preregistration, prediction-artifact, observation, evaluation, and release gates and archive the exact outputs.
@@ -803,6 +804,14 @@ Findings are reproducible research observations, not promoted solution claims.
   - Baseline: This is a guardrail for future independent evidence; the diagnostic toy spacing check was non-promotional and did not produce a meaningful p-value.
   - Interpretation: The spacing lane is now executable for future independent observations, but it does not add K4 plaintext, key material, or a promoted candidate.
   - Next test: When a real non-anchor observation file exists, run validate-spacing-observations with the spacing preregistration, then evaluate-spacing-prediction with --positions-file and archive the JSON outputs.
+  - Promoted: false
+- **F10 Independent lane status exposes the next evidence gate (H3)**
+  - Sources: `src/preregistration.rs`, `src/main.rs`, `tests/cli_e2e.rs`, `experiments/PROGRESS_LOG.md`
+  - Steps: scan committed preregistration files except the template; validate each preregistration and declared prediction artifact; report lane readiness and the next observation validator or evaluator command
+  - Output: The lane-status command reports 7 lanes, 7 ready for source-backed observations, 0 invalid lanes, and promoted false.
+  - Baseline: This is an operational gate summary rather than a statistical cryptanalytic baseline.
+  - Interpretation: All current independent prediction lanes are ready for future source-backed observation files, but no observation has been scored and no candidate is promoted.
+  - Next test: Use independent-lane-status before adding any observation file, then run the family-specific observation validator and evaluator named by the lane status output.
   - Promoted: false
 
 ## Release Check
@@ -824,9 +833,10 @@ Local preflight only. This repo does not use GitHub Actions.
 - markdown-report-present: true (Generated release report must be present. path=/Users/michaelnobile/Antigravity/Ciphers/notes/k4-report.md)
 - candidate-registry-aligned: true (Candidate CSV rows are represented in the candidate registry with source IDs and rationale. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/k4-candidates.csv; registry_path=/Users/michaelnobile/Antigravity/Ciphers/experiments/k4-candidates.md)
 - preregistrations-valid: true (Committed non-template preregistrations validate. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/preregistrations; checked=7)
-- prediction-artifacts-valid: true (Committed prediction artifacts match their preregistrations and deterministic generators. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/predictions; checked=6)
+- prediction-artifacts-valid: true (Committed prediction artifacts match their preregistrations and deterministic generators. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/predictions; checked=7)
+- independent-lanes-ready: true (Independent preregistered lanes are ready for source-backed observation files. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/preregistrations; ready=7; checked=7)
 - position-observation-template-guarded: true (Position observation template remains intentionally non-scorable. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/position-observations-template.json)
-- findings-source-inputs-valid: true (Findings source inputs resolve to registered sources, committed files, or known local command references. path=/Users/michaelnobile/Antigravity/Ciphers/src/findings.rs; checked=9)
+- findings-source-inputs-valid: true (Findings source inputs resolve to registered sources, committed files, or known local command references. path=/Users/michaelnobile/Antigravity/Ciphers/src/findings.rs; checked=10)
 - source-packet-latest-access-date: true (Source packet includes latest registered source access date. path=/Users/michaelnobile/Antigravity/Ciphers/sources/source-packet.md; latest_access_date=2026-05-25)
 - source-packet-registry-aligned: true (Source packet matches every registered source ID, URL, type, and allowed-use boundary. path=/Users/michaelnobile/Antigravity/Ciphers/sources/source-packet.md)
 - no-plaintext-leakage-markers: true (No leaked/full-plaintext sentinel markers found in release-facing files.)

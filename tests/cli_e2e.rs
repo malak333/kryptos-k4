@@ -177,6 +177,7 @@ fn facts_hypotheses_sources_and_help_are_covered() {
         ))
         .stdout(predicate::str::contains("validate-period-observations"))
         .stdout(predicate::str::contains("validate-spacing-observations"))
+        .stdout(predicate::str::contains("independent-lane-status"))
         .stdout(predicate::str::contains("evaluate-period-prediction"))
         .stdout(predicate::str::contains("evaluate-spacing-prediction"));
 }
@@ -1386,6 +1387,7 @@ fn committed_period_prediction_artifact_matches_cli_output() {
     for path in [
         "experiments/predictions/non-anchor-position-period-v1.json",
         "experiments/predictions/non-anchor-position-period-diagnostic-v1.json",
+        "experiments/predictions/non-anchor-position-period-followup-v1.json",
         "experiments/predictions/non-anchor-position-period-v2.json",
         "experiments/predictions/non-anchor-position-period-v3.json",
         "experiments/predictions/non-anchor-position-period-v4.json",
@@ -1547,6 +1549,7 @@ fn validate_prediction_artifact_checks_committed_independent_target() {
     for preregistration in [
         "experiments/preregistrations/non-anchor-position-period-v1.json",
         "experiments/preregistrations/non-anchor-position-period-diagnostic-v1.json",
+        "experiments/preregistrations/non-anchor-position-period-followup-v1.json",
         "experiments/preregistrations/non-anchor-position-period-v2.json",
         "experiments/preregistrations/non-anchor-position-period-v3.json",
         "experiments/preregistrations/non-anchor-position-period-v4.json",
@@ -1601,6 +1604,47 @@ fn validate_prediction_artifact_checks_committed_independent_target() {
     assert_eq!(json["expected_period_count"], 7);
     assert_eq!(json["artifact_period_count"], 7);
     assert_eq!(json["promoted_candidate"], false);
+}
+
+#[test]
+fn independent_lane_status_summarizes_ready_lanes() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .arg("independent-lane-status")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Independent Lane Status"))
+        .stdout(predicate::str::contains("lanes: 7"))
+        .stdout(predicate::str::contains(
+            "ready for source-backed observations: 7",
+        ))
+        .stdout(predicate::str::contains("invalid lanes: 0"))
+        .stdout(predicate::str::contains(
+            "non-anchor-position-period-followup-v1",
+        ))
+        .stdout(predicate::str::contains(
+            "ready-for-source-backed-observations",
+        ))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["independent-lane-status", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["lane_count"], 7);
+    assert_eq!(json["ready_for_source_backed_observations"], 7);
+    assert_eq!(json["invalid_lanes"], 0);
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(json["lanes"].as_array().unwrap().iter().all(|lane| {
+        lane["ready_for_source_backed_observations"] == true
+            && lane["prediction_artifact_valid"] == true
+            && lane["promoted_candidate"] == false
+    }));
 }
 
 #[test]
@@ -2399,6 +2443,7 @@ fn release_check_json_exposes_all_local_preflight_gates() {
         "lockfile-present",
         "markdown-report-present",
         "findings-source-inputs-valid",
+        "independent-lanes-ready",
         "position-observation-template-guarded",
         "source-packet-registry-aligned",
         "no-plaintext-leakage-markers",

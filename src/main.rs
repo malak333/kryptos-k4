@@ -3,19 +3,20 @@ use clap::{Parser, Subcommand, ValueEnum};
 use kryptos_k4::{
     AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, BatchKeyMaterialCandidate,
     BatchKeyMaterialRun, BatchKeyRunHistory, CandidateTransform, FragmentMode,
-    HeldoutKeyControlRun, K4_CIPHERTEXT, KeyMaterialExplanation, KeyMaterialOffsetSweep,
-    KeyMaterialTest, PeriodPredictionEvaluation, PeriodPredictionPlan, PeriodPredictionPlanSet,
-    PositionStructureRun, PredictionArtifactValidation, PreregistrationValidation, ReportFormat,
-    RoutedBatchKeyMaterialRun, SpacingPredictionEvaluation, SpacingPredictionPlanSet,
-    StructuralModelRun, analyze_constraints, analyze_known_plaintext_spans,
-    batch_test_key_material_with_batch_baseline, batch_test_routed_key_material,
-    build_all_period_prediction_plans, build_all_spacing_prediction_plans,
-    build_period_prediction_plan, build_report, candidate_sequences,
-    evaluate_period_prediction_positions, evaluate_spacing_prediction_positions,
-    explain_key_material, findings, heldout_key_control, hypotheses, known_anchors,
-    load_and_validate_preregistration, render_report, run_baseline, run_position_structure_control,
-    run_release_checks, run_route_experiments, run_structural_model_control,
-    score_candidate_sequences, sources, summarize_batch_key_material_runs,
+    HeldoutKeyControlRun, IndependentLaneStatusReport, K4_CIPHERTEXT, KeyMaterialExplanation,
+    KeyMaterialOffsetSweep, KeyMaterialTest, PeriodPredictionEvaluation, PeriodPredictionPlan,
+    PeriodPredictionPlanSet, PositionStructureRun, PredictionArtifactValidation,
+    PreregistrationValidation, ReportFormat, RoutedBatchKeyMaterialRun,
+    SpacingPredictionEvaluation, SpacingPredictionPlanSet, StructuralModelRun, analyze_constraints,
+    analyze_known_plaintext_spans, batch_test_key_material_with_batch_baseline,
+    batch_test_routed_key_material, build_all_period_prediction_plans,
+    build_all_spacing_prediction_plans, build_period_prediction_plan, build_report,
+    candidate_sequences, evaluate_period_prediction_positions,
+    evaluate_spacing_prediction_positions, explain_key_material, findings, heldout_key_control,
+    hypotheses, known_anchors, load_and_validate_preregistration, render_report, run_baseline,
+    run_position_structure_control, run_release_checks, run_route_experiments,
+    run_structural_model_control, score_candidate_sequences, sources,
+    summarize_batch_key_material_runs, summarize_independent_lanes,
     sweep_key_material_offsets_with_baseline, test_key_material, validate_prediction_artifact,
     validation_exit_result,
 };
@@ -274,6 +275,15 @@ enum Command {
         /// JSON preregistration file that points to the prediction artifact.
         #[arg(long)]
         preregistration: PathBuf,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Summarize preregistered independent lanes and their next required gate.
+    IndependentLaneStatus {
+        /// Directory containing lane preregistration JSON files.
+        #[arg(long, default_value = "experiments/preregistrations")]
+        directory: PathBuf,
         /// Output format.
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
@@ -881,6 +891,9 @@ fn main() -> Result<()> {
             preregistration,
             format,
         } => print_validate_prediction_artifact(preregistration, format)?,
+        Command::IndependentLaneStatus { directory, format } => {
+            print_independent_lane_status(directory, format)?
+        }
         Command::ValidatePeriodObservations {
             artifact,
             preregistration,
@@ -2074,6 +2087,41 @@ fn print_prediction_artifact_validation(validation: &PredictionArtifactValidatio
             println!("- {warning}");
         }
         println!();
+    }
+}
+
+fn print_independent_lane_status(directory: PathBuf, format: OutputFormat) -> Result<()> {
+    let report = summarize_independent_lanes(&directory)?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&report)?),
+        OutputFormat::Markdown => print_independent_lane_status_report(&report),
+    }
+    Ok(())
+}
+
+fn print_independent_lane_status_report(report: &IndependentLaneStatusReport) {
+    println!("# Independent Lane Status\n");
+    println!("This is not a claimed solution.\n");
+    println!("directory: `{}`", report.directory);
+    println!("lanes: {}", report.lane_count);
+    println!(
+        "ready for source-backed observations: {}",
+        report.ready_for_source_backed_observations
+    );
+    println!("invalid lanes: {}", report.invalid_lanes);
+    println!("promoted: {}", report.promoted_candidate);
+    println!("note: {}\n", report.note);
+
+    println!("| Lane | Family | Artifact | Status | Next Step |");
+    println!("| --- | --- | --- | --- | --- |");
+    for lane in &report.lanes {
+        let id = lane.id.as_deref().unwrap_or("unavailable");
+        let family = lane.hypothesis_family.as_deref().unwrap_or("unavailable");
+        let artifact = lane.prediction_artifact.as_deref().unwrap_or("none");
+        println!(
+            "| `{}` | {} | `{}` | {} | {} |",
+            id, family, artifact, lane.status, lane.next_step
+        );
     }
 }
 

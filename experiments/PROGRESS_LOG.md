@@ -218,7 +218,11 @@ Concrete follow-up lane registered:
 `experiments/preregistrations/non-anchor-position-period-followup-v1.json`
 predeclares future independent non-anchor position observations as the
 evaluation surface. It intentionally has no source IDs and validates only as a
-pure independent prediction target.
+pure independent prediction target. Its deterministic artifact at
+`experiments/predictions/non-anchor-position-period-followup-v1.json` is
+emitted by `period-prediction-plan --all --format json`, closing the earlier
+gap where the preregistration was valid but not ready for source-backed
+observation scoring.
 
 Template-derived diagnostic lane populated and renamed:
 `experiments/preregistrations/non-anchor-position-period-diagnostic-v1.json`
@@ -272,6 +276,14 @@ Follow-up hardening: `validate-spacing-observations` now also rejects
 single-position files because spacing evaluation needs at least two positions to
 form one pair. This closes a pre-score validation gap where a source-backed file
 could pass validation but fail at evaluation time.
+
+Independent lane status command added:
+`independent-lane-status --format json` scans the preregistration directory,
+validates each preregistration and committed prediction artifact, and reports
+the next validator/evaluator command for each lane. Current status: 7 lanes,
+7 ready for source-backed observations, 0 invalid lanes, promoted false. This is
+an operational gate summary only; it adds no plaintext, key material, or scored
+evidence.
 
 2026 archive-research context registered:
 `kryptosbot-sanborn-papers-2026` was added to the source registry after checking

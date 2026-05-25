@@ -46,8 +46,10 @@ cargo run -- validate-preregistration --input experiments/preregistrations/non-a
 cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-v3.json --format json
 cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-period-v4.json --format json
 cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-v4.json --format json
+cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-followup-v1.json --format json
 cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-spacing-v1.json --format json
 cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-spacing-v1.json --format json
+cargo run -- independent-lane-status --format json
 cargo run -- period-prediction-plan --period 3
 cargo run -- period-prediction-plan --all
 cargo run -- period-prediction-plan --all --format json
@@ -139,6 +141,13 @@ The follow-up independent prediction lane in
 evidence-free position-period generator and exists to keep future non-anchor
 position evidence separate from the already mined public-anchor fragments.
 
+The earlier follow-up preregistration
+`experiments/preregistrations/non-anchor-position-period-followup-v1.json` also
+has a committed deterministic artifact at
+`experiments/predictions/non-anchor-position-period-followup-v1.json`, so
+`independent-lane-status` can report it as ready for source-backed observations
+rather than awaiting artifact setup.
+
 The newly populated independent prediction proposal at
 `experiments/preregistrations/non-anchor-position-period-v3.json` has a
 matching committed artifact at
@@ -178,6 +187,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `structural-models` | Pre-registered period-model controls that score public fragments only after the model registry is fixed, with seeded nulls and Holm adjustment. |
 | `validate-preregistration` | Gate for proposed new lanes in Markdown or JSON; rejects reuse of public anchor-derived fragments as discovery inputs or primary evidence. |
 | `validate-prediction-artifact` | Gate for committed independent prediction artifacts in Markdown or JSON; checks the preregistration and deterministic generator output still match. |
+| `independent-lane-status` | Operational summary of preregistered independent lanes, artifact validity, readiness for source-backed observations, and next required validator/evaluator command. |
 | `validate-period-observations` | Gate for source-backed independent position observations in Markdown or JSON; can also validate the prediction artifact preregistration, and rejects unregistered or disallowed source IDs, duplicates, and public-anchor positions before scoring. |
 | `validate-spacing-observations` | Gate for source-backed independent position observations before spacing scoring in Markdown or JSON; can also validate the spacing prediction artifact preregistration. |
 | `period-prediction-plan` | Emits non-anchor K4 position residue classes for one or all registered periods in Markdown or JSON without scoring fragment values or candidate material. |
@@ -189,7 +199,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |
 | `routes` | Small named route/permutation screens with fixed baselines. |
 | `findings` | Findings ledger with evidence inputs, transformations, baselines, interpretation, and next tests. |
-| `release-check` | Local release preflight in Markdown or JSON confirming no hosted automation, required docs, generated report presence, candidate CSV/registry alignment, preregistration and prediction-artifact validity, non-scorable observation template status, findings source-input integrity, source-packet/source-registry field and latest-access-date alignment, and plaintext-leakage sentinel absence. |
+| `release-check` | Local release preflight in Markdown or JSON confirming no hosted automation, required docs, generated report presence, candidate CSV/registry alignment, preregistration and prediction-artifact validity, independent-lane readiness, non-scorable observation template status, findings source-input integrity, source-packet/source-registry field and latest-access-date alignment, and plaintext-leakage sentinel absence. |
 | `hypotheses` | Ranked source-grounded hypothesis register in Markdown or JSON. |
 | `sources` | Source provenance records in Markdown or JSON for source-policy audits. |
 | `export-data` | Machine-readable JSON for ciphertext, anchors, and sources. |

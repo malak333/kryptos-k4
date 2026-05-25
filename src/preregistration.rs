@@ -2,6 +2,7 @@ use crate::{build_all_period_prediction_plans, build_all_spacing_prediction_plan
 use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use std::fs;
 use std::path::Path;
 
 #[derive(Debug, Clone, PartialEq, Eq, Deserialize, Serialize)]
@@ -56,9 +57,232 @@ pub struct PredictionArtifactValidation {
     pub note: &'static str,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct IndependentLaneStatusReport {
+    pub directory: String,
+    pub lane_count: usize,
+    pub ready_for_source_backed_observations: usize,
+    pub invalid_lanes: usize,
+    pub lanes: Vec<IndependentLaneStatus>,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct IndependentLaneStatus {
+    pub path: String,
+    pub id: Option<String>,
+    pub title: Option<String>,
+    pub hypothesis_family: Option<String>,
+    pub evidence_kind: Option<EvidenceKind>,
+    pub source_id_count: usize,
+    pub prediction_artifact: Option<String>,
+    pub preregistration_valid: bool,
+    pub prediction_artifact_valid: Option<bool>,
+    pub ready_for_source_backed_observations: bool,
+    pub status: String,
+    pub next_step: String,
+    pub errors: Vec<String>,
+    pub warnings: Vec<String>,
+    pub promoted_candidate: bool,
+}
+
 pub fn validate_preregistration(input: &str) -> Result<PreregistrationValidation> {
     let registration: LanePreregistration = serde_json::from_str(input)?;
     Ok(validate_registration(registration))
+}
+
+pub fn summarize_independent_lanes(directory: &Path) -> Result<IndependentLaneStatusReport> {
+    summarize_independent_lanes_with_repo_root(directory, Path::new("."))
+}
+
+pub fn summarize_independent_lanes_with_repo_root(
+    directory: &Path,
+    repo_root: &Path,
+) -> Result<IndependentLaneStatusReport> {
+    let mut paths = fs::read_dir(directory)?
+        .filter_map(|entry| entry.ok())
+        .map(|entry| entry.path())
+        .filter(|path| {
+            path.extension()
+                .is_some_and(|extension| extension == "json")
+        })
+        .filter(|path| {
+            path.file_name().and_then(|name| name.to_str())
+                != Some("independent-lane-template.json")
+        })
+        .collect::<Vec<_>>();
+    paths.sort();
+
+    let lanes = paths
+        .iter()
+        .map(|path| summarize_independent_lane(path, repo_root))
+        .collect::<Vec<_>>();
+    let ready_for_source_backed_observations = lanes
+        .iter()
+        .filter(|lane| lane.ready_for_source_backed_observations)
+        .count();
+    let invalid_lanes = lanes
+        .iter()
+        .filter(|lane| !lane.preregistration_valid || lane.prediction_artifact_valid == Some(false))
+        .count();
+
+    Ok(IndependentLaneStatusReport {
+        directory: directory.display().to_string(),
+        lane_count: lanes.len(),
+        ready_for_source_backed_observations,
+        invalid_lanes,
+        lanes,
+        promoted_candidate: false,
+        note: "Independent lane status is an operational gate summary; it is not a claimed solution.",
+    })
+}
+
+fn summarize_independent_lane(path: &Path, repo_root: &Path) -> IndependentLaneStatus {
+    let path_label = path.display().to_string();
+    let input = match fs::read_to_string(path) {
+        Ok(input) => input,
+        Err(error) => {
+            return IndependentLaneStatus {
+                path: path_label,
+                id: None,
+                title: None,
+                hypothesis_family: None,
+                evidence_kind: None,
+                source_id_count: 0,
+                prediction_artifact: None,
+                preregistration_valid: false,
+                prediction_artifact_valid: None,
+                ready_for_source_backed_observations: false,
+                status: "unreadable-preregistration".to_string(),
+                next_step: "Fix file readability before interpreting this lane.".to_string(),
+                errors: vec![error.to_string()],
+                warnings: Vec::new(),
+                promoted_candidate: false,
+            };
+        }
+    };
+    let registration = serde_json::from_str::<LanePreregistration>(&input);
+    let validation = validate_preregistration(&input);
+
+    match (registration, validation) {
+        (Ok(registration), Ok(validation)) => {
+            let artifact_validation = if registration.prediction_artifact.is_some() {
+                Some(validate_prediction_artifact_with_repo_root(path, repo_root))
+            } else {
+                None
+            };
+            let artifact_valid = artifact_validation
+                .as_ref()
+                .map(|result| result.as_ref().is_ok_and(|validation| validation.valid));
+            let mut errors = validation.errors;
+            let warnings = validation.warnings;
+            if let Some(Err(error)) = artifact_validation {
+                errors.push(error.to_string());
+            }
+            let ready = validation.valid && artifact_valid.unwrap_or(false);
+            let (status, next_step) = lane_status_next_step(&registration, ready, artifact_valid);
+
+            IndependentLaneStatus {
+                path: path_label,
+                id: Some(registration.id),
+                title: Some(registration.title),
+                hypothesis_family: Some(registration.hypothesis_family),
+                evidence_kind: Some(registration.evidence_kind),
+                source_id_count: registration.source_ids.len(),
+                prediction_artifact: registration.prediction_artifact,
+                preregistration_valid: validation.valid,
+                prediction_artifact_valid: artifact_valid,
+                ready_for_source_backed_observations: ready,
+                status,
+                next_step,
+                errors,
+                warnings,
+                promoted_candidate: false,
+            }
+        }
+        (Ok(registration), Err(error)) => IndependentLaneStatus {
+            path: path_label,
+            id: Some(registration.id),
+            title: Some(registration.title),
+            hypothesis_family: Some(registration.hypothesis_family),
+            evidence_kind: Some(registration.evidence_kind),
+            source_id_count: registration.source_ids.len(),
+            prediction_artifact: registration.prediction_artifact,
+            preregistration_valid: false,
+            prediction_artifact_valid: None,
+            ready_for_source_backed_observations: false,
+            status: "invalid-preregistration".to_string(),
+            next_step: "Fix preregistration JSON before adding observations or scoring."
+                .to_string(),
+            errors: vec![error.to_string()],
+            warnings: Vec::new(),
+            promoted_candidate: false,
+        },
+        (Err(error), _) => IndependentLaneStatus {
+            path: path_label,
+            id: None,
+            title: None,
+            hypothesis_family: None,
+            evidence_kind: None,
+            source_id_count: 0,
+            prediction_artifact: None,
+            preregistration_valid: false,
+            prediction_artifact_valid: None,
+            ready_for_source_backed_observations: false,
+            status: "invalid-json".to_string(),
+            next_step: "Fix preregistration JSON before adding observations or scoring."
+                .to_string(),
+            errors: vec![error.to_string()],
+            warnings: Vec::new(),
+            promoted_candidate: false,
+        },
+    }
+}
+
+fn lane_status_next_step(
+    registration: &LanePreregistration,
+    ready: bool,
+    artifact_valid: Option<bool>,
+) -> (String, String) {
+    if !ready {
+        if artifact_valid == Some(false) {
+            return (
+                "prediction-artifact-invalid".to_string(),
+                "Regenerate or fix the committed prediction artifact before scoring observations."
+                    .to_string(),
+            );
+        }
+        if registration.prediction_artifact.is_none() {
+            return (
+                "awaiting-prediction-artifact".to_string(),
+                "Declare and commit a deterministic prediction artifact before scoring observations."
+                    .to_string(),
+            );
+        }
+        return (
+            "preregistration-invalid".to_string(),
+            "Fix preregistration validation errors before adding observations or scoring."
+                .to_string(),
+        );
+    }
+
+    match registration.hypothesis_family.as_str() {
+        "position-spacing-prediction" => (
+            "ready-for-source-backed-observations".to_string(),
+            "Run validate-spacing-observations, then evaluate-spacing-prediction with --positions-file."
+                .to_string(),
+        ),
+        "position-period-prediction" => (
+            "ready-for-source-backed-observations".to_string(),
+            "Run validate-period-observations, then evaluate-period-prediction with --positions-file."
+                .to_string(),
+        ),
+        _ => (
+            "ready-needs-family-specific-evaluator".to_string(),
+            "Add a family-specific observation validator/evaluator before scoring.".to_string(),
+        ),
+    }
 }
 
 fn validate_registration(registration: LanePreregistration) -> PreregistrationValidation {

@@ -1,7 +1,8 @@
 use crate::data::sources;
 use crate::findings::findings;
 use crate::preregistration::{
-    LanePreregistration, validate_prediction_artifact_with_repo_root, validate_preregistration,
+    LanePreregistration, summarize_independent_lanes_with_repo_root,
+    validate_prediction_artifact_with_repo_root, validate_preregistration,
 };
 use anyhow::{Result, bail};
 use serde::Serialize;
@@ -30,8 +31,9 @@ const REQUIRED_RELEASE_FILES: [(&str, &str); 10] = [
 const REQUIRED_GENERATED_REPORTS: [(&str, &str); 1] =
     [("markdown-report-present", "notes/k4-report.md")];
 
-const REQUIRED_REPORT_MARKERS: [&str; 8] = [
+const REQUIRED_REPORT_MARKERS: [&str; 9] = [
     "`validate-prediction-artifact`",
+    "`independent-lane-status`",
     "`validate-period-observations`",
     "`evaluate-period-prediction`",
     "Independent non-anchor period targets are materialized before scoring",
@@ -112,6 +114,7 @@ fn run_release_checks_inner(
     checks.push(check_candidate_registry_alignment(repo_root));
     checks.push(check_preregistrations_validate(repo_root));
     checks.push(check_prediction_artifacts_validate(repo_root));
+    checks.push(check_independent_lanes_ready(repo_root));
     checks.push(check_position_observation_template_guarded(repo_root));
     checks.push(check_findings_source_inputs_validate(repo_root));
     checks.push(check_source_packet_latest_access_date(repo_root));
@@ -281,6 +284,57 @@ fn check_prediction_artifacts_validate(repo_root: &Path) -> ReleaseCheck {
                 repo_root.join("experiments/predictions").display(),
                 mismatches.join(", ")
             )
+        },
+    }
+}
+
+fn check_independent_lanes_ready(repo_root: &Path) -> ReleaseCheck {
+    let directory = repo_root.join("experiments/preregistrations");
+    match summarize_independent_lanes_with_repo_root(&directory, repo_root) {
+        Ok(report) => {
+            let blocked_lanes = report
+                .lanes
+                .iter()
+                .filter(|lane| !lane.ready_for_source_backed_observations)
+                .map(|lane| {
+                    format!(
+                        "{}:{}",
+                        lane.id.as_deref().unwrap_or("unavailable"),
+                        lane.status
+                    )
+                })
+                .collect::<Vec<_>>();
+            ReleaseCheck {
+                name: "independent-lanes-ready",
+                passed: report.lane_count > 0 && blocked_lanes.is_empty(),
+                detail: if report.lane_count > 0 && blocked_lanes.is_empty() {
+                    format!(
+                        "Independent preregistered lanes are ready for source-backed observation files. path={}; ready={}; checked={}",
+                        directory.display(),
+                        report.ready_for_source_backed_observations,
+                        report.lane_count
+                    )
+                } else if report.lane_count == 0 {
+                    format!(
+                        "No independent preregistered lanes found. path={}",
+                        directory.display()
+                    )
+                } else {
+                    format!(
+                        "Independent preregistered lanes are not ready for source-backed observation files. path={}; blocked={}",
+                        directory.display(),
+                        blocked_lanes.join(", ")
+                    )
+                },
+            }
+        }
+        Err(error) => ReleaseCheck {
+            name: "independent-lanes-ready",
+            passed: false,
+            detail: format!(
+                "Independent lane status could not be evaluated. path={}; error={error}",
+                directory.display()
+            ),
         },
     }
 }
@@ -799,6 +853,32 @@ mod tests {
             temp.path()
                 .join("experiments/predictions/non-anchor-position-period-v1.json"),
             r#"{"period_count":1,"periods":[]}"#,
+        )
+        .unwrap();
+
+        assert!(run_release_checks(temp.path()).is_err());
+    }
+
+    #[test]
+    fn release_checks_fail_when_independent_lane_lacks_artifact() {
+        let temp = release_ready_temp_dir();
+        fs::write(
+            temp.path()
+                .join("experiments/preregistrations/non-anchor-position-period-followup-v1.json"),
+            r#"{
+  "id": "non-anchor-position-period-followup-v1",
+  "title": "Non-anchor position-period follow-up",
+  "hypothesis_family": "position-period-prediction",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane predeclares a structural position rule before any key-material scoring, and it does not use public anchor-derived additive fragments as discovery evidence or primary evaluation evidence.",
+  "prediction_target": "Future independently obtained non-anchor K4 position observations should concentrate in predeclared residue classes for the registered period set before any key-material tuning is performed.",
+  "discovery_inputs": ["Registered period set selected before scoring"],
+  "evaluation_inputs": ["Future independently documented non-anchor K4 position observations"],
+  "controls": ["best-of-period null control"],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}"#,
         )
         .unwrap();
 

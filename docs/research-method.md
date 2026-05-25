@@ -58,6 +58,7 @@ The integration tests in `tests/cli_e2e.rs` execute the compiled CLI and verify:
 - structural-models output evaluates a fixed registry of period models with seeded nulls and Holm adjustment before any candidate-word expansion;
 - validate-preregistration rejects new lanes that reuse public anchor-derived fragments as discovery inputs or primary evidence;
 - validate-prediction-artifact checks committed independent prediction artifacts against the deterministic generator;
+- independent-lane-status summarizes preregistered lanes, artifact validity, readiness for source-backed observations, and the next validator or evaluator command;
 - validate-period-observations and validate-spacing-observations reject unregistered source IDs, disallowed source-use boundaries, duplicate positions, public-anchor positions, and unchanged observation templates before scoring;
 - period-prediction-plan emits predeclared non-anchor residue-class targets from K4 positions only, without scoring public fragment values or candidate material;
 - spacing-prediction-plan emits predeclared non-anchor spacing residue targets from K4 positions only, without scoring public fragment values or candidate material;
@@ -83,7 +84,7 @@ target/release/kryptos-k4 --help
 
 Then create the tag and release manually with `git` and `gh release create`.
 
-The `release-check` command verifies the no-Actions/no-Dependabot policy, required release docs, generated Markdown report presence, candidate CSV/registry alignment, committed preregistration validity, committed prediction-artifact validity, intentionally non-scorable observation-template status, findings source-input integrity, source-packet/source-registry field alignment, latest source access-date metadata, and absence of explicit leaked/full-plaintext sentinel markers before release.
+The `release-check` command verifies the no-Actions/no-Dependabot policy, required release docs, generated Markdown report presence, candidate CSV/registry alignment, committed preregistration validity, committed prediction-artifact validity, independent-lane readiness for source-backed observations, intentionally non-scorable observation-template status, findings source-input integrity, source-packet/source-registry field alignment, latest source access-date metadata, and absence of explicit leaked/full-plaintext sentinel markers before release.
 
 The source packet and `src/data.rs` source registry must stay aligned. Archive-sale reporting and community archive-research pages are historical or preregistration context only; they must not introduce archive-discovered plaintext, private auction material, or unregistered community interpretations into the data model, reports, exports, or tests.
 
@@ -104,6 +105,11 @@ Direct `evaluate-period-prediction --positions ...` and
 check mechanics or reproduce examples, but evidence-bearing evaluation requires
 `--positions-file` with registered source IDs, a matching `--preregistration`,
 and a passing period or spacing observation validation result.
+
+Run `independent-lane-status` before adding a source-backed observation file. It
+must show a valid preregistration and prediction artifact for the target lane,
+then follow the family-specific observation validator and evaluator named in the
+status output.
 
 Public methodology-context sources can document why a search family is stopped
 or why a null control is required. They still do not supply plaintext,

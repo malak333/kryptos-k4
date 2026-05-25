@@ -6,6 +6,7 @@
   "source_ids": [],
   "rationale": "This lane predeclares a position-period target before any new candidate-word scoring, so it is not another pass over the already-mined anchor-derived key fragments.",
   "prediction_target": "Future independently obtained non-anchor K4 position observations should concentrate in predeclared residue classes for the registered period set before any key-material tuning is performed.",
+  "prediction_artifact": "experiments/predictions/non-anchor-position-period-followup-v1.json",
   "discovery_inputs": [
     "Registered period set selected before scoring",
     "Absolute K4 position numbers outside the withheld-evidence set",
