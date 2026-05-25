@@ -66,6 +66,8 @@ Result summary:
 - fragment values scored: none
 - candidate material scored: none
 - promoted: false
+- committed prediction artifact:
+  `experiments/predictions/non-anchor-position-period-v1.json`
 
 Interpretation: this makes the `non-anchor-position-period-v1` lane executable
 as a predeclared target. It does not use public anchor-derived key fragments as
@@ -73,6 +75,9 @@ evidence. Future independent evidence can be compared to these residue classes
 without retuning the period or residue assignment. Prefer `--all` when the
 period has not been justified independently, because that preserves the full
 registered-period search surface for later best-of-period controls.
+The committed artifact is intentionally evidence-free: it contains K4 position
+classes only, excludes public-anchor positions, and does not include fragment
+values or candidate key material.
 
 ## Existing Completed 100k Controls
 

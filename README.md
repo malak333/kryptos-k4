@@ -41,6 +41,7 @@ cargo run -- structural-models --target spans --alphabet kryptos --iterations 10
 cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-period-v1.json
 cargo run -- period-prediction-plan --period 3
 cargo run -- period-prediction-plan --all
+cargo run -- period-prediction-plan --all --format json
 cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --top 20
 cargo run -- baseline --target spans --iterations 1000 --seed 42
 cargo run -- baseline --target spans --iterations 1000 --seed 42 --format json
@@ -93,6 +94,13 @@ The loop writes timestamped folders under `results/key-tests/`, updates `results
 Candidate rows in `experiments/k4-candidates.csv` are documented in
 `experiments/k4-candidates.md`. Add new rows only with a public source ID and
 rationale so batch histories remain auditable.
+
+The current independent prediction lane is preregistered in
+`experiments/preregistrations/non-anchor-position-period-v1.json`, and its
+committed evidence-free prediction artifact is
+`experiments/predictions/non-anchor-position-period-v1.json`. Regenerate that
+artifact only with `period-prediction-plan --all --format json`; it must remain
+free of fragment values, candidate key material, and claimed plaintext.
 
 Summarize a completed lane:
 

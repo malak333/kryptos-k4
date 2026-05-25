@@ -33,6 +33,7 @@ Required JSON fields:
 - `source_ids`
 - `rationale`
 - `prediction_target`
+- `prediction_artifact` optional path to a committed prediction target artifact
 - `discovery_inputs`
 - `evaluation_inputs`
 - `controls`

@@ -6,6 +6,7 @@
   "source_ids": [],
   "rationale": "Explain why this lane is not another search over public anchor-derived fragments.",
   "prediction_target": "Define the independent target before running any scoring command.",
+  "prediction_artifact": "experiments/predictions/<lane-id>.json",
   "discovery_inputs": [
     "Describe the non-anchor discovery input or pre-declared structural rule."
   ],

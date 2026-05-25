@@ -6,6 +6,7 @@
   "source_ids": [],
   "rationale": "Test whether predeclared position-period rules predict held-out K4 position classes before any key-material expansion or fragment-score tuning.",
   "prediction_target": "Before scoring any candidate words, emit non-anchor residue-class targets for each registered period in {2,3,4,5,7,8,13}; future independent evidence must use a best-of-period control unless a single period is independently justified first.",
+  "prediction_artifact": "experiments/predictions/non-anchor-position-period-v1.json",
   "discovery_inputs": [
     "Predeclared period registry from structural-models",
     "K4 absolute position numbers only",

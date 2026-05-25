@@ -19,6 +19,8 @@ pub struct LanePreregistration {
     pub source_ids: Vec<String>,
     pub rationale: String,
     pub prediction_target: String,
+    #[serde(default)]
+    pub prediction_artifact: Option<String>,
     pub discovery_inputs: Vec<String>,
     pub evaluation_inputs: Vec<String>,
     pub controls: Vec<String>,
@@ -83,6 +85,10 @@ fn validate_registration(registration: LanePreregistration) -> PreregistrationVa
         &registration.prediction_target,
         &mut errors,
     );
+    if let Some(prediction_artifact) = &registration.prediction_artifact {
+        require_non_empty("prediction_artifact", prediction_artifact, &mut errors);
+        reject_placeholder("prediction_artifact", prediction_artifact, &mut errors);
+    }
     reject_placeholder_vec(
         "discovery_inputs",
         &registration.discovery_inputs,
@@ -235,6 +241,7 @@ mod tests {
             rationale: "Tests a prediction target before any key-material expansion.".to_string(),
             prediction_target:
                 "Predict a non-anchor position class before comparing anchor fragments.".to_string(),
+            prediction_artifact: None,
             discovery_inputs: vec!["registered structural model".to_string()],
             evaluation_inputs: vec!["withheld non-anchor prediction target".to_string()],
             controls: vec!["seeded shuffle baseline".to_string()],
