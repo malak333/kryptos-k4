@@ -26,7 +26,7 @@ The CLI implements the first production slice:
 - candidate-independent residue/spacing structure controls over fixed public-fragment positions;
 - pre-registered structural model controls that evaluate fixed period models before adding new key material;
 - preregistration validation for any future lane that would add candidate material, transforms, routes, structural tests, or independent prediction targets;
-- committed non-anchor period prediction artifacts and source-backed observation validation before any independent position evidence is scored;
+- committed non-anchor period and spacing prediction artifacts plus source-backed observation validation before any independent position evidence is scored;
 - seeded null-distribution baselines with add-one empirical p-values and Holm adjustment;
 - targeted raw key-fragment filtering by anchor/span, alphabet, and derivation mode;
 - proposed key-material checks, exact match explanations, descriptive pattern metrics, composite pattern scores, cyclic offset sweeps, seeded shuffled-value sweep baselines, CSV-driven batch runs, and batch-level best-of-candidate-file null controls against public span-derived additive fragments at actual K4 positions;
@@ -58,9 +58,11 @@ The integration tests in `tests/cli_e2e.rs` execute the compiled CLI and verify:
 - structural-models output evaluates a fixed registry of period models with seeded nulls and Holm adjustment before any candidate-word expansion;
 - validate-preregistration rejects new lanes that reuse public anchor-derived fragments as discovery inputs or primary evidence;
 - validate-prediction-artifact checks committed independent prediction artifacts against the deterministic generator;
-- validate-period-observations rejects unregistered source IDs, disallowed source-use boundaries, duplicate positions, public-anchor positions, and unchanged observation templates before scoring;
+- validate-period-observations and validate-spacing-observations reject unregistered source IDs, disallowed source-use boundaries, duplicate positions, public-anchor positions, and unchanged observation templates before scoring;
 - period-prediction-plan emits predeclared non-anchor residue-class targets from K4 positions only, without scoring public fragment values or candidate material;
+- spacing-prediction-plan emits predeclared non-anchor spacing residue targets from K4 positions only, without scoring public fragment values or candidate material;
 - evaluate-period-prediction scores explicit non-anchor position inputs or source-backed observation files, marks ad hoc `--positions` input as diagnostic, requires `--preregistration` for source-backed files, and marks source-backed files distinctly in JSON/Markdown output;
+- evaluate-spacing-prediction scores explicit non-anchor position inputs or source-backed observation files, marks ad hoc `--positions` input as diagnostic, requires `--preregistration` for source-backed files, and rejects undersized source-backed spacing observations before scoring;
 - experiments/PROGRESS_LOG.md records command-backed negative controls and active gates so weak lanes are not repeatedly rerun as evidence;
 - candidate-sequence output includes family, source IDs, transform metadata, and no promoted candidates;
 - route output uses only small named route families and emits no plaintext guesses.
@@ -90,16 +92,18 @@ remain stopped-lane exploratory inputs unless they are represented in
 `experiments/k4-candidates.md` with registered source IDs and rationale, then
 survive the current batch, routed, and held-out controls.
 
-Source-backed period observation files are stricter than general source
-registration: `validate-period-observations` rejects public-anchor summary,
-public-clue context, methodology context, and archive-context-only sources as
-scored independent position evidence. Those sources can still document context
-or controls, but not the held-out target being scored.
+Source-backed period and spacing observation files are stricter than general
+source registration: `validate-period-observations` and
+`validate-spacing-observations` reject public-anchor summary, public-clue
+context, methodology context, and archive-context-only sources as scored
+independent position evidence. Those sources can still document context or
+controls, but not the held-out target being scored.
 
-Direct `evaluate-period-prediction --positions ...` runs are diagnostic only.
-They can check mechanics or reproduce examples, but evidence-bearing evaluation
-requires `--positions-file` with registered source IDs, a matching
-`--preregistration`, and a passing `validate-period-observations` result.
+Direct `evaluate-period-prediction --positions ...` and
+`evaluate-spacing-prediction --positions ...` runs are diagnostic only. They can
+check mechanics or reproduce examples, but evidence-bearing evaluation requires
+`--positions-file` with registered source IDs, a matching `--preregistration`,
+and a passing period or spacing observation validation result.
 
 Public methodology-context sources can document why a search family is stopped
 or why a null control is required. They still do not supply plaintext,

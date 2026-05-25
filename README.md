@@ -73,9 +73,11 @@ rejected for scoring. The observation template intentionally has an empty
 `positions_one_based` list, so copied lanes cannot accidentally score synthetic
 example positions.
 
-Direct `evaluate-period-prediction --positions ...` runs are diagnostic only.
+Direct `evaluate-period-prediction --positions ...` and
+`evaluate-spacing-prediction --positions ...` runs are diagnostic only.
 Evidence-bearing evaluations must use `--positions-file` with
-`--preregistration` after `validate-period-observations` passes.
+`--preregistration` after the matching period or spacing observation validator
+passes.
 
 ## Background Batch Runs
 
