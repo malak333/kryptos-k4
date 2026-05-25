@@ -113,27 +113,58 @@ fn check_source_packet_registry_alignment(repo_root: &Path) -> ReleaseCheck {
     let relative_path = "sources/source-packet.md";
     let path = repo_root.join(relative_path);
     let contents = fs::read_to_string(&path).unwrap_or_default();
-    let missing_sources: Vec<_> = sources()
-        .into_iter()
-        .map(|source| source.id)
-        .filter(|source_id| !contents.contains(&format!("`{source_id}`")))
-        .collect();
+    let mut mismatches = Vec::new();
+
+    for source in sources() {
+        let id = format!("`{}`", source.id);
+        let Some(line) = contents.lines().find(|line| line.contains(&id)) else {
+            mismatches.push(format!("{}:missing-row", source.id));
+            continue;
+        };
+
+        if !line.contains(source.url) {
+            mismatches.push(format!("{}:url", source.id));
+        }
+        if !line.contains(source.source_type) {
+            mismatches.push(format!("{}:source-type", source.id));
+        }
+        if !source_packet_allowed_use_matches(line, source.allowed_use) {
+            mismatches.push(format!("{}:allowed-use", source.id));
+        }
+    }
 
     ReleaseCheck {
         name: "source-packet-registry-aligned",
-        passed: missing_sources.is_empty(),
-        detail: if missing_sources.is_empty() {
+        passed: mismatches.is_empty(),
+        detail: if mismatches.is_empty() {
             format!(
-                "Source packet lists every registered source ID. path={}",
+                "Source packet matches every registered source ID, URL, type, and allowed-use boundary. path={}",
                 path.display()
             )
         } else {
             format!(
-                "Source packet is missing registered source IDs. path={}; missing={}",
+                "Source packet is missing or mismatches registered source fields. path={}; mismatches={}",
                 path.display(),
-                missing_sources.join(", ")
+                mismatches.join(", ")
             )
         },
+    }
+}
+
+fn source_packet_allowed_use_matches(line: &str, allowed_use: &str) -> bool {
+    match allowed_use {
+        "public-facts-only" => {
+            line.contains("Public installation and unresolved-section facts")
+                || line.contains("Public sculpture/chart/K4 context")
+        }
+        "public-anchor-summary" => line.contains("Public ciphertext and public clue summary"),
+        "methodology-context" => line.contains("Cryptodiagnosis context only"),
+        "public-clue-context" => line.contains("Public clue and Berlin World Clock context"),
+        "archive-context-only" => {
+            line.contains("Archive-sale context only")
+                || line.contains("Archive-research context only")
+        }
+        _ => line.contains(allowed_use),
     }
 }
 
@@ -278,6 +309,19 @@ mod tests {
         assert!(run_release_checks(temp.path()).is_err());
     }
 
+    #[test]
+    fn release_checks_fail_when_source_packet_has_stale_source_fields() {
+        let temp = release_ready_temp_dir();
+        let mut packet = source_packet_fixture();
+        packet = packet.replace(
+            "https://kryptosbot.com/archive/",
+            "https://example.com/stale-archive/",
+        );
+        fs::write(temp.path().join("sources/source-packet.md"), packet).unwrap();
+
+        assert!(run_release_checks(temp.path()).is_err());
+    }
+
     fn release_ready_temp_dir() -> TempDir {
         let temp = TempDir::new().unwrap();
         for directory in ["docs", "sources", "notes"] {
@@ -288,11 +332,7 @@ mod tests {
         }
         fs::write(
             temp.path().join("sources/source-packet.md"),
-            sources()
-                .into_iter()
-                .map(|source| format!("`{}`", source.id))
-                .collect::<Vec<_>>()
-                .join("\n"),
+            source_packet_fixture(),
         )
         .unwrap();
         for (_, relative_path) in REQUIRED_GENERATED_REPORTS {
@@ -303,5 +343,32 @@ mod tests {
             .unwrap();
         }
         temp
+    }
+
+    fn source_packet_fixture() -> String {
+        sources()
+            .into_iter()
+            .map(|source| {
+                let allowed_use_summary = match source.allowed_use {
+                    "public-facts-only" if source.id == "cia-artifact" => {
+                        "Public installation and unresolved-section facts"
+                    }
+                    "public-facts-only" => "Public sculpture/chart/K4 context",
+                    "public-anchor-summary" => "Public ciphertext and public clue summary",
+                    "methodology-context" => "Cryptodiagnosis context only",
+                    "public-clue-context" => "Public clue and Berlin World Clock context",
+                    "archive-context-only" if source.id == "kryptosbot-sanborn-papers-2026" => {
+                        "Archive-research context only"
+                    }
+                    "archive-context-only" => "Archive-sale context only",
+                    allowed_use => allowed_use,
+                };
+                format!(
+                    "| `{}` | {} | {} | Not locally archived | {} | {} |",
+                    source.id, source.source_type, source.url, allowed_use_summary, source.use_note
+                )
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
     }
 }
