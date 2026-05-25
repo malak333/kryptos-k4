@@ -430,6 +430,15 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
     },
+    /// Validate a self-contained independent observation evaluation archive.
+    ValidateEvaluationArchive {
+        /// Directory produced by evaluate-period-prediction or evaluate-spacing-prediction --output-dir.
+        #[arg(long)]
+        input: PathBuf,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Print ranked source-grounded hypotheses.
     Hypotheses {
         /// Output format.
@@ -1103,6 +1112,9 @@ fn main() -> Result<()> {
             output_dir,
             format,
         })?,
+        Command::ValidateEvaluationArchive { input, format } => {
+            print_validate_evaluation_archive(input, format)?
+        }
         Command::Hypotheses { format } => print_hypotheses(format)?,
         Command::CandidateSequences { format } => print_candidate_sequences(format)?,
         Command::Routes { format } => print_routes(format)?,
@@ -1542,6 +1554,259 @@ fn render_archived_evaluation_command(
     }
     command.push_str(&format!(" --iterations {iterations} --seed {seed}\n"));
     command
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct EvaluationArchiveValidation {
+    directory: String,
+    artifact_kind: String,
+    source_backed_observation: bool,
+    valid: bool,
+    errors: Vec<String>,
+    warnings: Vec<String>,
+    files_checked: Vec<String>,
+    promoted_candidate: bool,
+    note: &'static str,
+}
+
+fn validate_evaluation_archive(directory: &Path) -> Result<EvaluationArchiveValidation> {
+    let mut errors = Vec::new();
+    let mut warnings = Vec::new();
+    let mut files_checked = Vec::new();
+
+    let artifact = read_archive_json(directory, "artifact.json", &mut errors, &mut files_checked);
+    let result = read_archive_json(directory, "result.json", &mut errors, &mut files_checked);
+    check_archive_text_file(directory, "summary.md", &mut errors, &mut files_checked);
+    let command = read_archive_text_file(directory, "command.txt", &mut errors, &mut files_checked);
+
+    let artifact_kind = artifact
+        .as_ref()
+        .and_then(infer_prediction_artifact_kind)
+        .unwrap_or("unknown")
+        .to_string();
+    if artifact_kind == "unknown" && artifact.is_some() {
+        errors.push(
+            "artifact.json is not a recognized period or spacing prediction artifact".to_string(),
+        );
+    }
+
+    let source_backed_observation = result
+        .as_ref()
+        .and_then(|value| value.get("source_backed_observation"))
+        .and_then(serde_json::Value::as_bool)
+        .unwrap_or(false);
+
+    if let Some(result) = &result {
+        if result
+            .get("promoted_candidate")
+            .and_then(serde_json::Value::as_bool)
+            != Some(false)
+        {
+            errors.push("result.json must keep promoted_candidate false".to_string());
+        }
+        if artifact_kind == "period" && result.get("best_period").is_none() {
+            errors.push("period archive result.json is missing best_period".to_string());
+        }
+        if artifact_kind == "spacing" && result.get("best_modulus").is_none() {
+            errors.push("spacing archive result.json is missing best_modulus".to_string());
+        }
+    }
+    if let Some(artifact) = &artifact
+        && artifact
+            .get("promoted_candidate")
+            .and_then(serde_json::Value::as_bool)
+            .is_some_and(|promoted| promoted)
+    {
+        errors.push("artifact.json must not promote a candidate".to_string());
+    }
+
+    if source_backed_observation {
+        let observations = read_archive_json(
+            directory,
+            "observations.json",
+            &mut errors,
+            &mut files_checked,
+        );
+        read_archive_json(
+            directory,
+            "preregistration.json",
+            &mut errors,
+            &mut files_checked,
+        );
+        if let (Some(observations), Some(result)) = (&observations, &result) {
+            validate_observations_match_result(observations, result, &mut errors);
+        }
+        if let Some(command) = &command {
+            require_command_token(command, "--artifact artifact.json", &mut errors);
+            require_command_token(
+                command,
+                "--preregistration preregistration.json",
+                &mut errors,
+            );
+            require_command_token(command, "--positions-file observations.json", &mut errors);
+        }
+    } else {
+        let positions_path = directory.join("input-positions.txt");
+        if positions_path.exists() {
+            files_checked.push("input-positions.txt".to_string());
+            if let (Ok(positions_text), Some(result)) =
+                (fs::read_to_string(&positions_path), &result)
+            {
+                match parse_position_list(positions_text.trim()) {
+                    Ok(positions) => {
+                        if json_usize_array(result, "observed_positions_one_based")
+                            != Some(positions)
+                        {
+                            errors.push(
+                                "input-positions.txt does not match result observed positions"
+                                    .to_string(),
+                            );
+                        }
+                    }
+                    Err(error) => errors.push(format!("input-positions.txt is invalid: {error}")),
+                }
+            }
+        } else {
+            warnings.push("diagnostic archive has no input-positions.txt".to_string());
+        }
+        if let Some(command) = &command {
+            require_command_token(command, "--artifact artifact.json", &mut errors);
+            require_command_token(command, "--positions", &mut errors);
+        }
+    }
+
+    files_checked.sort();
+    files_checked.dedup();
+
+    Ok(EvaluationArchiveValidation {
+        directory: directory.display().to_string(),
+        artifact_kind,
+        source_backed_observation,
+        valid: errors.is_empty(),
+        errors,
+        warnings,
+        files_checked,
+        promoted_candidate: false,
+        note: "Evaluation archive validation checks reproducibility artifacts only; it is not a claimed solution.",
+    })
+}
+
+fn read_archive_json(
+    directory: &Path,
+    file_name: &str,
+    errors: &mut Vec<String>,
+    files_checked: &mut Vec<String>,
+) -> Option<serde_json::Value> {
+    let path = directory.join(file_name);
+    if !path.exists() {
+        errors.push(format!("{file_name} is missing"));
+        return None;
+    }
+    files_checked.push(file_name.to_string());
+    match fs::read_to_string(&path) {
+        Ok(input) => match serde_json::from_str(&input) {
+            Ok(value) => Some(value),
+            Err(error) => {
+                errors.push(format!("{file_name} is not valid JSON: {error}"));
+                None
+            }
+        },
+        Err(error) => {
+            errors.push(format!("{file_name} could not be read: {error}"));
+            None
+        }
+    }
+}
+
+fn read_archive_text_file(
+    directory: &Path,
+    file_name: &str,
+    errors: &mut Vec<String>,
+    files_checked: &mut Vec<String>,
+) -> Option<String> {
+    let path = directory.join(file_name);
+    if !path.exists() {
+        errors.push(format!("{file_name} is missing"));
+        return None;
+    }
+    files_checked.push(file_name.to_string());
+    match fs::read_to_string(&path) {
+        Ok(input) => Some(input),
+        Err(error) => {
+            errors.push(format!("{file_name} could not be read: {error}"));
+            None
+        }
+    }
+}
+
+fn check_archive_text_file(
+    directory: &Path,
+    file_name: &str,
+    errors: &mut Vec<String>,
+    files_checked: &mut Vec<String>,
+) {
+    let _ = read_archive_text_file(directory, file_name, errors, files_checked);
+}
+
+fn infer_prediction_artifact_kind(value: &serde_json::Value) -> Option<&'static str> {
+    if value.get("period_count").is_some() && value.get("plans").is_some() {
+        return Some("period");
+    }
+    if value.get("modulus_count").is_some() && value.get("plans").is_some() {
+        return Some("spacing");
+    }
+    None
+}
+
+fn validate_observations_match_result(
+    observations: &serde_json::Value,
+    result: &serde_json::Value,
+    errors: &mut Vec<String>,
+) {
+    if observations.get("id") != result.get("observation_id") {
+        errors.push("observations.json id does not match result observation_id".to_string());
+    }
+    if json_string_array(observations, "source_ids")
+        != json_string_array(result, "observation_source_ids")
+    {
+        errors.push(
+            "observations.json source_ids do not match result observation_source_ids".to_string(),
+        );
+    }
+    if json_usize_array(observations, "positions_one_based")
+        != json_usize_array(result, "observed_positions_one_based")
+    {
+        errors
+            .push("observations.json positions do not match result observed positions".to_string());
+    }
+}
+
+fn json_usize_array(value: &serde_json::Value, key: &str) -> Option<Vec<usize>> {
+    value
+        .get(key)?
+        .as_array()?
+        .iter()
+        .map(|entry| {
+            entry
+                .as_u64()
+                .and_then(|number| usize::try_from(number).ok())
+        })
+        .collect()
+}
+
+fn json_string_array(value: &serde_json::Value, key: &str) -> Option<Vec<String>> {
+    value
+        .get(key)?
+        .as_array()?
+        .iter()
+        .map(|entry| entry.as_str().map(str::to_string))
+        .collect()
+}
+
+fn require_command_token(command: &str, token: &str, errors: &mut Vec<String>) {
+    if !command.contains(token) {
+        errors.push(format!("command.txt must contain `{token}`"));
+    }
 }
 
 fn print_batch_key_material_summary(run: &BatchKeyMaterialRun) {
@@ -3057,6 +3322,50 @@ fn render_period_prediction_evaluation(evaluation: &PeriodPredictionEvaluation) 
 
 fn print_spacing_prediction_evaluation(evaluation: &SpacingPredictionEvaluation) {
     print!("{}", render_spacing_prediction_evaluation(evaluation));
+}
+
+fn print_validate_evaluation_archive(input: PathBuf, format: OutputFormat) -> Result<()> {
+    let validation = validate_evaluation_archive(&input)?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&validation)?),
+        OutputFormat::Markdown => {
+            println!("# Evaluation Archive Validation\n");
+            println!("This is not a claimed solution.\n");
+            println!("directory: `{}`", validation.directory);
+            println!("artifact kind: {}", validation.artifact_kind);
+            println!(
+                "source-backed observation: {}",
+                validation.source_backed_observation
+            );
+            println!("valid: {}", validation.valid);
+            println!("promoted: {}", validation.promoted_candidate);
+            println!("note: {}\n", validation.note);
+            println!("## Files Checked\n");
+            for file_name in &validation.files_checked {
+                println!("- `{file_name}`");
+            }
+            println!("\n## Errors\n");
+            if validation.errors.is_empty() {
+                println!("none");
+            } else {
+                for error in &validation.errors {
+                    println!("- {error}");
+                }
+            }
+            println!("\n## Warnings\n");
+            if validation.warnings.is_empty() {
+                println!("none");
+            } else {
+                for warning in &validation.warnings {
+                    println!("- {warning}");
+                }
+            }
+        }
+    }
+    if !validation.valid {
+        anyhow::bail!("evaluation archive failed validation");
+    }
+    Ok(())
 }
 
 fn render_spacing_prediction_evaluation(evaluation: &SpacingPredictionEvaluation) -> String {

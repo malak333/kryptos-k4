@@ -1929,6 +1929,26 @@ fn evaluate_period_prediction_accepts_source_backed_position_file() {
     assert!(archived_command.contains("--artifact artifact.json"));
     assert!(archived_command.contains("--preregistration preregistration.json"));
     assert!(archived_command.contains("--positions-file observations.json"));
+
+    let validation_output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-evaluation-archive",
+            "--input",
+            output_dir.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let validation: Value = serde_json::from_slice(&validation_output).unwrap();
+    assert_eq!(validation["valid"], true);
+    assert_eq!(validation["artifact_kind"], "period");
+    assert_eq!(validation["source_backed_observation"], true);
+    assert_eq!(validation["promoted_candidate"], false);
 }
 
 #[test]
@@ -2069,6 +2089,31 @@ fn evaluate_spacing_prediction_accepts_source_backed_position_file() {
     assert!(archived_command.contains("--artifact artifact.json"));
     assert!(archived_command.contains("--preregistration preregistration.json"));
     assert!(archived_command.contains("--positions-file observations.json"));
+}
+
+#[test]
+fn validate_evaluation_archive_rejects_incomplete_archive() {
+    let temp = tempfile::tempdir().unwrap();
+    std::fs::write(
+        temp.path().join("command.txt"),
+        "evaluate-period-prediction\n",
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-evaluation-archive",
+            "--input",
+            temp.path().to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("valid: false"))
+        .stdout(predicate::str::contains("artifact.json is missing"))
+        .stderr(predicate::str::contains(
+            "evaluation archive failed validation",
+        ));
 }
 
 #[test]

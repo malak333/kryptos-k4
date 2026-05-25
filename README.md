@@ -59,8 +59,10 @@ cargo run -- spacing-prediction-plan --format json
 cargo run -- evaluate-period-prediction --artifact experiments/predictions/non-anchor-position-period-v1.json --positions 1,4,7 --iterations 1000 --seed 67
 cargo run -- validate-period-observations --artifact experiments/predictions/non-anchor-position-period-v1.json --preregistration experiments/preregistrations/non-anchor-position-period-v1.json --input <source-backed-observations.json> --format json
 cargo run -- evaluate-period-prediction --artifact experiments/predictions/non-anchor-position-period-v1.json --preregistration experiments/preregistrations/non-anchor-position-period-v1.json --positions-file <source-backed-observations.json> --iterations 1000 --seed 67 --output-dir results/period-observations/latest --format json
+cargo run -- validate-evaluation-archive --input results/period-observations/latest
 cargo run -- validate-spacing-observations --artifact experiments/predictions/non-anchor-position-spacing-v1.json --preregistration experiments/preregistrations/non-anchor-position-spacing-v1.json --input <source-backed-observations.json> --format json
 cargo run -- evaluate-spacing-prediction --artifact experiments/predictions/non-anchor-position-spacing-v1.json --preregistration experiments/preregistrations/non-anchor-position-spacing-v1.json --positions-file <source-backed-observations.json> --iterations 1000 --seed 67 --output-dir results/spacing-observations/latest --format json
+cargo run -- validate-evaluation-archive --input results/spacing-observations/latest
 cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --top 20
 cargo run -- baseline --target spans --iterations 1000 --seed 42
 cargo run -- baseline --target spans --iterations 1000 --seed 42 --format json
@@ -209,6 +211,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `spacing-prediction-plan` | Emits non-anchor K4 spacing residue classes for registered moduli in Markdown or JSON without scoring fragment values or candidate material. |
 | `evaluate-period-prediction` | Scores independently supplied one-based non-anchor positions against a committed period prediction artifact with a best-of-period null control in Markdown or JSON; marks quick `--positions` input as diagnostic, requires `--preregistration` for source-backed `--positions-file` JSON records, and can archive `artifact.json`, `preregistration.json`, `observations.json`, `result.json`, `summary.md`, and `command.txt` with `--output-dir`. |
 | `evaluate-spacing-prediction` | Scores independently supplied one-based non-anchor positions against a committed spacing prediction artifact with a best-of-modulus null control in Markdown or JSON; marks quick `--positions` input as diagnostic, requires `--preregistration` for source-backed `--positions-file` JSON records, and can archive `artifact.json`, `preregistration.json`, `observations.json`, `result.json`, `summary.md`, and `command.txt` with `--output-dir`. |
+| `validate-evaluation-archive` | Gate for archived independent observation evaluations in Markdown or JSON; checks archive files, local replay command paths, source-backed observation consistency, artifact kind, and no-promotion boundaries. |
 | `summarize-key-runs` | Historical scanner for batch result folders, ranking individual runs and per-candidate p-value stability. |
 | `baseline` | Seeded false-positive controls for the generic recurrence screen. |
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |

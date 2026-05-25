@@ -62,6 +62,8 @@ cargo run --locked -- evaluate-period-prediction \
   --preregistration experiments/preregistrations/non-anchor-position-period-v1.json \
   --positions-file <source-backed-observations.json> \
   --output-dir results/period-observations/latest
+cargo run --locked -- validate-evaluation-archive \
+  --input results/period-observations/latest
 ```
 
 For spacing lanes, use the same source-backed observation-file format, but score
@@ -79,6 +81,8 @@ cargo run --locked -- evaluate-spacing-prediction \
   --preregistration experiments/preregistrations/non-anchor-position-spacing-v1.json \
   --positions-file <source-backed-observations.json> \
   --output-dir results/spacing-observations/latest
+cargo run --locked -- validate-evaluation-archive \
+  --input results/spacing-observations/latest
 ```
 
 Observation source IDs must be registered and must have an `allowed_use`
