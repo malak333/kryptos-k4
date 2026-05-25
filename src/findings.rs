@@ -240,6 +240,7 @@ mod tests {
     use crate::data::sources;
     use crate::preregistration::summarize_independent_lanes;
     use std::collections::HashSet;
+    use std::fs;
     use std::path::Path;
 
     #[test]
@@ -291,5 +292,50 @@ mod tests {
         )));
         assert!(!report.promoted_candidate);
         assert!(!finding.promoted_candidate);
+    }
+
+    #[test]
+    fn period_target_finding_covers_committed_period_artifacts() {
+        let expected_sources = committed_period_files("experiments/preregistrations")
+            .into_iter()
+            .chain(committed_period_files("experiments/predictions"))
+            .collect::<HashSet<_>>();
+        let finding = findings()
+            .into_iter()
+            .find(|finding| finding.id == "F5")
+            .expect("F5 should describe materialized period targets");
+        let finding_sources = finding
+            .source_inputs
+            .iter()
+            .copied()
+            .collect::<HashSet<_>>();
+
+        for expected_source in expected_sources {
+            assert!(
+                finding_sources.contains(expected_source.as_str()),
+                "F5 is missing committed period source input `{expected_source}`"
+            );
+        }
+        assert!(!finding.promoted_candidate);
+    }
+
+    fn committed_period_files(directory: &str) -> Vec<String> {
+        fs::read_dir(directory)
+            .unwrap_or_else(|error| panic!("failed to read {directory}: {error}"))
+            .map(|entry| {
+                entry
+                    .unwrap_or_else(|error| panic!("failed to read entry in {directory}: {error}"))
+                    .path()
+            })
+            .filter(|path| {
+                path.file_name()
+                    .and_then(|name| name.to_str())
+                    .is_some_and(|name| name.starts_with("non-anchor-position-period"))
+                    && path
+                        .extension()
+                        .is_some_and(|extension| extension == "json")
+            })
+            .map(|path| path.display().to_string())
+            .collect()
     }
 }
