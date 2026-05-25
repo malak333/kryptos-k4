@@ -757,7 +757,7 @@ Findings are reproducible research observations, not promoted solution claims.
   - Next test: Only add route families that are named, deterministic, and justified before seeing their score.
   - Promoted: false
 - **F5 Independent non-anchor period targets are materialized before scoring (H3)**
-  - Sources: `experiments/preregistrations/non-anchor-position-period-v1.json`, `experiments/predictions/non-anchor-position-period-v1.json`, `experiments/preregistrations/new-lane-id.json`, `experiments/predictions/non-anchor-position-period-diagnostic-v1.json`
+  - Sources: `experiments/preregistrations/non-anchor-position-period-v1.json`, `experiments/predictions/non-anchor-position-period-v1.json`, `experiments/preregistrations/non-anchor-position-period-diagnostic-v1.json`, `experiments/predictions/non-anchor-position-period-diagnostic-v1.json`
   - Steps: validate each non-anchor position-period preregistration; emit all registered period residue classes before observing independent evidence; compare each committed prediction artifact against deterministic generator output
   - Output: The committed artifacts lock seven registered periods, exclude 24 public-anchor positions, and emit 73 non-anchor K4 positions per period.
   - Baseline: The artifacts have no score yet; future evidence must use held-out or best-of-period controls before interpretation.

@@ -1392,7 +1392,7 @@ fn validate_preregistration_rejects_unchanged_template() {
 fn validate_prediction_artifact_checks_committed_independent_target() {
     for preregistration in [
         "experiments/preregistrations/non-anchor-position-period-v1.json",
-        "experiments/preregistrations/new-lane-id.json",
+        "experiments/preregistrations/non-anchor-position-period-diagnostic-v1.json",
     ] {
         Command::cargo_bin("kryptos-k4")
             .unwrap()

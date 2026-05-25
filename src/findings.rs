@@ -87,7 +87,7 @@ pub fn findings() -> Vec<Finding> {
             source_inputs: &[
                 "experiments/preregistrations/non-anchor-position-period-v1.json",
                 "experiments/predictions/non-anchor-position-period-v1.json",
-                "experiments/preregistrations/new-lane-id.json",
+                "experiments/preregistrations/non-anchor-position-period-diagnostic-v1.json",
                 "experiments/predictions/non-anchor-position-period-diagnostic-v1.json",
             ],
             transformation_steps: &[

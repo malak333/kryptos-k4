@@ -126,11 +126,12 @@ predeclares future independent non-anchor position observations as the
 evaluation surface. It intentionally has no source IDs and validates only as a
 pure independent prediction target.
 
-Template-derived diagnostic lane populated:
-`experiments/preregistrations/new-lane-id.json` now carries the stable lane id
-`non-anchor-position-period-diagnostic-v1` and declares the committed target
-artifact `experiments/predictions/non-anchor-position-period-diagnostic-v1.json`.
-Both `validate-preregistration` and `validate-prediction-artifact` pass. This is
+Template-derived diagnostic lane populated and renamed:
+`experiments/preregistrations/non-anchor-position-period-diagnostic-v1.json`
+carries the stable lane id `non-anchor-position-period-diagnostic-v1` and
+declares the committed target artifact
+`experiments/predictions/non-anchor-position-period-diagnostic-v1.json`. Both
+`validate-preregistration` and `validate-prediction-artifact` pass. This is
 still only a pre-score independent target; it contributes no evidence until a
 source-backed non-anchor observation file is added.
 
