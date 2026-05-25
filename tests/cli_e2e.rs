@@ -1959,6 +1959,42 @@ fn validate_spacing_observations_rejects_anchor_and_duplicate_positions() {
 }
 
 #[test]
+fn validate_spacing_observations_rejects_single_position_files() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("observations.json");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "single-spacing-position-test",
+  "source_ids": ["cia-artifact"],
+  "positions_one_based": [1],
+  "rationale": "Synthetic CLI test fixture for spacing minimum-size validation."
+}"#,
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-spacing-observations",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-spacing-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-spacing-v1.json",
+            "--input",
+            observations_path.to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains(
+            "at least two one-based K4 positions",
+        ))
+        .stderr(predicate::str::contains(
+            "spacing observations failed validation",
+        ));
+}
+
+#[test]
 fn validate_period_observations_rejects_anchor_and_duplicate_positions() {
     let temp = tempfile::tempdir().unwrap();
     let observations_path = temp.path().join("observations.json");

@@ -2186,6 +2186,13 @@ fn validate_spacing_observations(
     let mut preregistration_id = None;
     let mut artifact_valid = None;
 
+    if observations.positions_one_based.len() < 2 {
+        errors.push(
+            "spacing observation files must include at least two one-based K4 positions"
+                .to_string(),
+        );
+    }
+
     if let Some(preregistration_path) = preregistration_path {
         let artifact_validation = validate_prediction_artifact(preregistration_path)?;
         preregistration_id = Some(artifact_validation.preregistration_id.clone());

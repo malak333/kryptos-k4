@@ -250,6 +250,11 @@ spacing evaluation. It rejects duplicate positions, public-anchor positions, and
 source IDs whose allowed-use boundary cannot support scored independent
 position evidence.
 
+Follow-up hardening: `validate-spacing-observations` now also rejects
+single-position files because spacing evaluation needs at least two positions to
+form one pair. This closes a pre-score validation gap where a source-backed file
+could pass validation but fail at evaluation time.
+
 2026 archive-research context registered:
 `kryptosbot-sanborn-papers-2026` was added to the source registry after checking
 the public KryptosBot Sanborn papers archive page. It is explicitly
