@@ -99,6 +99,7 @@ fn run_release_checks_inner(
     if require_current_report {
         checks.push(check_generated_report_markers(repo_root));
     }
+    checks.push(check_source_packet_latest_access_date(repo_root));
     checks.push(check_source_packet_registry_alignment(repo_root));
     checks.push(check_no_plaintext_leakage_markers(repo_root));
 
@@ -146,6 +147,35 @@ fn check_source_packet_registry_alignment(repo_root: &Path) -> ReleaseCheck {
                 "Source packet is missing or mismatches registered source fields. path={}; mismatches={}",
                 path.display(),
                 mismatches.join(", ")
+            )
+        },
+    }
+}
+
+fn check_source_packet_latest_access_date(repo_root: &Path) -> ReleaseCheck {
+    let relative_path = "sources/source-packet.md";
+    let path = repo_root.join(relative_path);
+    let contents = fs::read_to_string(&path).unwrap_or_default();
+    let latest_access_date = sources()
+        .into_iter()
+        .map(|source| source.accessed_at)
+        .max()
+        .expect("source registry must not be empty");
+
+    ReleaseCheck {
+        name: "source-packet-latest-access-date",
+        passed: contents.contains(latest_access_date),
+        detail: if contents.contains(latest_access_date) {
+            format!(
+                "Source packet includes latest registered source access date. path={}; latest_access_date={}",
+                path.display(),
+                latest_access_date
+            )
+        } else {
+            format!(
+                "Source packet is missing the latest registered source access date. path={}; latest_access_date={}",
+                path.display(),
+                latest_access_date
             )
         },
     }
@@ -322,6 +352,15 @@ mod tests {
         assert!(run_release_checks(temp.path()).is_err());
     }
 
+    #[test]
+    fn release_checks_fail_when_source_packet_has_stale_access_date() {
+        let temp = release_ready_temp_dir();
+        let packet = source_packet_fixture().replace("2026-05-25", "2026-05-20");
+        fs::write(temp.path().join("sources/source-packet.md"), packet).unwrap();
+
+        assert!(run_release_checks(temp.path()).is_err());
+    }
+
     fn release_ready_temp_dir() -> TempDir {
         let temp = TempDir::new().unwrap();
         for directory in ["docs", "sources", "notes"] {
@@ -346,7 +385,7 @@ mod tests {
     }
 
     fn source_packet_fixture() -> String {
-        sources()
+        let source_rows = sources()
             .into_iter()
             .map(|source| {
                 let allowed_use_summary = match source.allowed_use {
@@ -369,6 +408,10 @@ mod tests {
                 )
             })
             .collect::<Vec<_>>()
-            .join("\n")
+            .join("\n");
+
+        format!(
+            "# Source Packet\n\nLast updated: 2026-05-25\nSource access dates: 2026-05-20 through 2026-05-25\n\n{source_rows}"
+        )
     }
 }

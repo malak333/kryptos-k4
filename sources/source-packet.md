@@ -1,6 +1,7 @@
 # Source Packet
 
-Accessed: 2026-05-20
+Last updated: 2026-05-25
+Source access dates: 2026-05-20 through 2026-05-25
 
 This packet records the public sources used by the CLI data model. It intentionally stores summaries and links only; it does not store claimed full K4 plaintext, leaked/archive-discovered plaintext, or paid/private archive material.
 

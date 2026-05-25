@@ -6,7 +6,7 @@ This report uses public anchors only and is not a claimed solution. Production r
 
 - Evidence boundary: public ciphertext, public known-plaintext anchors, source provenance, deterministic controls, and pre-registered exploratory screens only.
 - Research boundary: no generated plaintext is treated as decoded K4 text; all promoted-candidate flags remain false unless independent corroboration and stronger samples justify a future change.
-- Production-readiness scope: local Rust CLI, report rendering, JSON output, source packet/source registry field alignment, release preflight, and no-GitHub-Actions policy. External publication, peer review, and cryptanalytic validation remain outside this report.
+- Production-readiness scope: local Rust CLI, report rendering, JSON output, source packet/source registry field and access-date alignment, release preflight, and no-GitHub-Actions policy. External publication, peer review, and cryptanalytic validation remain outside this report.
 
 ## Feature Coverage
 
@@ -31,7 +31,7 @@ This report uses public anchors only and is not a claimed solution. Production r
 | `routes` | Bounded named route experiments with identity, reverse, and seeded-random baselines. |
 | `findings` | Reproducible findings ledger with sources, transformations, baselines, interpretation, and next tests. |
 | `sources` | Source provenance records and allowed-use notes in Markdown or JSON. |
-| `release-check` | Local release preflight results, including no-GitHub-Actions and source-packet/source-registry field alignment gates. |
+| `release-check` | Local release preflight results, including no-GitHub-Actions and source-packet/source-registry field and latest-access-date alignment gates. |
 | `export-data` | Covered by the source data rendered here; the command writes ciphertext, anchor, and source JSON files. |
 
 ## Ciphertext
@@ -780,5 +780,6 @@ Local preflight only. This repo does not use GitHub Actions.
 - license-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/Ciphers/LICENSE)
 - lockfile-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/Ciphers/Cargo.lock)
 - markdown-report-present: true (Generated release report must be present. path=/Users/michaelnobile/Antigravity/Ciphers/notes/k4-report.md)
+- source-packet-latest-access-date: true (Source packet includes latest registered source access date. path=/Users/michaelnobile/Antigravity/Ciphers/sources/source-packet.md; latest_access_date=2026-05-25)
 - source-packet-registry-aligned: true (Source packet matches every registered source ID, URL, type, and allowed-use boundary. path=/Users/michaelnobile/Antigravity/Ciphers/sources/source-packet.md)
 - no-plaintext-leakage-markers: true (No leaked/full-plaintext sentinel markers found in release-facing files.)
