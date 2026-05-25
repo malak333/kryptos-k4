@@ -267,6 +267,9 @@ enum Command {
         /// JSON artifact emitted by period-prediction-plan --all --format json.
         #[arg(long)]
         artifact: PathBuf,
+        /// Optional preregistration file used to validate the prediction artifact at the same time.
+        #[arg(long)]
+        preregistration: Option<PathBuf>,
         /// JSON file with source IDs and one-based non-anchor K4 positions.
         #[arg(long)]
         input: PathBuf,
@@ -398,6 +401,8 @@ struct PeriodPredictionObservationInput {
 #[derive(Debug, Serialize)]
 struct PeriodPredictionObservationValidation {
     artifact_path: String,
+    preregistration_id: Option<String>,
+    artifact_valid: Option<bool>,
     observation_id: String,
     observation_source_ids: Vec<String>,
     observation_rationale: String,
@@ -770,9 +775,10 @@ fn main() -> Result<()> {
         } => print_validate_prediction_artifact(preregistration, format)?,
         Command::ValidatePeriodObservations {
             artifact,
+            preregistration,
             input,
             format,
-        } => print_validate_period_observations(artifact, input, format)?,
+        } => print_validate_period_observations(artifact, preregistration, input, format)?,
         Command::PeriodPredictionPlan {
             period,
             all,
@@ -1931,10 +1937,11 @@ fn print_prediction_artifact_validation(validation: &PredictionArtifactValidatio
 
 fn print_validate_period_observations(
     artifact: PathBuf,
+    preregistration: Option<PathBuf>,
     input: PathBuf,
     format: OutputFormat,
 ) -> Result<()> {
-    let validation = validate_period_observations(&artifact, &input)?;
+    let validation = validate_period_observations(&artifact, preregistration.as_deref(), &input)?;
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&validation)?),
         OutputFormat::Markdown => print_period_observation_validation(&validation),
@@ -1948,11 +1955,34 @@ fn print_validate_period_observations(
 
 fn validate_period_observations(
     artifact_path: &Path,
+    preregistration_path: Option<&Path>,
     input_path: &Path,
 ) -> Result<PeriodPredictionObservationValidation> {
     let observations = read_period_prediction_observation_file(input_path)?;
     let observation_id = observations.id.clone();
     let mut errors = validate_period_prediction_observation_fields(&observations);
+    let mut preregistration_id = None;
+    let mut artifact_valid = None;
+
+    if let Some(preregistration_path) = preregistration_path {
+        let artifact_validation = validate_prediction_artifact(preregistration_path)?;
+        preregistration_id = Some(artifact_validation.preregistration_id.clone());
+        artifact_valid = Some(artifact_validation.valid);
+        if artifact_validation.artifact_path != artifact_path.display().to_string() {
+            errors.push(format!(
+                "artifact `{}` does not match preregistration artifact `{}`",
+                artifact_path.display(),
+                artifact_validation.artifact_path
+            ));
+        }
+        errors.extend(
+            artifact_validation
+                .errors
+                .into_iter()
+                .map(|error| format!("prediction artifact: {error}")),
+        );
+    }
+
     let non_anchor_positions = load_period_prediction_artifact_positions(artifact_path)?;
 
     let mut seen = HashSet::new();
@@ -1971,6 +2001,8 @@ fn validate_period_observations(
 
     Ok(PeriodPredictionObservationValidation {
         artifact_path: artifact_path.display().to_string(),
+        preregistration_id,
+        artifact_valid,
         observation_id,
         observation_source_ids: observations.source_ids,
         observation_rationale: observations.rationale,
@@ -1987,6 +2019,12 @@ fn print_period_observation_validation(validation: &PeriodPredictionObservationV
     println!("# Period Observation Validation\n");
     println!("This is not a claimed solution.\n");
     println!("artifact: `{}`", validation.artifact_path);
+    if let Some(preregistration_id) = &validation.preregistration_id {
+        println!("preregistration id: `{preregistration_id}`");
+    }
+    if let Some(artifact_valid) = validation.artifact_valid {
+        println!("artifact valid: {artifact_valid}");
+    }
     println!("observation id: `{}`", validation.observation_id);
     println!(
         "observation sources: {}",

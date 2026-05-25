@@ -47,6 +47,7 @@ Validate the observation file first:
 ```bash
 cargo run --locked -- validate-period-observations \
   --artifact experiments/predictions/non-anchor-position-period-v1.json \
+  --preregistration experiments/preregistrations/non-anchor-position-period-v1.json \
   --input <source-backed-observations.json>
 ```
 

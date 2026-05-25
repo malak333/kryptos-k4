@@ -99,7 +99,8 @@ evidence source-backed instead of only accepting ad hoc comma-separated inputs.
 unregistered source IDs, duplicate positions, and positions outside the
 committed non-anchor prediction artifact. It also rejects unchanged template
 placeholder text and carries observation rationale into validation/evaluation
-output.
+output. Pass `--preregistration` to validate the committed prediction artifact
+and observation file in one pre-score gate.
 
 Concrete follow-up lane registered:
 `experiments/preregistrations/non-anchor-position-period-followup-v1.json`

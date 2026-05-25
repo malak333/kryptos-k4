@@ -1530,6 +1530,8 @@ fn validate_period_observations_accepts_source_backed_non_anchor_positions() {
             "validate-period-observations",
             "--artifact",
             "experiments/predictions/non-anchor-position-period-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-period-v1.json",
             "--input",
             observations_path.to_str().unwrap(),
             "--format",
@@ -1543,6 +1545,8 @@ fn validate_period_observations_accepts_source_backed_non_anchor_positions() {
 
     let json: Value = serde_json::from_slice(&output).unwrap();
     assert_eq!(json["valid"], true);
+    assert_eq!(json["preregistration_id"], "non-anchor-position-period-v1");
+    assert_eq!(json["artifact_valid"], true);
     assert_eq!(json["observation_id"], "synthetic-validation-test");
     assert_eq!(json["observation_source_ids"][0], "cia-artifact");
     assert_eq!(
