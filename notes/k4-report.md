@@ -28,7 +28,7 @@ This report uses public anchors only and is not a claimed solution. Production r
 | `validate-prediction-artifact` | Gate confirming committed independent prediction artifacts still match their preregistration and deterministic generator in Markdown or JSON. |
 | `validate-period-observations` | Gate for source-backed independent position observations, source allowed-use compatibility, and optional prediction-artifact preregistration validation before period prediction scoring in Markdown or JSON. |
 | `period-prediction-plan` | Non-anchor residue-class target emission for a registered period, without scoring public fragment values, in Markdown or JSON. |
-| `evaluate-period-prediction` | Independent-position evaluator for committed period prediction artifacts with best-of-period null controls, diagnostic/source-backed observation status, source-backed observation-file input, and optional artifact preregistration validation in Markdown or JSON. |
+| `evaluate-period-prediction` | Independent-position evaluator for committed period prediction artifacts with best-of-period null controls, diagnostic/source-backed observation status, source-backed observation-file input that requires preregistration-backed artifact validation, and Markdown/JSON output. |
 | `baseline` | Seeded false-positive controls for anchors and spans across all supported alphabets in Markdown or JSON. |
 | `hypotheses` | Ranked source-grounded hypotheses with facts, assumptions, falsification tests, and risks in Markdown or JSON. |
 | `candidate-sequences` | Pre-registered contextual sequences and score results in Markdown or JSON. |

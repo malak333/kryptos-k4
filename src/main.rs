@@ -2173,6 +2173,7 @@ fn print_evaluate_period_prediction(
     seed: u64,
     format: OutputFormat,
 ) -> Result<()> {
+    let has_preregistration = preregistration.is_some();
     if let Some(preregistration) = preregistration {
         let artifact_validation = validate_prediction_artifact(&preregistration)?;
         if artifact_validation.artifact_path != artifact.display().to_string() {
@@ -2185,6 +2186,11 @@ fn print_evaluate_period_prediction(
         if !artifact_validation.valid {
             anyhow::bail!("prediction artifact failed validation");
         }
+    }
+    if positions_file.is_some() && !has_preregistration {
+        anyhow::bail!(
+            "--positions-file requires --preregistration so the committed prediction artifact is validated before scoring source-backed observations"
+        );
     }
 
     let observation_input = match (positions, positions_file) {

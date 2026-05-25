@@ -87,7 +87,9 @@ than a cryptanalytic result.
 ## 2026-05-25: Period Evaluation Source-Backing Flag
 
 `evaluate-period-prediction` now distinguishes diagnostic ad hoc `--positions`
-input from source-backed `--positions-file` evidence. JSON and Markdown output
+input from source-backed `--positions-file` evidence. Source-backed
+`--positions-file` evaluation requires `--preregistration`, so the committed
+prediction artifact is validated before scoring. JSON and Markdown output
 include `source_backed_observation`; ad hoc position lists also include a warning
 that they are diagnostic only.
 

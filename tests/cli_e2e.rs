@@ -1746,6 +1746,8 @@ fn evaluate_period_prediction_rejects_unregistered_position_file_source() {
             "evaluate-period-prediction",
             "--artifact",
             "experiments/predictions/non-anchor-position-period-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-period-v1.json",
             "--positions-file",
             observations_path.to_str().unwrap(),
             "--iterations",
@@ -1754,6 +1756,39 @@ fn evaluate_period_prediction_rejects_unregistered_position_file_source() {
         .assert()
         .failure()
         .stderr(predicate::str::contains("source_id `missing-source`"));
+}
+
+#[test]
+fn evaluate_period_prediction_requires_preregistration_for_position_file() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("observations.json");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "source-backed-without-preregistration",
+  "source_ids": ["cia-artifact"],
+  "positions_one_based": [1, 4, 7],
+  "rationale": "Synthetic CLI test fixture for artifact validation guard."
+}"#,
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-period-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-period-v1.json",
+            "--positions-file",
+            observations_path.to_str().unwrap(),
+            "--iterations",
+            "100",
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "--positions-file requires --preregistration",
+        ));
 }
 
 #[test]

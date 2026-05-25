@@ -67,7 +67,7 @@ flowchart TD
 - `test-key`, `explain-key`, and `batch-test-keys` compare proposed material against public span-derived additive fragments at actual K4 positions, can sweep cyclic phase offsets, can print exact matching rows, can report descriptive pattern metrics and composite pattern scores, can run seeded shuffled-value and candidate-file-level baselines, and never promote candidates.
 - `summarize-key-runs` scans historical batch result folders and ranks both individual run rows and per-candidate p-value stability.
 - Preregistration, prediction-artifact, observation-file, and period-prediction gates keep independent non-anchor position targets separate from public-anchor-derived fragments before scoring.
-- Period-prediction evaluations distinguish diagnostic ad hoc `--positions` input from source-backed `--positions-file` evidence.
+- Period-prediction evaluations distinguish diagnostic ad hoc `--positions` input from source-backed `--positions-file` evidence; source-backed files require preregistration-backed artifact validation before scoring.
 - Observation files must cite source IDs with a scored-evidence-compatible `allowed_use`; public anchor, clue context, methodology context, and archive context sources remain non-scored context.
 - Background wrapper scripts can run repeated `batch-test-keys` experiments with explicit flags, timestamped local artifacts, latest-result pointers, and optional macOS keep-awake support.
 - Local release verification is implemented without GitHub Actions and also guards committed prediction artifacts, source-input references, and the intentionally non-scorable observation template.
