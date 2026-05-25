@@ -91,11 +91,16 @@ independent set of one-based non-anchor K4 positions against the committed
 artifact with a seeded best-of-period null. It rejects public-anchor positions
 and remains non-promotional.
 
+Evaluator input hardened: `evaluate-period-prediction` now also accepts
+`--positions-file`, a JSON observation record with registered `source_ids`,
+`positions_one_based`, and rationale. This keeps future non-anchor position
+evidence source-backed instead of only accepting ad hoc comma-separated inputs.
+
 Concrete follow-up lane registered:
-`experiments/preregistrations/new-lane-id.json` now uses the stable id
-`non-anchor-position-period-followup-v1` and predeclares future independent
-non-anchor position observations as the evaluation surface. It intentionally has
-no source IDs and validates only as a pure independent prediction target.
+`experiments/preregistrations/non-anchor-position-period-followup-v1.json`
+predeclares future independent non-anchor position observations as the
+evaluation surface. It intentionally has no source IDs and validates only as a
+pure independent prediction target.
 
 ## Existing Completed 100k Controls
 

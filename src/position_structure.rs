@@ -143,6 +143,8 @@ pub struct PeriodResiduePrediction {
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct PeriodPredictionEvaluation {
     pub artifact_path: String,
+    pub observation_id: Option<String>,
+    pub observation_source_ids: Vec<String>,
     pub observed_position_count: usize,
     pub observed_positions_one_based: Vec<usize>,
     pub best_period: usize,
@@ -450,6 +452,8 @@ pub fn evaluate_period_prediction_positions(
 
     Ok(PeriodPredictionEvaluation {
         artifact_path: artifact_path.display().to_string(),
+        observation_id: None,
+        observation_source_ids: Vec::new(),
         observed_position_count: observed_positions_one_based.len(),
         observed_positions_one_based,
         best_period: best.period,

@@ -44,6 +44,7 @@ cargo run -- period-prediction-plan --period 3
 cargo run -- period-prediction-plan --all
 cargo run -- period-prediction-plan --all --format json
 cargo run -- evaluate-period-prediction --artifact experiments/predictions/non-anchor-position-period-v1.json --positions 1,4,7 --iterations 1000 --seed 67
+cargo run -- evaluate-period-prediction --artifact experiments/predictions/non-anchor-position-period-v1.json --positions-file <source-backed-observations.json> --iterations 1000 --seed 67
 cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --top 20
 cargo run -- baseline --target spans --iterations 1000 --seed 42
 cargo run -- baseline --target spans --iterations 1000 --seed 42 --format json
@@ -130,7 +131,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `validate-preregistration` | Gate for proposed new lanes; rejects reuse of public anchor-derived fragments as discovery inputs or primary evidence. |
 | `validate-prediction-artifact` | Gate for committed independent prediction artifacts; checks the preregistration and deterministic generator output still match. |
 | `period-prediction-plan` | Emits non-anchor K4 position residue classes for one or all registered periods without scoring fragment values or candidate material. |
-| `evaluate-period-prediction` | Scores independently supplied one-based non-anchor positions against a committed period prediction artifact with a best-of-period null control. |
+| `evaluate-period-prediction` | Scores independently supplied one-based non-anchor positions against a committed period prediction artifact with a best-of-period null control; accepts quick `--positions` input or a source-backed `--positions-file` JSON record. |
 | `summarize-key-runs` | Historical scanner for batch result folders, ranking individual runs and per-candidate p-value stability. |
 | `baseline` | Seeded false-positive controls for the generic recurrence screen. |
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |

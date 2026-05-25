@@ -1463,6 +1463,80 @@ fn evaluate_period_prediction_scores_independent_position_set() {
 }
 
 #[test]
+fn evaluate_period_prediction_accepts_source_backed_position_file() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("observations.json");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "synthetic-non-anchor-test",
+  "source_ids": ["cia-artifact"],
+  "positions_one_based": [1, 4, 7],
+  "rationale": "Synthetic CLI test fixture for the observation-file input path."
+}"#,
+    )
+    .unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-period-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-period-v1.json",
+            "--positions-file",
+            observations_path.to_str().unwrap(),
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["observation_id"], "synthetic-non-anchor-test");
+    assert_eq!(json["observation_source_ids"][0], "cia-artifact");
+    assert_eq!(json["best_period"], 3);
+    assert_eq!(json["promoted_candidate"], false);
+}
+
+#[test]
+fn evaluate_period_prediction_rejects_unregistered_position_file_source() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("observations.json");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "bad-source-test",
+  "source_ids": ["missing-source"],
+  "positions_one_based": [1, 4, 7],
+  "rationale": "Synthetic CLI test fixture for source validation."
+}"#,
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-period-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-period-v1.json",
+            "--positions-file",
+            observations_path.to_str().unwrap(),
+            "--iterations",
+            "100",
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("source_id `missing-source`"));
+}
+
+#[test]
 fn evaluate_period_prediction_rejects_public_anchor_positions() {
     Command::cargo_bin("kryptos-k4")
         .unwrap()

@@ -31,6 +31,17 @@ discovery inputs or primary evidence. Those fragments can still be listed as
 controls after an independent target is defined. The validator also rejects
 unchanged template placeholder text.
 
+For future period-prediction evidence, copy
+`experiments/position-observations-template.json` to a lane-specific file and
+replace the observation id, registered source IDs, positions, and rationale
+before running:
+
+```bash
+cargo run --locked -- evaluate-period-prediction \
+  --artifact experiments/predictions/non-anchor-position-period-v1.json \
+  --positions-file <source-backed-observations.json>
+```
+
 Required JSON fields:
 
 - `id`

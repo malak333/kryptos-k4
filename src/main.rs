@@ -17,8 +17,9 @@ use kryptos_k4::{
     summarize_batch_key_material_runs, sweep_key_material_offsets_with_baseline, test_key_material,
     validate_preregistration, validation_exit_result,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::{
+    collections::HashSet,
     fs,
     path::{Path, PathBuf},
 };
@@ -279,8 +280,19 @@ enum Command {
         #[arg(long)]
         artifact: PathBuf,
         /// Comma-separated one-based K4 positions to evaluate. Positions must be non-anchor positions.
-        #[arg(long)]
-        positions: String,
+        #[arg(
+            long,
+            conflicts_with = "positions_file",
+            required_unless_present = "positions_file"
+        )]
+        positions: Option<String>,
+        /// JSON file with source IDs and one-based non-anchor K4 positions.
+        #[arg(
+            long,
+            conflicts_with = "positions",
+            required_unless_present = "positions"
+        )]
+        positions_file: Option<PathBuf>,
         /// Seeded null iterations for best-of-period position concentration.
         #[arg(long, default_value_t = 10_000)]
         iterations: usize,
@@ -353,6 +365,21 @@ struct PredictionArtifactValidation {
     artifact_period_count: Option<usize>,
     promoted_candidate: bool,
     note: &'static str,
+}
+
+#[derive(Debug, Deserialize)]
+struct PeriodPredictionObservationFile {
+    id: String,
+    source_ids: Vec<String>,
+    positions_one_based: Vec<usize>,
+    rationale: String,
+}
+
+#[derive(Debug)]
+struct PeriodPredictionObservationInput {
+    id: Option<String>,
+    source_ids: Vec<String>,
+    positions_one_based: Vec<usize>,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -500,6 +527,41 @@ fn parse_position_list(input: &str) -> std::result::Result<Vec<usize>, String> {
     }
 }
 
+fn load_period_prediction_observations(path: &Path) -> Result<PeriodPredictionObservationInput> {
+    let input = fs::read_to_string(path)?;
+    let observations: PeriodPredictionObservationFile = serde_json::from_str(&input)?;
+    if observations.id.trim().is_empty() {
+        anyhow::bail!("positions_file id must not be empty");
+    }
+    if observations.source_ids.is_empty()
+        || observations
+            .source_ids
+            .iter()
+            .any(|source_id| source_id.trim().is_empty())
+    {
+        anyhow::bail!("positions_file must include at least one registered source_id");
+    }
+    if observations.rationale.trim().is_empty() {
+        anyhow::bail!("positions_file rationale must not be empty");
+    }
+    if observations.positions_one_based.is_empty() {
+        anyhow::bail!("positions_file must include at least one one-based K4 position");
+    }
+
+    let registered_sources: HashSet<_> = sources().into_iter().map(|source| source.id).collect();
+    for source_id in &observations.source_ids {
+        if !registered_sources.contains(source_id.as_str()) {
+            anyhow::bail!("positions_file source_id `{source_id}` is not registered");
+        }
+    }
+
+    Ok(PeriodPredictionObservationInput {
+        id: Some(observations.id),
+        source_ids: observations.source_ids,
+        positions_one_based: observations.positions_one_based,
+    })
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
@@ -630,10 +692,18 @@ fn main() -> Result<()> {
         Command::EvaluatePeriodPrediction {
             artifact,
             positions,
+            positions_file,
             iterations,
             seed,
             format,
-        } => print_evaluate_period_prediction(artifact, positions, iterations, seed, format)?,
+        } => print_evaluate_period_prediction(
+            artifact,
+            positions,
+            positions_file,
+            iterations,
+            seed,
+            format,
+        )?,
         Command::Hypotheses => print_hypotheses(),
         Command::CandidateSequences { format } => print_candidate_sequences(format)?,
         Command::Routes { format } => print_routes(format)?,
@@ -1838,13 +1908,29 @@ fn print_period_prediction_plan_markdown(plan: &PeriodPredictionPlan) {
 
 fn print_evaluate_period_prediction(
     artifact: PathBuf,
-    positions: String,
+    positions: Option<String>,
+    positions_file: Option<PathBuf>,
     iterations: usize,
     seed: u64,
     format: OutputFormat,
 ) -> Result<()> {
-    let positions = parse_position_list(&positions).map_err(anyhow::Error::msg)?;
-    let evaluation = evaluate_period_prediction_positions(artifact, positions, iterations, seed)?;
+    let observation_input = match (positions, positions_file) {
+        (Some(positions), None) => PeriodPredictionObservationInput {
+            id: None,
+            source_ids: Vec::new(),
+            positions_one_based: parse_position_list(&positions).map_err(anyhow::Error::msg)?,
+        },
+        (None, Some(path)) => load_period_prediction_observations(&path)?,
+        _ => anyhow::bail!("provide exactly one of --positions or --positions-file"),
+    };
+    let mut evaluation = evaluate_period_prediction_positions(
+        artifact,
+        observation_input.positions_one_based,
+        iterations,
+        seed,
+    )?;
+    evaluation.observation_id = observation_input.id;
+    evaluation.observation_source_ids = observation_input.source_ids;
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&evaluation)?),
         OutputFormat::Markdown => print_period_prediction_evaluation(&evaluation),
@@ -1856,6 +1942,15 @@ fn print_period_prediction_evaluation(evaluation: &PeriodPredictionEvaluation) {
     println!("# Period Prediction Evaluation\n");
     println!("This is not a claimed solution.\n");
     println!("artifact: `{}`", evaluation.artifact_path);
+    if let Some(observation_id) = &evaluation.observation_id {
+        println!("observation id: `{observation_id}`");
+    }
+    if !evaluation.observation_source_ids.is_empty() {
+        println!(
+            "observation sources: {}",
+            evaluation.observation_source_ids.join(", ")
+        );
+    }
     println!(
         "observed positions: {}",
         evaluation
