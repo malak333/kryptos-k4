@@ -101,6 +101,26 @@ pub fn findings() -> Vec<Finding> {
             next_test: "Use validate-prediction-artifact before evaluating any future independent evidence against the committed residue classes, and keep source-backed observation files separate from public-anchor-derived fragments.",
             promoted_candidate: false,
         },
+        Finding {
+            id: "F6",
+            title: "Methodology context stops repeated single-layer search mining",
+            related_hypothesis: "H1/H2/H3/H4/H5",
+            source_inputs: &[
+                "kryptosbot-methodology-2026",
+                "experiments/STOPPED_LANES.md",
+                "experiments/PROGRESS_LOG.md",
+            ],
+            transformation_steps: &[
+                "register methodology context with a non-scored allowed-use boundary",
+                "compare it against completed batch, routed, held-out, and structural controls",
+                "record saturated search families as stopped unless a preregistration narrows the target before scoring",
+            ],
+            output_summary: "Simple single-layer, word-list, route, and uncorrected best-of-search lanes are documented as stopped for current evidence.",
+            baseline_comparison: "The stopped-lane decision is backed by existing negative batch-level, routed, held-out, and structural controls rather than a new positive score.",
+            interpretation: "Methodology context improves research discipline, but it is not plaintext, candidate evidence, or an independent scored observation.",
+            next_test: "Only reopen a stopped search family with a lane-specific preregistration that fixes the cipher family, transform set, target, and multiple-comparison control before scoring.",
+            promoted_candidate: false,
+        },
     ]
 }
 

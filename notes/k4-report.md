@@ -765,6 +765,14 @@ Findings are reproducible research observations, not promoted solution claims.
   - Interpretation: These are evidence-free prediction targets, not positive signals or K4 solution claims.
   - Next test: Use validate-prediction-artifact before evaluating any future independent evidence against the committed residue classes, and keep source-backed observation files separate from public-anchor-derived fragments.
   - Promoted: false
+- **F6 Methodology context stops repeated single-layer search mining (H1/H2/H3/H4/H5)**
+  - Sources: `kryptosbot-methodology-2026`, `experiments/STOPPED_LANES.md`, `experiments/PROGRESS_LOG.md`
+  - Steps: register methodology context with a non-scored allowed-use boundary; compare it against completed batch, routed, held-out, and structural controls; record saturated search families as stopped unless a preregistration narrows the target before scoring
+  - Output: Simple single-layer, word-list, route, and uncorrected best-of-search lanes are documented as stopped for current evidence.
+  - Baseline: The stopped-lane decision is backed by existing negative batch-level, routed, held-out, and structural controls rather than a new positive score.
+  - Interpretation: Methodology context improves research discipline, but it is not plaintext, candidate evidence, or an independent scored observation.
+  - Next test: Only reopen a stopped search family with a lane-specific preregistration that fixes the cipher family, transform set, target, and multiple-comparison control before scoring.
+  - Promoted: false
 
 ## Release Check
 

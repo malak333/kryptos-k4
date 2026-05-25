@@ -14,6 +14,10 @@ evidence. It does not provide plaintext, candidate material, or scored
 observations. Any future use still needs a preregistered target and a null or
 multiple-comparison control before interpretation.
 
+Follow-up: this boundary is now represented in the findings ledger as `F6`,
+so the generated report records the methodology source as a stopped-lane
+discipline finding rather than only as source metadata.
+
 ## 2026-05-25: Observation Source-Use Gate
 
 The period-observation path now rejects registered sources whose `allowed_use`
