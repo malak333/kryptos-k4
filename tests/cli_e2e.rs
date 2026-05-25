@@ -1237,6 +1237,24 @@ fn validate_preregistration_rejects_public_anchor_reuse() {
 }
 
 #[test]
+fn validate_preregistration_rejects_unchanged_template() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-preregistration",
+            "--input",
+            "experiments/preregistrations/independent-lane-template.json",
+        ])
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("valid: false"))
+        .stdout(predicate::str::contains("placeholder text"))
+        .stderr(predicate::str::contains(
+            "preregistration failed validation",
+        ));
+}
+
+#[test]
 fn candidate_sequences_json_contains_registered_families() {
     let output = Command::cargo_bin("kryptos-k4")
         .unwrap()

@@ -70,6 +70,30 @@ fn validate_registration(registration: LanePreregistration) -> PreregistrationVa
         &mut errors,
     );
     require_non_empty_vec("controls", &registration.controls, &mut errors);
+    reject_placeholder("id", &registration.id, &mut errors);
+    reject_placeholder("title", &registration.title, &mut errors);
+    reject_placeholder(
+        "hypothesis_family",
+        &registration.hypothesis_family,
+        &mut errors,
+    );
+    reject_placeholder("rationale", &registration.rationale, &mut errors);
+    reject_placeholder(
+        "prediction_target",
+        &registration.prediction_target,
+        &mut errors,
+    );
+    reject_placeholder_vec(
+        "discovery_inputs",
+        &registration.discovery_inputs,
+        &mut errors,
+    );
+    reject_placeholder_vec(
+        "evaluation_inputs",
+        &registration.evaluation_inputs,
+        &mut errors,
+    );
+    reject_placeholder_vec("controls", &registration.controls, &mut errors);
 
     if registration.uses_public_anchor_fragments_for_discovery {
         errors.push(
@@ -148,6 +172,29 @@ fn require_non_empty_vec(field: &str, values: &[String], errors: &mut Vec<String
     if values.iter().all(|value| value.trim().is_empty()) {
         errors.push(format!("{field} must include at least one non-empty value"));
     }
+}
+
+fn reject_placeholder(field: &str, value: &str, errors: &mut Vec<String>) {
+    if contains_placeholder(value) {
+        errors.push(format!(
+            "{field} still contains template placeholder text; replace it before validation"
+        ));
+    }
+}
+
+fn reject_placeholder_vec(field: &str, values: &[String], errors: &mut Vec<String>) {
+    for value in values {
+        reject_placeholder(field, value, errors);
+    }
+}
+
+fn contains_placeholder(value: &str) -> bool {
+    let normalized = value.to_ascii_lowercase();
+    normalized.contains("replace-with")
+        || normalized.contains("replace with")
+        || normalized.contains("describe the")
+        || normalized.contains("define the")
+        || normalized.contains("explain why")
 }
 
 fn mentions_public_anchor_fragments(input: &str) -> bool {
@@ -244,6 +291,25 @@ mod tests {
                 .errors
                 .iter()
                 .any(|error| error.contains("not registered"))
+        );
+    }
+
+    #[test]
+    fn rejects_template_placeholders() {
+        let mut registration = valid_registration();
+        registration.id = "replace-with-lane-id".to_string();
+        registration.discovery_inputs = vec![
+            "Describe the non-anchor discovery input or pre-declared structural rule.".to_string(),
+        ];
+
+        let validation = validate_registration(registration);
+
+        assert!(!validation.valid);
+        assert!(
+            validation
+                .errors
+                .iter()
+                .any(|error| error.contains("placeholder text"))
         );
     }
 }

@@ -1,0 +1,26 @@
+{
+  "id": "non-anchor-position-period-v1",
+  "title": "Non-anchor position period prediction",
+  "hypothesis_family": "position-period-prediction",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "Test whether a predeclared position-period rule predicts held-out K4 position classes before any key-material expansion or fragment-score tuning.",
+  "prediction_target": "Before scoring any candidate words, choose one period from {2,3,4,5,7,8,13} using only the predeclared rule, then predict which non-anchor K4 position residues should share the same derived key-value class.",
+  "discovery_inputs": [
+    "Predeclared period registry from structural-models",
+    "K4 absolute position numbers only",
+    "Residue classes selected before observing new score output"
+  ],
+  "evaluation_inputs": [
+    "Withheld non-anchor K4 position residue classes",
+    "Future source-documented fragment rows, if independently obtained"
+  ],
+  "controls": [
+    "seeded shuffle baseline",
+    "multiple-comparison correction",
+    "held-out residue-class scoring",
+    "best-of-period null control"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

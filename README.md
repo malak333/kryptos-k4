@@ -38,7 +38,7 @@ cargo run -- batch-test-routed-keys --input experiments/k4-candidates.csv --swee
 cargo run -- heldout-key-control --input experiments/k4-candidates.csv --iterations 1000 --seed 42 --output-dir results/key-tests/heldout-control
 cargo run -- position-structure --target spans --alphabet all --iterations 1000 --seed 42
 cargo run -- structural-models --target spans --alphabet kryptos --iterations 1000 --seed 42
-cargo run -- validate-preregistration --input experiments/preregistrations/independent-lane-template.json
+cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-period-v1.json
 cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --top 20
 cargo run -- baseline --target spans --iterations 1000 --seed 42
 cargo run -- baseline --target spans --iterations 1000 --seed 42 --format json
