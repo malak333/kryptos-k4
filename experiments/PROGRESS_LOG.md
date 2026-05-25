@@ -260,6 +260,16 @@ non-anchor prediction boundary. Its deterministic artifact at
 validation pass. This lane adds no candidate material and contributes no scored
 evidence until source-backed non-anchor observations exist.
 
+Additional independent period lane populated:
+`experiments/preregistrations/non-anchor-position-period-v5.json` carries
+stable lane id `non-anchor-position-period-v5`, replacing the temporary copied
+placeholder filename with a concrete lane id. Its deterministic artifact at
+`experiments/predictions/non-anchor-position-period-v5.json` is emitted by
+`period-prediction-plan --all --format json`. `validate-preregistration`,
+`validate-prediction-artifact`, `independent-lane-status`, and `release-check`
+all pass. This is still a pre-scoring, source-backed-observation target only;
+it adds no plaintext, candidate material, or promoted evidence.
+
 Spacing evaluator added: `evaluate-spacing-prediction` scores independent
 non-anchor observation positions against the committed spacing artifact with a
 best-of-modulus seeded null. Direct `--positions` input is diagnostic; scored
@@ -280,8 +290,8 @@ could pass validation but fail at evaluation time.
 Independent lane status command added:
 `independent-lane-status --format json` scans the preregistration directory,
 validates each preregistration and committed prediction artifact, and reports
-the next validator/evaluator command for each lane. Current status: 7 lanes,
-7 ready for source-backed observations, 0 invalid lanes, promoted false. This is
+the next validator/evaluator command for each lane. Current status: 8 lanes,
+8 ready for source-backed observations, 0 invalid lanes, promoted false. This is
 an operational gate summary only; it adds no plaintext, key material, or scored
 evidence.
 

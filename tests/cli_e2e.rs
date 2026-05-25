@@ -1391,6 +1391,7 @@ fn committed_period_prediction_artifact_matches_cli_output() {
         "experiments/predictions/non-anchor-position-period-v2.json",
         "experiments/predictions/non-anchor-position-period-v3.json",
         "experiments/predictions/non-anchor-position-period-v4.json",
+        "experiments/predictions/non-anchor-position-period-v5.json",
     ] {
         let fixture: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
 
@@ -1553,6 +1554,7 @@ fn validate_prediction_artifact_checks_committed_independent_target() {
         "experiments/preregistrations/non-anchor-position-period-v2.json",
         "experiments/preregistrations/non-anchor-position-period-v3.json",
         "experiments/preregistrations/non-anchor-position-period-v4.json",
+        "experiments/preregistrations/non-anchor-position-period-v5.json",
     ] {
         Command::cargo_bin("kryptos-k4")
             .unwrap()
@@ -1614,9 +1616,9 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Independent Lane Status"))
-        .stdout(predicate::str::contains("lanes: 7"))
+        .stdout(predicate::str::contains("lanes: 8"))
         .stdout(predicate::str::contains(
-            "ready for source-backed observations: 7",
+            "ready for source-backed observations: 8",
         ))
         .stdout(predicate::str::contains("invalid lanes: 0"))
         .stdout(predicate::str::contains(
@@ -1636,8 +1638,8 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["lane_count"], 7);
-    assert_eq!(json["ready_for_source_backed_observations"], 7);
+    assert_eq!(json["lane_count"], 8);
+    assert_eq!(json["ready_for_source_backed_observations"], 8);
     assert_eq!(json["invalid_lanes"], 0);
     assert_eq!(json["promoted_candidate"], false);
     assert!(json["lanes"].as_array().unwrap().iter().all(|lane| {
