@@ -2206,6 +2206,10 @@ fn print_evaluate_period_prediction(
     evaluation.observation_id = observation_input.id;
     evaluation.observation_source_ids = observation_input.source_ids;
     evaluation.observation_rationale = observation_input.rationale;
+    if !evaluation.observation_source_ids.is_empty() {
+        evaluation.source_backed_observation = true;
+        evaluation.observation_warning = None;
+    }
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&evaluation)?),
         OutputFormat::Markdown => print_period_prediction_evaluation(&evaluation),
@@ -2228,6 +2232,13 @@ fn print_period_prediction_evaluation(evaluation: &PeriodPredictionEvaluation) {
     }
     if let Some(observation_rationale) = &evaluation.observation_rationale {
         println!("observation rationale: {observation_rationale}");
+    }
+    println!(
+        "source-backed observation: {}",
+        evaluation.source_backed_observation
+    );
+    if let Some(observation_warning) = evaluation.observation_warning {
+        println!("warning: {observation_warning}");
     }
     println!(
         "observed positions: {}",

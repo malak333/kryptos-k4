@@ -1560,6 +1560,13 @@ fn evaluate_period_prediction_scores_independent_position_set() {
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
     assert_eq!(json["observed_position_count"], 3);
+    assert_eq!(json["source_backed_observation"], false);
+    assert!(
+        json["observation_warning"]
+            .as_str()
+            .unwrap()
+            .contains("diagnostic")
+    );
     assert_eq!(json["best_period"], 3);
     assert_eq!(json["best_residue"], 0);
     assert_eq!(json["best_hits"], 3);
@@ -1608,6 +1615,8 @@ fn evaluate_period_prediction_accepts_source_backed_position_file() {
     let json: Value = serde_json::from_slice(&output).unwrap();
     assert_eq!(json["observation_id"], "synthetic-non-anchor-test");
     assert_eq!(json["observation_source_ids"][0], "cia-artifact");
+    assert_eq!(json["source_backed_observation"], true);
+    assert_eq!(json["observation_warning"], Value::Null);
     assert_eq!(
         json["observation_rationale"],
         "Synthetic CLI test fixture for the observation-file input path."

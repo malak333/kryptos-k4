@@ -73,6 +73,10 @@ rejected for scoring. The observation template intentionally has an empty
 `positions_one_based` list, so copied lanes cannot accidentally score synthetic
 example positions.
 
+Direct `evaluate-period-prediction --positions ...` runs are diagnostic only.
+Evidence-bearing evaluations should use `--positions-file` after
+`validate-period-observations` passes.
+
 ## Background Batch Runs
 
 Run a long batch once without tying up the terminal:
@@ -150,7 +154,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `validate-prediction-artifact` | Gate for committed independent prediction artifacts in Markdown or JSON; checks the preregistration and deterministic generator output still match. |
 | `validate-period-observations` | Gate for source-backed independent position observations in Markdown or JSON; can also validate the prediction artifact preregistration, and rejects unregistered or disallowed source IDs, duplicates, and public-anchor positions before scoring. |
 | `period-prediction-plan` | Emits non-anchor K4 position residue classes for one or all registered periods in Markdown or JSON without scoring fragment values or candidate material. |
-| `evaluate-period-prediction` | Scores independently supplied one-based non-anchor positions against a committed period prediction artifact with a best-of-period null control in Markdown or JSON; accepts quick `--positions` input or a source-backed `--positions-file` JSON record, with optional artifact preregistration validation. |
+| `evaluate-period-prediction` | Scores independently supplied one-based non-anchor positions against a committed period prediction artifact with a best-of-period null control in Markdown or JSON; marks quick `--positions` input as diagnostic and marks source-backed `--positions-file` JSON records as evidence-bearing only after validation, with optional artifact preregistration validation. |
 | `summarize-key-runs` | Historical scanner for batch result folders, ranking individual runs and per-candidate p-value stability. |
 | `baseline` | Seeded false-positive controls for the generic recurrence screen. |
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |

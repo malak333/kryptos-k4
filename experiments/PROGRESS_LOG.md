@@ -84,6 +84,17 @@ ledger as `F7`, so the generated report records the v2 preregistration,
 committed artifact, and JSON gate boundary as a reproducibility finding rather
 than a cryptanalytic result.
 
+## 2026-05-25: Period Evaluation Source-Backing Flag
+
+`evaluate-period-prediction` now distinguishes diagnostic ad hoc `--positions`
+input from source-backed `--positions-file` evidence. JSON and Markdown output
+include `source_backed_observation`; ad hoc position lists also include a warning
+that they are diagnostic only.
+
+Interpretation: the command remains useful for quick mechanics checks, but
+future evidence-bearing period evaluations should come from validated
+observation files with registered source IDs and rationale.
+
 ## 2026-05-25: Preregistration Gate
 
 Command:

@@ -60,7 +60,7 @@ The integration tests in `tests/cli_e2e.rs` execute the compiled CLI and verify:
 - validate-prediction-artifact checks committed independent prediction artifacts against the deterministic generator;
 - validate-period-observations rejects unregistered source IDs, disallowed source-use boundaries, duplicate positions, public-anchor positions, and unchanged observation templates before scoring;
 - period-prediction-plan emits predeclared non-anchor residue-class targets from K4 positions only, without scoring public fragment values or candidate material;
-- evaluate-period-prediction scores only explicit non-anchor position inputs or source-backed observation files, with seeded best-of-period controls and non-promotion flags;
+- evaluate-period-prediction scores explicit non-anchor position inputs or source-backed observation files, marks ad hoc `--positions` input as diagnostic, and marks source-backed files distinctly in JSON/Markdown output;
 - experiments/PROGRESS_LOG.md records command-backed negative controls and active gates so weak lanes are not repeatedly rerun as evidence;
 - candidate-sequence output includes family, source IDs, transform metadata, and no promoted candidates;
 - route output uses only small named route families and emits no plaintext guesses.
@@ -95,6 +95,11 @@ registration: `validate-period-observations` rejects public-anchor summary,
 public-clue context, methodology context, and archive-context-only sources as
 scored independent position evidence. Those sources can still document context
 or controls, but not the held-out target being scored.
+
+Direct `evaluate-period-prediction --positions ...` runs are diagnostic only.
+They can check mechanics or reproduce examples, but evidence-bearing evaluation
+requires `--positions-file` with registered source IDs and a passing
+`validate-period-observations` result.
 
 Public methodology-context sources can document why a search family is stopped
 or why a null control is required. They still do not supply plaintext,
