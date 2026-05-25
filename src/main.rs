@@ -5,12 +5,12 @@ use kryptos_k4::{
     BatchKeyMaterialRun, BatchKeyRunHistory, CandidateTransform, FragmentMode,
     HeldoutKeyControlRun, K4_CIPHERTEXT, KeyMaterialExplanation, KeyMaterialOffsetSweep,
     KeyMaterialTest, PositionStructureRun, ReportFormat, RoutedBatchKeyMaterialRun,
-    analyze_constraints, analyze_known_plaintext_spans,
+    StructuralModelRun, analyze_constraints, analyze_known_plaintext_spans,
     batch_test_key_material_with_batch_baseline, batch_test_routed_key_material, build_report,
     candidate_sequences, explain_key_material, findings, heldout_key_control, hypotheses,
     known_anchors, render_report, run_baseline, run_position_structure_control, run_release_checks,
-    run_route_experiments, score_candidate_sequences, sources, summarize_batch_key_material_runs,
-    sweep_key_material_offsets_with_baseline, test_key_material,
+    run_route_experiments, run_structural_model_control, score_candidate_sequences, sources,
+    summarize_batch_key_material_runs, sweep_key_material_offsets_with_baseline, test_key_material,
 };
 use std::{
     fs,
@@ -197,6 +197,27 @@ enum Command {
     },
     /// Test candidate-independent residue and spacing structure over public fragments.
     PositionStructure {
+        /// Target family to evaluate.
+        #[arg(long, value_enum, default_value_t = CliBaselineTarget::Spans)]
+        target: CliBaselineTarget,
+        /// Alphabet family to evaluate.
+        #[arg(long, value_enum, default_value_t = CliBaselineAlphabet::All)]
+        alphabet: CliBaselineAlphabet,
+        /// Public fragment mode to evaluate.
+        #[arg(long, value_enum, default_value_t = CliFragmentMode::Additive)]
+        mode: CliFragmentMode,
+        /// Number of seeded null iterations.
+        #[arg(long, default_value_t = 10_000)]
+        iterations: usize,
+        /// Seed for deterministic null controls.
+        #[arg(long, default_value_t = 42)]
+        seed: u64,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Evaluate pre-registered position models before considering new key material.
+    StructuralModels {
         /// Target family to evaluate.
         #[arg(long, value_enum, default_value_t = CliBaselineTarget::Spans)]
         target: CliBaselineTarget,
@@ -501,6 +522,14 @@ fn main() -> Result<()> {
             seed,
             format,
         } => print_position_structure(target, alphabet, mode, iterations, seed, format)?,
+        Command::StructuralModels {
+            target,
+            alphabet,
+            mode,
+            iterations,
+            seed,
+            format,
+        } => print_structural_models(target, alphabet, mode, iterations, seed, format)?,
         Command::Hypotheses => print_hypotheses(),
         Command::CandidateSequences { format } => print_candidate_sequences(format)?,
         Command::Routes { format } => print_routes(format)?,
@@ -1430,6 +1459,66 @@ fn print_position_structure_summary(run: &PositionStructureRun) {
             result.adjusted_p_value,
             result.promoted_candidate,
             result.warning
+        );
+    }
+}
+
+fn print_structural_models(
+    target: CliBaselineTarget,
+    alphabet: CliBaselineAlphabet,
+    mode: CliFragmentMode,
+    iterations: usize,
+    seed: u64,
+    format: OutputFormat,
+) -> Result<()> {
+    let run = run_structural_model_control(
+        target.into(),
+        alphabet.into(),
+        mode.into(),
+        iterations,
+        seed,
+    )?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&run)?),
+        OutputFormat::Markdown => print_structural_model_summary(&run),
+    }
+    Ok(())
+}
+
+fn print_structural_model_summary(run: &StructuralModelRun) {
+    println!("# Structural Model Control\n");
+    println!("This is not a claimed solution.\n");
+    println!(
+        "target: {}; alphabet: {}; fragment mode: {:?}; models: {}; iterations: {}; seed: {}",
+        run.target_scope,
+        run.alphabet_scope,
+        run.fragment_mode,
+        run.model_count,
+        run.iterations,
+        run.seed
+    );
+    println!("promoted: {}", run.promoted_candidate);
+    println!("note: {}\n", run.note);
+    println!(
+        "| Model | Kind | Period | Targets | Fragments | Residue Score | Spacing Hits | Composite | Null Mean | Null SD | P | Adjusted P | Promoted |"
+    );
+    println!("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |");
+    for result in &run.results {
+        println!(
+            "| {} | {} | {} | {} | {} | {} | {} | {} | {:.2} | {:.2} | {:.4} | {:.4} | {} |",
+            result.model_id,
+            result.model_kind,
+            result.period,
+            result.target_count,
+            result.fragment_count,
+            result.observed_residue_score,
+            result.observed_spacing_hits,
+            result.observed_composite_score,
+            result.null_mean_composite_score,
+            result.null_std_dev_composite_score,
+            result.empirical_p_value,
+            result.adjusted_p_value,
+            result.promoted_candidate
         );
     }
 }

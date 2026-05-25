@@ -1060,6 +1060,89 @@ fn position_structure_json_is_deterministic_and_non_promotional() {
 }
 
 #[test]
+fn structural_models_markdown_mentions_preregistered_models() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "structural-models",
+            "--target",
+            "spans",
+            "--alphabet",
+            "kryptos",
+            "--iterations",
+            "25",
+            "--seed",
+            "67",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Structural Model Control"))
+        .stdout(predicate::str::contains("period-3-triad"))
+        .stdout(predicate::str::contains("Adjusted P"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["structural-models", "--iterations", "0"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "structural-models iterations must be greater than zero",
+        ));
+}
+
+#[test]
+fn structural_models_json_is_deterministic_and_non_promotional() {
+    let args = [
+        "structural-models",
+        "--target",
+        "spans",
+        "--alphabet",
+        "kryptos",
+        "--iterations",
+        "50",
+        "--seed",
+        "67",
+        "--format",
+        "json",
+    ];
+    let first = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(args)
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let second = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(args)
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    assert_eq!(first, second);
+    let json: Value = serde_json::from_slice(&first).unwrap();
+    assert_eq!(json["target_scope"], "spans");
+    assert_eq!(json["alphabet_scope"], "kryptos");
+    assert_eq!(json["fragment_mode"], "additive-key");
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(json["note"].as_str().unwrap().contains("pre-registered"));
+    assert!(
+        json["results"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|result| result["promoted_candidate"] == false
+                && result["model_id"].as_str().unwrap().starts_with("period-")
+                && result["empirical_p_value"].is_number()
+                && result["adjusted_p_value"].is_number())
+    );
+}
+
+#[test]
 fn candidate_sequences_json_contains_registered_families() {
     let output = Command::cargo_bin("kryptos-k4")
         .unwrap()

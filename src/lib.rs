@@ -43,8 +43,9 @@ pub use key_test::{
     sweep_key_material_offsets_with_baseline, test_key_material,
 };
 pub use position_structure::{
-    PositionModulusScore, PositionStructureResult, PositionStructureRun,
-    run_position_structure_control,
+    PositionModulusScore, PositionStructureResult, PositionStructureRun, StructuralModel,
+    StructuralModelResult, StructuralModelRun, registered_structural_models,
+    run_position_structure_control, run_structural_model_control,
 };
 pub use release_check::{ReleaseCheck, run_release_checks};
 pub use report::{Report, ReportFormat, build_report, render_report};
