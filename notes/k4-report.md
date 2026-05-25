@@ -6,7 +6,7 @@ This report uses public anchors only and is not a claimed solution. Production r
 
 - Evidence boundary: public ciphertext, public known-plaintext anchors, source provenance, deterministic controls, and pre-registered exploratory screens only.
 - Research boundary: no generated plaintext is treated as decoded K4 text; all promoted-candidate flags remain false unless independent corroboration and stronger samples justify a future change.
-- Production-readiness scope: local Rust CLI, report rendering, JSON output, source packet presence, release preflight, and no-GitHub-Actions policy. External publication, peer review, and cryptanalytic validation remain outside this report.
+- Production-readiness scope: local Rust CLI, report rendering, JSON output, source packet/source registry alignment, release preflight, and no-GitHub-Actions policy. External publication, peer review, and cryptanalytic validation remain outside this report.
 
 ## Feature Coverage
 
@@ -30,8 +30,8 @@ This report uses public anchors only and is not a claimed solution. Production r
 | `candidate-sequences` | Pre-registered contextual sequences and score results. |
 | `routes` | Bounded named route experiments with identity, reverse, and seeded-random baselines. |
 | `findings` | Reproducible findings ledger with sources, transformations, baselines, interpretation, and next tests. |
-| `sources` | Source provenance records and allowed-use notes. |
-| `release-check` | Local release preflight results, including the no-GitHub-Actions boundary. |
+| `sources` | Source provenance records and allowed-use notes in Markdown or JSON. |
+| `release-check` | Local release preflight results, including no-GitHub-Actions and source-packet/source-registry alignment gates. |
 | `export-data` | Covered by the source data rendered here; the command writes ciphertext, anchor, and source JSON files. |
 
 ## Ciphertext
