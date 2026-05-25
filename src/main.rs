@@ -1419,8 +1419,10 @@ fn write_heldout_key_control_outputs(
 fn write_period_prediction_evaluation_outputs(
     output_dir: &Path,
     evaluation: &PeriodPredictionEvaluation,
+    archive_input: &EvaluationArchiveInput,
 ) -> Result<()> {
     fs::create_dir_all(output_dir)?;
+    write_evaluation_archive_input(output_dir, archive_input)?;
     fs::write(
         output_dir.join("result.json"),
         serde_json::to_string_pretty(evaluation)?,
@@ -1442,8 +1444,10 @@ fn write_period_prediction_evaluation_outputs(
 fn write_spacing_prediction_evaluation_outputs(
     output_dir: &Path,
     evaluation: &SpacingPredictionEvaluation,
+    archive_input: &EvaluationArchiveInput,
 ) -> Result<()> {
     fs::create_dir_all(output_dir)?;
+    write_evaluation_archive_input(output_dir, archive_input)?;
     fs::write(
         output_dir.join("result.json"),
         serde_json::to_string_pretty(evaluation)?,
@@ -1459,6 +1463,39 @@ fn write_spacing_prediction_evaluation_outputs(
             evaluation.artifact_path, evaluation.iterations, evaluation.seed
         ),
     )?;
+    Ok(())
+}
+
+enum EvaluationArchiveInput {
+    Positions(String),
+    PositionsFile(PathBuf),
+}
+
+fn evaluation_archive_input(
+    positions: &Option<String>,
+    positions_file: &Option<PathBuf>,
+) -> EvaluationArchiveInput {
+    if let Some(positions) = positions {
+        return EvaluationArchiveInput::Positions(positions.clone());
+    }
+    if let Some(path) = positions_file {
+        return EvaluationArchiveInput::PositionsFile(path.clone());
+    }
+    EvaluationArchiveInput::Positions(String::new())
+}
+
+fn write_evaluation_archive_input(
+    output_dir: &Path,
+    archive_input: &EvaluationArchiveInput,
+) -> Result<()> {
+    match archive_input {
+        EvaluationArchiveInput::Positions(positions) => {
+            fs::write(output_dir.join("input-positions.txt"), positions)?;
+        }
+        EvaluationArchiveInput::PositionsFile(path) => {
+            fs::copy(path, output_dir.join("observations.json"))?;
+        }
+    }
     Ok(())
 }
 
@@ -2784,6 +2821,7 @@ fn print_evaluate_period_prediction(options: PeriodPredictionEvaluationOptions) 
         );
     }
 
+    let archive_input = evaluation_archive_input(&positions, &positions_file);
     let observation_input = match (positions, positions_file) {
         (Some(positions), None) => PeriodPredictionObservationInput {
             id: None,
@@ -2808,7 +2846,7 @@ fn print_evaluate_period_prediction(options: PeriodPredictionEvaluationOptions) 
         evaluation.observation_warning = None;
     }
     if let Some(output_dir) = output_dir {
-        write_period_prediction_evaluation_outputs(&output_dir, &evaluation)?;
+        write_period_prediction_evaluation_outputs(&output_dir, &evaluation, &archive_input)?;
     }
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&evaluation)?),
@@ -2854,6 +2892,7 @@ fn print_evaluate_spacing_prediction(options: SpacingPredictionEvaluationOptions
         );
     }
 
+    let archive_input = evaluation_archive_input(&positions, &positions_file);
     let observation_input = match (positions, positions_file) {
         (Some(positions), None) => PeriodPredictionObservationInput {
             id: None,
@@ -2878,7 +2917,7 @@ fn print_evaluate_spacing_prediction(options: SpacingPredictionEvaluationOptions
         evaluation.observation_warning = None;
     }
     if let Some(output_dir) = output_dir {
-        write_spacing_prediction_evaluation_outputs(&output_dir, &evaluation)?;
+        write_spacing_prediction_evaluation_outputs(&output_dir, &evaluation, &archive_input)?;
     }
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&evaluation)?),

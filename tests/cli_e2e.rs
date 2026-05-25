@@ -1892,9 +1892,19 @@ fn evaluate_period_prediction_accepts_source_backed_position_file() {
     assert_eq!(json["best_period"], 3);
     assert_eq!(json["promoted_candidate"], false);
 
-    for file_name in ["result.json", "summary.md", "command.txt"] {
+    for file_name in [
+        "observations.json",
+        "result.json",
+        "summary.md",
+        "command.txt",
+    ] {
         assert!(output_dir.join(file_name).exists(), "{file_name} missing");
     }
+    let archived_observations: Value = serde_json::from_str(
+        &std::fs::read_to_string(output_dir.join("observations.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(archived_observations["id"], "synthetic-non-anchor-test");
     let archived_json: Value =
         serde_json::from_str(&std::fs::read_to_string(output_dir.join("result.json")).unwrap())
             .unwrap();
@@ -2016,9 +2026,19 @@ fn evaluate_spacing_prediction_accepts_source_backed_position_file() {
     assert_eq!(json["best_modulus"], 2);
     assert_eq!(json["promoted_candidate"], false);
 
-    for file_name in ["result.json", "summary.md", "command.txt"] {
+    for file_name in [
+        "observations.json",
+        "result.json",
+        "summary.md",
+        "command.txt",
+    ] {
         assert!(output_dir.join(file_name).exists(), "{file_name} missing");
     }
+    let archived_observations: Value = serde_json::from_str(
+        &std::fs::read_to_string(output_dir.join("observations.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(archived_observations["id"], "synthetic-spacing-test");
     let archived_json: Value =
         serde_json::from_str(&std::fs::read_to_string(output_dir.join("result.json")).unwrap())
             .unwrap();
