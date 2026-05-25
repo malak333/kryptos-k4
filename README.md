@@ -58,6 +58,7 @@ cargo run -- findings --format json
 cargo run -- release-check
 cargo run -- hypotheses
 cargo run -- sources
+cargo run -- sources --format json
 cargo run -- export-data --directory data
 cargo run -- report --format markdown --output notes/k4-report.md
 cargo run -- report --format json
@@ -141,7 +142,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `findings` | Findings ledger with evidence inputs, transformations, baselines, interpretation, and next tests. |
 | `release-check` | Local release preflight confirming no hosted automation, required docs, generated report presence, and plaintext-leakage sentinel absence. |
 | `hypotheses` | Ranked source-grounded hypothesis register. |
-| `sources` | Source provenance records. |
+| `sources` | Source provenance records in Markdown or JSON for source-policy audits. |
 | `export-data` | Machine-readable JSON for ciphertext, anchors, and sources. |
 | `report` | Full Markdown or JSON report. |
 

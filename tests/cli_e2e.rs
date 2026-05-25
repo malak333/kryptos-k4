@@ -68,6 +68,20 @@ fn facts_hypotheses_sources_and_help_are_covered() {
         .stdout(predicate::str::contains("elonka-kryptos"))
         .stdout(predicate::str::contains("accessed 2026-05-20"));
 
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["sources", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert!(json.as_array().unwrap().iter().any(|source| {
+        source["id"] == "kryptosbot-sanborn-papers-2026"
+            && source["allowed_use"] == "archive-context-only"
+    }));
+
     Command::cargo_bin("kryptos-k4")
         .unwrap()
         .arg("--help")

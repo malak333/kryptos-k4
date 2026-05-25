@@ -342,7 +342,11 @@ enum Command {
         format: OutputFormat,
     },
     /// Print source provenance records.
-    Sources,
+    Sources {
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Run local release preflight checks. Does not use GitHub Actions.
     ReleaseCheck {
         /// Output format.
@@ -808,7 +812,7 @@ fn main() -> Result<()> {
         Command::CandidateSequences { format } => print_candidate_sequences(format)?,
         Command::Routes { format } => print_routes(format)?,
         Command::Findings { format } => print_findings(format)?,
-        Command::Sources => print_sources(),
+        Command::Sources { format } => print_sources(format)?,
         Command::ReleaseCheck { format } => print_release_check(format)?,
         Command::ExportData { directory } => export_data(directory)?,
         Command::Report { format, output } => {
@@ -2339,18 +2343,24 @@ fn print_findings(format: OutputFormat) -> Result<()> {
     Ok(())
 }
 
-fn print_sources() {
-    for source in sources() {
-        println!(
-            "{} ({}): {}\n  accessed {} | use: {}\n  {}",
-            source.label,
-            source.id,
-            source.url,
-            source.accessed_at,
-            source.allowed_use,
-            source.use_note
-        );
+fn print_sources(format: OutputFormat) -> Result<()> {
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&sources())?),
+        OutputFormat::Markdown => {
+            for source in sources() {
+                println!(
+                    "{} ({}): {}\n  accessed {} | use: {}\n  {}",
+                    source.label,
+                    source.id,
+                    source.url,
+                    source.accessed_at,
+                    source.allowed_use,
+                    source.use_note
+                );
+            }
+        }
     }
+    Ok(())
 }
 
 fn print_release_check(format: OutputFormat) -> Result<()> {
