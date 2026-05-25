@@ -248,17 +248,30 @@ pub fn validate_prediction_artifact_with_repo_root(
     let registration: LanePreregistration = serde_json::from_str(&input)?;
     let preregistration_validation = validate_preregistration(&input)?;
     let artifact_kind = prediction_artifact_kind(&registration);
+    let artifact_kind_label = artifact_kind.unwrap_or("unsupported");
     let expected_value = match artifact_kind {
-        "spacing" => serde_json::to_value(build_all_spacing_prediction_plans()?)?,
-        _ => serde_json::to_value(build_all_period_prediction_plans()?)?,
+        Some("spacing") => Some(serde_json::to_value(build_all_spacing_prediction_plans()?)?),
+        Some("period") => Some(serde_json::to_value(build_all_period_prediction_plans()?)?),
+        _ => None,
     };
     let expected_plan_count = expected_value
-        .get("plans")
+        .as_ref()
+        .and_then(|expected_value| expected_value.get("plans"))
         .and_then(serde_json::Value::as_array)
         .map_or(0, Vec::len);
-    let expected_period_count = plan_set_count(&expected_value).unwrap_or(0);
+    let expected_period_count = expected_value
+        .as_ref()
+        .and_then(plan_set_count)
+        .unwrap_or(0);
     let mut errors = preregistration_validation.errors;
     let warnings = preregistration_validation.warnings;
+
+    if artifact_kind.is_none() {
+        errors.push(format!(
+            "prediction_artifact validation only supports `position-period-prediction` and `position-spacing-prediction` hypothesis families; got `{}`",
+            registration.hypothesis_family
+        ));
+    }
 
     let artifact_path = registration.prediction_artifact.clone().unwrap_or_default();
     let mut artifact_plan_count = None;
@@ -275,9 +288,11 @@ pub fn validate_prediction_artifact_with_repo_root(
                         .and_then(serde_json::Value::as_array)
                         .map(Vec::len);
                     artifact_period_count = plan_set_count(&artifact_value);
-                    if artifact_value != expected_value {
+                    if let Some(expected_value) = &expected_value
+                        && artifact_value != *expected_value
+                    {
                         errors.push(format!(
-                            "prediction artifact does not match deterministic {artifact_kind} prediction plan output"
+                            "prediction artifact does not match deterministic {artifact_kind_label} prediction plan output"
                         ));
                     }
                 }
@@ -293,7 +308,7 @@ pub fn validate_prediction_artifact_with_repo_root(
 
     Ok(PredictionArtifactValidation {
         preregistration_id: registration.id,
-        artifact_kind: artifact_kind.to_string(),
+        artifact_kind: artifact_kind_label.to_string(),
         artifact_path,
         valid: errors.is_empty(),
         errors,
@@ -307,18 +322,11 @@ pub fn validate_prediction_artifact_with_repo_root(
     })
 }
 
-fn prediction_artifact_kind(registration: &LanePreregistration) -> &'static str {
+fn prediction_artifact_kind(registration: &LanePreregistration) -> Option<&'static str> {
     match registration.hypothesis_family.as_str() {
-        "position-spacing-prediction" => "spacing",
-        "position-period-prediction" => "period",
-        _ if registration
-            .prediction_artifact
-            .as_deref()
-            .is_some_and(|path| path.contains("spacing")) =>
-        {
-            "spacing"
-        }
-        _ => "period",
+        "position-spacing-prediction" => Some("spacing"),
+        "position-period-prediction" => Some("period"),
+        _ => None,
     }
 }
 
@@ -477,5 +485,41 @@ mod tests {
         assert!(validation.errors.iter().any(|error| {
             error.contains("prediction artifact does not match deterministic period")
         }));
+    }
+
+    #[test]
+    fn prediction_artifact_validation_rejects_unsupported_artifact_family() {
+        let temp = TempDir::new().unwrap();
+        let artifact_path = "experiments/predictions/structural-routing-v1.json";
+        let absolute_artifact_path = temp.path().join(artifact_path);
+        std::fs::create_dir_all(absolute_artifact_path.parent().unwrap()).unwrap();
+        std::fs::write(
+            &absolute_artifact_path,
+            serde_json::to_string_pretty(&build_all_period_prediction_plans().unwrap()).unwrap(),
+        )
+        .unwrap();
+
+        let mut registration = valid_registration();
+        registration.id = "structural-routing-artifact-v1".to_string();
+        registration.prediction_artifact = Some(artifact_path.to_string());
+        let preregistration_path = temp.path().join("structural-routing-artifact-v1.json");
+        std::fs::write(
+            &preregistration_path,
+            serde_json::to_string_pretty(&registration).unwrap(),
+        )
+        .unwrap();
+
+        let validation =
+            validate_prediction_artifact_with_repo_root(&preregistration_path, temp.path())
+                .unwrap();
+
+        assert_eq!(validation.artifact_kind, "unsupported");
+        assert!(!validation.valid);
+        assert!(
+            validation
+                .errors
+                .iter()
+                .any(|error| { error.contains("only supports `position-period-prediction`") })
+        );
     }
 }
