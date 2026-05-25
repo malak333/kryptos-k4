@@ -165,6 +165,27 @@ pub fn findings() -> Vec<Finding> {
             next_test: "When a real non-anchor observation file exists, validate its preregistration and artifact, run validate-period-observations, then evaluate-period-prediction with --positions-file and archive the JSON outputs.",
             promoted_candidate: false,
         },
+        Finding {
+            id: "F9",
+            title: "Spacing prediction scoring has a source-backed validation gate",
+            related_hypothesis: "H3",
+            source_inputs: &[
+                "src/main.rs",
+                "src/position_structure.rs",
+                "tests/cli_e2e.rs",
+                "experiments/PROGRESS_LOG.md",
+            ],
+            transformation_steps: &[
+                "emit a committed non-anchor spacing prediction artifact",
+                "validate source-backed observation files against the spacing artifact before scoring",
+                "evaluate spacing observations with a best-of-modulus seeded null only after artifact validation",
+            ],
+            output_summary: "Spacing observations now have a pre-score validation command and evaluator, both keeping ad hoc inputs diagnostic and source-backed files preregistration-gated.",
+            baseline_comparison: "This is a guardrail for future independent evidence; the diagnostic toy spacing check was non-promotional and did not produce a meaningful p-value.",
+            interpretation: "The spacing lane is now executable for future independent observations, but it does not add K4 plaintext, key material, or a promoted candidate.",
+            next_test: "When a real non-anchor observation file exists, run validate-spacing-observations with the spacing preregistration, then evaluate-spacing-prediction with --positions-file and archive the JSON outputs.",
+            promoted_candidate: false,
+        },
     ]
 }
 

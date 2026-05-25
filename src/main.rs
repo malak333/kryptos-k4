@@ -6,8 +6,8 @@ use kryptos_k4::{
     HeldoutKeyControlRun, K4_CIPHERTEXT, KeyMaterialExplanation, KeyMaterialOffsetSweep,
     KeyMaterialTest, PeriodPredictionEvaluation, PeriodPredictionPlan, PeriodPredictionPlanSet,
     PositionStructureRun, PredictionArtifactValidation, PreregistrationValidation, ReportFormat,
-    RoutedBatchKeyMaterialRun, SpacingPredictionEvaluation, StructuralModelRun,
-    analyze_constraints, analyze_known_plaintext_spans,
+    RoutedBatchKeyMaterialRun, SpacingPredictionEvaluation, SpacingPredictionPlanSet,
+    StructuralModelRun, analyze_constraints, analyze_known_plaintext_spans,
     batch_test_key_material_with_batch_baseline, batch_test_routed_key_material,
     build_all_period_prediction_plans, build_all_spacing_prediction_plans,
     build_period_prediction_plan, build_report, candidate_sequences,
@@ -284,6 +284,21 @@ enum Command {
         #[arg(long)]
         artifact: PathBuf,
         /// Optional preregistration file used to validate the prediction artifact at the same time.
+        #[arg(long)]
+        preregistration: Option<PathBuf>,
+        /// JSON file with source IDs and one-based non-anchor K4 positions.
+        #[arg(long)]
+        input: PathBuf,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Validate source-backed non-anchor position observations before spacing scoring.
+    ValidateSpacingObservations {
+        /// JSON artifact emitted by spacing-prediction-plan --format json.
+        #[arg(long)]
+        artifact: PathBuf,
+        /// Optional preregistration file used to validate the spacing prediction artifact at the same time.
         #[arg(long)]
         preregistration: Option<PathBuf>,
         /// JSON file with source IDs and one-based non-anchor K4 positions.
@@ -732,6 +747,17 @@ fn load_period_prediction_artifact_positions(path: &Path) -> Result<HashSet<usiz
     Ok(positions)
 }
 
+fn load_spacing_prediction_artifact_positions(path: &Path) -> Result<HashSet<usize>> {
+    let input = fs::read_to_string(path)?;
+    let plans: SpacingPredictionPlanSet = serde_json::from_str(&input)?;
+    let positions = plans
+        .plans
+        .into_iter()
+        .flat_map(|plan| plan.positions_one_based)
+        .collect();
+    Ok(positions)
+}
+
 fn main() -> Result<()> {
     let cli = Cli::parse();
 
@@ -861,6 +887,12 @@ fn main() -> Result<()> {
             input,
             format,
         } => print_validate_period_observations(artifact, preregistration, input, format)?,
+        Command::ValidateSpacingObservations {
+            artifact,
+            preregistration,
+            input,
+            format,
+        } => print_validate_spacing_observations(artifact, preregistration, input, format)?,
         Command::PeriodPredictionPlan {
             period,
             all,
@@ -2055,6 +2087,26 @@ fn print_validate_period_observations(
     }
 }
 
+fn print_validate_spacing_observations(
+    artifact: PathBuf,
+    preregistration: Option<PathBuf>,
+    input: PathBuf,
+    format: OutputFormat,
+) -> Result<()> {
+    let validation = validate_spacing_observations(&artifact, preregistration.as_deref(), &input)?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&validation)?),
+        OutputFormat::Markdown => {
+            print_position_observation_validation("Spacing Observation Validation", &validation)
+        }
+    }
+    if validation.valid {
+        Ok(())
+    } else {
+        anyhow::bail!("spacing observations failed validation")
+    }
+}
+
 fn validate_period_observations(
     artifact_path: &Path,
     preregistration_path: Option<&Path>,
@@ -2070,6 +2122,12 @@ fn validate_period_observations(
         let artifact_validation = validate_prediction_artifact(preregistration_path)?;
         preregistration_id = Some(artifact_validation.preregistration_id.clone());
         artifact_valid = Some(artifact_validation.valid);
+        if artifact_validation.artifact_kind != "period" {
+            errors.push(format!(
+                "preregistration `{}` does not declare a period prediction artifact",
+                artifact_validation.preregistration_id
+            ));
+        }
         if artifact_validation.artifact_path != artifact_path.display().to_string() {
             errors.push(format!(
                 "artifact `{}` does not match preregistration artifact `{}`",
@@ -2117,8 +2175,83 @@ fn validate_period_observations(
     })
 }
 
+fn validate_spacing_observations(
+    artifact_path: &Path,
+    preregistration_path: Option<&Path>,
+    input_path: &Path,
+) -> Result<PeriodPredictionObservationValidation> {
+    let observations = read_period_prediction_observation_file(input_path)?;
+    let observation_id = observations.id.clone();
+    let mut errors = validate_period_prediction_observation_fields(&observations);
+    let mut preregistration_id = None;
+    let mut artifact_valid = None;
+
+    if let Some(preregistration_path) = preregistration_path {
+        let artifact_validation = validate_prediction_artifact(preregistration_path)?;
+        preregistration_id = Some(artifact_validation.preregistration_id.clone());
+        artifact_valid = Some(artifact_validation.valid);
+        if artifact_validation.artifact_kind != "spacing" {
+            errors.push(format!(
+                "preregistration `{}` does not declare a spacing prediction artifact",
+                artifact_validation.preregistration_id
+            ));
+        }
+        if artifact_validation.artifact_path != artifact_path.display().to_string() {
+            errors.push(format!(
+                "artifact `{}` does not match preregistration artifact `{}`",
+                artifact_path.display(),
+                artifact_validation.artifact_path
+            ));
+        }
+        errors.extend(
+            artifact_validation
+                .errors
+                .into_iter()
+                .map(|error| format!("prediction artifact: {error}")),
+        );
+    }
+
+    let non_anchor_positions = load_spacing_prediction_artifact_positions(artifact_path)?;
+
+    let mut seen = HashSet::new();
+    for position in &observations.positions_one_based {
+        if !seen.insert(*position) {
+            errors.push(format!(
+                "positions_one_based contains duplicate position `{position}`"
+            ));
+        }
+        if !non_anchor_positions.contains(position) {
+            errors.push(format!(
+                "position `{position}` is not in the spacing prediction artifact non-anchor universe"
+            ));
+        }
+    }
+
+    Ok(PeriodPredictionObservationValidation {
+        artifact_path: artifact_path.display().to_string(),
+        preregistration_id,
+        artifact_valid,
+        observation_id,
+        observation_source_ids: observations.source_ids,
+        observation_rationale: observations.rationale,
+        observed_position_count: observations.positions_one_based.len(),
+        observed_positions_one_based: observations.positions_one_based,
+        valid: errors.is_empty(),
+        errors,
+        promoted_candidate: false,
+        note: "Spacing observation validation checks source-backed non-anchor positions before spacing scoring; it is not a claimed solution.",
+    })
+}
+
 fn print_period_observation_validation(validation: &PeriodPredictionObservationValidation) {
-    println!("# Period Observation Validation\n");
+    print_position_observation_validation("Period Observation Validation", validation);
+}
+
+fn print_position_observation_validation(
+    title: &str,
+    validation: &PeriodPredictionObservationValidation,
+) {
+    println!("# {title}\n");
     println!("This is not a claimed solution.\n");
     println!("artifact: `{}`", validation.artifact_path);
     if let Some(preregistration_id) = &validation.preregistration_id {

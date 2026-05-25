@@ -244,6 +244,12 @@ best-of-modulus seeded null. Direct `--positions` input is diagnostic; scored
 source-backed use requires `--positions-file` plus the spacing preregistration
 so the artifact is validated before evaluation.
 
+Spacing observation validation added: `validate-spacing-observations` now checks
+source-backed observation files against the committed spacing artifact before
+spacing evaluation. It rejects duplicate positions, public-anchor positions, and
+source IDs whose allowed-use boundary cannot support scored independent
+position evidence.
+
 2026 archive-research context registered:
 `kryptosbot-sanborn-papers-2026` was added to the source registry after checking
 the public KryptosBot Sanborn papers archive page. It is explicitly

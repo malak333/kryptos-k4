@@ -1878,6 +1878,87 @@ fn validate_period_observations_accepts_source_backed_non_anchor_positions() {
 }
 
 #[test]
+fn validate_spacing_observations_accepts_source_backed_non_anchor_positions() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("observations.json");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "synthetic-spacing-validation-test",
+  "source_ids": ["cia-artifact"],
+  "positions_one_based": [1, 3, 5],
+  "rationale": "Synthetic CLI test fixture for spacing observation validation."
+}"#,
+    )
+    .unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-spacing-observations",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-spacing-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-spacing-v1.json",
+            "--input",
+            observations_path.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["valid"], true);
+    assert_eq!(json["preregistration_id"], "non-anchor-position-spacing-v1");
+    assert_eq!(json["artifact_valid"], true);
+    assert_eq!(json["observation_id"], "synthetic-spacing-validation-test");
+    assert_eq!(json["observation_source_ids"][0], "cia-artifact");
+    assert_eq!(
+        json["observation_rationale"],
+        "Synthetic CLI test fixture for spacing observation validation."
+    );
+    assert_eq!(json["observed_position_count"], 3);
+    assert_eq!(json["promoted_candidate"], false);
+}
+
+#[test]
+fn validate_spacing_observations_rejects_anchor_and_duplicate_positions() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("observations.json");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "bad-spacing-position-test",
+  "source_ids": ["cia-artifact"],
+  "positions_one_based": [1, 1, 22],
+  "rationale": "Synthetic CLI test fixture for spacing observation validation failures."
+}"#,
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-spacing-observations",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-spacing-v1.json",
+            "--input",
+            observations_path.to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("duplicate position `1`"))
+        .stdout(predicate::str::contains("position `22`"))
+        .stderr(predicate::str::contains(
+            "spacing observations failed validation",
+        ));
+}
+
+#[test]
 fn validate_period_observations_rejects_anchor_and_duplicate_positions() {
     let temp = tempfile::tempdir().unwrap();
     let observations_path = temp.path().join("observations.json");

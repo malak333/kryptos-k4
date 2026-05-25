@@ -153,8 +153,11 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `validate-preregistration` | Gate for proposed new lanes in Markdown or JSON; rejects reuse of public anchor-derived fragments as discovery inputs or primary evidence. |
 | `validate-prediction-artifact` | Gate for committed independent prediction artifacts in Markdown or JSON; checks the preregistration and deterministic generator output still match. |
 | `validate-period-observations` | Gate for source-backed independent position observations in Markdown or JSON; can also validate the prediction artifact preregistration, and rejects unregistered or disallowed source IDs, duplicates, and public-anchor positions before scoring. |
+| `validate-spacing-observations` | Gate for source-backed independent position observations before spacing scoring in Markdown or JSON; can also validate the spacing prediction artifact preregistration. |
 | `period-prediction-plan` | Emits non-anchor K4 position residue classes for one or all registered periods in Markdown or JSON without scoring fragment values or candidate material. |
+| `spacing-prediction-plan` | Emits non-anchor K4 spacing residue classes for registered moduli in Markdown or JSON without scoring fragment values or candidate material. |
 | `evaluate-period-prediction` | Scores independently supplied one-based non-anchor positions against a committed period prediction artifact with a best-of-period null control in Markdown or JSON; marks quick `--positions` input as diagnostic and requires `--preregistration` for source-backed `--positions-file` JSON records so the artifact is validated before scoring. |
+| `evaluate-spacing-prediction` | Scores independently supplied one-based non-anchor positions against a committed spacing prediction artifact with a best-of-modulus null control in Markdown or JSON; marks quick `--positions` input as diagnostic and requires `--preregistration` for source-backed `--positions-file` JSON records. |
 | `summarize-key-runs` | Historical scanner for batch result folders, ranking individual runs and per-candidate p-value stability. |
 | `baseline` | Seeded false-positive controls for the generic recurrence screen. |
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |
