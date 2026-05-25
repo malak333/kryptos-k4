@@ -6,7 +6,9 @@ The project follows the source-led plan in `kryptos-k4-research-plan.md`.
 
 1. Preserve strict source provenance for all facts.
 2. Separate public facts from assumptions and hypotheses.
-3. Treat the 2025 archive/plaintext discovery as historical context only.
+3. Treat archive/plaintext discovery and community archive-research notes as
+   historical context only unless a separate preregistration defines an
+   independent evaluation target first.
 4. Do not include claimed full plaintext content.
 5. Promote a hypothesis only when it produces a falsifiable next test.
 
@@ -77,4 +79,4 @@ Then create the tag and release manually with `git` and `gh release create`.
 
 The `release-check` command verifies the no-Actions/no-Dependabot policy, required release docs, generated Markdown report presence, and absence of explicit leaked/full-plaintext sentinel markers before release.
 
-The source packet and `src/data.rs` source registry must stay aligned. Archive-sale reporting is historical context only; it must not introduce archive-discovered plaintext or private auction material into the data model, reports, exports, or tests.
+The source packet and `src/data.rs` source registry must stay aligned. Archive-sale reporting and community archive-research pages are historical or preregistration context only; they must not introduce archive-discovered plaintext, private auction material, or unregistered community interpretations into the data model, reports, exports, or tests.

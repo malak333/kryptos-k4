@@ -215,6 +215,17 @@ pub fn sources() -> Vec<Source> {
             allowed_use: "archive-context-only",
             use_note: "Archive sale outcome and context only; no archive-discovered plaintext content.",
         },
+        Source {
+            id: "kryptosbot-sanborn-papers-2026",
+            label: "KryptosBot 2026 Sanborn papers research archive",
+            url: "https://kryptosbot.com/archive/",
+            archive_url: None,
+            accessed_at: "2026-05-25",
+            publication_date: Some("2026-04"),
+            source_type: "community-research-archive",
+            allowed_use: "archive-context-only",
+            use_note: "Curated public notes from Smithsonian Sanborn papers research; context for future preregistration only, not scored plaintext or candidate evidence.",
+        },
     ]
 }
 
@@ -295,6 +306,7 @@ mod tests {
             "scientific-american-2025",
             "ap-2025-auction",
             "ap-2025-archive-sale",
+            "kryptosbot-sanborn-papers-2026",
         ] {
             assert!(
                 source_ids.contains(required_source),

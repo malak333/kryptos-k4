@@ -2013,6 +2013,10 @@ fn export_data_writes_machine_readable_files() {
     assert!(sources.as_array().unwrap().iter().any(|source| {
         source["id"] == "scientific-american-2025" && source["allowed_use"] == "public-clue-context"
     }));
+    assert!(sources.as_array().unwrap().iter().any(|source| {
+        source["id"] == "kryptosbot-sanborn-papers-2026"
+            && source["allowed_use"] == "archive-context-only"
+    }));
     assert!(sources.as_array().unwrap().iter().all(|source| {
         source["url"].as_str().unwrap().starts_with("https://")
             && !source["accessed_at"].as_str().unwrap().is_empty()

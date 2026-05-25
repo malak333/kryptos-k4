@@ -117,6 +117,13 @@ Both `validate-preregistration` and `validate-prediction-artifact` pass. This is
 still only a pre-score independent target; it contributes no evidence until a
 source-backed non-anchor observation file is added.
 
+2026 archive-research context registered:
+`kryptosbot-sanborn-papers-2026` was added to the source registry after checking
+the public KryptosBot Sanborn papers archive page. It is explicitly
+`archive-context-only`: the page may inform future preregistration rationale,
+but it does not add candidate rows, scored observations, plaintext, or promoted
+claims.
+
 ## Existing Completed 100k Controls
 
 ### Pattern Score Candidate Batch
