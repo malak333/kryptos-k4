@@ -1386,6 +1386,8 @@ fn committed_period_prediction_artifact_matches_cli_output() {
     for path in [
         "experiments/predictions/non-anchor-position-period-v1.json",
         "experiments/predictions/non-anchor-position-period-diagnostic-v1.json",
+        "experiments/predictions/non-anchor-position-period-v2.json",
+        "experiments/predictions/non-anchor-position-period-v3.json",
     ] {
         let fixture: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
 
@@ -1544,6 +1546,8 @@ fn validate_prediction_artifact_checks_committed_independent_target() {
     for preregistration in [
         "experiments/preregistrations/non-anchor-position-period-v1.json",
         "experiments/preregistrations/non-anchor-position-period-diagnostic-v1.json",
+        "experiments/preregistrations/non-anchor-position-period-v2.json",
+        "experiments/preregistrations/non-anchor-position-period-v3.json",
         "experiments/preregistrations/non-anchor-position-spacing-v1.json",
     ] {
         Command::cargo_bin("kryptos-k4")

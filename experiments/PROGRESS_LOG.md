@@ -238,6 +238,15 @@ route, or fragment-value scoring. The deterministic artifact
 validation pass. This lane is a future-evidence target only, not a K4 solve or
 promotion claim.
 
+Additional independent period lane populated:
+`experiments/preregistrations/non-anchor-position-period-v3.json` carries
+stable lane id `non-anchor-position-period-v3` and
+declares non-anchor position-period prediction as its family. Its deterministic
+artifact at `experiments/predictions/non-anchor-position-period-v3.json` is
+emitted by `period-prediction-plan --all --format json`. Both preregistration
+and artifact validation pass. This is a pre-scoring target for future
+source-backed non-anchor observations only.
+
 Spacing evaluator added: `evaluate-spacing-prediction` scores independent
 non-anchor observation positions against the committed spacing artifact with a
 best-of-modulus seeded null. Direct `--positions` input is diagnostic; scored

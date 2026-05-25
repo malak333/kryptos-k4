@@ -127,6 +127,13 @@ The follow-up independent prediction lane in
 evidence-free position-period generator and exists to keep future non-anchor
 position evidence separate from the already mined public-anchor fragments.
 
+The newly populated independent prediction proposal at
+`experiments/preregistrations/non-anchor-position-period-v3.json` has a
+matching committed artifact at
+`experiments/predictions/non-anchor-position-period-v3.json`. It is another
+pre-scoring position-period target for future non-anchor evidence, not a
+candidate-word, route, or public-anchor mining result.
+
 Summarize a completed lane:
 
 ```bash
