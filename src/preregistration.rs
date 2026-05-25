@@ -308,15 +308,17 @@ pub fn validate_prediction_artifact_with_repo_root(
 }
 
 fn prediction_artifact_kind(registration: &LanePreregistration) -> &'static str {
-    if registration.hypothesis_family == "position-spacing-prediction"
-        || registration
+    match registration.hypothesis_family.as_str() {
+        "position-spacing-prediction" => "spacing",
+        "position-period-prediction" => "period",
+        _ if registration
             .prediction_artifact
             .as_deref()
-            .is_some_and(|path| path.contains("spacing"))
-    {
-        "spacing"
-    } else {
-        "period"
+            .is_some_and(|path| path.contains("spacing")) =>
+        {
+            "spacing"
+        }
+        _ => "period",
     }
 }
 
@@ -352,6 +354,7 @@ pub fn validation_exit_result(validation: &PreregistrationValidation) -> Result<
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::TempDir;
 
     fn valid_registration() -> LanePreregistration {
         LanePreregistration {
@@ -440,5 +443,39 @@ mod tests {
                 .iter()
                 .any(|error| error.contains("placeholder text"))
         );
+    }
+
+    #[test]
+    fn prediction_artifact_kind_prefers_hypothesis_family_over_path() {
+        let temp = TempDir::new().unwrap();
+        let artifact_path = "experiments/predictions/non-anchor-position-spacing-v1.json";
+        let absolute_artifact_path = temp.path().join(artifact_path);
+        std::fs::create_dir_all(absolute_artifact_path.parent().unwrap()).unwrap();
+        std::fs::write(
+            &absolute_artifact_path,
+            serde_json::to_string_pretty(&build_all_spacing_prediction_plans().unwrap()).unwrap(),
+        )
+        .unwrap();
+
+        let mut registration = valid_registration();
+        registration.id = "period-family-spacing-path-v1".to_string();
+        registration.hypothesis_family = "position-period-prediction".to_string();
+        registration.prediction_artifact = Some(artifact_path.to_string());
+        let preregistration_path = temp.path().join("period-family-spacing-path-v1.json");
+        std::fs::write(
+            &preregistration_path,
+            serde_json::to_string_pretty(&registration).unwrap(),
+        )
+        .unwrap();
+
+        let validation =
+            validate_prediction_artifact_with_repo_root(&preregistration_path, temp.path())
+                .unwrap();
+
+        assert_eq!(validation.artifact_kind, "period");
+        assert!(!validation.valid);
+        assert!(validation.errors.iter().any(|error| {
+            error.contains("prediction artifact does not match deterministic period")
+        }));
     }
 }
