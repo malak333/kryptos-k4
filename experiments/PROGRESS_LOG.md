@@ -54,11 +54,13 @@ Command:
 
 ```bash
 cargo run --locked -- period-prediction-plan --period 3
+cargo run --locked -- period-prediction-plan --all
 ```
 
 Result summary:
 
 - period: `3`
+- registered periods in `--all` mode: `7`
 - public-anchor positions excluded: `24`
 - non-anchor positions emitted as prediction targets: `73`
 - fragment values scored: none
@@ -68,7 +70,9 @@ Result summary:
 Interpretation: this makes the `non-anchor-position-period-v1` lane executable
 as a predeclared target. It does not use public anchor-derived key fragments as
 evidence. Future independent evidence can be compared to these residue classes
-without retuning the period or residue assignment.
+without retuning the period or residue assignment. Prefer `--all` when the
+period has not been justified independently, because that preserves the full
+registered-period search surface for later best-of-period controls.
 
 ## Existing Completed 100k Controls
 

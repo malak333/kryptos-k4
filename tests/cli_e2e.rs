@@ -1199,6 +1199,41 @@ fn period_prediction_plan_json_is_parseable_and_non_promotional() {
 }
 
 #[test]
+fn period_prediction_plan_all_emits_registered_period_set() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["period-prediction-plan", "--all"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Period Prediction Plan Set"))
+        .stdout(predicate::str::contains("periods: 7"))
+        .stdout(predicate::str::contains("future independent evidence"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["period-prediction-plan", "--all", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["period_count"], 7);
+    assert_eq!(json["promoted_candidate"], false);
+    assert_eq!(json["plans"].as_array().unwrap().len(), 7);
+    assert!(
+        json["plans"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|plan| plan["non_anchor_position_count"] == 73
+                && plan["anchor_position_count"] == 24
+                && plan["promoted_candidate"] == false)
+    );
+}
+
+#[test]
 fn validate_preregistration_accepts_independent_prediction_target() {
     let temp = tempfile::tempdir().unwrap();
     let input_path = temp.path().join("lane.json");

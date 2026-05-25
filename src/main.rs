@@ -4,10 +4,11 @@ use kryptos_k4::{
     AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, BatchKeyMaterialCandidate,
     BatchKeyMaterialRun, BatchKeyRunHistory, CandidateTransform, FragmentMode,
     HeldoutKeyControlRun, K4_CIPHERTEXT, KeyMaterialExplanation, KeyMaterialOffsetSweep,
-    KeyMaterialTest, PeriodPredictionPlan, PositionStructureRun, PreregistrationValidation,
-    ReportFormat, RoutedBatchKeyMaterialRun, StructuralModelRun, analyze_constraints,
-    analyze_known_plaintext_spans, batch_test_key_material_with_batch_baseline,
-    batch_test_routed_key_material, build_period_prediction_plan, build_report,
+    KeyMaterialTest, PeriodPredictionPlan, PeriodPredictionPlanSet, PositionStructureRun,
+    PreregistrationValidation, ReportFormat, RoutedBatchKeyMaterialRun, StructuralModelRun,
+    analyze_constraints, analyze_known_plaintext_spans,
+    batch_test_key_material_with_batch_baseline, batch_test_routed_key_material,
+    build_all_period_prediction_plans, build_period_prediction_plan, build_report,
     candidate_sequences, explain_key_material, findings, heldout_key_control, hypotheses,
     known_anchors, load_and_validate_preregistration, render_report, run_baseline,
     run_position_structure_control, run_release_checks, run_route_experiments,
@@ -252,8 +253,11 @@ enum Command {
     /// Emit a predeclared non-anchor residue-class target for future independent evidence.
     PeriodPredictionPlan {
         /// Registered period to use for the residue-class prediction.
+        #[arg(long, conflicts_with = "all")]
+        period: Option<usize>,
+        /// Emit plans for every registered period and require future best-of-period controls.
         #[arg(long)]
-        period: usize,
+        all: bool,
         /// Output format.
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
@@ -554,9 +558,11 @@ fn main() -> Result<()> {
         Command::ValidatePreregistration { input, format } => {
             print_validate_preregistration(input, format)?
         }
-        Command::PeriodPredictionPlan { period, format } => {
-            print_period_prediction_plan(period, format)?
-        }
+        Command::PeriodPredictionPlan {
+            period,
+            all,
+            format,
+        } => print_period_prediction_plan(period, all, format)?,
         Command::Hypotheses => print_hypotheses(),
         Command::CandidateSequences { format } => print_candidate_sequences(format)?,
         Command::Routes { format } => print_routes(format)?,
@@ -1589,13 +1595,40 @@ fn print_preregistration_validation(validation: &PreregistrationValidation) {
     }
 }
 
-fn print_period_prediction_plan(period: usize, format: OutputFormat) -> Result<()> {
-    let plan = build_period_prediction_plan(period)?;
-    match format {
-        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&plan)?),
-        OutputFormat::Markdown => print_period_prediction_plan_markdown(&plan),
+fn print_period_prediction_plan(
+    period: Option<usize>,
+    all: bool,
+    format: OutputFormat,
+) -> Result<()> {
+    if all {
+        let plans = build_all_period_prediction_plans()?;
+        match format {
+            OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&plans)?),
+            OutputFormat::Markdown => print_period_prediction_plan_set_markdown(&plans),
+        }
+    } else {
+        let period = period.ok_or_else(|| {
+            anyhow::anyhow!("period-prediction-plan requires --period <N> or --all")
+        })?;
+        let plan = build_period_prediction_plan(period)?;
+        match format {
+            OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&plan)?),
+            OutputFormat::Markdown => print_period_prediction_plan_markdown(&plan),
+        }
     }
     Ok(())
+}
+
+fn print_period_prediction_plan_set_markdown(plans: &PeriodPredictionPlanSet) {
+    println!("# Period Prediction Plan Set\n");
+    println!("This is not a claimed solution.\n");
+    println!("periods: {}", plans.period_count);
+    println!("promoted: {}", plans.promoted_candidate);
+    println!("note: {}\n", plans.note);
+    for plan in &plans.plans {
+        print_period_prediction_plan_markdown(plan);
+        println!();
+    }
 }
 
 fn print_period_prediction_plan_markdown(plan: &PeriodPredictionPlan) {

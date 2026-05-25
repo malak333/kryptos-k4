@@ -4,12 +4,12 @@
   "hypothesis_family": "position-period-prediction",
   "evidence_kind": "independent-prediction-target",
   "source_ids": [],
-  "rationale": "Test whether a predeclared position-period rule predicts held-out K4 position classes before any key-material expansion or fragment-score tuning.",
-  "prediction_target": "Before scoring any candidate words, choose one period from {2,3,4,5,7,8,13} using only the predeclared rule, then predict which non-anchor K4 position residues should share the same derived key-value class.",
+  "rationale": "Test whether predeclared position-period rules predict held-out K4 position classes before any key-material expansion or fragment-score tuning.",
+  "prediction_target": "Before scoring any candidate words, emit non-anchor residue-class targets for each registered period in {2,3,4,5,7,8,13}; future independent evidence must use a best-of-period control unless a single period is independently justified first.",
   "discovery_inputs": [
     "Predeclared period registry from structural-models",
     "K4 absolute position numbers only",
-    "Residue classes selected before observing new score output"
+    "Residue classes emitted before observing new score output"
   ],
   "evaluation_inputs": [
     "Withheld non-anchor K4 position residue classes",

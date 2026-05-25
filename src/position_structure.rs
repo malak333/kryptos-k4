@@ -126,6 +126,14 @@ pub struct PeriodPredictionPlan {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct PeriodPredictionPlanSet {
+    pub period_count: usize,
+    pub plans: Vec<PeriodPredictionPlan>,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct PeriodResiduePrediction {
     pub residue: usize,
     pub position_count: usize,
@@ -331,6 +339,20 @@ pub fn build_period_prediction_plan(period: usize) -> Result<PeriodPredictionPla
         source_inputs: "K4 ciphertext length and public anchor positions only; no fragment values, candidate words, or public anchor-derived key fragments are scored.",
         prediction_rule: "Group every non-anchor K4 position by zero-based position modulo the registered period; future independent evidence must be evaluated against these residue classes without retuning.",
         note: "Period prediction plan only; this emits a predeclared target for future independent evidence and is not a decryption claim.",
+    })
+}
+
+pub fn build_all_period_prediction_plans() -> Result<PeriodPredictionPlanSet> {
+    let plans: Vec<PeriodPredictionPlan> = registered_structural_models()
+        .iter()
+        .map(|model| build_period_prediction_plan(model.period))
+        .collect::<Result<Vec<_>>>()?;
+
+    Ok(PeriodPredictionPlanSet {
+        period_count: plans.len(),
+        plans,
+        promoted_candidate: false,
+        note: "All-period prediction plan set only; future independent evidence must control the best-of-period search surface before any interpretation.",
     })
 }
 
@@ -809,6 +831,20 @@ mod tests {
                     *position >= anchor.start_one_based()
                         && *position <= anchor.end_one_based_inclusive()
                 }))
+        );
+    }
+
+    #[test]
+    fn all_period_prediction_plans_cover_registered_periods() {
+        let run = build_all_period_prediction_plans().unwrap();
+
+        assert_eq!(run.period_count, registered_structural_models().len());
+        assert!(!run.promoted_candidate);
+        assert_eq!(run.plans.len(), run.period_count);
+        assert!(
+            run.plans
+                .iter()
+                .all(|plan| plan.non_anchor_position_count == K4_CIPHERTEXT.len() - 24)
         );
     }
 }
