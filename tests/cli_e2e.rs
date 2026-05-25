@@ -2010,6 +2010,7 @@ fn release_check_json_exposes_all_local_preflight_gates() {
         "lockfile-present",
         "markdown-report-present",
         "findings-source-inputs-valid",
+        "position-observation-template-guarded",
         "source-packet-registry-aligned",
         "no-plaintext-leakage-markers",
     ] {

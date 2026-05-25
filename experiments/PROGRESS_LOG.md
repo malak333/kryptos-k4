@@ -68,6 +68,8 @@ Result summary:
 - prediction artifact validation: `valid: true`, `expected_period_count: 7`,
   `artifact_period_count: 7`, `promoted_candidate: false`
 - release-check JSON: every local preflight check reports `passed: true`
+- release-check now includes `position-observation-template-guarded`, requiring
+  the observation template to stay intentionally non-scorable
 - release-check now includes `findings-source-inputs-valid`, requiring each
   findings ledger input to resolve to a registered source, committed file, or
   known local command reference

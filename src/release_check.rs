@@ -30,7 +30,7 @@ const REQUIRED_RELEASE_FILES: [(&str, &str); 10] = [
 const REQUIRED_GENERATED_REPORTS: [(&str, &str); 1] =
     [("markdown-report-present", "notes/k4-report.md")];
 
-const REQUIRED_REPORT_MARKERS: [&str; 7] = [
+const REQUIRED_REPORT_MARKERS: [&str; 8] = [
     "`validate-prediction-artifact`",
     "`validate-period-observations`",
     "`evaluate-period-prediction`",
@@ -38,6 +38,7 @@ const REQUIRED_REPORT_MARKERS: [&str; 7] = [
     "evidence-free prediction target",
     "`position-structure`",
     "findings-source-inputs-valid",
+    "position-observation-template-guarded",
 ];
 
 const PLAINTEXT_LEAKAGE_SCAN_FILES: [&str; 4] = [
@@ -111,6 +112,7 @@ fn run_release_checks_inner(
     checks.push(check_candidate_registry_alignment(repo_root));
     checks.push(check_preregistrations_validate(repo_root));
     checks.push(check_prediction_artifacts_validate(repo_root));
+    checks.push(check_position_observation_template_guarded(repo_root));
     checks.push(check_findings_source_inputs_validate(repo_root));
     checks.push(check_source_packet_latest_access_date(repo_root));
     checks.push(check_source_packet_registry_alignment(repo_root));
@@ -277,6 +279,81 @@ fn check_prediction_artifacts_validate(repo_root: &Path) -> ReleaseCheck {
             format!(
                 "Committed prediction artifacts failed validation. path={}; mismatches={}",
                 repo_root.join("experiments/predictions").display(),
+                mismatches.join(", ")
+            )
+        },
+    }
+}
+
+fn check_position_observation_template_guarded(repo_root: &Path) -> ReleaseCheck {
+    let template_path = repo_root.join("experiments/position-observations-template.json");
+    let input = match fs::read_to_string(&template_path) {
+        Ok(input) => input,
+        Err(error) => {
+            return ReleaseCheck {
+                name: "position-observation-template-guarded",
+                passed: false,
+                detail: format!(
+                    "Position observation template could not be read. path={}; error={error}",
+                    template_path.display()
+                ),
+            };
+        }
+    };
+
+    let mut mismatches = Vec::new();
+    match serde_json::from_str::<serde_json::Value>(&input) {
+        Ok(value) => {
+            if !value
+                .get("id")
+                .and_then(serde_json::Value::as_str)
+                .is_some_and(|id| id.contains("replace-with"))
+            {
+                mismatches.push("id must remain a replace-with placeholder".to_string());
+            }
+            if !value
+                .get("source_ids")
+                .and_then(serde_json::Value::as_array)
+                .is_some_and(|source_ids| {
+                    source_ids.iter().any(|source_id| {
+                        source_id
+                            .as_str()
+                            .is_some_and(|source_id| source_id.contains("replace-with"))
+                    })
+                })
+            {
+                mismatches.push("source_ids must include a replace-with placeholder".to_string());
+            }
+            if !value
+                .get("rationale")
+                .and_then(serde_json::Value::as_str)
+                .is_some_and(|rationale| rationale.contains("Explain why"))
+            {
+                mismatches.push("rationale must remain explanatory placeholder text".to_string());
+            }
+            if !value
+                .get("positions_one_based")
+                .and_then(serde_json::Value::as_array)
+                .is_some_and(|positions| positions.is_empty())
+            {
+                mismatches.push("positions_one_based must remain empty".to_string());
+            }
+        }
+        Err(error) => mismatches.push(format!("template is not valid JSON: {error}")),
+    }
+
+    ReleaseCheck {
+        name: "position-observation-template-guarded",
+        passed: mismatches.is_empty(),
+        detail: if mismatches.is_empty() {
+            format!(
+                "Position observation template remains intentionally non-scorable. path={}",
+                template_path.display()
+            )
+        } else {
+            format!(
+                "Position observation template can no longer prove its non-scorable guard. path={}; mismatches={}",
+                template_path.display(),
                 mismatches.join(", ")
             )
         },
@@ -728,6 +805,24 @@ mod tests {
         assert!(run_release_checks(temp.path()).is_err());
     }
 
+    #[test]
+    fn release_checks_fail_when_observation_template_can_be_scored() {
+        let temp = release_ready_temp_dir();
+        fs::write(
+            temp.path()
+                .join("experiments/position-observations-template.json"),
+            r#"{
+  "id": "scorable-template",
+  "source_ids": ["cia-artifact"],
+  "positions_one_based": [1, 4, 7],
+  "rationale": "Accidentally populated template."
+}"#,
+        )
+        .unwrap();
+
+        assert!(run_release_checks(temp.path()).is_err());
+    }
+
     fn release_ready_temp_dir() -> TempDir {
         let temp = TempDir::new().unwrap();
         for directory in [
@@ -762,6 +857,12 @@ mod tests {
             temp.path()
                 .join("experiments/preregistrations/non-anchor-position-period-v1.json"),
             preregistration_fixture(),
+        )
+        .unwrap();
+        fs::write(
+            temp.path()
+                .join("experiments/position-observations-template.json"),
+            position_observation_template_fixture(),
         )
         .unwrap();
         fs::write(
@@ -843,6 +944,18 @@ mod tests {
   ],
   "uses_public_anchor_fragments_for_discovery": false,
   "uses_public_anchor_fragments_as_primary_evidence": false
+}"#
+        .to_string()
+    }
+
+    fn position_observation_template_fixture() -> String {
+        r#"{
+  "id": "replace-with-observation-id",
+  "source_ids": [
+    "replace-with-registered-source-id"
+  ],
+  "positions_one_based": [],
+  "rationale": "Explain why these are independent non-anchor K4 positions before evaluating them."
 }"#
         .to_string()
     }
