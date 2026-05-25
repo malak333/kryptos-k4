@@ -100,13 +100,22 @@ unregistered source IDs, duplicate positions, and positions outside the
 committed non-anchor prediction artifact. It also rejects unchanged template
 placeholder text and carries observation rationale into validation/evaluation
 output. Pass `--preregistration` to validate the committed prediction artifact
-and observation file in one pre-score gate.
+and observation file in one pre-score gate; the same preregistration guard is
+available on `evaluate-period-prediction` before scoring.
 
 Concrete follow-up lane registered:
 `experiments/preregistrations/non-anchor-position-period-followup-v1.json`
 predeclares future independent non-anchor position observations as the
 evaluation surface. It intentionally has no source IDs and validates only as a
 pure independent prediction target.
+
+Template-derived diagnostic lane populated:
+`experiments/preregistrations/new-lane-id.json` now carries the stable lane id
+`non-anchor-position-period-diagnostic-v1` and declares the committed target
+artifact `experiments/predictions/non-anchor-position-period-diagnostic-v1.json`.
+Both `validate-preregistration` and `validate-prediction-artifact` pass. This is
+still only a pre-score independent target; it contributes no evidence until a
+source-backed non-anchor observation file is added.
 
 ## Existing Completed 100k Controls
 

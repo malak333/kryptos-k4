@@ -45,7 +45,7 @@ cargo run -- period-prediction-plan --all
 cargo run -- period-prediction-plan --all --format json
 cargo run -- evaluate-period-prediction --artifact experiments/predictions/non-anchor-position-period-v1.json --positions 1,4,7 --iterations 1000 --seed 67
 cargo run -- validate-period-observations --artifact experiments/predictions/non-anchor-position-period-v1.json --preregistration experiments/preregistrations/non-anchor-position-period-v1.json --input <source-backed-observations.json>
-cargo run -- evaluate-period-prediction --artifact experiments/predictions/non-anchor-position-period-v1.json --positions-file <source-backed-observations.json> --iterations 1000 --seed 67
+cargo run -- evaluate-period-prediction --artifact experiments/predictions/non-anchor-position-period-v1.json --preregistration experiments/preregistrations/non-anchor-position-period-v1.json --positions-file <source-backed-observations.json> --iterations 1000 --seed 67
 cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --top 20
 cargo run -- baseline --target spans --iterations 1000 --seed 42
 cargo run -- baseline --target spans --iterations 1000 --seed 42 --format json
@@ -133,7 +133,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `validate-prediction-artifact` | Gate for committed independent prediction artifacts; checks the preregistration and deterministic generator output still match. |
 | `validate-period-observations` | Gate for source-backed independent position observations; can also validate the prediction artifact preregistration, and rejects unregistered source IDs, duplicates, and public-anchor positions before scoring. |
 | `period-prediction-plan` | Emits non-anchor K4 position residue classes for one or all registered periods without scoring fragment values or candidate material. |
-| `evaluate-period-prediction` | Scores independently supplied one-based non-anchor positions against a committed period prediction artifact with a best-of-period null control; accepts quick `--positions` input or a source-backed `--positions-file` JSON record. |
+| `evaluate-period-prediction` | Scores independently supplied one-based non-anchor positions against a committed period prediction artifact with a best-of-period null control; accepts quick `--positions` input or a source-backed `--positions-file` JSON record, with optional artifact preregistration validation. |
 | `summarize-key-runs` | Historical scanner for batch result folders, ranking individual runs and per-candidate p-value stability. |
 | `baseline` | Seeded false-positive controls for the generic recurrence screen. |
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |

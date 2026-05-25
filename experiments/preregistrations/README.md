@@ -39,6 +39,7 @@ before running:
 ```bash
 cargo run --locked -- evaluate-period-prediction \
   --artifact experiments/predictions/non-anchor-position-period-v1.json \
+  --preregistration experiments/preregistrations/non-anchor-position-period-v1.json \
   --positions-file <source-backed-observations.json>
 ```
 
@@ -53,6 +54,16 @@ cargo run --locked -- validate-period-observations \
 
 The template intentionally fails validation until every `replace-with...` field
 and the explanatory rationale are replaced.
+
+Current independent period lanes:
+
+- `non-anchor-position-period-v1.json` with committed artifact
+  `experiments/predictions/non-anchor-position-period-v1.json`
+- `non-anchor-position-period-followup-v1.json` for future source-backed
+  non-anchor observations
+- `new-lane-id.json`, now populated as `non-anchor-position-period-diagnostic-v1`,
+  with committed artifact
+  `experiments/predictions/non-anchor-position-period-diagnostic-v1.json`
 
 Required JSON fields:
 

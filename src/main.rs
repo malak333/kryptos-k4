@@ -294,6 +294,9 @@ enum Command {
         /// JSON artifact emitted by period-prediction-plan --all --format json.
         #[arg(long)]
         artifact: PathBuf,
+        /// Optional preregistration file used to validate the prediction artifact before scoring.
+        #[arg(long)]
+        preregistration: Option<PathBuf>,
         /// Comma-separated one-based K4 positions to evaluate. Positions must be non-anchor positions.
         #[arg(
             long,
@@ -786,6 +789,7 @@ fn main() -> Result<()> {
         } => print_period_prediction_plan(period, all, format)?,
         Command::EvaluatePeriodPrediction {
             artifact,
+            preregistration,
             positions,
             positions_file,
             iterations,
@@ -793,6 +797,7 @@ fn main() -> Result<()> {
             format,
         } => print_evaluate_period_prediction(
             artifact,
+            preregistration,
             positions,
             positions_file,
             iterations,
@@ -2128,12 +2133,27 @@ fn print_period_prediction_plan_markdown(plan: &PeriodPredictionPlan) {
 
 fn print_evaluate_period_prediction(
     artifact: PathBuf,
+    preregistration: Option<PathBuf>,
     positions: Option<String>,
     positions_file: Option<PathBuf>,
     iterations: usize,
     seed: u64,
     format: OutputFormat,
 ) -> Result<()> {
+    if let Some(preregistration) = preregistration {
+        let artifact_validation = validate_prediction_artifact(&preregistration)?;
+        if artifact_validation.artifact_path != artifact.display().to_string() {
+            anyhow::bail!(
+                "artifact `{}` does not match preregistration artifact `{}`",
+                artifact.display(),
+                artifact_validation.artifact_path
+            );
+        }
+        if !artifact_validation.valid {
+            anyhow::bail!("prediction artifact failed validation");
+        }
+    }
+
     let observation_input = match (positions, positions_file) {
         (Some(positions), None) => PeriodPredictionObservationInput {
             id: None,

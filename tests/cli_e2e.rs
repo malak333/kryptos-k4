@@ -1235,12 +1235,6 @@ fn period_prediction_plan_all_emits_registered_period_set() {
 
 #[test]
 fn committed_period_prediction_artifact_matches_cli_output() {
-    let fixture: Value = serde_json::from_str(
-        &std::fs::read_to_string("experiments/predictions/non-anchor-position-period-v1.json")
-            .unwrap(),
-    )
-    .unwrap();
-
     let output = Command::cargo_bin("kryptos-k4")
         .unwrap()
         .args(["period-prediction-plan", "--all", "--format", "json"])
@@ -1251,14 +1245,21 @@ fn committed_period_prediction_artifact_matches_cli_output() {
         .clone();
     let generated: Value = serde_json::from_slice(&output).unwrap();
 
-    assert_eq!(fixture, generated);
-    assert_eq!(fixture["period_count"], 7);
-    assert_eq!(fixture["promoted_candidate"], false);
-    assert!(fixture["plans"].as_array().unwrap().iter().all(
-        |plan| plan["non_anchor_position_count"] == 73
-            && plan["anchor_position_count"] == 24
-            && plan["promoted_candidate"] == false
-    ));
+    for path in [
+        "experiments/predictions/non-anchor-position-period-v1.json",
+        "experiments/predictions/non-anchor-position-period-diagnostic-v1.json",
+    ] {
+        let fixture: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+
+        assert_eq!(fixture, generated, "{path} is stale");
+        assert_eq!(fixture["period_count"], 7);
+        assert_eq!(fixture["promoted_candidate"], false);
+        assert!(fixture["plans"].as_array().unwrap().iter().all(
+            |plan| plan["non_anchor_position_count"] == 73
+                && plan["anchor_position_count"] == 24
+                && plan["promoted_candidate"] == false
+        ));
+    }
 }
 
 #[test]
@@ -1375,20 +1376,25 @@ fn validate_preregistration_rejects_unchanged_template() {
 
 #[test]
 fn validate_prediction_artifact_checks_committed_independent_target() {
-    Command::cargo_bin("kryptos-k4")
-        .unwrap()
-        .args([
-            "validate-prediction-artifact",
-            "--preregistration",
-            "experiments/preregistrations/non-anchor-position-period-v1.json",
-        ])
-        .assert()
-        .success()
-        .stdout(predicate::str::contains("Prediction Artifact Validation"))
-        .stdout(predicate::str::contains("valid: true"))
-        .stdout(predicate::str::contains("expected periods: 7"))
-        .stdout(predicate::str::contains("artifact periods: 7"))
-        .stdout(predicate::str::contains("promoted: false"));
+    for preregistration in [
+        "experiments/preregistrations/non-anchor-position-period-v1.json",
+        "experiments/preregistrations/new-lane-id.json",
+    ] {
+        Command::cargo_bin("kryptos-k4")
+            .unwrap()
+            .args([
+                "validate-prediction-artifact",
+                "--preregistration",
+                preregistration,
+            ])
+            .assert()
+            .success()
+            .stdout(predicate::str::contains("Prediction Artifact Validation"))
+            .stdout(predicate::str::contains("valid: true"))
+            .stdout(predicate::str::contains("expected periods: 7"))
+            .stdout(predicate::str::contains("artifact periods: 7"))
+            .stdout(predicate::str::contains("promoted: false"));
+    }
 
     let output = Command::cargo_bin("kryptos-k4")
         .unwrap()
@@ -1483,6 +1489,8 @@ fn evaluate_period_prediction_accepts_source_backed_position_file() {
             "evaluate-period-prediction",
             "--artifact",
             "experiments/predictions/non-anchor-position-period-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-period-v1.json",
             "--positions-file",
             observations_path.to_str().unwrap(),
             "--iterations",
