@@ -28,6 +28,7 @@ This report uses public anchors only and is not a claimed solution. Production r
 | `validate-prediction-artifact` | Gate confirming committed independent prediction artifacts still match their preregistration and deterministic generator in Markdown or JSON. |
 | `validate-period-observations` | Gate for source-backed independent position observations, source allowed-use compatibility, and optional prediction-artifact preregistration validation before period prediction scoring in Markdown or JSON. |
 | `period-prediction-plan` | Non-anchor residue-class target emission for a registered period, without scoring public fragment values, in Markdown or JSON. |
+| `spacing-prediction-plan` | Non-anchor spacing residue-class target emission for registered moduli, without scoring fragment values or candidate words, in Markdown or JSON. |
 | `evaluate-period-prediction` | Independent-position evaluator for committed period prediction artifacts with best-of-period null controls, diagnostic/source-backed observation status, source-backed observation-file input that requires preregistration-backed artifact validation, and Markdown/JSON output. |
 | `baseline` | Seeded false-positive controls for anchors and spans across all supported alphabets in Markdown or JSON. |
 | `hypotheses` | Ranked source-grounded hypotheses with facts, assumptions, falsification tests, and risks in Markdown or JSON. |
@@ -785,6 +786,14 @@ Findings are reproducible research observations, not promoted solution claims.
   - Interpretation: Future evidence can be audited by tools before scoring, but the gate result itself provides no plaintext and promotes no candidate.
   - Next test: Before any new non-anchor observation is scored, run the JSON preregistration, prediction-artifact, observation, evaluation, and release gates and archive the exact outputs.
   - Promoted: false
+- **F8 Source-backed observation scoring requires preregistration (H3)**
+  - Sources: `src/main.rs`, `src/position_structure.rs`, `tests/cli_e2e.rs`, `experiments/PROGRESS_LOG.md`
+  - Steps: mark direct evaluate-period-prediction --positions input as diagnostic; require --preregistration when evaluate-period-prediction scores a --positions-file; validate the committed prediction artifact before source-backed observations are scored
+  - Output: Ad hoc position lists now emit a diagnostic warning, while source-backed observation files require preregistration-backed artifact validation before scoring.
+  - Baseline: This is an evidence-boundary guard rather than a positive statistical signal; it prevents stale artifacts or ad hoc position lists from being interpreted as independent support.
+  - Interpretation: The period-prediction workflow is stricter, but no new K4 plaintext, key material, or promoted candidate is produced.
+  - Next test: When a real non-anchor observation file exists, validate its preregistration and artifact, run validate-period-observations, then evaluate-period-prediction with --positions-file and archive the JSON outputs.
+  - Promoted: false
 
 ## Release Check
 
@@ -804,10 +813,10 @@ Local preflight only. This repo does not use GitHub Actions.
 - lockfile-present: true (Required release file must be present. path=/Users/michaelnobile/Antigravity/Ciphers/Cargo.lock)
 - markdown-report-present: true (Generated release report must be present. path=/Users/michaelnobile/Antigravity/Ciphers/notes/k4-report.md)
 - candidate-registry-aligned: true (Candidate CSV rows are represented in the candidate registry with source IDs and rationale. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/k4-candidates.csv; registry_path=/Users/michaelnobile/Antigravity/Ciphers/experiments/k4-candidates.md)
-- preregistrations-valid: true (Committed non-template preregistrations validate. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/preregistrations; checked=4)
-- prediction-artifacts-valid: true (Committed prediction artifacts match their preregistrations and deterministic generators. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/predictions; checked=3)
+- preregistrations-valid: true (Committed non-template preregistrations validate. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/preregistrations; checked=5)
+- prediction-artifacts-valid: true (Committed prediction artifacts match their preregistrations and deterministic generators. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/predictions; checked=4)
 - position-observation-template-guarded: true (Position observation template remains intentionally non-scorable. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/position-observations-template.json)
-- findings-source-inputs-valid: true (Findings source inputs resolve to registered sources, committed files, or known local command references. path=/Users/michaelnobile/Antigravity/Ciphers/src/findings.rs; checked=7)
+- findings-source-inputs-valid: true (Findings source inputs resolve to registered sources, committed files, or known local command references. path=/Users/michaelnobile/Antigravity/Ciphers/src/findings.rs; checked=8)
 - source-packet-latest-access-date: true (Source packet includes latest registered source access date. path=/Users/michaelnobile/Antigravity/Ciphers/sources/source-packet.md; latest_access_date=2026-05-25)
 - source-packet-registry-aligned: true (Source packet matches every registered source ID, URL, type, and allowed-use boundary. path=/Users/michaelnobile/Antigravity/Ciphers/sources/source-packet.md)
 - no-plaintext-leakage-markers: true (No leaked/full-plaintext sentinel markers found in release-facing files.)

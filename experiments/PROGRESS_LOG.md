@@ -97,6 +97,10 @@ Interpretation: the command remains useful for quick mechanics checks, but
 future evidence-bearing period evaluations should come from validated
 observation files with registered source IDs and rationale.
 
+Follow-up documentation update: this guard is now represented in the findings
+ledger as `F8`, so the generated report records source-backed observation
+scoring as a reproducibility boundary rather than a cryptanalytic result.
+
 ## 2026-05-25: Preregistration Gate
 
 Command:
@@ -224,6 +228,15 @@ declares the committed target artifact
 `validate-preregistration` and `validate-prediction-artifact` pass. This is
 still only a pre-score independent target; it contributes no evidence until a
 source-backed non-anchor observation file is added.
+
+Independent spacing lane registered:
+`experiments/preregistrations/non-anchor-position-spacing-v1.json` predeclares
+a position-only spacing/delta residue target before any candidate-word,
+route, or fragment-value scoring. The deterministic artifact
+`experiments/predictions/non-anchor-position-spacing-v1.json` is emitted by
+`spacing-prediction-plan --format json`; both preregistration and artifact
+validation pass. This lane is a future-evidence target only, not a K4 solve or
+promotion claim.
 
 2026 archive-research context registered:
 `kryptosbot-sanborn-papers-2026` was added to the source registry after checking

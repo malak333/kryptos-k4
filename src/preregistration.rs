@@ -1,4 +1,4 @@
-use crate::{build_all_period_prediction_plans, sources};
+use crate::{build_all_period_prediction_plans, build_all_spacing_prediction_plans, sources};
 use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
@@ -43,10 +43,13 @@ pub struct PreregistrationValidation {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
 pub struct PredictionArtifactValidation {
     pub preregistration_id: String,
+    pub artifact_kind: String,
     pub artifact_path: String,
     pub valid: bool,
     pub errors: Vec<String>,
     pub warnings: Vec<String>,
+    pub expected_plan_count: usize,
+    pub artifact_plan_count: Option<usize>,
     pub expected_period_count: usize,
     pub artifact_period_count: Option<usize>,
     pub promoted_candidate: bool,
@@ -244,12 +247,21 @@ pub fn validate_prediction_artifact_with_repo_root(
     let input = std::fs::read_to_string(preregistration_path)?;
     let registration: LanePreregistration = serde_json::from_str(&input)?;
     let preregistration_validation = validate_preregistration(&input)?;
-    let expected = build_all_period_prediction_plans()?;
-    let expected_value = serde_json::to_value(&expected)?;
+    let artifact_kind = prediction_artifact_kind(&registration);
+    let expected_value = match artifact_kind {
+        "spacing" => serde_json::to_value(build_all_spacing_prediction_plans()?)?,
+        _ => serde_json::to_value(build_all_period_prediction_plans()?)?,
+    };
+    let expected_plan_count = expected_value
+        .get("plans")
+        .and_then(serde_json::Value::as_array)
+        .map_or(0, Vec::len);
+    let expected_period_count = plan_set_count(&expected_value).unwrap_or(0);
     let mut errors = preregistration_validation.errors;
     let warnings = preregistration_validation.warnings;
 
     let artifact_path = registration.prediction_artifact.clone().unwrap_or_default();
+    let mut artifact_plan_count = None;
     let mut artifact_period_count = None;
     if artifact_path.trim().is_empty() {
         errors.push("preregistration does not declare prediction_artifact".to_string());
@@ -258,15 +270,15 @@ pub fn validate_prediction_artifact_with_repo_root(
         match std::fs::read_to_string(&resolved_artifact_path) {
             Ok(artifact) => match serde_json::from_str::<serde_json::Value>(&artifact) {
                 Ok(artifact_value) => {
-                    artifact_period_count = artifact_value
-                        .get("period_count")
-                        .and_then(serde_json::Value::as_u64)
-                        .map(|value| value as usize);
+                    artifact_plan_count = artifact_value
+                        .get("plans")
+                        .and_then(serde_json::Value::as_array)
+                        .map(Vec::len);
+                    artifact_period_count = plan_set_count(&artifact_value);
                     if artifact_value != expected_value {
-                        errors.push(
-                            "prediction artifact does not match deterministic all-period prediction plan output"
-                                .to_string(),
-                        );
+                        errors.push(format!(
+                            "prediction artifact does not match deterministic {artifact_kind} prediction plan output"
+                        ));
                     }
                 }
                 Err(error) => {
@@ -281,15 +293,43 @@ pub fn validate_prediction_artifact_with_repo_root(
 
     Ok(PredictionArtifactValidation {
         preregistration_id: registration.id,
+        artifact_kind: artifact_kind.to_string(),
         artifact_path,
         valid: errors.is_empty(),
         errors,
         warnings,
-        expected_period_count: expected.period_count,
+        expected_plan_count,
+        artifact_plan_count,
+        expected_period_count,
         artifact_period_count,
         promoted_candidate: false,
         note: "Prediction artifact validation checks a committed independent target against its preregistration and deterministic generator; it is not a claimed solution.",
     })
+}
+
+fn prediction_artifact_kind(registration: &LanePreregistration) -> &'static str {
+    if registration.hypothesis_family == "position-spacing-prediction"
+        || registration
+            .prediction_artifact
+            .as_deref()
+            .is_some_and(|path| path.contains("spacing"))
+    {
+        "spacing"
+    } else {
+        "period"
+    }
+}
+
+fn plan_set_count(value: &serde_json::Value) -> Option<usize> {
+    value
+        .get("period_count")
+        .and_then(serde_json::Value::as_u64)
+        .or_else(|| {
+            value
+                .get("modulus_count")
+                .and_then(serde_json::Value::as_u64)
+        })
+        .map(|value| value as usize)
 }
 
 fn resolve_repo_relative_path(repo_root: &Path, path: &str) -> std::path::PathBuf {

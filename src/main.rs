@@ -9,11 +9,11 @@ use kryptos_k4::{
     RoutedBatchKeyMaterialRun, StructuralModelRun, analyze_constraints,
     analyze_known_plaintext_spans, batch_test_key_material_with_batch_baseline,
     batch_test_routed_key_material, build_all_period_prediction_plans,
-    build_period_prediction_plan, build_report, candidate_sequences,
-    evaluate_period_prediction_positions, explain_key_material, findings, heldout_key_control,
-    hypotheses, known_anchors, load_and_validate_preregistration, render_report, run_baseline,
-    run_position_structure_control, run_release_checks, run_route_experiments,
-    run_structural_model_control, score_candidate_sequences, sources,
+    build_all_spacing_prediction_plans, build_period_prediction_plan, build_report,
+    candidate_sequences, evaluate_period_prediction_positions, explain_key_material, findings,
+    heldout_key_control, hypotheses, known_anchors, load_and_validate_preregistration,
+    render_report, run_baseline, run_position_structure_control, run_release_checks,
+    run_route_experiments, run_structural_model_control, score_candidate_sequences, sources,
     summarize_batch_key_material_runs, sweep_key_material_offsets_with_baseline, test_key_material,
     validate_prediction_artifact, validation_exit_result,
 };
@@ -299,6 +299,12 @@ enum Command {
         /// Emit plans for every registered period and require future best-of-period controls.
         #[arg(long)]
         all: bool,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Emit predeclared non-anchor spacing residue targets for future independent evidence.
+    SpacingPredictionPlan {
         /// Output format.
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
@@ -826,6 +832,7 @@ fn main() -> Result<()> {
             all,
             format,
         } => print_period_prediction_plan(period, all, format)?,
+        Command::SpacingPredictionPlan { format } => print_spacing_prediction_plan(format)?,
         Command::EvaluatePeriodPrediction {
             artifact,
             preregistration,
@@ -1942,8 +1949,14 @@ fn print_prediction_artifact_validation(validation: &PredictionArtifactValidatio
     println!("# Prediction Artifact Validation\n");
     println!("This is not a claimed solution.\n");
     println!("id: `{}`", validation.preregistration_id);
+    println!("artifact kind: {}", validation.artifact_kind);
     println!("artifact: `{}`", validation.artifact_path);
     println!("valid: {}", validation.valid);
+    println!("expected plans: {}", validation.expected_plan_count);
+    match validation.artifact_plan_count {
+        Some(plan_count) => println!("artifact plans: {plan_count}"),
+        None => println!("artifact plans: unavailable"),
+    }
     println!("expected periods: {}", validation.expected_period_count);
     match validation.artifact_period_count {
         Some(period_count) => println!("artifact periods: {period_count}"),
@@ -2162,6 +2175,48 @@ fn print_period_prediction_plan_markdown(plan: &PeriodPredictionPlan) {
             residue.residue, residue.position_count, positions
         );
     }
+}
+
+fn print_spacing_prediction_plan(format: OutputFormat) -> Result<()> {
+    let plans = build_all_spacing_prediction_plans()?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&plans)?),
+        OutputFormat::Markdown => {
+            println!("# Spacing Prediction Plan Set\n");
+            println!("This is not a claimed solution.\n");
+            println!("moduli: {}", plans.modulus_count);
+            println!("promoted: {}", plans.promoted_candidate);
+            println!("note: {}\n", plans.note);
+            for plan in &plans.plans {
+                println!("## Modulus {}\n", plan.modulus);
+                println!("non-anchor positions: {}", plan.non_anchor_position_count);
+                println!(
+                    "public-anchor positions excluded: {}",
+                    plan.anchor_position_count
+                );
+                println!("promoted: {}", plan.promoted_candidate);
+                println!("source inputs: {}", plan.source_inputs);
+                println!("prediction rule: {}", plan.prediction_rule);
+                println!("note: {}\n", plan.note);
+                println!("| Residue | Pair Count | Sample Pairs One-Based |");
+                println!("| --- | --- | --- |");
+                for residue in &plan.residues {
+                    let sample_pairs = residue
+                        .sample_pairs_one_based
+                        .iter()
+                        .map(|pair| format!("{}-{}", pair[0], pair[1]))
+                        .collect::<Vec<_>>()
+                        .join(", ");
+                    println!(
+                        "| {} | {} | {} |",
+                        residue.residue, residue.pair_count, sample_pairs
+                    );
+                }
+                println!();
+            }
+        }
+    }
+    Ok(())
 }
 
 fn print_evaluate_period_prediction(

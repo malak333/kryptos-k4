@@ -1333,6 +1333,41 @@ fn period_prediction_plan_all_emits_registered_period_set() {
 }
 
 #[test]
+fn spacing_prediction_plan_emits_registered_modulus_set() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["spacing-prediction-plan"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Spacing Prediction Plan Set"))
+        .stdout(predicate::str::contains("moduli: 7"))
+        .stdout(predicate::str::contains("future independent evidence"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["spacing-prediction-plan", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["modulus_count"], 7);
+    assert_eq!(json["promoted_candidate"], false);
+    assert_eq!(json["plans"].as_array().unwrap().len(), 7);
+    assert!(
+        json["plans"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|plan| plan["non_anchor_position_count"] == 73
+                && plan["anchor_position_count"] == 24
+                && plan["promoted_candidate"] == false)
+    );
+}
+
+#[test]
 fn committed_period_prediction_artifact_matches_cli_output() {
     let output = Command::cargo_bin("kryptos-k4")
         .unwrap()
@@ -1359,6 +1394,33 @@ fn committed_period_prediction_artifact_matches_cli_output() {
                 && plan["promoted_candidate"] == false
         ));
     }
+}
+
+#[test]
+fn committed_spacing_prediction_artifact_matches_cli_output() {
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["spacing-prediction-plan", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let generated: Value = serde_json::from_slice(&output).unwrap();
+    let fixture: Value = serde_json::from_str(
+        &std::fs::read_to_string("experiments/predictions/non-anchor-position-spacing-v1.json")
+            .unwrap(),
+    )
+    .unwrap();
+
+    assert_eq!(fixture, generated);
+    assert_eq!(fixture["modulus_count"], 7);
+    assert_eq!(fixture["promoted_candidate"], false);
+    assert!(fixture["plans"].as_array().unwrap().iter().all(
+        |plan| plan["non_anchor_position_count"] == 73
+            && plan["anchor_position_count"] == 24
+            && plan["promoted_candidate"] == false
+    ));
 }
 
 #[test]
@@ -1478,6 +1540,7 @@ fn validate_prediction_artifact_checks_committed_independent_target() {
     for preregistration in [
         "experiments/preregistrations/non-anchor-position-period-v1.json",
         "experiments/preregistrations/non-anchor-position-period-diagnostic-v1.json",
+        "experiments/preregistrations/non-anchor-position-spacing-v1.json",
     ] {
         Command::cargo_bin("kryptos-k4")
             .unwrap()

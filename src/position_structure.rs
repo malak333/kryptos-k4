@@ -140,6 +140,33 @@ pub struct PeriodResiduePrediction {
     pub positions_one_based: Vec<usize>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SpacingPredictionPlanSet {
+    pub modulus_count: usize,
+    pub plans: Vec<SpacingPredictionPlan>,
+    pub promoted_candidate: bool,
+    pub note: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SpacingPredictionPlan {
+    pub modulus: usize,
+    pub non_anchor_position_count: usize,
+    pub anchor_position_count: usize,
+    pub residues: Vec<SpacingResiduePrediction>,
+    pub promoted_candidate: bool,
+    pub source_inputs: String,
+    pub prediction_rule: String,
+    pub note: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct SpacingResiduePrediction {
+    pub residue: usize,
+    pub pair_count: usize,
+    pub sample_pairs_one_based: Vec<[usize; 2]>,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct PeriodPredictionEvaluation {
     pub artifact_path: String,
@@ -338,6 +365,20 @@ pub fn registered_structural_models() -> Vec<StructuralModel> {
     ]
 }
 
+fn anchor_position_set() -> HashSet<usize> {
+    known_anchors()
+        .iter()
+        .flat_map(|anchor| anchor.start_zero_based..=anchor.end_zero_based_inclusive)
+        .collect()
+}
+
+fn non_anchor_positions_one_based(anchor_positions: &HashSet<usize>) -> Vec<usize> {
+    (0..K4_CIPHERTEXT.len())
+        .filter(|position| !anchor_positions.contains(position))
+        .map(|position| position + 1)
+        .collect()
+}
+
 pub fn build_period_prediction_plan(period: usize) -> Result<PeriodPredictionPlan> {
     if !registered_structural_models()
         .iter()
@@ -346,10 +387,7 @@ pub fn build_period_prediction_plan(period: usize) -> Result<PeriodPredictionPla
         bail!("period must be one of the registered structural model periods");
     }
 
-    let anchor_positions: HashSet<usize> = known_anchors()
-        .iter()
-        .flat_map(|anchor| anchor.start_zero_based..=anchor.end_zero_based_inclusive)
-        .collect();
+    let anchor_positions = anchor_position_set();
     let non_anchor_positions: Vec<usize> = (0..K4_CIPHERTEXT.len())
         .filter(|position| !anchor_positions.contains(position))
         .collect();
@@ -393,6 +431,65 @@ pub fn build_all_period_prediction_plans() -> Result<PeriodPredictionPlanSet> {
         plans,
         promoted_candidate: false,
         note: "All-period prediction plan set only; future independent evidence must control the best-of-period search surface before any interpretation.".to_string(),
+    })
+}
+
+pub fn build_spacing_prediction_plan(modulus: usize) -> Result<SpacingPredictionPlan> {
+    if !registered_structural_models()
+        .iter()
+        .any(|model| model.period == modulus)
+    {
+        bail!("modulus must be one of the registered structural model periods");
+    }
+
+    let anchor_positions = anchor_position_set();
+    let non_anchor_positions = non_anchor_positions_one_based(&anchor_positions);
+    let mut residues: Vec<SpacingResiduePrediction> = (0..modulus)
+        .map(|residue| {
+            let mut pairs = Vec::new();
+            let mut sample_pairs_one_based = Vec::new();
+            for (left_index, left) in non_anchor_positions.iter().enumerate() {
+                for right in non_anchor_positions.iter().skip(left_index + 1) {
+                    if (right - left) % modulus == residue {
+                        pairs.push([*left, *right]);
+                        if sample_pairs_one_based.len() < 16 {
+                            sample_pairs_one_based.push([*left, *right]);
+                        }
+                    }
+                }
+            }
+            SpacingResiduePrediction {
+                residue,
+                pair_count: pairs.len(),
+                sample_pairs_one_based,
+            }
+        })
+        .collect();
+    residues.sort_by_key(|prediction| prediction.residue);
+
+    Ok(SpacingPredictionPlan {
+        modulus,
+        non_anchor_position_count: non_anchor_positions.len(),
+        anchor_position_count: anchor_positions.len(),
+        residues,
+        promoted_candidate: false,
+        source_inputs: "K4 ciphertext length and public anchor positions only; no fragment values, candidate words, routes, or public anchor-derived key fragments are scored.".to_string(),
+        prediction_rule: "Group every unordered pair of non-anchor K4 positions by one-based spacing modulo the registered modulus; future independent evidence must be evaluated against these spacing residue classes without retuning.".to_string(),
+        note: "Spacing prediction plan only; this emits a predeclared target for future independent evidence and is not a decryption claim.".to_string(),
+    })
+}
+
+pub fn build_all_spacing_prediction_plans() -> Result<SpacingPredictionPlanSet> {
+    let plans: Vec<SpacingPredictionPlan> = registered_structural_models()
+        .iter()
+        .map(|model| build_spacing_prediction_plan(model.period))
+        .collect::<Result<Vec<_>>>()?;
+
+    Ok(SpacingPredictionPlanSet {
+        modulus_count: plans.len(),
+        plans,
+        promoted_candidate: false,
+        note: "All-modulus spacing prediction plan set only; future independent evidence must control the best-of-modulus search surface before any interpretation.".to_string(),
     })
 }
 

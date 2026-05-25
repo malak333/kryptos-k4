@@ -144,6 +144,27 @@ pub fn findings() -> Vec<Finding> {
             next_test: "Before any new non-anchor observation is scored, run the JSON preregistration, prediction-artifact, observation, evaluation, and release gates and archive the exact outputs.",
             promoted_candidate: false,
         },
+        Finding {
+            id: "F8",
+            title: "Source-backed observation scoring requires preregistration",
+            related_hypothesis: "H3",
+            source_inputs: &[
+                "src/main.rs",
+                "src/position_structure.rs",
+                "tests/cli_e2e.rs",
+                "experiments/PROGRESS_LOG.md",
+            ],
+            transformation_steps: &[
+                "mark direct evaluate-period-prediction --positions input as diagnostic",
+                "require --preregistration when evaluate-period-prediction scores a --positions-file",
+                "validate the committed prediction artifact before source-backed observations are scored",
+            ],
+            output_summary: "Ad hoc position lists now emit a diagnostic warning, while source-backed observation files require preregistration-backed artifact validation before scoring.",
+            baseline_comparison: "This is an evidence-boundary guard rather than a positive statistical signal; it prevents stale artifacts or ad hoc position lists from being interpreted as independent support.",
+            interpretation: "The period-prediction workflow is stricter, but no new K4 plaintext, key material, or promoted candidate is produced.",
+            next_test: "When a real non-anchor observation file exists, validate its preregistration and artifact, run validate-period-observations, then evaluate-period-prediction with --positions-file and archive the JSON outputs.",
+            promoted_candidate: false,
+        },
     ]
 }
 
