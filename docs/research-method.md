@@ -91,3 +91,8 @@ registration: `validate-period-observations` rejects public-anchor summary,
 public-clue context, and archive-context-only sources as scored independent
 position evidence. Those sources can still document context or controls, but not
 the held-out target being scored.
+
+Public methodology-context sources can document why a search family is stopped
+or why a null control is required. They still do not supply plaintext,
+candidate rows, or scored observations unless a separate preregistration defines
+that evidence boundary before scoring.

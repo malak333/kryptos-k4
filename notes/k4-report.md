@@ -681,6 +681,7 @@ Baseline output is a false-positive control, not a claimed solution. Target: all
 - `ap-2025-auction` [Associated Press 2025 auction report](https://www.ap.org/news-highlights/spotlights/2025/kryptos-final-code-remains-unsolved-the-cia-sculptures-creator-is-auctioning-the-solution/) - Archive-discovery context and Sanborn decipherment distinction.; type: major-reporting; accessed 2026-05-20; use: archive-context-only
 - `ap-2025-archive-sale` [Associated Press 2025 archive sale follow-up](https://apnews.com/article/kryptos-jim-sanborn-auction-cia-secret-code-cb8ee8554ca473910cbd0592f8bdb350) - Archive sale outcome and context only; no archive-discovered plaintext content.; type: major-reporting; accessed 2026-05-20; use: archive-context-only
 - `kryptosbot-sanborn-papers-2026` [KryptosBot 2026 Sanborn papers research archive](https://kryptosbot.com/archive/) - Curated public notes from Smithsonian Sanborn papers research; context for future preregistration only, not scored plaintext or candidate evidence.; type: community-research-archive; accessed 2026-05-25; use: archive-context-only
+- `kryptosbot-methodology-2026` [KryptosBot 2026 methodology and eliminations](https://kryptosbot.com/methodology/) - Public reproducibility and elimination-scope context; not plaintext, not candidate evidence, and not scored observations.; type: community-research-methodology; accessed 2026-05-25; use: methodology-context
 
 ## Candidate Sequences
 

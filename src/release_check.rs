@@ -420,7 +420,10 @@ fn source_packet_allowed_use_matches(line: &str, allowed_use: &str) -> bool {
                 || line.contains("Public sculpture/chart/K4 context")
         }
         "public-anchor-summary" => line.contains("Public ciphertext and public clue summary"),
-        "methodology-context" => line.contains("Cryptodiagnosis context only"),
+        "methodology-context" => {
+            line.contains("Cryptodiagnosis context only")
+                || line.contains("Methodology context only")
+        }
         "public-clue-context" => line.contains("Public clue and Berlin World Clock context"),
         "archive-context-only" => {
             line.contains("Archive-sale context only")
@@ -716,7 +719,10 @@ mod tests {
                     }
                     "public-facts-only" => "Public sculpture/chart/K4 context",
                     "public-anchor-summary" => "Public ciphertext and public clue summary",
-                    "methodology-context" => "Cryptodiagnosis context only",
+                    "methodology-context" if source.id == "histocrypt-2021-bean" => {
+                        "Cryptodiagnosis context only"
+                    }
+                    "methodology-context" => "Methodology context only",
                     "public-clue-context" => "Public clue and Berlin World Clock context",
                     "archive-context-only" if source.id == "kryptosbot-sanborn-papers-2026" => {
                         "Archive-research context only"

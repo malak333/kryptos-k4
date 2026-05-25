@@ -15,6 +15,7 @@ This packet records the public sources used by the CLI data model. It intentiona
 | `ap-2025-auction` | major-reporting | https://www.ap.org/news-highlights/spotlights/2025/kryptos-final-code-remains-unsolved-the-cia-sculptures-creator-is-auctioning-the-solution/ | Not locally archived | Archive-sale context only | Records the public auction context and Sanborn's distinction between archive discovery and decipherment. |
 | `ap-2025-archive-sale` | major-reporting | https://apnews.com/article/kryptos-jim-sanborn-auction-cia-secret-code-cb8ee8554ca473910cbd0592f8bdb350 | Not locally archived | Archive-sale context only | Records the public sale outcome as historical context while excluding archive-discovered plaintext. |
 | `kryptosbot-sanborn-papers-2026` | community-research-archive | https://kryptosbot.com/archive/ | Not locally archived | Archive-research context only | Curated public notes from a 2026 Smithsonian Sanborn papers research visit; useful for future preregistration context only, not scored plaintext or candidate evidence. |
+| `kryptosbot-methodology-2026` | community-research-methodology | https://kryptosbot.com/methodology/ | Not locally archived | Methodology context only | Public reproducibility and elimination-scope context for avoiding repeated single-layer and uncorrected-search lanes; not plaintext, candidate evidence, or scored observations. |
 
 ## Boundary
 

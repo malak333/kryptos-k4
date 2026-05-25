@@ -45,6 +45,19 @@ Latest evidence is summarized in `experiments/PROGRESS_LOG.md`.
 Future structural work must define the model before looking at the public
 fragment-derived scores and must pass preregistration.
 
+## Simple Single-Layer And Uncorrected Search Lanes
+
+Status: stopped unless a preregistration narrows the search before scoring.
+
+Reason: the public methodology context now registered as
+`kryptosbot-methodology-2026` reinforces the existing local result: repeated
+single-layer, word-list, route, or uncorrected best-of-search runs are more
+likely to mine the search surface than produce independent evidence.
+
+Future work in this area must specify the cipher family, transform set,
+candidate source, scoring target, and multiple-comparison control before any
+new score is interpreted.
+
 ## Required Gate For New Lanes
 
 Before adding new candidates, transforms, routes, or structural tests, create a

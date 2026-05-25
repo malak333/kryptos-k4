@@ -3,6 +3,17 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-25: Methodology Context Source
+
+The public KryptosBot methodology page is now registered as
+`kryptosbot-methodology-2026` with `allowed_use = methodology-context`.
+
+Interpretation: this source can document why saturated single-layer,
+word-list, route, or uncorrected best-of-search lanes should not be rerun as
+evidence. It does not provide plaintext, candidate material, or scored
+observations. Any future use still needs a preregistered target and a null or
+multiple-comparison control before interpretation.
+
 ## 2026-05-25: Observation Source-Use Gate
 
 The period-observation path now rejects registered sources whose `allowed_use`

@@ -45,6 +45,7 @@ Excluded evidence:
 | Sanborn clarified in 2025 reporting that `BERLINCLOCK` refers to the Berlin World Clock. | Verified reporting | Scientific American |
 | AP reported Sanborn distinguished discovering archived text from deciphering the method/key. | Verified reporting | AP |
 | Richard Bean's HistoCrypt abstract reports statistical evidence for a one-to-one plaintext/ciphertext relationship and suggests Gromark as a possible method family. | Verified academic abstract | HistoCrypt 2021 |
+| Public KryptosBot methodology notes emphasize reproducibility, broad elimination of simple single-layer systems, and correction for repeated search surfaces. | Community methodology context | KryptosBot methodology |
 
 ## Source Timeline
 
@@ -58,6 +59,7 @@ Excluded evidence:
 | 2021 | Richard Bean publishes HistoCrypt cryptodiagnosis abstract. | Prioritizes one-to-one and Gromark-like hypotheses for test design. |
 | 2025 | Scientific American reports Sanborn's final public clues before archive sale. | Adds Berlin World Clock clarification and event/theme clues. |
 | 2025 | AP reports archive-discovered text and sale of Sanborn archive. | Context only; do not use discovered plaintext content. |
+| 2026 | KryptosBot publishes public methodology and elimination notes. | Methodology context only; use to avoid rerunning saturated single-layer or uncorrected-search lanes, not as plaintext or candidate evidence. |
 
 ## Constraint Ledger
 
@@ -72,6 +74,7 @@ Excluded evidence:
 | Bean's analysis suggests a one-to-one plaintext/ciphertext relationship. | Prioritize substitution/additive stream-like systems before pure transposition. | Medium-high |
 | Sanborn emphasizes creativity and has said K4 is not necessarily a math solution. | Mechanism may involve art/context/key generation rather than pure cipher taxonomy. | Medium |
 | 2025 archive discovery is not a cryptographic decipherment. | It should inform history, not provide solution material. | High |
+| Public methodology notes report broad negative coverage for simple single-layer cipher families and warn against uncorrected search-space mining. | Future work should prioritize preregistered independent targets or richer structural models instead of repeated word/route mining over public anchors. | Medium |
 
 ## Hypothesis Register
 
