@@ -270,6 +270,15 @@ placeholder filename with a concrete lane id. Its deterministic artifact at
 all pass. This is still a pre-scoring, source-backed-observation target only;
 it adds no plaintext, candidate material, or promoted evidence.
 
+Source-backed observation scaffold added:
+`init-position-observations` creates a source-backed non-anchor observation JSON
+file without hand-editing template placeholders. It rejects placeholder fields,
+unregistered or disallowed source IDs, duplicate positions, public-anchor
+positions, out-of-range positions, and accidental overwrites unless `--force` is
+passed. The command is a file-creation guard only; the resulting file must still
+pass `validate-period-observations` or `validate-spacing-observations` with the
+matching preregistration and prediction artifact before scoring.
+
 Spacing evaluator added: `evaluate-spacing-prediction` scores independent
 non-anchor observation positions against the committed spacing artifact with a
 best-of-modulus seeded null. Direct `--positions` input is diagnostic; scored

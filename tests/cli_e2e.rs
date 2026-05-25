@@ -178,6 +178,7 @@ fn facts_hypotheses_sources_and_help_are_covered() {
         .stdout(predicate::str::contains("validate-period-observations"))
         .stdout(predicate::str::contains("validate-spacing-observations"))
         .stdout(predicate::str::contains("independent-lane-status"))
+        .stdout(predicate::str::contains("init-position-observations"))
         .stdout(predicate::str::contains("evaluate-period-prediction"))
         .stdout(predicate::str::contains("evaluate-spacing-prediction"));
 }
@@ -1647,6 +1648,101 @@ fn independent_lane_status_summarizes_ready_lanes() {
             && lane["prediction_artifact_valid"] == true
             && lane["promoted_candidate"] == false
     }));
+}
+
+#[test]
+fn init_position_observations_writes_guarded_source_backed_file() {
+    let temp = tempfile::tempdir().unwrap();
+    let output_path = temp.path().join("observations.json");
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "init-position-observations",
+            "--id",
+            "source-backed-observation-v1",
+            "--source-id",
+            "cia-artifact",
+            "--positions",
+            "1,4,7",
+            "--rationale",
+            "Source-backed non-anchor observation mechanics check.",
+            "--output",
+            output_path.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("\"valid\": true"))
+        .stdout(predicate::str::contains("\"promoted_candidate\": false"));
+
+    let file_json: Value =
+        serde_json::from_str(&std::fs::read_to_string(&output_path).unwrap()).unwrap();
+    assert_eq!(file_json["id"], "source-backed-observation-v1");
+    assert_eq!(file_json["source_ids"][0], "cia-artifact");
+    assert_eq!(file_json["positions_one_based"][0], 1);
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-period-observations",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-period-v5.json",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-period-v5.json",
+            "--input",
+            output_path.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("\"valid\": true"))
+        .stdout(predicate::str::contains("\"artifact_valid\": true"));
+}
+
+#[test]
+fn init_position_observations_rejects_anchor_positions_and_disallowed_sources() {
+    let temp = tempfile::tempdir().unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "init-position-observations",
+            "--id",
+            "bad-anchor-observation-v1",
+            "--source-id",
+            "cia-artifact",
+            "--positions",
+            "22",
+            "--rationale",
+            "Source-backed non-anchor observation mechanics check.",
+            "--output",
+            temp.path().join("anchor.json").to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("public-anchor position"));
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "init-position-observations",
+            "--id",
+            "bad-source-observation-v1",
+            "--source-id",
+            "elonka-kryptos",
+            "--positions",
+            "1,4,7",
+            "--rationale",
+            "Source-backed non-anchor observation mechanics check.",
+            "--output",
+            temp.path().join("source.json").to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("cannot be scored"));
 }
 
 #[test]

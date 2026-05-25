@@ -288,6 +288,30 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
     },
+    /// Create a guarded source-backed non-anchor position observation JSON file.
+    InitPositionObservations {
+        /// Stable observation file ID.
+        #[arg(long)]
+        id: String,
+        /// Registered source ID. Repeat for multiple sources.
+        #[arg(long = "source-id", required = true)]
+        source_ids: Vec<String>,
+        /// Comma-separated one-based K4 positions to write.
+        #[arg(long)]
+        positions: String,
+        /// Rationale for why these positions are independent non-anchor observations.
+        #[arg(long)]
+        rationale: String,
+        /// Output JSON path.
+        #[arg(long)]
+        output: PathBuf,
+        /// Overwrite an existing output file.
+        #[arg(long)]
+        force: bool,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Validate source-backed non-anchor position observations before scoring them.
     ValidatePeriodObservations {
         /// JSON artifact emitted by period-prediction-plan --all --format json.
@@ -474,7 +498,7 @@ struct KeyFragmentRow {
     promoted_candidate: bool,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 struct PeriodPredictionObservationFile {
     id: String,
     source_ids: Vec<String>,
@@ -500,6 +524,16 @@ struct PeriodPredictionObservationValidation {
     observation_rationale: String,
     observed_position_count: usize,
     observed_positions_one_based: Vec<usize>,
+    valid: bool,
+    errors: Vec<String>,
+    promoted_candidate: bool,
+    note: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct PositionObservationScaffoldReport {
+    output_path: String,
+    observation: PeriodPredictionObservationFile,
     valid: bool,
     errors: Vec<String>,
     promoted_candidate: bool,
@@ -745,6 +779,84 @@ fn load_period_prediction_observations(path: &Path) -> Result<PeriodPredictionOb
     })
 }
 
+fn validate_position_observation_scaffold(
+    observations: &PeriodPredictionObservationFile,
+) -> Vec<String> {
+    let mut errors = validate_period_prediction_observation_fields(observations);
+    let anchor_positions: HashSet<_> = known_anchors()
+        .into_iter()
+        .flat_map(|anchor| anchor.start_one_based()..=anchor.end_one_based_inclusive())
+        .collect();
+    let mut seen = HashSet::new();
+
+    for position in &observations.positions_one_based {
+        if !seen.insert(*position) {
+            errors.push(format!(
+                "positions_one_based contains duplicate position `{position}`"
+            ));
+        }
+        if *position == 0 || *position > K4_CIPHERTEXT.len() {
+            errors.push(format!(
+                "position `{position}` is outside the one-based K4 range 1..={}",
+                K4_CIPHERTEXT.len()
+            ));
+        }
+        if anchor_positions.contains(position) {
+            errors.push(format!(
+                "position `{position}` is a public-anchor position and cannot be used as independent observation evidence"
+            ));
+        }
+    }
+
+    errors
+}
+
+fn create_position_observation_file(
+    id: String,
+    source_ids: Vec<String>,
+    positions: String,
+    rationale: String,
+    output: PathBuf,
+    force: bool,
+) -> Result<PositionObservationScaffoldReport> {
+    if output.exists() && !force {
+        anyhow::bail!(
+            "output file already exists: {}; pass --force to overwrite",
+            output.display()
+        );
+    }
+
+    let observation = PeriodPredictionObservationFile {
+        id,
+        source_ids,
+        positions_one_based: parse_position_list(&positions).map_err(anyhow::Error::msg)?,
+        rationale,
+    };
+    let errors = validate_position_observation_scaffold(&observation);
+    if !errors.is_empty() {
+        anyhow::bail!(errors.join("; "));
+    }
+
+    if let Some(parent) = output.parent()
+        && !parent.as_os_str().is_empty()
+    {
+        fs::create_dir_all(parent)?;
+    }
+    fs::write(
+        &output,
+        format!("{}\n", serde_json::to_string_pretty(&observation)?),
+    )?;
+
+    Ok(PositionObservationScaffoldReport {
+        output_path: output.display().to_string(),
+        observation,
+        valid: true,
+        errors,
+        promoted_candidate: false,
+        note: "Position observation scaffolding writes source-backed non-anchor positions only; it is not a claimed solution.",
+    })
+}
+
 fn load_period_prediction_artifact_positions(path: &Path) -> Result<HashSet<usize>> {
     let input = fs::read_to_string(path)?;
     let plans: PeriodPredictionPlanSet = serde_json::from_str(&input)?;
@@ -894,6 +1006,17 @@ fn main() -> Result<()> {
         Command::IndependentLaneStatus { directory, format } => {
             print_independent_lane_status(directory, format)?
         }
+        Command::InitPositionObservations {
+            id,
+            source_ids,
+            positions,
+            rationale,
+            output,
+            force,
+            format,
+        } => print_init_position_observations(
+            id, source_ids, positions, rationale, output, force, format,
+        )?,
         Command::ValidatePeriodObservations {
             artifact,
             preregistration,
@@ -2123,6 +2246,61 @@ fn print_independent_lane_status_report(report: &IndependentLaneStatusReport) {
             id, family, artifact, lane.status, lane.next_step
         );
     }
+}
+
+fn print_init_position_observations(
+    id: String,
+    source_ids: Vec<String>,
+    positions: String,
+    rationale: String,
+    output: PathBuf,
+    force: bool,
+    format: OutputFormat,
+) -> Result<()> {
+    let report =
+        create_position_observation_file(id, source_ids, positions, rationale, output, force)?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&report)?),
+        OutputFormat::Markdown => print_position_observation_scaffold_report(&report),
+    }
+    Ok(())
+}
+
+fn print_position_observation_scaffold_report(report: &PositionObservationScaffoldReport) {
+    println!("# Position Observation File\n");
+    println!("This is not a claimed solution.\n");
+    println!("output: `{}`", report.output_path);
+    println!("observation id: `{}`", report.observation.id);
+    println!("source ids: {}", report.observation.source_ids.join(", "));
+    println!(
+        "positions: {}",
+        report
+            .observation
+            .positions_one_based
+            .iter()
+            .map(|position| position.to_string())
+            .collect::<Vec<_>>()
+            .join(", ")
+    );
+    println!("valid: {}", report.valid);
+    println!("promoted: {}", report.promoted_candidate);
+    println!("note: {}\n", report.note);
+    println!("## Errors\n");
+    if report.errors.is_empty() {
+        println!("none\n");
+    } else {
+        for error in &report.errors {
+            println!("- {error}");
+        }
+        println!();
+    }
+    println!("## Next Gates\n");
+    println!(
+        "- Run `validate-period-observations` or `validate-spacing-observations` with the matching committed artifact and preregistration before scoring."
+    );
+    println!(
+        "- Then run the matching `evaluate-*-prediction --positions-file` command and archive the JSON output."
+    );
 }
 
 fn print_validate_period_observations(

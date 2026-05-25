@@ -99,6 +99,10 @@ source registration: `validate-period-observations` and
 context, methodology context, and archive-context-only sources as scored
 independent position evidence. Those sources can still document context or
 controls, but not the held-out target being scored.
+Use `init-position-observations` to create the JSON file for a future
+source-backed observation; it refuses placeholders, duplicate positions, public
+anchor positions, out-of-range positions, disallowed source uses, and accidental
+overwrites before the validator/evaluator commands can score the file.
 
 Direct `evaluate-period-prediction --positions ...` and
 `evaluate-spacing-prediction --positions ...` runs are diagnostic only. They can

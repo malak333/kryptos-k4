@@ -50,6 +50,7 @@ cargo run -- validate-prediction-artifact --preregistration experiments/preregis
 cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-spacing-v1.json --format json
 cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-spacing-v1.json --format json
 cargo run -- independent-lane-status --format json
+cargo run -- init-position-observations --id future-observation-v1 --source-id cia-artifact --positions 1,4,7 --rationale "Source-backed non-anchor observation rationale." --output results/key-tests/future-observation-v1.json
 cargo run -- period-prediction-plan --period 3
 cargo run -- period-prediction-plan --all
 cargo run -- period-prediction-plan --all --format json
@@ -196,6 +197,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `validate-preregistration` | Gate for proposed new lanes in Markdown or JSON; rejects reuse of public anchor-derived fragments as discovery inputs or primary evidence. |
 | `validate-prediction-artifact` | Gate for committed independent prediction artifacts in Markdown or JSON; checks the preregistration and deterministic generator output still match. |
 | `independent-lane-status` | Operational summary of preregistered independent lanes, artifact validity, readiness for source-backed observations, and next required validator/evaluator command. |
+| `init-position-observations` | Guarded source-backed observation-file creator in Markdown or JSON; writes only registered-source, non-anchor K4 positions and refuses placeholders, disallowed source uses, duplicate positions, anchors, out-of-range positions, and accidental overwrites unless `--force` is passed. |
 | `validate-period-observations` | Gate for source-backed independent position observations in Markdown or JSON; can also validate the prediction artifact preregistration, and rejects unregistered or disallowed source IDs, duplicates, and public-anchor positions before scoring. |
 | `validate-spacing-observations` | Gate for source-backed independent position observations before spacing scoring in Markdown or JSON; can also validate the spacing prediction artifact preregistration. |
 | `period-prediction-plan` | Emits non-anchor K4 position residue classes for one or all registered periods in Markdown or JSON without scoring fragment values or candidate material. |
