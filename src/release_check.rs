@@ -4,7 +4,7 @@ use serde::Serialize;
 use std::fs;
 use std::path::Path;
 
-const REQUIRED_RELEASE_FILES: [(&str, &str); 8] = [
+const REQUIRED_RELEASE_FILES: [(&str, &str); 10] = [
     ("readme-present", "README.md"),
     ("research-method-present", "docs/research-method.md"),
     (
@@ -16,6 +16,8 @@ const REQUIRED_RELEASE_FILES: [(&str, &str); 8] = [
         "docs/architecture-production-goal.md",
     ),
     ("source-packet-present", "sources/source-packet.md"),
+    ("candidate-csv-present", "experiments/k4-candidates.csv"),
+    ("candidate-registry-present", "experiments/k4-candidates.md"),
     ("research-plan-present", "kryptos-k4-research-plan.md"),
     ("license-present", "LICENSE"),
     ("lockfile-present", "Cargo.lock"),
@@ -99,6 +101,7 @@ fn run_release_checks_inner(
     if require_current_report {
         checks.push(check_generated_report_markers(repo_root));
     }
+    checks.push(check_candidate_registry_alignment(repo_root));
     checks.push(check_source_packet_latest_access_date(repo_root));
     checks.push(check_source_packet_registry_alignment(repo_root));
     checks.push(check_no_plaintext_leakage_markers(repo_root));
@@ -108,6 +111,102 @@ fn run_release_checks_inner(
     }
 
     Ok(checks)
+}
+
+fn check_candidate_registry_alignment(repo_root: &Path) -> ReleaseCheck {
+    let csv_relative_path = "experiments/k4-candidates.csv";
+    let registry_relative_path = "experiments/k4-candidates.md";
+    let csv_path = repo_root.join(csv_relative_path);
+    let registry_path = repo_root.join(registry_relative_path);
+    let csv_contents = fs::read_to_string(&csv_path).unwrap_or_default();
+    let registry_contents = fs::read_to_string(&registry_path).unwrap_or_default();
+
+    let candidate_materials = candidate_materials_from_csv(&csv_contents);
+    let mut mismatches = Vec::new();
+
+    if candidate_materials.is_empty() {
+        mismatches.push("candidate-csv:empty".to_string());
+    }
+
+    for material in candidate_materials {
+        let token = format!("`{material}`");
+        if !registry_contents.contains(&token) {
+            mismatches.push(format!("{material}:missing-registry-row"));
+        }
+    }
+
+    if !registry_contents.contains("Source IDs:") {
+        mismatches.push("registry:missing-source-ids".to_string());
+    }
+    if !registry_contents.contains("Rationale:") {
+        mismatches.push("registry:missing-rationale".to_string());
+    }
+
+    let known_source_ids: std::collections::BTreeSet<_> =
+        sources().into_iter().map(|source| source.id).collect();
+    for source_id in candidate_registry_source_ids(&registry_contents) {
+        if !known_source_ids.contains(source_id.as_str()) {
+            mismatches.push(format!("registry-source:{source_id}:unknown"));
+        }
+    }
+
+    ReleaseCheck {
+        name: "candidate-registry-aligned",
+        passed: mismatches.is_empty(),
+        detail: if mismatches.is_empty() {
+            format!(
+                "Candidate CSV rows are represented in the candidate registry with source IDs and rationale. path={}; registry_path={}",
+                csv_path.display(),
+                registry_path.display()
+            )
+        } else {
+            format!(
+                "Candidate CSV and registry are misaligned. path={}; registry_path={}; mismatches={}",
+                csv_path.display(),
+                registry_path.display(),
+                mismatches.join(", ")
+            )
+        },
+    }
+}
+
+fn candidate_materials_from_csv(input: &str) -> std::collections::BTreeSet<String> {
+    input
+        .lines()
+        .filter_map(|line| {
+            let trimmed = line.trim();
+            if trimmed.is_empty()
+                || trimmed.starts_with('#')
+                || trimmed.eq_ignore_ascii_case("material,transform")
+            {
+                return None;
+            }
+            let material = trimmed.split(',').next()?.trim();
+            (!material.is_empty()).then(|| material.to_string())
+        })
+        .collect()
+}
+
+fn candidate_registry_source_ids(input: &str) -> std::collections::BTreeSet<String> {
+    input
+        .lines()
+        .filter(|line| line.trim_start().starts_with("Source IDs:"))
+        .flat_map(backticked_values)
+        .collect()
+}
+
+fn backticked_values(line: &str) -> Vec<String> {
+    let mut values = Vec::new();
+    let mut rest = line;
+    while let Some(start) = rest.find('`') {
+        let after_start = &rest[start + 1..];
+        let Some(end) = after_start.find('`') else {
+            break;
+        };
+        values.push(after_start[..end].to_string());
+        rest = &after_start[end + 1..];
+    }
+    values
 }
 
 fn check_source_packet_registry_alignment(repo_root: &Path) -> ReleaseCheck {
@@ -361,14 +460,45 @@ mod tests {
         assert!(run_release_checks(temp.path()).is_err());
     }
 
+    #[test]
+    fn release_checks_fail_when_candidate_csv_has_unregistered_material() {
+        let temp = release_ready_temp_dir();
+        fs::write(
+            temp.path().join("experiments/k4-candidates.csv"),
+            "material,transform\nUNREGISTERED,a1-z26-zero-based\n",
+        )
+        .unwrap();
+
+        assert!(run_release_checks(temp.path()).is_err());
+    }
+
+    #[test]
+    fn release_checks_fail_when_candidate_registry_references_unknown_source() {
+        let temp = release_ready_temp_dir();
+        let registry = candidate_registry_fixture().replace("`cia-artifact`", "`unknown-source`");
+        fs::write(temp.path().join("experiments/k4-candidates.md"), registry).unwrap();
+
+        assert!(run_release_checks(temp.path()).is_err());
+    }
+
     fn release_ready_temp_dir() -> TempDir {
         let temp = TempDir::new().unwrap();
-        for directory in ["docs", "sources", "notes"] {
+        for directory in ["docs", "sources", "notes", "experiments"] {
             fs::create_dir_all(temp.path().join(directory)).unwrap();
         }
         for (_, relative_path) in REQUIRED_RELEASE_FILES {
             fs::write(temp.path().join(relative_path), "release file").unwrap();
         }
+        fs::write(
+            temp.path().join("experiments/k4-candidates.csv"),
+            "material,transform\nKRYPTOS,a1-z26-zero-based\n",
+        )
+        .unwrap();
+        fs::write(
+            temp.path().join("experiments/k4-candidates.md"),
+            candidate_registry_fixture(),
+        )
+        .unwrap();
         fs::write(
             temp.path().join("sources/source-packet.md"),
             source_packet_fixture(),
@@ -413,5 +543,9 @@ mod tests {
         format!(
             "# Source Packet\n\nLast updated: 2026-05-25\nSource access dates: 2026-05-20 through 2026-05-25\n\n{source_rows}"
         )
+    }
+
+    fn candidate_registry_fixture() -> String {
+        "# K4 Candidate Key-Material Registry\n\nSource IDs: `cia-artifact`\n\nRationale: source-backed test fixture.\n\nRows:\n\n- `KRYPTOS`, A1/Z26 zero-based\n".to_string()
     }
 }

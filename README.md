@@ -140,7 +140,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |
 | `routes` | Small named route/permutation screens with fixed baselines. |
 | `findings` | Findings ledger with evidence inputs, transformations, baselines, interpretation, and next tests. |
-| `release-check` | Local release preflight confirming no hosted automation, required docs, generated report presence, source-packet/source-registry field and latest-access-date alignment, and plaintext-leakage sentinel absence. |
+| `release-check` | Local release preflight confirming no hosted automation, required docs, generated report presence, candidate CSV/registry alignment, source-packet/source-registry field and latest-access-date alignment, and plaintext-leakage sentinel absence. |
 | `hypotheses` | Ranked source-grounded hypothesis register. |
 | `sources` | Source provenance records in Markdown or JSON for source-policy audits. |
 | `export-data` | Machine-readable JSON for ciphertext, anchors, and sources. |
