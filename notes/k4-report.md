@@ -756,12 +756,12 @@ Findings are reproducible research observations, not promoted solution claims.
   - Next test: Only add route families that are named, deterministic, and justified before seeing their score.
   - Promoted: false
 - **F5 Independent non-anchor period targets are materialized before scoring (H3)**
-  - Sources: `experiments/preregistrations/non-anchor-position-period-v1.json`, `experiments/predictions/non-anchor-position-period-v1.json`
-  - Steps: validate the non-anchor position-period preregistration; emit all registered period residue classes before observing independent evidence; compare the committed prediction artifact against deterministic generator output
-  - Output: The current artifact locks seven registered periods, excludes 24 public-anchor positions, and emits 73 non-anchor K4 positions per period.
-  - Baseline: The artifact has no score yet; future evidence must use held-out or best-of-period controls before interpretation.
-  - Interpretation: This is an evidence-free prediction target, not a positive signal or a K4 solution claim.
-  - Next test: Use validate-prediction-artifact before evaluating any future independent evidence against the committed residue classes.
+  - Sources: `experiments/preregistrations/non-anchor-position-period-v1.json`, `experiments/predictions/non-anchor-position-period-v1.json`, `experiments/preregistrations/new-lane-id.json`, `experiments/predictions/non-anchor-position-period-diagnostic-v1.json`
+  - Steps: validate each non-anchor position-period preregistration; emit all registered period residue classes before observing independent evidence; compare each committed prediction artifact against deterministic generator output
+  - Output: The committed artifacts lock seven registered periods, exclude 24 public-anchor positions, and emit 73 non-anchor K4 positions per period.
+  - Baseline: The artifacts have no score yet; future evidence must use held-out or best-of-period controls before interpretation.
+  - Interpretation: These are evidence-free prediction targets, not positive signals or K4 solution claims.
+  - Next test: Use validate-prediction-artifact before evaluating any future independent evidence against the committed residue classes, and keep source-backed observation files separate from public-anchor-derived fragments.
   - Promoted: false
 
 ## Release Check
