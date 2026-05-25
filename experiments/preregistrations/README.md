@@ -60,11 +60,13 @@ Then score it:
 cargo run --locked -- evaluate-period-prediction \
   --artifact experiments/predictions/non-anchor-position-period-v1.json \
   --preregistration experiments/preregistrations/non-anchor-position-period-v1.json \
-  --positions-file <source-backed-observations.json>
+  --positions-file <source-backed-observations.json> \
+  --output-dir results/period-observations/latest
 ```
 
 For spacing lanes, use the same source-backed observation-file format, but score
-against the committed spacing artifact:
+against the committed spacing artifact. The `--output-dir` archive contains
+`result.json`, `summary.md`, and `command.txt`.
 
 ```bash
 cargo run --locked -- validate-spacing-observations \
@@ -74,7 +76,8 @@ cargo run --locked -- validate-spacing-observations \
 cargo run --locked -- evaluate-spacing-prediction \
   --artifact experiments/predictions/non-anchor-position-spacing-v1.json \
   --preregistration experiments/preregistrations/non-anchor-position-spacing-v1.json \
-  --positions-file <source-backed-observations.json>
+  --positions-file <source-backed-observations.json> \
+  --output-dir results/spacing-observations/latest
 ```
 
 Observation source IDs must be registered and must have an `allowed_use`

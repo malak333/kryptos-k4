@@ -388,6 +388,9 @@ enum Command {
         /// Seed for deterministic null controls.
         #[arg(long, default_value_t = 42)]
         seed: u64,
+        /// Optional directory for result.json, summary.md, and command.txt.
+        #[arg(long)]
+        output_dir: Option<PathBuf>,
         /// Output format.
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
@@ -420,6 +423,9 @@ enum Command {
         /// Seed for deterministic null controls.
         #[arg(long, default_value_t = 42)]
         seed: u64,
+        /// Optional directory for result.json, summary.md, and command.txt.
+        #[arg(long)]
+        output_dir: Option<PathBuf>,
         /// Output format.
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
@@ -1066,16 +1072,18 @@ fn main() -> Result<()> {
             positions_file,
             iterations,
             seed,
+            output_dir,
             format,
-        } => print_evaluate_period_prediction(
+        } => print_evaluate_period_prediction(PeriodPredictionEvaluationOptions {
             artifact,
             preregistration,
             positions,
             positions_file,
             iterations,
             seed,
+            output_dir,
             format,
-        )?,
+        })?,
         Command::EvaluateSpacingPrediction {
             artifact,
             preregistration,
@@ -1083,16 +1091,18 @@ fn main() -> Result<()> {
             positions_file,
             iterations,
             seed,
+            output_dir,
             format,
-        } => print_evaluate_spacing_prediction(
+        } => print_evaluate_spacing_prediction(SpacingPredictionEvaluationOptions {
             artifact,
             preregistration,
             positions,
             positions_file,
             iterations,
             seed,
+            output_dir,
             format,
-        )?,
+        })?,
         Command::Hypotheses { format } => print_hypotheses(format)?,
         Command::CandidateSequences { format } => print_candidate_sequences(format)?,
         Command::Routes { format } => print_routes(format)?,
@@ -1401,6 +1411,52 @@ fn write_heldout_key_control_outputs(
         format!(
             "heldout-key-control --input <input> --iterations {} --seed {}\n",
             run.iterations, run.seed
+        ),
+    )?;
+    Ok(())
+}
+
+fn write_period_prediction_evaluation_outputs(
+    output_dir: &Path,
+    evaluation: &PeriodPredictionEvaluation,
+) -> Result<()> {
+    fs::create_dir_all(output_dir)?;
+    fs::write(
+        output_dir.join("result.json"),
+        serde_json::to_string_pretty(evaluation)?,
+    )?;
+    fs::write(
+        output_dir.join("summary.md"),
+        render_period_prediction_evaluation(evaluation),
+    )?;
+    fs::write(
+        output_dir.join("command.txt"),
+        format!(
+            "evaluate-period-prediction --artifact {} --iterations {} --seed {}\n",
+            evaluation.artifact_path, evaluation.iterations, evaluation.seed
+        ),
+    )?;
+    Ok(())
+}
+
+fn write_spacing_prediction_evaluation_outputs(
+    output_dir: &Path,
+    evaluation: &SpacingPredictionEvaluation,
+) -> Result<()> {
+    fs::create_dir_all(output_dir)?;
+    fs::write(
+        output_dir.join("result.json"),
+        serde_json::to_string_pretty(evaluation)?,
+    )?;
+    fs::write(
+        output_dir.join("summary.md"),
+        render_spacing_prediction_evaluation(evaluation),
+    )?;
+    fs::write(
+        output_dir.join("command.txt"),
+        format!(
+            "evaluate-spacing-prediction --artifact {} --iterations {} --seed {}\n",
+            evaluation.artifact_path, evaluation.iterations, evaluation.seed
         ),
     )?;
     Ok(())
@@ -2669,15 +2725,39 @@ fn print_spacing_prediction_plan(format: OutputFormat) -> Result<()> {
     Ok(())
 }
 
-fn print_evaluate_period_prediction(
+struct PeriodPredictionEvaluationOptions {
     artifact: PathBuf,
     preregistration: Option<PathBuf>,
     positions: Option<String>,
     positions_file: Option<PathBuf>,
+    output_dir: Option<PathBuf>,
     iterations: usize,
     seed: u64,
     format: OutputFormat,
-) -> Result<()> {
+}
+
+struct SpacingPredictionEvaluationOptions {
+    artifact: PathBuf,
+    preregistration: Option<PathBuf>,
+    positions: Option<String>,
+    positions_file: Option<PathBuf>,
+    output_dir: Option<PathBuf>,
+    iterations: usize,
+    seed: u64,
+    format: OutputFormat,
+}
+
+fn print_evaluate_period_prediction(options: PeriodPredictionEvaluationOptions) -> Result<()> {
+    let PeriodPredictionEvaluationOptions {
+        artifact,
+        preregistration,
+        positions,
+        positions_file,
+        output_dir,
+        iterations,
+        seed,
+        format,
+    } = options;
     let has_preregistration = preregistration.is_some();
     if let Some(preregistration) = preregistration {
         let artifact_validation = validate_prediction_artifact(&preregistration)?;
@@ -2727,6 +2807,9 @@ fn print_evaluate_period_prediction(
         evaluation.source_backed_observation = true;
         evaluation.observation_warning = None;
     }
+    if let Some(output_dir) = output_dir {
+        write_period_prediction_evaluation_outputs(&output_dir, &evaluation)?;
+    }
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&evaluation)?),
         OutputFormat::Markdown => print_period_prediction_evaluation(&evaluation),
@@ -2734,15 +2817,17 @@ fn print_evaluate_period_prediction(
     Ok(())
 }
 
-fn print_evaluate_spacing_prediction(
-    artifact: PathBuf,
-    preregistration: Option<PathBuf>,
-    positions: Option<String>,
-    positions_file: Option<PathBuf>,
-    iterations: usize,
-    seed: u64,
-    format: OutputFormat,
-) -> Result<()> {
+fn print_evaluate_spacing_prediction(options: SpacingPredictionEvaluationOptions) -> Result<()> {
+    let SpacingPredictionEvaluationOptions {
+        artifact,
+        preregistration,
+        positions,
+        positions_file,
+        output_dir,
+        iterations,
+        seed,
+        format,
+    } = options;
     let has_preregistration = preregistration.is_some();
     if let Some(preregistration) = preregistration {
         let artifact_validation = validate_prediction_artifact(&preregistration)?;
@@ -2792,6 +2877,9 @@ fn print_evaluate_spacing_prediction(
         evaluation.source_backed_observation = true;
         evaluation.observation_warning = None;
     }
+    if let Some(output_dir) = output_dir {
+        write_spacing_prediction_evaluation_outputs(&output_dir, &evaluation)?;
+    }
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&evaluation)?),
         OutputFormat::Markdown => print_spacing_prediction_evaluation(&evaluation),
@@ -2800,29 +2888,36 @@ fn print_evaluate_spacing_prediction(
 }
 
 fn print_period_prediction_evaluation(evaluation: &PeriodPredictionEvaluation) {
-    println!("# Period Prediction Evaluation\n");
-    println!("This is not a claimed solution.\n");
-    println!("artifact: `{}`", evaluation.artifact_path);
+    print!("{}", render_period_prediction_evaluation(evaluation));
+}
+
+fn render_period_prediction_evaluation(evaluation: &PeriodPredictionEvaluation) -> String {
+    let mut output = String::new();
+    output.push_str("# Period Prediction Evaluation\n\n");
+    output.push_str("This is not a claimed solution.\n\n");
+    output.push_str(&format!("artifact: `{}`\n", evaluation.artifact_path));
     if let Some(observation_id) = &evaluation.observation_id {
-        println!("observation id: `{observation_id}`");
+        output.push_str(&format!("observation id: `{observation_id}`\n"));
     }
     if !evaluation.observation_source_ids.is_empty() {
-        println!(
+        output.push_str(&format!(
             "observation sources: {}",
             evaluation.observation_source_ids.join(", ")
-        );
+        ));
+        output.push('\n');
     }
     if let Some(observation_rationale) = &evaluation.observation_rationale {
-        println!("observation rationale: {observation_rationale}");
+        output.push_str(&format!("observation rationale: {observation_rationale}\n"));
     }
-    println!(
+    output.push_str(&format!(
         "source-backed observation: {}",
         evaluation.source_backed_observation
-    );
+    ));
+    output.push('\n');
     if let Some(observation_warning) = evaluation.observation_warning {
-        println!("warning: {observation_warning}");
+        output.push_str(&format!("warning: {observation_warning}\n"));
     }
-    println!(
+    output.push_str(&format!(
         "observed positions: {}",
         evaluation
             .observed_positions_one_based
@@ -2830,68 +2925,81 @@ fn print_period_prediction_evaluation(evaluation: &PeriodPredictionEvaluation) {
             .map(|position| position.to_string())
             .collect::<Vec<_>>()
             .join(", ")
-    );
-    println!(
+    ));
+    output.push('\n');
+    output.push_str(&format!(
         "observed position count: {}",
         evaluation.observed_position_count
-    );
-    println!(
+    ));
+    output.push('\n');
+    output.push_str(&format!(
         "best: period {} residue {} with {}/{} hits ({:.4})",
         evaluation.best_period,
         evaluation.best_residue,
         evaluation.best_hits,
         evaluation.observed_position_count,
         evaluation.best_hit_rate
-    );
-    println!(
+    ));
+    output.push('\n');
+    output.push_str(&format!(
         "best-of-period null: mean {:.2}; sd {:.2}; empirical p-value {:.4}; iterations {}; seed {}",
         evaluation.null_mean_best_hits,
         evaluation.null_std_dev_best_hits,
         evaluation.empirical_p_value,
         evaluation.iterations,
         evaluation.seed
-    );
-    println!("promoted: {}", evaluation.promoted_candidate);
-    println!("note: {}\n", evaluation.note);
+    ));
+    output.push('\n');
+    output.push_str(&format!("promoted: {}\n", evaluation.promoted_candidate));
+    output.push_str(&format!("note: {}\n\n", evaluation.note));
 
-    println!("| Period | Best Residue | Hits | Hit Rate |");
-    println!("| --- | --- | --- | --- |");
+    output.push_str("| Period | Best Residue | Hits | Hit Rate |\n");
+    output.push_str("| --- | --- | --- | --- |\n");
     for result in &evaluation.period_results {
-        println!(
+        output.push_str(&format!(
             "| {} | {} | {}/{} | {:.4} |",
             result.period,
             result.best_residue,
             result.best_hits,
             evaluation.observed_position_count,
             result.best_hit_rate
-        );
+        ));
+        output.push('\n');
     }
+    output
 }
 
 fn print_spacing_prediction_evaluation(evaluation: &SpacingPredictionEvaluation) {
-    println!("# Spacing Prediction Evaluation\n");
-    println!("This is not a claimed solution.\n");
-    println!("artifact: `{}`", evaluation.artifact_path);
+    print!("{}", render_spacing_prediction_evaluation(evaluation));
+}
+
+fn render_spacing_prediction_evaluation(evaluation: &SpacingPredictionEvaluation) -> String {
+    let mut output = String::new();
+    output.push_str("# Spacing Prediction Evaluation\n\n");
+    output.push_str("This is not a claimed solution.\n\n");
+    output.push_str(&format!("artifact: `{}`\n", evaluation.artifact_path));
     if let Some(observation_id) = &evaluation.observation_id {
-        println!("observation id: `{observation_id}`");
+        output.push_str(&format!("observation id: `{observation_id}`\n"));
     }
     if !evaluation.observation_source_ids.is_empty() {
-        println!(
+        output.push_str(&format!(
             "observation sources: {}",
             evaluation.observation_source_ids.join(", ")
-        );
+        ));
+        output.push('\n');
     }
     if let Some(observation_rationale) = &evaluation.observation_rationale {
-        println!("observation rationale: {observation_rationale}");
+        output.push_str(&format!("observation rationale: {observation_rationale}\n"));
     }
-    println!(
+    output.push_str(&format!(
         "source-backed observation: {}",
         evaluation.source_backed_observation
-    );
+    ));
+    output.push('\n');
     if let Some(observation_warning) = evaluation.observation_warning {
-        println!("warning: {observation_warning}");
+        output.push_str(&format!("warning: {observation_warning}\n"));
     }
-    println!(
+    output.push_str(&format!(
         "observed positions: {}",
         evaluation
             .observed_positions_one_based
@@ -2899,42 +3007,48 @@ fn print_spacing_prediction_evaluation(evaluation: &SpacingPredictionEvaluation)
             .map(|position| position.to_string())
             .collect::<Vec<_>>()
             .join(", ")
-    );
-    println!(
+    ));
+    output.push('\n');
+    output.push_str(&format!(
         "observed position count: {}; observed pair count: {}",
         evaluation.observed_position_count, evaluation.observed_pair_count
-    );
-    println!(
+    ));
+    output.push('\n');
+    output.push_str(&format!(
         "best: modulus {} residue {} with {}/{} pair hits ({:.4})",
         evaluation.best_modulus,
         evaluation.best_residue,
         evaluation.best_hits,
         evaluation.observed_pair_count,
         evaluation.best_hit_rate
-    );
-    println!(
+    ));
+    output.push('\n');
+    output.push_str(&format!(
         "best-of-modulus null: mean {:.2}; sd {:.2}; empirical p-value {:.4}; iterations {}; seed {}",
         evaluation.null_mean_best_hits,
         evaluation.null_std_dev_best_hits,
         evaluation.empirical_p_value,
         evaluation.iterations,
         evaluation.seed
-    );
-    println!("promoted: {}", evaluation.promoted_candidate);
-    println!("note: {}\n", evaluation.note);
+    ));
+    output.push('\n');
+    output.push_str(&format!("promoted: {}\n", evaluation.promoted_candidate));
+    output.push_str(&format!("note: {}\n\n", evaluation.note));
 
-    println!("| Modulus | Best Residue | Pair Hits | Hit Rate |");
-    println!("| --- | --- | --- | --- |");
+    output.push_str("| Modulus | Best Residue | Pair Hits | Hit Rate |\n");
+    output.push_str("| --- | --- | --- | --- |\n");
     for result in &evaluation.modulus_results {
-        println!(
+        output.push_str(&format!(
             "| {} | {} | {}/{} | {:.4} |",
             result.modulus,
             result.best_residue,
             result.best_hits,
             evaluation.observed_pair_count,
             result.best_hit_rate
-        );
+        ));
+        output.push('\n');
     }
+    output
 }
 
 fn print_hypotheses(format: OutputFormat) -> Result<()> {
