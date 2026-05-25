@@ -174,7 +174,11 @@ fn facts_hypotheses_sources_and_help_are_covered() {
         .success()
         .stdout(predicate::str::contains(
             "Print public known-plaintext anchors",
-        ));
+        ))
+        .stdout(predicate::str::contains("validate-period-observations"))
+        .stdout(predicate::str::contains("validate-spacing-observations"))
+        .stdout(predicate::str::contains("evaluate-period-prediction"))
+        .stdout(predicate::str::contains("evaluate-spacing-prediction"));
 }
 
 #[test]
