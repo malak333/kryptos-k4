@@ -50,7 +50,7 @@ cargo run -- validate-prediction-artifact --preregistration experiments/preregis
 cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-spacing-v1.json --format json
 cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-spacing-v1.json --format json
 cargo run -- independent-lane-status --format json
-cargo run -- init-position-observations --id future-observation-v1 --source-id cia-artifact --positions 1,4,7 --rationale "Source-backed non-anchor observation rationale." --output results/key-tests/future-observation-v1.json
+cargo run -- init-position-observations --id future-observation-v1 --source-id cia-artifact --positions 1,4,7 --rationale "Source-backed non-anchor observation rationale." --position-note "1=Source note for position 1." --position-note "4=Source note for position 4." --position-note "7=Source note for position 7." --output results/key-tests/future-observation-v1.json
 cargo run -- period-prediction-plan --period 3
 cargo run -- period-prediction-plan --all
 cargo run -- period-prediction-plan --all --format json
@@ -95,6 +95,8 @@ rejected for scoring. Source-backed observation files must include
 auditable. The observation template intentionally has an empty
 `positions_one_based` list and empty `position_notes` map, so copied lanes
 cannot accidentally score synthetic example positions.
+When notes differ by position, pass one `--position-note POS=NOTE` for every
+listed position; if omitted, the scaffold falls back to rationale-derived notes.
 
 Direct `evaluate-period-prediction --positions ...` and
 `evaluate-spacing-prediction --positions ...` runs are diagnostic only.
@@ -185,6 +187,13 @@ and has a matching deterministic artifact at
 `experiments/predictions/non-anchor-position-period-v10.json`. It remains a
 pre-scoring independent prediction target; it adds no candidate material and
 does not reuse public-anchor fragments as evidence.
+
+The next populated period lane,
+`experiments/preregistrations/non-anchor-position-period-v11.json`, carries the
+same independent prediction boundary with a matching deterministic artifact at
+`experiments/predictions/non-anchor-position-period-v11.json`. It exists to
+lock a source-backed non-anchor evaluation target before any new observation
+file is scored, not to add evidence from the reused public anchors.
 
 Summarize a completed lane:
 

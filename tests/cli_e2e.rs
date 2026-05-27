@@ -1625,12 +1625,12 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Independent Lane Status"))
-        .stdout(predicate::str::contains("lanes: 13"))
+        .stdout(predicate::str::contains("lanes: 14"))
         .stdout(predicate::str::contains(
-            "ready for source-backed observations: 13",
+            "ready for source-backed observations: 14",
         ))
         .stdout(predicate::str::contains("invalid lanes: 0"))
-        .stdout(predicate::str::contains("prediction artifacts: 13"))
+        .stdout(predicate::str::contains("prediction artifacts: 14"))
         .stdout(predicate::str::contains("unique prediction artifacts: 2"))
         .stdout(predicate::str::contains(
             "unique ready prediction artifacts: 2",
@@ -1638,7 +1638,7 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout(predicate::str::contains("duplicate artifact groups: 1"))
         .stdout(predicate::str::contains("Family Summary"))
         .stdout(predicate::str::contains(
-            "| position-period-prediction | 12 | 12 | 12 | 1 | 1 | 1 |",
+            "| position-period-prediction | 13 | 13 | 13 | 1 | 1 | 1 |",
         ))
         .stdout(predicate::str::contains(
             "| position-spacing-prediction | 1 | 1 | 1 | 1 | 1 | 0 |",
@@ -1661,16 +1661,16 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["lane_count"], 13);
-    assert_eq!(json["ready_for_source_backed_observations"], 13);
+    assert_eq!(json["lane_count"], 14);
+    assert_eq!(json["ready_for_source_backed_observations"], 14);
     assert_eq!(json["invalid_lanes"], 0);
-    assert_eq!(json["prediction_artifacts"], 13);
+    assert_eq!(json["prediction_artifacts"], 14);
     assert_eq!(json["unique_prediction_artifacts"], 2);
     assert_eq!(json["unique_ready_prediction_artifacts"], 2);
     let families = json["family_summaries"].as_array().unwrap();
     assert!(families.iter().any(|family| {
         family["hypothesis_family"] == "position-period-prediction"
-            && family["lanes"] == 12
+            && family["lanes"] == 13
             && family["unique_ready_prediction_artifacts"] == 1
             && family["duplicate_artifact_groups"] == 1
     }));
@@ -1712,6 +1712,12 @@ fn init_position_observations_writes_guarded_source_backed_file() {
             "1,4,7",
             "--rationale",
             "Source-backed non-anchor observation mechanics check.",
+            "--position-note",
+            "1=Position 1 is documented independently in the source packet.",
+            "--position-note",
+            "4=Position 4 is documented independently in the source packet.",
+            "--position-note",
+            "7=Position 7 is documented independently in the source packet.",
             "--output",
             output_path.to_str().unwrap(),
             "--format",
@@ -1727,11 +1733,9 @@ fn init_position_observations_writes_guarded_source_backed_file() {
     assert_eq!(file_json["id"], "source-backed-observation-v1");
     assert_eq!(file_json["source_ids"][0], "cia-artifact");
     assert_eq!(file_json["positions_one_based"][0], 1);
-    assert!(
-        file_json["position_notes"]["1"]
-            .as_str()
-            .unwrap()
-            .contains("one-based K4 position 1")
+    assert_eq!(
+        file_json["position_notes"]["1"],
+        "Position 1 is documented independently in the source packet."
     );
 
     Command::cargo_bin("kryptos-k4")
@@ -1794,6 +1798,58 @@ fn init_position_observations_rejects_anchor_positions_and_disallowed_sources() 
         .assert()
         .failure()
         .stderr(predicate::str::contains("cannot be scored"));
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "init-position-observations",
+            "--id",
+            "bad-position-note-observation-v1",
+            "--source-id",
+            "cia-artifact",
+            "--positions",
+            "1,4,7",
+            "--rationale",
+            "Source-backed non-anchor observation mechanics check.",
+            "--position-note",
+            "1=Position 1 note.",
+            "--position-note",
+            "4=Position 4 note.",
+            "--output",
+            temp.path().join("missing-note.json").to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "position-note is missing for position `7`",
+        ));
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "init-position-observations",
+            "--id",
+            "empty-position-note-observation-v1",
+            "--source-id",
+            "cia-artifact",
+            "--positions",
+            "1,4,7",
+            "--rationale",
+            "Source-backed non-anchor observation mechanics check.",
+            "--position-note",
+            "1=Position 1 note.",
+            "--position-note",
+            "4=   ",
+            "--position-note",
+            "7=Position 7 note.",
+            "--output",
+            temp.path().join("empty-note.json").to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "position-note for position `4` must not be empty",
+        ));
 }
 
 #[test]

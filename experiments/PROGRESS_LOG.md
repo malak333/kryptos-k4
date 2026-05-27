@@ -14,8 +14,8 @@ cargo run --locked -- release-check --format json
 
 Result summary:
 
-- independent lanes: `13`
-- ready for source-backed observations: `13`
+- independent lanes: `14`
+- ready for source-backed observations: `14`
 - unique ready prediction targets: `2`
 - invalid lanes: `0`
 - release-check failures: `0`
@@ -25,16 +25,16 @@ Interpretation: the independent evidence workflow is ready for source-backed
 observation files, but no independent observation has been scored and no K4
 candidate, plaintext, or solution is promoted.
 
-Duplicate-artifact accounting added: the lane-status command now reports 13
+Duplicate-artifact accounting added: the lane-status command now reports 14
 declared prediction artifacts but only 2 unique artifact contents, and both
-unique artifacts are ready for source-backed observations. The twelve
+unique artifacts are ready for source-backed observations. The thirteen
 period lanes currently share one deterministic position-period target; this is
-an operational readiness inventory, not twelve independent cryptanalytic signals.
+an operational readiness inventory, not thirteen independent cryptanalytic signals.
 Future interpretation should count unique prediction targets and source-backed
 observations, not just preregistration rows.
 
 Family-level inventory added: `independent-lane-status` now reports a family
-summary showing `position-period-prediction` has 12 lanes but 1 unique ready
+summary showing `position-period-prediction` has 13 lanes but 1 unique ready
 artifact, while `position-spacing-prediction` has 1 lane and 1 unique ready
 artifact. This keeps future work from treating duplicate period preregistration
 rows as separate evidence.
@@ -45,6 +45,9 @@ Follow-up hardening:
   `non-anchor-position-period-v8`, `non-anchor-position-period-v9`, and
   `non-anchor-position-period-v10` now have
   committed preregistrations and deterministic prediction artifacts.
+- `non-anchor-position-period-v11` now has a stable preregistration filename
+  and matching deterministic prediction artifact; it is another readiness lane,
+  not a new unique cryptanalytic signal.
 - The findings ledger now guards `F5` against missing committed period
   preregistration/artifact source inputs.
 - The findings ledger now guards `F7` against missing committed independent
@@ -66,11 +69,12 @@ reproducible evidence.
 
 Observation-note hardening added: source-backed observation files now require a
 `position_notes` entry for every scored one-based position. The scaffold command
-emits those notes, period and spacing validators reject missing or placeholder
-notes, and archived source-backed evaluations require `observations.json`
-`position_notes` to match `result.json` `observation_position_notes`. This keeps
-future non-anchor evidence auditable before any scoring result can be
-interpreted.
+emits those notes, accepts repeatable `--position-note POS=NOTE` entries for
+position-specific source notes, period and spacing validators reject missing or
+placeholder notes, and archived source-backed evaluations require
+`observations.json` `position_notes` to match `result.json`
+`observation_position_notes`. This keeps future non-anchor evidence auditable
+before any scoring result can be interpreted.
 
 ## 2026-05-25: Methodology Context Source
 

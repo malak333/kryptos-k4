@@ -302,6 +302,9 @@ enum Command {
         /// Rationale for why these positions are independent non-anchor observations.
         #[arg(long)]
         rationale: String,
+        /// Per-position note as POS=NOTE. Repeat for each position when source evidence differs.
+        #[arg(long = "position-note")]
+        position_notes: Vec<String>,
         /// Output JSON path.
         #[arg(long)]
         output: PathBuf,
@@ -648,6 +651,17 @@ struct ExplainKeyOptions {
     format: OutputFormat,
 }
 
+struct InitPositionObservationOptions {
+    id: String,
+    source_ids: Vec<String>,
+    positions: String,
+    rationale: String,
+    position_notes: Vec<String>,
+    output: PathBuf,
+    force: bool,
+    format: OutputFormat,
+}
+
 impl From<OutputFormat> for ReportFormat {
     fn from(value: OutputFormat) -> Self {
         match value {
@@ -898,6 +912,7 @@ fn create_position_observation_file(
     source_ids: Vec<String>,
     positions: String,
     rationale: String,
+    position_note_inputs: Vec<String>,
     output: PathBuf,
     force: bool,
 ) -> Result<PositionObservationScaffoldReport> {
@@ -909,15 +924,8 @@ fn create_position_observation_file(
     }
 
     let positions_one_based = parse_position_list(&positions).map_err(anyhow::Error::msg)?;
-    let position_notes = positions_one_based
-        .iter()
-        .map(|position| {
-            (
-                position.to_string(),
-                format!("Source-backed note for one-based K4 position {position}: {rationale}"),
-            )
-        })
-        .collect();
+    let position_notes =
+        build_position_notes(&positions_one_based, &rationale, &position_note_inputs)?;
     let observation = PeriodPredictionObservationFile {
         id,
         source_ids,
@@ -948,6 +956,61 @@ fn create_position_observation_file(
         promoted_candidate: false,
         note: "Position observation scaffolding writes source-backed non-anchor positions only; it is not a claimed solution.",
     })
+}
+
+fn build_position_notes(
+    positions_one_based: &[usize],
+    rationale: &str,
+    position_note_inputs: &[String],
+) -> Result<BTreeMap<String, String>> {
+    if position_note_inputs.is_empty() {
+        return Ok(positions_one_based
+            .iter()
+            .map(|position| {
+                (
+                    position.to_string(),
+                    format!("Source-backed note for one-based K4 position {position}: {rationale}"),
+                )
+            })
+            .collect());
+    }
+
+    let allowed_positions: HashSet<_> = positions_one_based.iter().copied().collect();
+    let mut notes = BTreeMap::new();
+    for input in position_note_inputs {
+        let Some((position_text, note)) = input.split_once('=') else {
+            anyhow::bail!("position-note `{input}` must use POS=NOTE");
+        };
+        let position = position_text
+            .trim()
+            .parse::<usize>()
+            .map_err(|_| anyhow::anyhow!("position-note `{input}` has invalid position"))?;
+        if !allowed_positions.contains(&position) {
+            anyhow::bail!(
+                "position-note `{input}` references position `{position}` not listed in --positions"
+            );
+        }
+        let note = note.trim();
+        if note.is_empty() {
+            anyhow::bail!("position-note for position `{position}` must not be empty");
+        }
+        if notes
+            .insert(position.to_string(), note.to_string())
+            .is_some()
+        {
+            anyhow::bail!("position-note for position `{position}` was provided more than once");
+        }
+    }
+
+    for position in positions_one_based {
+        if !notes.contains_key(&position.to_string()) {
+            anyhow::bail!(
+                "position-note is missing for position `{position}`; provide one POS=NOTE entry for every --positions value"
+            );
+        }
+    }
+
+    Ok(notes)
 }
 
 fn load_period_prediction_artifact_positions(path: &Path) -> Result<HashSet<usize>> {
@@ -1104,12 +1167,20 @@ fn main() -> Result<()> {
             source_ids,
             positions,
             rationale,
+            position_notes,
             output,
             force,
             format,
-        } => print_init_position_observations(
-            id, source_ids, positions, rationale, output, force, format,
-        )?,
+        } => print_init_position_observations(InitPositionObservationOptions {
+            id,
+            source_ids,
+            positions,
+            rationale,
+            position_notes,
+            output,
+            force,
+            format,
+        })?,
         Command::ValidatePeriodObservations {
             artifact,
             preregistration,
@@ -2968,17 +3039,26 @@ fn print_independent_lane_status_report(report: &IndependentLaneStatusReport) {
     }
 }
 
-fn print_init_position_observations(
-    id: String,
-    source_ids: Vec<String>,
-    positions: String,
-    rationale: String,
-    output: PathBuf,
-    force: bool,
-    format: OutputFormat,
-) -> Result<()> {
-    let report =
-        create_position_observation_file(id, source_ids, positions, rationale, output, force)?;
+fn print_init_position_observations(options: InitPositionObservationOptions) -> Result<()> {
+    let InitPositionObservationOptions {
+        id,
+        source_ids,
+        positions,
+        rationale,
+        position_notes,
+        output,
+        force,
+        format,
+    } = options;
+    let report = create_position_observation_file(
+        id,
+        source_ids,
+        positions,
+        rationale,
+        position_notes,
+        output,
+        force,
+    )?;
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&report)?),
         OutputFormat::Markdown => print_position_observation_scaffold_report(&report),

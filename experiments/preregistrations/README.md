@@ -46,8 +46,13 @@ cargo run --locked -- init-position-observations \
   --source-id <registered-public-facts-source-id> \
   --positions <comma-separated-non-anchor-positions> \
   --rationale "<why these positions are independent observations>" \
+  --position-note "<position>=<source-backed note for that position>" \
   --output <source-backed-observations.json>
 ```
+
+Repeat `--position-note` for every listed position when source evidence differs
+by position. If the option is omitted, the scaffold writes rationale-derived
+notes for every position.
 
 Validate the observation file first:
 
@@ -138,6 +143,9 @@ Current independent period lanes:
 - `non-anchor-position-period-v10.json`, a populated follow-up lane
   with committed artifact
   `experiments/predictions/non-anchor-position-period-v10.json`
+- `non-anchor-position-period-v11.json`, a populated follow-up lane
+  with committed artifact
+  `experiments/predictions/non-anchor-position-period-v11.json`
 - `non-anchor-position-spacing-v1.json`, a populated position-only spacing lane
   with committed artifact
   `experiments/predictions/non-anchor-position-spacing-v1.json`
