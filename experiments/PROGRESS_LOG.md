@@ -353,9 +353,10 @@ Independent lane status command added:
 `independent-lane-status --format json` scans the preregistration directory,
 validates each preregistration and committed prediction artifact, and reports
 the next validator/evaluator command for each lane. Current status: 11 lanes,
-11 ready for source-backed observations, 0 invalid lanes, promoted false. This is
-an operational gate summary only; it adds no plaintext, key material, or scored
-evidence.
+11 ready for source-backed observations, 0 invalid lanes, 11 prediction
+artifacts, 2 unique prediction artifact contents, 1 duplicate artifact group,
+promoted false. This is an operational gate summary only; it adds no plaintext,
+key material, or scored evidence.
 
 2026 archive-research context registered:
 `kryptosbot-sanborn-papers-2026` was added to the source registry after checking

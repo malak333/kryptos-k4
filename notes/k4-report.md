@@ -811,7 +811,7 @@ Findings are reproducible research observations, not promoted solution claims.
 - **F10 Independent lane status exposes the next evidence gate (H3)**
   - Sources: `src/preregistration.rs`, `src/main.rs`, `tests/cli_e2e.rs`, `experiments/PROGRESS_LOG.md`
   - Steps: scan committed preregistration files except the template; validate each preregistration and declared prediction artifact; report lane readiness and the next observation validator or evaluator command
-  - Output: The lane-status command reports 11 lanes, 11 ready for source-backed observations, 0 invalid lanes, and promoted false.
+  - Output: The lane-status command reports 11 lanes, 11 ready for source-backed observations, 0 invalid lanes, 11 prediction artifacts, 2 unique prediction artifact contents, 1 duplicate artifact group, and promoted false.
   - Baseline: This is an operational gate summary rather than a statistical cryptanalytic baseline.
   - Interpretation: All current independent prediction lanes are ready for future source-backed observation files, but no observation has been scored and no candidate is promoted.
   - Next test: Use independent-lane-status before adding any observation file, then run the family-specific observation validator and evaluator named by the lane status output.
