@@ -66,10 +66,22 @@ pub struct IndependentLaneStatusReport {
     pub prediction_artifacts: usize,
     pub unique_prediction_artifacts: usize,
     pub unique_ready_prediction_artifacts: usize,
+    pub family_summaries: Vec<IndependentLaneFamilySummary>,
     pub duplicate_prediction_artifact_groups: Vec<DuplicatePredictionArtifactGroup>,
     pub lanes: Vec<IndependentLaneStatus>,
     pub promoted_candidate: bool,
     pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct IndependentLaneFamilySummary {
+    pub hypothesis_family: String,
+    pub lanes: usize,
+    pub ready_for_source_backed_observations: usize,
+    pub prediction_artifacts: usize,
+    pub unique_prediction_artifacts: usize,
+    pub unique_ready_prediction_artifacts: usize,
+    pub duplicate_artifact_groups: usize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -146,6 +158,7 @@ pub fn summarize_independent_lanes_with_repo_root(
         .collect::<Vec<_>>();
     let unique_ready_prediction_artifacts =
         prediction_artifact_groups(&ready_lanes, repo_root).len();
+    let family_summaries = independent_lane_family_summaries(&lanes, repo_root);
     let duplicate_prediction_artifact_groups = artifact_groups
         .into_values()
         .filter(|group| group.len() > 1)
@@ -175,11 +188,54 @@ pub fn summarize_independent_lanes_with_repo_root(
         prediction_artifacts,
         unique_prediction_artifacts,
         unique_ready_prediction_artifacts,
+        family_summaries,
         duplicate_prediction_artifact_groups,
         lanes,
         promoted_candidate: false,
         note: "Independent lane status is an operational gate summary; it is not a claimed solution.",
     })
+}
+
+fn independent_lane_family_summaries(
+    lanes: &[IndependentLaneStatus],
+    repo_root: &Path,
+) -> Vec<IndependentLaneFamilySummary> {
+    let mut by_family: BTreeMap<String, Vec<IndependentLaneStatus>> = BTreeMap::new();
+    for lane in lanes {
+        by_family
+            .entry(
+                lane.hypothesis_family
+                    .clone()
+                    .unwrap_or_else(|| "unavailable".to_string()),
+            )
+            .or_default()
+            .push(lane.clone());
+    }
+
+    by_family
+        .into_iter()
+        .map(|(hypothesis_family, family_lanes)| {
+            let ready_lanes = family_lanes
+                .iter()
+                .filter(|lane| lane.ready_for_source_backed_observations)
+                .cloned()
+                .collect::<Vec<_>>();
+            let artifact_groups = prediction_artifact_groups(&family_lanes, repo_root);
+            let ready_artifact_groups = prediction_artifact_groups(&ready_lanes, repo_root);
+            IndependentLaneFamilySummary {
+                hypothesis_family,
+                lanes: family_lanes.len(),
+                ready_for_source_backed_observations: ready_lanes.len(),
+                prediction_artifacts: artifact_groups.values().map(Vec::len).sum(),
+                unique_prediction_artifacts: artifact_groups.len(),
+                unique_ready_prediction_artifacts: ready_artifact_groups.len(),
+                duplicate_artifact_groups: artifact_groups
+                    .values()
+                    .filter(|group| group.len() > 1)
+                    .count(),
+            }
+        })
+        .collect()
 }
 
 fn prediction_artifact_groups(
@@ -856,6 +912,19 @@ mod tests {
         assert_eq!(report.prediction_artifacts, 2);
         assert_eq!(report.unique_prediction_artifacts, 1);
         assert_eq!(report.unique_ready_prediction_artifacts, 0);
+        assert_eq!(report.family_summaries.len(), 1);
+        assert_eq!(
+            report.family_summaries[0].hypothesis_family,
+            "structural-routing"
+        );
+        assert_eq!(report.family_summaries[0].lanes, 2);
+        assert_eq!(report.family_summaries[0].prediction_artifacts, 2);
+        assert_eq!(report.family_summaries[0].unique_prediction_artifacts, 1);
+        assert_eq!(
+            report.family_summaries[0].unique_ready_prediction_artifacts,
+            0
+        );
+        assert_eq!(report.family_summaries[0].duplicate_artifact_groups, 1);
         assert_eq!(report.duplicate_prediction_artifact_groups.len(), 1);
         assert_eq!(
             report.duplicate_prediction_artifact_groups[0].lane_ids,

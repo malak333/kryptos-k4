@@ -83,6 +83,10 @@ cargo run -- report --format markdown --output notes/k4-report.md
 cargo run -- report --format json
 ```
 
+`independent-lane-status` includes a family summary that should be used as the
+current evidence count: the period-family files share one deterministic target,
+while the spacing family is the second unique ready target.
+
 Observation files must cite registered sources whose `allowed_use` boundary is
 compatible with scored independent position evidence. Public-anchor summary,
 public-clue context, methodology context, and archive-context-only sources are

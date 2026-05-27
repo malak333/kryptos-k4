@@ -33,6 +33,12 @@ an operational readiness inventory, not twelve independent cryptanalytic signals
 Future interpretation should count unique prediction targets and source-backed
 observations, not just preregistration rows.
 
+Family-level inventory added: `independent-lane-status` now reports a family
+summary showing `position-period-prediction` has 12 lanes but 1 unique ready
+artifact, while `position-spacing-prediction` has 1 lane and 1 unique ready
+artifact. This keeps future work from treating duplicate period preregistration
+rows as separate evidence.
+
 Follow-up hardening:
 
 - `non-anchor-position-period-v6`, `non-anchor-position-period-v7`,
@@ -365,7 +371,9 @@ validates each preregistration and committed prediction artifact, and reports
 the next validator/evaluator command for each lane. Current status: 13 lanes,
 13 ready for source-backed observations, 0 invalid lanes, 13 prediction
 artifacts, 2 unique prediction artifact contents, 2 unique ready prediction
-artifact contents, 1 duplicate artifact group, promoted false. This is an
+artifact contents, 1 duplicate artifact group, period family 12 lanes/1 unique
+ready artifact, spacing family 1 lane/1 unique ready artifact, promoted false.
+This is an
 operational gate summary only; it adds no plaintext, key material, or scored
 evidence.
 

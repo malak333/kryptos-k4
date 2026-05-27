@@ -116,6 +116,9 @@ Run `independent-lane-status` before adding a source-backed observation file. It
 must show a valid preregistration and prediction artifact for the target lane,
 then follow the family-specific observation validator and evaluator named in the
 status output.
+Use the family summary in that output as the evidence count: duplicate period
+preregistration rows that share one deterministic artifact are operational
+readiness records, not separate cryptanalytic signals.
 
 Public methodology-context sources can document why a search family is stopped
 or why a null control is required. They still do not supply plaintext,

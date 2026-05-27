@@ -2852,6 +2852,27 @@ fn print_independent_lane_status_report(report: &IndependentLaneStatusReport) {
     println!("promoted: {}", report.promoted_candidate);
     println!("note: {}\n", report.note);
 
+    if !report.family_summaries.is_empty() {
+        println!("## Family Summary\n");
+        println!(
+            "| Family | Lanes | Ready | Artifacts | Unique Artifacts | Unique Ready Artifacts | Duplicate Groups |"
+        );
+        println!("| --- | --- | --- | --- | --- | --- | --- |");
+        for family in &report.family_summaries {
+            println!(
+                "| {} | {} | {} | {} | {} | {} | {} |",
+                family.hypothesis_family,
+                family.lanes,
+                family.ready_for_source_backed_observations,
+                family.prediction_artifacts,
+                family.unique_prediction_artifacts,
+                family.unique_ready_prediction_artifacts,
+                family.duplicate_artifact_groups
+            );
+        }
+        println!();
+    }
+
     if !report.duplicate_prediction_artifact_groups.is_empty() {
         println!("## Duplicate Prediction Artifacts\n");
         println!("| Lanes | Artifacts |");

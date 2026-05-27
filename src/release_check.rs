@@ -309,15 +309,29 @@ fn check_independent_lanes_ready(repo_root: &Path) -> ReleaseCheck {
                 name: "independent-lanes-ready",
                 passed: report.lane_count > 0 && blocked_lanes.is_empty(),
                 detail: if report.lane_count > 0 && blocked_lanes.is_empty() {
+                    let family_summary = report
+                        .family_summaries
+                        .iter()
+                        .map(|family| {
+                            format!(
+                                "{}:{}_lanes/{}_unique_ready",
+                                family.hypothesis_family,
+                                family.lanes,
+                                family.unique_ready_prediction_artifacts
+                            )
+                        })
+                        .collect::<Vec<_>>()
+                        .join(",");
                     format!(
-                        "Independent preregistered lanes are ready for source-backed observation files. path={}; ready={}; checked={}; prediction_artifacts={}; unique_prediction_artifacts={}; unique_ready_prediction_artifacts={}; duplicate_artifact_groups={}",
+                        "Independent preregistered lanes are ready for source-backed observation files. path={}; ready={}; checked={}; prediction_artifacts={}; unique_prediction_artifacts={}; unique_ready_prediction_artifacts={}; duplicate_artifact_groups={}; family_summary={}",
                         directory.display(),
                         report.ready_for_source_backed_observations,
                         report.lane_count,
                         report.prediction_artifacts,
                         report.unique_prediction_artifacts,
                         report.unique_ready_prediction_artifacts,
-                        report.duplicate_prediction_artifact_groups.len()
+                        report.duplicate_prediction_artifact_groups.len(),
+                        family_summary
                     )
                 } else if report.lane_count == 0 {
                     format!(

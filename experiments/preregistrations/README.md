@@ -31,6 +31,10 @@ discovery inputs or primary evidence. Those fragments can still be listed as
 controls after an independent target is defined. The validator also rejects
 unchanged template placeholder text.
 
+Before adding another lane, run `independent-lane-status` and check the family
+summary. A new preregistration that points to the same deterministic artifact as
+an existing family adds workflow traceability, not independent evidence.
+
 For future period-prediction evidence, first check which registered sources can
 support scored observations, then use the guarded scaffold command to create a
 lane-specific observation file:

@@ -1636,6 +1636,13 @@ fn independent_lane_status_summarizes_ready_lanes() {
             "unique ready prediction artifacts: 2",
         ))
         .stdout(predicate::str::contains("duplicate artifact groups: 1"))
+        .stdout(predicate::str::contains("Family Summary"))
+        .stdout(predicate::str::contains(
+            "| position-period-prediction | 12 | 12 | 12 | 1 | 1 | 1 |",
+        ))
+        .stdout(predicate::str::contains(
+            "| position-spacing-prediction | 1 | 1 | 1 | 1 | 1 | 0 |",
+        ))
         .stdout(predicate::str::contains("Duplicate Prediction Artifacts"))
         .stdout(predicate::str::contains(
             "non-anchor-position-period-followup-v1",
@@ -1660,6 +1667,19 @@ fn independent_lane_status_summarizes_ready_lanes() {
     assert_eq!(json["prediction_artifacts"], 13);
     assert_eq!(json["unique_prediction_artifacts"], 2);
     assert_eq!(json["unique_ready_prediction_artifacts"], 2);
+    let families = json["family_summaries"].as_array().unwrap();
+    assert!(families.iter().any(|family| {
+        family["hypothesis_family"] == "position-period-prediction"
+            && family["lanes"] == 12
+            && family["unique_ready_prediction_artifacts"] == 1
+            && family["duplicate_artifact_groups"] == 1
+    }));
+    assert!(families.iter().any(|family| {
+        family["hypothesis_family"] == "position-spacing-prediction"
+            && family["lanes"] == 1
+            && family["unique_ready_prediction_artifacts"] == 1
+            && family["duplicate_artifact_groups"] == 0
+    }));
     assert_eq!(
         json["duplicate_prediction_artifact_groups"]
             .as_array()

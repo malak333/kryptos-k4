@@ -244,7 +244,7 @@ pub fn findings() -> Vec<Finding> {
                 "validate each preregistration and declared prediction artifact",
                 "report lane readiness and the next observation validator or evaluator command",
             ],
-            output_summary: "The lane-status command reports 13 lanes, 13 ready for source-backed observations, 0 invalid lanes, 13 prediction artifacts, 2 unique prediction artifact contents, 2 unique ready prediction artifact contents, 1 duplicate artifact group, and promoted false.",
+            output_summary: "The lane-status command reports 13 lanes, 13 ready for source-backed observations, 0 invalid lanes, 13 prediction artifacts, 2 unique prediction artifact contents, 2 unique ready prediction artifact contents, 1 duplicate artifact group, period family 12 lanes/1 unique ready artifact, spacing family 1 lane/1 unique ready artifact, and promoted false.",
             baseline_comparison: "This is an operational gate summary rather than a statistical cryptanalytic baseline.",
             interpretation: "All current independent prediction lanes are ready for future source-backed observation files, but no observation has been scored and no candidate is promoted.",
             next_test: "Use independent-lane-status before adding any observation file, then run the family-specific observation validator and evaluator named by the lane status output.",
@@ -316,6 +316,20 @@ mod tests {
             report.unique_ready_prediction_artifacts,
             report.duplicate_prediction_artifact_groups.len()
         )));
+        for family in &report.family_summaries {
+            assert!(finding.output_summary.contains(&format!(
+                "{} family {} lane",
+                family.hypothesis_family
+                    .strip_prefix("position-")
+                    .and_then(|suffix| suffix.strip_suffix("-prediction"))
+                    .unwrap_or(&family.hypothesis_family),
+                family.lanes
+            )));
+            assert!(finding.output_summary.contains(&format!(
+                "{} unique ready artifact",
+                family.unique_ready_prediction_artifacts
+            )));
+        }
         assert!(!report.promoted_candidate);
         assert!(!finding.promoted_candidate);
     }
