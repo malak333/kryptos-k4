@@ -3236,7 +3236,7 @@ fn json_report_includes_candidate_and_route_experiments() {
 #[test]
 fn markdown_report_can_be_written_to_file() {
     let temp = tempfile::tempdir().unwrap();
-    let report_path = temp.path().join("k4-report.md");
+    let report_path = temp.path().join("nested").join("k4-report.md");
 
     Command::cargo_bin("kryptos-k4")
         .unwrap()
@@ -3258,6 +3258,18 @@ fn markdown_report_can_be_written_to_file() {
     assert!(report.contains("validate-prediction-artifact"));
     assert!(report.contains("evaluate-period-prediction"));
     assert!(report.contains("Independent non-anchor period targets"));
+    assert!(
+        !temp
+            .path()
+            .join("nested")
+            .read_dir()
+            .unwrap()
+            .any(|entry| entry
+                .unwrap()
+                .file_name()
+                .to_string_lossy()
+                .starts_with(".k4-report.md.tmp-"))
+    );
 }
 
 #[test]

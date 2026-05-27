@@ -94,6 +94,11 @@ one-based positions that are eligible for future source-backed observation
 files and the 24 excluded public-anchor positions. This is a setup aid for the
 next evidence gate, not a structural score or candidate signal.
 
+Report-output hardening added: `report --output` now writes through a temporary
+file in the destination directory before replacing the generated report path.
+Use this instead of shell redirection so a failed preflight-backed render cannot
+truncate `notes/k4-report.md` before the command returns an error.
+
 ## 2026-05-25: Methodology Context Source
 
 The public KryptosBot methodology page is now registered as

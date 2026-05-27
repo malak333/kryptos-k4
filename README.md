@@ -95,6 +95,9 @@ interpreted.
 `non-anchor-positions` prints the one-based K4 position universe eligible for
 future source-backed observations and the public anchor ranges that must stay
 excluded from scored evidence.
+Use `report --output notes/k4-report.md` to regenerate the Markdown report; the
+CLI writes through a temporary file and replaces the report only after the
+preflight-backed render succeeds.
 
 Observation files must cite registered sources whose `allowed_use` boundary is
 compatible with scored independent position evidence. Public-anchor summary,

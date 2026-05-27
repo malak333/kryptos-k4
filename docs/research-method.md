@@ -66,6 +66,7 @@ The integration tests in `tests/cli_e2e.rs` execute the compiled CLI and verify:
 - spacing-prediction-plan emits predeclared non-anchor spacing residue targets from K4 positions only, without scoring public fragment values or candidate material;
 - evaluate-period-prediction scores explicit non-anchor position inputs or source-backed observation files, marks ad hoc `--positions` input as diagnostic, requires `--preregistration` for source-backed files, and marks source-backed files distinctly in JSON/Markdown output;
 - evaluate-spacing-prediction scores explicit non-anchor position inputs or source-backed observation files, marks ad hoc `--positions` input as diagnostic, requires `--preregistration` for source-backed files, and rejects undersized source-backed spacing observations before scoring;
+- report --output writes the generated report through a temporary file before replacing the target path;
 - experiments/PROGRESS_LOG.md records command-backed negative controls and active gates so weak lanes are not repeatedly rerun as evidence;
 - candidate-sequence output includes family, source IDs, transform metadata, and no promoted candidates;
 - route output uses only small named route families and emits no plaintext guesses.

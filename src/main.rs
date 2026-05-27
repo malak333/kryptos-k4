@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::{Parser, Subcommand, ValueEnum};
 use kryptos_k4::{
     AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, BatchKeyMaterialCandidate,
@@ -1318,16 +1318,38 @@ fn main() -> Result<()> {
             let report = build_report()?;
             let rendered = render_report(&report, format.into())?;
             if let Some(path) = output {
-                if let Some(parent) = path.parent() {
-                    fs::create_dir_all(parent)?;
-                }
-                fs::write(path, rendered)?;
+                write_output_file_atomically(&path, &rendered)?;
             } else {
                 print!("{rendered}");
             }
         }
     }
 
+    Ok(())
+}
+
+fn write_output_file_atomically(path: &Path, contents: &str) -> Result<()> {
+    let parent = path
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+        .unwrap_or_else(|| Path::new("."));
+    fs::create_dir_all(parent)
+        .with_context(|| format!("failed to create output directory `{}`", parent.display()))?;
+    let file_name = path
+        .file_name()
+        .with_context(|| format!("output path `{}` has no file name", path.display()))?;
+    let temp_path = parent.join(format!(
+        ".{}.tmp-{}",
+        file_name.to_string_lossy(),
+        std::process::id()
+    ));
+    fs::write(&temp_path, contents)
+        .with_context(|| format!("failed to write temporary output `{}`", temp_path.display()))?;
+    if let Err(error) = fs::rename(&temp_path, path) {
+        let _ = fs::remove_file(&temp_path);
+        return Err(error)
+            .with_context(|| format!("failed to replace output `{}`", path.display()));
+    }
     Ok(())
 }
 
