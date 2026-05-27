@@ -616,11 +616,13 @@ struct NextEvidenceGateReport {
     ready_lanes: usize,
     invalid_lanes: usize,
     unique_ready_prediction_artifacts: usize,
+    duplicate_prediction_artifact_group_count: usize,
     eligible_source_ids: Vec<String>,
     ineligible_source_count: usize,
     valid_source_backed_archive_count: usize,
     invalid_archive_count: usize,
     evidence_available: bool,
+    readiness_note: &'static str,
     required_observation_fields: Vec<&'static str>,
     gates: Vec<NextEvidenceGate>,
     promoted_candidate: bool,
@@ -3131,11 +3133,15 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
         ready_lanes: lane_report.ready_for_source_backed_observations,
         invalid_lanes: lane_report.invalid_lanes,
         unique_ready_prediction_artifacts: lane_report.unique_ready_prediction_artifacts,
+        duplicate_prediction_artifact_group_count: lane_report
+            .duplicate_prediction_artifact_groups
+            .len(),
         eligible_source_ids,
         ineligible_source_count: source_report.ineligible_count,
         valid_source_backed_archive_count: evidence_report.valid_source_backed_archive_count,
         invalid_archive_count: evidence_report.invalid_archive_count,
         evidence_available: evidence_report.evidence_available,
+        readiness_note: "Ready lane count is an operational inventory; use unique ready prediction artifacts and validated source-backed archives as the evidence counts.",
         required_observation_fields: vec![
             "registered eligible source ID",
             "one-based non-anchor K4 positions",
@@ -3214,6 +3220,10 @@ fn print_next_evidence_gate(directory: PathBuf, format: OutputFormat) -> Result<
                 report.unique_ready_prediction_artifacts
             );
             println!(
+                "duplicate prediction artifact groups: {}",
+                report.duplicate_prediction_artifact_group_count
+            );
+            println!(
                 "eligible scored-observation sources: {}",
                 report.eligible_source_ids.join(", ")
             );
@@ -3225,6 +3235,7 @@ fn print_next_evidence_gate(directory: PathBuf, format: OutputFormat) -> Result<
             println!("invalid archives: {}", report.invalid_archive_count);
             println!("evidence available: {}", report.evidence_available);
             println!("promoted: {}", report.promoted_candidate);
+            println!("readiness note: {}", report.readiness_note);
             println!("note: {}\n", report.note);
             println!("required observation fields:");
             for field in &report.required_observation_fields {

@@ -111,6 +111,11 @@ Next-evidence-gate now includes evidence archive status directly: it reports
 repo state. This keeps the 16 ready lanes from being mistaken for scored
 independent evidence.
 
+Next-evidence-gate now also reports duplicate prediction-artifact groups and a
+readiness note. Current repo state has 16 ready lanes, 2 unique ready prediction
+artifacts, and 1 duplicate prediction-artifact group, so lane count remains an
+operational inventory rather than an independent evidence count.
+
 ## 2026-05-25: Methodology Context Source
 
 The public KryptosBot methodology page is now registered as

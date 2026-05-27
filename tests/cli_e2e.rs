@@ -1900,9 +1900,15 @@ fn next_evidence_gate_prints_operational_checklist() {
         .stdout(predicate::str::contains(
             "unique ready prediction artifacts: 2",
         ))
+        .stdout(predicate::str::contains(
+            "duplicate prediction artifact groups: 1",
+        ))
         .stdout(predicate::str::contains("cia-artifact, cia-sculpture"))
         .stdout(predicate::str::contains("valid source-backed archives: 0"))
         .stdout(predicate::str::contains("evidence available: false"))
+        .stdout(predicate::str::contains(
+            "Ready lane count is an operational inventory",
+        ))
         .stdout(predicate::str::contains("validate-period-observations"))
         .stdout(predicate::str::contains("evaluate-period-prediction"))
         .stdout(predicate::str::contains("validate-spacing-observations"))
@@ -1922,9 +1928,16 @@ fn next_evidence_gate_prints_operational_checklist() {
     assert_eq!(json["ready_lanes"], 16);
     assert_eq!(json["invalid_lanes"], 0);
     assert_eq!(json["unique_ready_prediction_artifacts"], 2);
+    assert_eq!(json["duplicate_prediction_artifact_group_count"], 1);
     assert_eq!(json["valid_source_backed_archive_count"], 0);
     assert_eq!(json["invalid_archive_count"], 0);
     assert_eq!(json["evidence_available"], false);
+    assert!(
+        json["readiness_note"]
+            .as_str()
+            .unwrap()
+            .contains("unique ready prediction artifacts")
+    );
     assert_eq!(json["promoted_candidate"], false);
     assert!(
         json["eligible_source_ids"]
