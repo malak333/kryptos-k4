@@ -182,6 +182,7 @@ fn facts_hypotheses_sources_and_help_are_covered() {
         .stdout(predicate::str::contains("independent-evidence-status"))
         .stdout(predicate::str::contains("source-review-packet"))
         .stdout(predicate::str::contains("init-source-review"))
+        .stdout(predicate::str::contains("validate-source-review"))
         .stdout(predicate::str::contains("non-anchor-positions"))
         .stdout(predicate::str::contains("init-position-observations"))
         .stdout(predicate::str::contains("observation-sources"))
@@ -316,6 +317,109 @@ fn init_source_review_writes_prescore_review_file() {
     assert_eq!(json["valid"], true);
     assert_eq!(json["review"]["id"], "cia-source-review-v2");
     assert_eq!(json["review"]["promoted_candidate"], false);
+}
+
+#[test]
+fn validate_source_review_checks_prescore_review_file() {
+    let temp = tempfile::tempdir().unwrap();
+    let output_path = temp.path().join("source-review.json");
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "init-source-review",
+            "--id",
+            "cia-source-review-v1",
+            "--source-id",
+            "cia-artifact",
+            "--source-id",
+            "cia-sculpture",
+            "--review-note",
+            "Reviewed eligible CIA source pages before selecting any non-anchor positions.",
+            "--output",
+            output_path.to_str().unwrap(),
+        ])
+        .assert()
+        .success();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-source-review",
+            "--input",
+            output_path.to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Source Review Validation"))
+        .stdout(predicate::str::contains(
+            "review id: `cia-source-review-v1`",
+        ))
+        .stdout(predicate::str::contains("reviewed sources: 2"))
+        .stdout(predicate::str::contains("local archives missing: 2"))
+        .stdout(predicate::str::contains("valid: true"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-source-review",
+            "--input",
+            output_path.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["valid"], true);
+    assert_eq!(json["review_id"], "cia-source-review-v1");
+    assert_eq!(json["source_ids"].as_array().unwrap().len(), 2);
+    assert_eq!(json["missing_local_archive_count"], 2);
+    assert_eq!(json["promoted_candidate"], false);
+}
+
+#[test]
+fn validate_source_review_rejects_tampered_review_file() {
+    let temp = tempfile::tempdir().unwrap();
+    let output_path = temp.path().join("source-review.json");
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "init-source-review",
+            "--id",
+            "cia-source-review-v1",
+            "--source-id",
+            "cia-artifact",
+            "--review-note",
+            "Reviewed eligible CIA source page before selecting any non-anchor positions.",
+            "--output",
+            output_path.to_str().unwrap(),
+        ])
+        .assert()
+        .success();
+
+    let mut json: Value =
+        serde_json::from_str(&std::fs::read_to_string(&output_path).unwrap()).unwrap();
+    json["sources"][0]["url"] = Value::String("https://example.invalid/tampered".to_string());
+    std::fs::write(&output_path, serde_json::to_string_pretty(&json).unwrap()).unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-source-review",
+            "--input",
+            output_path.to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "source-review file failed validation",
+        ));
 }
 
 #[test]
@@ -2106,6 +2210,7 @@ fn next_evidence_gate_prints_operational_checklist() {
         ))
         .stdout(predicate::str::contains("validate-period-observations"))
         .stdout(predicate::str::contains("init-source-review"))
+        .stdout(predicate::str::contains("validate-source-review"))
         .stdout(predicate::str::contains("evaluate-period-prediction"))
         .stdout(predicate::str::contains("validate-spacing-observations"))
         .stdout(predicate::str::contains("evaluate-spacing-prediction"))
@@ -2139,6 +2244,12 @@ fn next_evidence_gate_prints_operational_checklist() {
             .as_str()
             .unwrap()
             .contains("init-source-review")
+    );
+    assert!(
+        json["source_review_validation_command"]
+            .as_str()
+            .unwrap()
+            .contains("validate-source-review")
     );
     assert_eq!(json["promoted_candidate"], false);
     assert!(

@@ -118,6 +118,9 @@ shows which eligible sources currently lack local archive URLs.
 Use `init-source-review` to materialize that pre-score review into JSON before
 choosing observation positions; it rejects context-only sources, duplicate
 source IDs, placeholders, and accidental overwrites.
+Run `validate-source-review` before scaffolding observations from a saved review
+file so edited or stale source-review artifacts cannot bypass current source
+eligibility metadata.
 Run `independent-evidence-status` to confirm whether any source-backed
 observation evaluation archives already exist before interpreting a lane as
 having evidence.

@@ -45,6 +45,10 @@ Additional preregistration cleanup:
   only registered scored-observation-eligible source IDs, rejects duplicate or
   context-only sources, records missing local-archive status, and remains
   non-promotional.
+- `validate-source-review` now rechecks saved source-review artifacts against
+  the current source registry before observation scoring. It catches stale
+  reviewed source metadata, duplicate source IDs, placeholders, context-only
+  sources, and tampering while still making no cryptanalytic claim.
 
 Current independent-lane status:
 

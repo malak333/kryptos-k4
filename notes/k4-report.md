@@ -31,6 +31,7 @@ This report uses public anchors only and is not a claimed solution. Production r
 | `independent-evidence-status` | Archive status for source-backed period/spacing observation evaluations, separating valid source-backed evidence, diagnostic archives, invalid archives, and no-evidence states in Markdown or JSON. |
 | `source-review-packet` | Pre-score source review packet for eligible observation sources, local archive status, source URLs, use boundaries, and required review steps in Markdown or JSON. |
 | `init-source-review` | Guarded pre-score source-review file creator that records reviewed eligible sources, local archive status, required review steps, and review notes before any observation positions are selected. |
+| `validate-source-review` | Gate for pre-score source-review artifacts, checking reviewed source IDs and metadata against the registered eligible source set in Markdown or JSON. |
 | `non-anchor-positions` | Non-scoring one-based K4 position universe for future source-backed observations, including excluded public anchor ranges, in Markdown or JSON. |
 | `init-position-observations` | Guarded source-backed observation-file creator that writes registered-source non-anchor positions plus required per-position notes (`--position-note POS=NOTE`) only, without scoring, in Markdown or JSON. |
 | `observation-sources` | Focused source-use report for scored independent position observations, separating eligible public-facts sources from context-only sources in Markdown or JSON. |

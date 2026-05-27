@@ -333,6 +333,15 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
     },
+    /// Validate a pre-score source-review JSON file before observation scoring.
+    ValidateSourceReview {
+        /// Source-review JSON file to validate.
+        #[arg(long)]
+        input: PathBuf,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Print the one-based K4 positions eligible for future non-anchor observations.
     NonAnchorPositions {
         /// Output format.
@@ -660,6 +669,7 @@ struct NextEvidenceGateReport {
     readiness_note: &'static str,
     required_observation_fields: Vec<&'static str>,
     source_review_scaffold_command: &'static str,
+    source_review_validation_command: &'static str,
     gates: Vec<NextEvidenceGate>,
     promoted_candidate: bool,
     note: &'static str,
@@ -706,6 +716,20 @@ struct SourceReviewScaffoldReport {
     review: SourceReviewFile,
     valid: bool,
     errors: Vec<String>,
+    promoted_candidate: bool,
+    note: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct SourceReviewValidation {
+    input_path: String,
+    review_id: Option<String>,
+    source_ids: Vec<String>,
+    reviewed_source_count: usize,
+    missing_local_archive_count: usize,
+    valid: bool,
+    errors: Vec<String>,
+    warnings: Vec<String>,
     promoted_candidate: bool,
     note: &'static str,
 }
@@ -1226,6 +1250,216 @@ fn create_source_review_file(
     })
 }
 
+fn validate_source_review_file(input: &Path) -> Result<SourceReviewValidation> {
+    let contents = fs::read_to_string(input)
+        .with_context(|| format!("failed to read source-review file `{}`", input.display()))?;
+    let value: serde_json::Value = serde_json::from_str(&contents)
+        .with_context(|| format!("source-review file `{}` is not valid JSON", input.display()))?;
+    let mut errors = Vec::new();
+    let mut warnings = Vec::new();
+
+    let review_id = json_string_field(&value, "id", &mut errors);
+    if let Some(id) = &review_id
+        && contains_template_placeholder(id)
+    {
+        errors.push("id still contains template placeholder text".to_string());
+    }
+
+    match json_string_field(&value, "review_note", &mut errors) {
+        Some(note) if contains_template_placeholder(&note) => {
+            errors.push("review_note still contains template placeholder text".to_string());
+        }
+        Some(_) => {}
+        None => {}
+    }
+
+    if value
+        .get("promoted_candidate")
+        .and_then(serde_json::Value::as_bool)
+        != Some(false)
+    {
+        errors.push("promoted_candidate must be false".to_string());
+    }
+
+    let source_ids = json_string_array_field(&value, "source_ids", &mut errors);
+    let sources = value
+        .get("sources")
+        .and_then(serde_json::Value::as_array)
+        .cloned()
+        .unwrap_or_else(|| {
+            errors.push("sources must be a non-empty array".to_string());
+            Vec::new()
+        });
+    if sources.is_empty() {
+        errors.push("sources must include at least one reviewed source".to_string());
+    }
+    if !sources.is_empty() && sources.len() != source_ids.len() {
+        errors.push(format!(
+            "sources length {} does not match source_ids length {}",
+            sources.len(),
+            source_ids.len()
+        ));
+    }
+
+    let eligible_by_id: BTreeMap<_, _> = observation_source_eligibility_report()
+        .sources
+        .into_iter()
+        .filter(|source| source.eligible_for_scored_observations)
+        .map(|source| (source.id, source))
+        .collect();
+    let mut seen_source_ids = HashSet::new();
+    let mut missing_local_archive_count = 0;
+    for source_id in &source_ids {
+        if !seen_source_ids.insert(source_id.clone()) {
+            errors.push(format!("source_id `{source_id}` appears more than once"));
+        }
+        match eligible_by_id.get(source_id.as_str()) {
+            Some(source) if !source.locally_archived => missing_local_archive_count += 1,
+            Some(_) => {}
+            None => errors.push(format!(
+                "source_id `{source_id}` is not registered as eligible scored-observation evidence"
+            )),
+        }
+    }
+
+    for source_value in &sources {
+        let Some(source_id) = json_string_field(source_value, "id", &mut errors) else {
+            continue;
+        };
+        let Some(expected) = eligible_by_id.get(source_id.as_str()) else {
+            errors.push(format!(
+                "sources entry `{source_id}` is not registered as eligible scored-observation evidence"
+            ));
+            continue;
+        };
+        if !source_ids.contains(&source_id) {
+            errors.push(format!(
+                "sources entry `{source_id}` is not listed in source_ids"
+            ));
+        }
+        validate_source_review_field(source_value, &source_id, "url", expected.url, &mut errors);
+        validate_source_review_field(
+            source_value,
+            &source_id,
+            "accessed_at",
+            expected.accessed_at,
+            &mut errors,
+        );
+        validate_source_review_field(
+            source_value,
+            &source_id,
+            "allowed_use",
+            expected.allowed_use,
+            &mut errors,
+        );
+        if source_value
+            .get("locally_archived")
+            .and_then(serde_json::Value::as_bool)
+            != Some(expected.locally_archived)
+        {
+            errors.push(format!(
+                "sources entry `{source_id}` has stale locally_archived value"
+            ));
+        }
+    }
+
+    if json_array_len(&value, "required_review_steps", &mut errors) == 0 {
+        errors.push("required_review_steps must not be empty".to_string());
+    }
+    if json_array_len(&value, "observation_requirements", &mut errors) == 0 {
+        errors.push("observation_requirements must not be empty".to_string());
+    }
+    if missing_local_archive_count > 0 {
+        warnings.push(format!(
+            "{missing_local_archive_count} reviewed source(s) lack local archive URLs"
+        ));
+    }
+
+    let valid = errors.is_empty();
+    Ok(SourceReviewValidation {
+        input_path: input.display().to_string(),
+        review_id,
+        source_ids,
+        reviewed_source_count: sources.len(),
+        missing_local_archive_count,
+        valid,
+        errors,
+        warnings,
+        promoted_candidate: false,
+        note: "Source-review validation checks pre-score source eligibility and metadata; it is not a claimed solution.",
+    })
+}
+
+fn json_string_field(
+    value: &serde_json::Value,
+    field: &str,
+    errors: &mut Vec<String>,
+) -> Option<String> {
+    match value.get(field).and_then(serde_json::Value::as_str) {
+        Some(text) if !text.trim().is_empty() => Some(text.trim().to_string()),
+        Some(_) => {
+            errors.push(format!("{field} must not be empty"));
+            None
+        }
+        None => {
+            errors.push(format!("{field} must be a string"));
+            None
+        }
+    }
+}
+
+fn json_string_array_field(
+    value: &serde_json::Value,
+    field: &str,
+    errors: &mut Vec<String>,
+) -> Vec<String> {
+    let Some(array) = value.get(field).and_then(serde_json::Value::as_array) else {
+        errors.push(format!("{field} must be a non-empty array"));
+        return Vec::new();
+    };
+    if array.is_empty() {
+        errors.push(format!("{field} must be a non-empty array"));
+    }
+    array
+        .iter()
+        .filter_map(|entry| match entry.as_str() {
+            Some(text) if !text.trim().is_empty() => Some(text.trim().to_string()),
+            _ => {
+                errors.push(format!("{field} entries must be non-empty strings"));
+                None
+            }
+        })
+        .collect()
+}
+
+fn json_array_len(value: &serde_json::Value, field: &str, errors: &mut Vec<String>) -> usize {
+    match value.get(field).and_then(serde_json::Value::as_array) {
+        Some(array) => array.len(),
+        None => {
+            errors.push(format!("{field} must be an array"));
+            0
+        }
+    }
+}
+
+fn validate_source_review_field(
+    source_value: &serde_json::Value,
+    source_id: &str,
+    field: &str,
+    expected: &str,
+    errors: &mut Vec<String>,
+) {
+    match source_value.get(field).and_then(serde_json::Value::as_str) {
+        Some(actual) if actual == expected => {}
+        Some(_) => errors.push(format!(
+            "sources entry `{source_id}` has stale {field} value"
+        )),
+        None => errors.push(format!(
+            "sources entry `{source_id}` is missing string field `{field}`"
+        )),
+    }
+}
+
 fn build_position_notes(
     positions_one_based: &[usize],
     position_note_inputs: &[String],
@@ -1443,6 +1677,9 @@ fn main() -> Result<()> {
             force,
             format,
         })?,
+        Command::ValidateSourceReview { input, format } => {
+            print_validate_source_review(input, format)?
+        }
         Command::NonAnchorPositions { format } => print_non_anchor_positions(format)?,
         Command::InitPositionObservations {
             id,
@@ -3332,6 +3569,7 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
             "one non-empty position_notes entry per scored position",
         ],
         source_review_scaffold_command: "cargo run --locked -- init-source-review --id <source-review-id> --source-id <eligible-source-id> --review-note \"<what source pages were reviewed before choosing positions>\" --output <source-review.json>",
+        source_review_validation_command: "cargo run --locked -- validate-source-review --input <source-review.json> --format json",
         gates,
         promoted_candidate: false,
         note: "Next-evidence-gate output is an operational checklist for future source-backed observations; it is not a claimed solution.",
@@ -3428,6 +3666,10 @@ fn print_next_evidence_gate(directory: PathBuf, format: OutputFormat) -> Result<
             println!(
                 "\nsource review scaffold:\n```bash\n{}\n```",
                 report.source_review_scaffold_command
+            );
+            println!(
+                "source review validate:\n```bash\n{}\n```",
+                report.source_review_validation_command
             );
             println!("\n## Eligible Source Details\n");
             println!("| Source ID | Local Archive | Accessed | Source Type | Use Boundary | URL |");
@@ -3568,6 +3810,57 @@ fn print_init_source_review(options: InitSourceReviewOptions) -> Result<()> {
         OutputFormat::Markdown => print_source_review_scaffold_report(&report),
     }
     Ok(())
+}
+
+fn print_validate_source_review(input: PathBuf, format: OutputFormat) -> Result<()> {
+    let validation = validate_source_review_file(&input)?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&validation)?),
+        OutputFormat::Markdown => print_source_review_validation(&validation),
+    }
+    if validation.valid {
+        Ok(())
+    } else {
+        anyhow::bail!("source-review file failed validation")
+    }
+}
+
+fn print_source_review_validation(validation: &SourceReviewValidation) {
+    println!("# Source Review Validation\n");
+    println!("This is not a claimed solution.\n");
+    println!("input: `{}`", validation.input_path);
+    match &validation.review_id {
+        Some(id) => println!("review id: `{id}`"),
+        None => println!("review id: unavailable"),
+    }
+    println!("source ids: {}", validation.source_ids.join(", "));
+    println!("reviewed sources: {}", validation.reviewed_source_count);
+    println!(
+        "local archives missing: {}",
+        validation.missing_local_archive_count
+    );
+    println!("valid: {}", validation.valid);
+    println!("promoted: {}", validation.promoted_candidate);
+    println!("note: {}\n", validation.note);
+
+    println!("## Errors\n");
+    if validation.errors.is_empty() {
+        println!("none\n");
+    } else {
+        for error in &validation.errors {
+            println!("- {error}");
+        }
+        println!();
+    }
+
+    println!("## Warnings\n");
+    if validation.warnings.is_empty() {
+        println!("none");
+    } else {
+        for warning in &validation.warnings {
+            println!("- {warning}");
+        }
+    }
 }
 
 fn print_source_review_scaffold_report(report: &SourceReviewScaffoldReport) {
