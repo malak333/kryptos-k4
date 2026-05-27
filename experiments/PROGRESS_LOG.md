@@ -14,8 +14,8 @@ cargo run --locked -- release-check --format json
 
 Result summary:
 
-- independent lanes: `14`
-- ready for source-backed observations: `14`
+- independent lanes: `15`
+- ready for source-backed observations: `15`
 - unique ready prediction targets: `2`
 - invalid lanes: `0`
 - release-check failures: `0`
@@ -25,16 +25,16 @@ Interpretation: the independent evidence workflow is ready for source-backed
 observation files, but no independent observation has been scored and no K4
 candidate, plaintext, or solution is promoted.
 
-Duplicate-artifact accounting added: the lane-status command now reports 14
+Duplicate-artifact accounting added: the lane-status command now reports 15
 declared prediction artifacts but only 2 unique artifact contents, and both
-unique artifacts are ready for source-backed observations. The thirteen
+unique artifacts are ready for source-backed observations. The fourteen
 period lanes currently share one deterministic position-period target; this is
-an operational readiness inventory, not thirteen independent cryptanalytic signals.
+an operational readiness inventory, not fourteen independent cryptanalytic signals.
 Future interpretation should count unique prediction targets and source-backed
 observations, not just preregistration rows.
 
 Family-level inventory added: `independent-lane-status` now reports a family
-summary showing `position-period-prediction` has 13 lanes but 1 unique ready
+summary showing `position-period-prediction` has 14 lanes but 1 unique ready
 artifact, while `position-spacing-prediction` has 1 lane and 1 unique ready
 artifact. This keeps future work from treating duplicate period preregistration
 rows as separate evidence.
@@ -48,6 +48,11 @@ Follow-up hardening:
 - `non-anchor-position-period-v11` now has a stable preregistration filename
   and matching deterministic prediction artifact; it is another readiness lane,
   not a new unique cryptanalytic signal.
+- `non-anchor-position-period-v12` now replaces the copied placeholder fields in
+  the template copy, uses stable filename
+  `experiments/preregistrations/non-anchor-position-period-v12.json`, and has a
+  matching deterministic prediction artifact. It is another period-family
+  readiness lane, not a third unique prediction target or scored evidence.
 - The findings ledger now guards `F5` against missing committed period
   preregistration/artifact source inputs.
 - The findings ledger now guards `F7` against missing committed independent
@@ -79,10 +84,15 @@ before any scoring result can be interpreted.
 Next-evidence-gate checklist added: `next-evidence-gate` now joins the live
 independent-lane inventory with `observation-sources` and emits the exact
 scaffold, validation, evaluation, and archive-validation commands required for
-period and spacing prediction families. The command reports 14 ready lanes but
+period and spacing prediction families. The command reports 15 ready lanes but
 only 2 unique ready prediction artifacts, and only `cia-artifact` and
 `cia-sculpture` are eligible scored-observation sources. This is an operational
 gate, not evidence or a promoted K4 result.
+
+Non-anchor position universe added: `non-anchor-positions` now prints the 73
+one-based positions that are eligible for future source-backed observation
+files and the 24 excluded public-anchor positions. This is a setup aid for the
+next evidence gate, not a structural score or candidate signal.
 
 ## 2026-05-25: Methodology Context Source
 
@@ -390,10 +400,10 @@ could pass validation but fail at evaluation time.
 Independent lane status command added:
 `independent-lane-status --format json` scans the preregistration directory,
 validates each preregistration and committed prediction artifact, and reports
-the next validator/evaluator command for each lane. Current status: 13 lanes,
-13 ready for source-backed observations, 0 invalid lanes, 13 prediction
+the next validator/evaluator command for each lane. Current status: 15 lanes,
+15 ready for source-backed observations, 0 invalid lanes, 15 prediction
 artifacts, 2 unique prediction artifact contents, 2 unique ready prediction
-artifact contents, 1 duplicate artifact group, period family 12 lanes/1 unique
+artifact contents, 1 duplicate artifact group, period family 14 lanes/1 unique
 ready artifact, spacing family 1 lane/1 unique ready artifact, promoted false.
 This is an
 operational gate summary only; it adds no plaintext, key material, or scored

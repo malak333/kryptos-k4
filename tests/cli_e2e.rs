@@ -179,6 +179,7 @@ fn facts_hypotheses_sources_and_help_are_covered() {
         .stdout(predicate::str::contains("validate-spacing-observations"))
         .stdout(predicate::str::contains("independent-lane-status"))
         .stdout(predicate::str::contains("next-evidence-gate"))
+        .stdout(predicate::str::contains("non-anchor-positions"))
         .stdout(predicate::str::contains("init-position-observations"))
         .stdout(predicate::str::contains("observation-sources"))
         .stdout(predicate::str::contains("evaluate-period-prediction"))
@@ -1626,12 +1627,12 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Independent Lane Status"))
-        .stdout(predicate::str::contains("lanes: 14"))
+        .stdout(predicate::str::contains("lanes: 15"))
         .stdout(predicate::str::contains(
-            "ready for source-backed observations: 14",
+            "ready for source-backed observations: 15",
         ))
         .stdout(predicate::str::contains("invalid lanes: 0"))
-        .stdout(predicate::str::contains("prediction artifacts: 14"))
+        .stdout(predicate::str::contains("prediction artifacts: 15"))
         .stdout(predicate::str::contains("unique prediction artifacts: 2"))
         .stdout(predicate::str::contains(
             "unique ready prediction artifacts: 2",
@@ -1639,7 +1640,7 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout(predicate::str::contains("duplicate artifact groups: 1"))
         .stdout(predicate::str::contains("Family Summary"))
         .stdout(predicate::str::contains(
-            "| position-period-prediction | 13 | 13 | 13 | 1 | 1 | 1 |",
+            "| position-period-prediction | 14 | 14 | 14 | 1 | 1 | 1 |",
         ))
         .stdout(predicate::str::contains(
             "| position-spacing-prediction | 1 | 1 | 1 | 1 | 1 | 0 |",
@@ -1662,16 +1663,16 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["lane_count"], 14);
-    assert_eq!(json["ready_for_source_backed_observations"], 14);
+    assert_eq!(json["lane_count"], 15);
+    assert_eq!(json["ready_for_source_backed_observations"], 15);
     assert_eq!(json["invalid_lanes"], 0);
-    assert_eq!(json["prediction_artifacts"], 14);
+    assert_eq!(json["prediction_artifacts"], 15);
     assert_eq!(json["unique_prediction_artifacts"], 2);
     assert_eq!(json["unique_ready_prediction_artifacts"], 2);
     let families = json["family_summaries"].as_array().unwrap();
     assert!(families.iter().any(|family| {
         family["hypothesis_family"] == "position-period-prediction"
-            && family["lanes"] == 13
+            && family["lanes"] == 14
             && family["unique_ready_prediction_artifacts"] == 1
             && family["duplicate_artifact_groups"] == 1
     }));
@@ -1894,7 +1895,7 @@ fn next_evidence_gate_prints_operational_checklist() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Next Evidence Gate"))
-        .stdout(predicate::str::contains("ready lanes: 14"))
+        .stdout(predicate::str::contains("ready lanes: 15"))
         .stdout(predicate::str::contains(
             "unique ready prediction artifacts: 2",
         ))
@@ -1915,7 +1916,7 @@ fn next_evidence_gate_prints_operational_checklist() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["ready_lanes"], 14);
+    assert_eq!(json["ready_lanes"], 15);
     assert_eq!(json["invalid_lanes"], 0);
     assert_eq!(json["unique_ready_prediction_artifacts"], 2);
     assert_eq!(json["promoted_candidate"], false);
@@ -1949,6 +1950,50 @@ fn next_evidence_gate_prints_operational_checklist() {
                 .as_str()
                 .unwrap()
                 .contains("evaluate-spacing-prediction")
+    }));
+}
+
+#[test]
+fn non_anchor_positions_lists_allowed_observation_universe() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .arg("non-anchor-positions")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Non-Anchor K4 Positions"))
+        .stdout(predicate::str::contains("ciphertext length: 97"))
+        .stdout(predicate::str::contains("non-anchor positions: 73"))
+        .stdout(predicate::str::contains("excluded anchor positions: 24"))
+        .stdout(predicate::str::contains("EAST"))
+        .stdout(predicate::str::contains("22-25"))
+        .stdout(predicate::str::contains("BERLIN"))
+        .stdout(predicate::str::contains("64-69"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["non-anchor-positions", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["ciphertext_length"], 97);
+    assert_eq!(json["non_anchor_position_count"], 73);
+    assert_eq!(json["anchor_position_count"], 24);
+    assert_eq!(json["promoted_candidate"], false);
+    let positions = json["non_anchor_positions_one_based"].as_array().unwrap();
+    assert_eq!(positions.first().unwrap(), 1);
+    assert_eq!(positions.last().unwrap(), 97);
+    assert!(!positions.iter().any(|position| position == 22));
+    assert!(!positions.iter().any(|position| position == 74));
+    assert!(positions.iter().any(|position| position == 75));
+    let anchors = json["excluded_anchor_ranges"].as_array().unwrap();
+    assert!(anchors.iter().any(|anchor| {
+        anchor["label"] == "NORTHEAST"
+            && anchor["start_one_based"] == 26
+            && anchor["end_one_based_inclusive"] == 34
     }));
 }
 

@@ -22,7 +22,7 @@ use kryptos_k4::{
 };
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::{BTreeMap, HashSet},
+    collections::{BTreeMap, BTreeSet, HashSet},
     fs,
     path::{Path, PathBuf},
 };
@@ -293,6 +293,12 @@ enum Command {
         /// Directory containing lane preregistration JSON files.
         #[arg(long, default_value = "experiments/preregistrations")]
         directory: PathBuf,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Print the one-based K4 positions eligible for future non-anchor observations.
+    NonAnchorPositions {
         /// Output format.
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
@@ -620,6 +626,26 @@ struct NextEvidenceGate {
     validation_command: String,
     evaluation_command: String,
     archive_validation_command: String,
+}
+
+#[derive(Debug, Serialize)]
+struct NonAnchorPositionReport {
+    ciphertext_length: usize,
+    non_anchor_position_count: usize,
+    anchor_position_count: usize,
+    non_anchor_positions_one_based: Vec<usize>,
+    excluded_anchor_ranges: Vec<ExcludedAnchorRange>,
+    promoted_candidate: bool,
+    note: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct ExcludedAnchorRange {
+    label: &'static str,
+    start_one_based: usize,
+    end_one_based_inclusive: usize,
+    positions_one_based: Vec<usize>,
+    source_ids: Vec<&'static str>,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -1201,6 +1227,7 @@ fn main() -> Result<()> {
         Command::NextEvidenceGate { directory, format } => {
             print_next_evidence_gate(directory, format)?
         }
+        Command::NonAnchorPositions { format } => print_non_anchor_positions(format)?,
         Command::InitPositionObservations {
             id,
             source_ids,
@@ -3158,6 +3185,88 @@ fn print_next_evidence_gate(directory: PathBuf, format: OutputFormat) -> Result<
                 println!(
                     "archive check:\n```bash\n{}\n```\n",
                     gate.archive_validation_command
+                );
+            }
+        }
+    }
+    Ok(())
+}
+
+fn non_anchor_position_report() -> NonAnchorPositionReport {
+    let anchors = known_anchors();
+    let mut anchor_positions = BTreeSet::new();
+    let excluded_anchor_ranges = anchors
+        .iter()
+        .map(|anchor| {
+            let positions_one_based =
+                (anchor.start_one_based()..=anchor.end_one_based_inclusive()).collect::<Vec<_>>();
+            for position in &positions_one_based {
+                anchor_positions.insert(*position);
+            }
+            ExcludedAnchorRange {
+                label: anchor.plaintext,
+                start_one_based: anchor.start_one_based(),
+                end_one_based_inclusive: anchor.end_one_based_inclusive(),
+                positions_one_based,
+                source_ids: anchor.source_ids.to_vec(),
+            }
+        })
+        .collect::<Vec<_>>();
+    let non_anchor_positions_one_based = (1..=K4_CIPHERTEXT.len())
+        .filter(|position| !anchor_positions.contains(position))
+        .collect::<Vec<_>>();
+
+    NonAnchorPositionReport {
+        ciphertext_length: K4_CIPHERTEXT.len(),
+        non_anchor_position_count: non_anchor_positions_one_based.len(),
+        anchor_position_count: anchor_positions.len(),
+        non_anchor_positions_one_based,
+        excluded_anchor_ranges,
+        promoted_candidate: false,
+        note: "Non-anchor-position output is a setup aid for future source-backed observations; it is not a claimed solution.",
+    }
+}
+
+fn print_non_anchor_positions(format: OutputFormat) -> Result<()> {
+    let report = non_anchor_position_report();
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&report)?),
+        OutputFormat::Markdown => {
+            println!("# Non-Anchor K4 Positions\n");
+            println!("This is not a claimed solution.\n");
+            println!("ciphertext length: {}", report.ciphertext_length);
+            println!("non-anchor positions: {}", report.non_anchor_position_count);
+            println!(
+                "excluded anchor positions: {}",
+                report.anchor_position_count
+            );
+            println!("promoted: {}", report.promoted_candidate);
+            println!("note: {}\n", report.note);
+            println!(
+                "positions: {}\n",
+                report
+                    .non_anchor_positions_one_based
+                    .iter()
+                    .map(|position| position.to_string())
+                    .collect::<Vec<_>>()
+                    .join(",")
+            );
+            println!("## Excluded Public Anchors\n");
+            println!("| Label | Range | Positions | Sources |");
+            println!("| --- | --- | --- | --- |");
+            for anchor in &report.excluded_anchor_ranges {
+                println!(
+                    "| {} | {}-{} | {} | {} |",
+                    anchor.label,
+                    anchor.start_one_based,
+                    anchor.end_one_based_inclusive,
+                    anchor
+                        .positions_one_based
+                        .iter()
+                        .map(|position| position.to_string())
+                        .collect::<Vec<_>>()
+                        .join(","),
+                    anchor.source_ids.join(",")
                 );
             }
         }
