@@ -104,7 +104,8 @@ local-archive status, and use-boundary notes so source review requirements are
 visible before an observation file is created.
 `source-review-packet` prints the same eligible-source review boundary as a
 standalone pre-score checklist, including missing local archives and the
-required observation fields that must be filled before any evaluator command.
+required observation fields, including the validated source-review artifact,
+that must be filled before any evaluator command.
 `init-source-review` writes that review boundary to a JSON artifact with the
 reviewed eligible sources and a reviewer note, so source review can be audited
 before any non-anchor positions are selected.
@@ -269,7 +270,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `validate-preregistration` | Gate for proposed new lanes in Markdown or JSON; rejects reuse of public anchor-derived fragments as discovery inputs or primary evidence. |
 | `validate-prediction-artifact` | Gate for committed independent prediction artifacts in Markdown or JSON; checks the preregistration and deterministic generator output still match. |
 | `independent-lane-status` | Operational summary of preregistered independent lanes, artifact validity, readiness for source-backed observations, family summaries, unique ready prediction artifacts, duplicate artifact groups, and next required validator/evaluator command. |
-| `next-evidence-gate` | Operational checklist combining independent-lane readiness, unique/duplicate prediction-target accounting, eligible observation sources, current evidence-archive status, required observation fields, and exact scaffold/validate/evaluate/archive commands before source-backed scoring. |
+| `next-evidence-gate` | Operational checklist combining independent-lane readiness, unique/duplicate prediction-target accounting, eligible observation sources, current evidence-archive status, required observation fields including source-review coverage, and exact scaffold/validate/evaluate/archive commands before source-backed scoring. |
 | `independent-evidence-status` | Archive status for period/spacing independent observation evaluations, separating valid source-backed evidence, diagnostic archives, invalid archives, and no-evidence states. |
 | `non-anchor-positions` | Non-scoring one-based position universe for future source-backed observations, with excluded public anchor ranges and source IDs. |
 | `init-position-observations` | Guarded source-backed observation-file creator in Markdown or JSON; writes only registered-source, non-anchor K4 positions plus per-position notes, can link a validated `--source-review`, and refuses placeholders, disallowed source uses, duplicate positions, anchors, out-of-range positions, uncovered source-review files, and accidental overwrites unless `--force` is passed. |
@@ -289,7 +290,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `hypotheses` | Ranked source-grounded hypothesis register in Markdown or JSON. |
 | `sources` | Source provenance records in Markdown or JSON for source-policy audits. |
 | `observation-sources` | Focused source-use report showing which registered sources may support scored independent position observations and why other sources are context-only. |
-| `source-review-packet` | Pre-score source review packet for eligible observation sources, local archive status, source URLs, use boundaries, and required review steps. |
+| `source-review-packet` | Pre-score source review packet for eligible observation sources, local archive status, source URLs, use boundaries, required review steps, and the observation requirement to link the validated source-review file. |
 | `init-source-review` | Guarded pre-score source-review file creator that writes reviewed eligible sources and review notes before any observation positions are selected. |
 | `validate-source-review` | Gate for pre-score source-review artifacts, checking reviewed source IDs and metadata against the registered eligible source set. |
 | `export-data` | Machine-readable JSON for ciphertext, anchors, and sources. |

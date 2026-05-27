@@ -114,7 +114,9 @@ source details so the source and archive boundary is visible at the point where
 an observation file would be scaffolded.
 Run `source-review-packet` when preparing a concrete observation pass. It
 separates the pre-score source-review checklist from the scoring commands and
-shows which eligible sources currently lack local archive URLs.
+shows which eligible sources currently lack local archive URLs. Its observation
+requirements include the validated source-review artifact that must cover every
+cited observation source.
 Use `init-source-review` to materialize that pre-score review into JSON before
 choosing observation positions; it rejects context-only sources, duplicate
 source IDs, placeholders, and accidental overwrites.

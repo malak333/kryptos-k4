@@ -241,6 +241,13 @@ fn source_review_packet_exposes_prescore_source_checklist() {
                 .unwrap()
                 .contains("sources without local archives"))
     );
+    assert!(
+        json["observation_requirements"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|requirement| requirement.as_str().unwrap().contains("source-review file"))
+    );
 }
 
 #[test]
@@ -290,6 +297,13 @@ fn init_source_review_writes_prescore_review_file() {
                 .as_str()
                 .unwrap()
                 .contains("Run the family-specific observation validator"))
+    );
+    assert!(
+        file_json["observation_requirements"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|requirement| requirement.as_str().unwrap().contains("source-review file"))
     );
 
     let json_output_path = temp.path().join("source-review-json.json");
@@ -2093,7 +2107,10 @@ fn init_position_observations_links_valid_source_review_file() {
         .assert()
         .success()
         .stdout(predicate::str::contains("\"valid\": true"))
-        .stdout(predicate::str::contains("\"artifact_valid\": true"));
+        .stdout(predicate::str::contains("\"artifact_valid\": true"))
+        .stdout(predicate::str::contains(
+            "\"observation_source_review_file\"",
+        ));
 }
 
 #[test]
@@ -2378,6 +2395,13 @@ fn next_evidence_gate_prints_operational_checklist() {
             .unwrap()
             .contains("validate-source-review")
     );
+    assert!(
+        json["required_observation_fields"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|field| field.as_str().unwrap().contains("source-review file"))
+    );
     assert_eq!(json["promoted_candidate"], false);
     assert!(
         json["eligible_source_ids"]
@@ -2407,6 +2431,10 @@ fn next_evidence_gate_prints_operational_checklist() {
                 .as_str()
                 .unwrap()
                 .contains("evaluate-period-prediction")
+            && gate["observation_scaffold_command"]
+                .as_str()
+                .unwrap()
+                .contains("--source-review")
     }));
     assert!(gates.iter().any(|gate| {
         gate["hypothesis_family"] == "position-spacing-prediction"

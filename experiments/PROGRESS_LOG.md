@@ -39,7 +39,8 @@ Additional preregistration cleanup:
 - `source-review-packet` now emits the eligible-source pre-score checklist as a
   standalone Markdown/JSON command. This keeps source review, missing local
   archive status, required observation fields, and no-promotion boundaries
-  visible before any period or spacing evaluator can be run.
+  visible before any period or spacing evaluator can be run. Its observation
+  requirements now explicitly include the linked validated source-review file.
 - `init-source-review` now materializes that pre-score source review as a JSON
   artifact before any non-anchor observation positions are selected. It accepts
   only registered scored-observation-eligible source IDs, rejects duplicate or

@@ -613,6 +613,8 @@ struct PeriodPredictionObservationValidation {
     artifact_valid: Option<bool>,
     observation_id: String,
     observation_source_ids: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    observation_source_review_file: Option<String>,
     observation_rationale: String,
     observed_position_count: usize,
     observed_positions_one_based: Vec<usize>,
@@ -3616,6 +3618,7 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
         readiness_note: "Ready lane count is an operational inventory; use unique ready prediction artifacts and validated source-backed archives as the evidence counts.",
         required_observation_fields: vec![
             "registered eligible source ID",
+            "validated source-review file covering cited source IDs",
             "one-based non-anchor K4 positions",
             "source-backed rationale",
             "one non-empty position_notes entry per scored position",
@@ -3783,12 +3786,14 @@ fn source_review_packet_report() -> SourceReviewPacketReport {
         required_review_steps: vec![
             "Review each eligible source URL before drafting observation positions.",
             "Record source-backed rationale and one position note per scored one-based K4 position.",
+            "Link the validated source-review artifact from the observation file.",
             "Do not use public-anchor summary, public-clue context, methodology context, or archive-context-only sources as scored evidence.",
             "Treat sources without local archives as review-required until an observation archive preserves the exact scored input.",
             "Run the family-specific observation validator before any evaluator command.",
         ],
         observation_requirements: vec![
             "registered eligible source ID",
+            "validated source-review file covering cited source IDs",
             "one-based non-anchor K4 positions",
             "source-backed rationale",
             "one non-empty position_notes entry per scored position",
@@ -4397,6 +4402,7 @@ fn validate_period_observations(
         artifact_valid,
         observation_id,
         observation_source_ids: observations.source_ids,
+        observation_source_review_file: observations.source_review_file,
         observation_rationale: observations.rationale,
         observed_position_count: observations.positions_one_based.len(),
         observed_positions_one_based: observations.positions_one_based,
@@ -4473,6 +4479,7 @@ fn validate_spacing_observations(
         artifact_valid,
         observation_id,
         observation_source_ids: observations.source_ids,
+        observation_source_review_file: observations.source_review_file,
         observation_rationale: observations.rationale,
         observed_position_count: observations.positions_one_based.len(),
         observed_positions_one_based: observations.positions_one_based,
@@ -4506,6 +4513,9 @@ fn print_position_observation_validation(
         "observation sources: {}",
         validation.observation_source_ids.join(", ")
     );
+    if let Some(source_review_file) = &validation.observation_source_review_file {
+        println!("source review file: `{source_review_file}`");
+    }
     println!(
         "observation rationale: {}",
         validation.observation_rationale
