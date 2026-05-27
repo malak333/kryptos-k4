@@ -306,6 +306,12 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
     },
+    /// Print a pre-score review packet for eligible observation sources.
+    SourceReviewPacket {
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Print the one-based K4 positions eligible for future non-anchor observations.
     NonAnchorPositions {
         /// Output format.
@@ -648,6 +654,16 @@ struct NextEvidenceGate {
     validation_command: String,
     evaluation_command: String,
     archive_validation_command: String,
+}
+
+#[derive(Debug, Serialize)]
+struct SourceReviewPacketReport {
+    eligible_source_count: usize,
+    eligible_sources: Vec<ObservationSourceEligibility>,
+    required_review_steps: Vec<&'static str>,
+    observation_requirements: Vec<&'static str>,
+    promoted_candidate: bool,
+    note: &'static str,
 }
 
 #[derive(Debug, Serialize)]
@@ -1265,6 +1281,7 @@ fn main() -> Result<()> {
         Command::IndependentEvidenceStatus { roots, format } => {
             print_independent_evidence_status(roots, format)?
         }
+        Command::SourceReviewPacket { format } => print_source_review_packet(format)?,
         Command::NonAnchorPositions { format } => print_non_anchor_positions(format)?,
         Command::InitPositionObservations {
             id,
@@ -3287,6 +3304,83 @@ fn print_next_evidence_gate(directory: PathBuf, format: OutputFormat) -> Result<
                     "archive check:\n```bash\n{}\n```\n",
                     gate.archive_validation_command
                 );
+            }
+        }
+    }
+    Ok(())
+}
+
+fn source_review_packet_report() -> SourceReviewPacketReport {
+    let source_report = observation_source_eligibility_report();
+    let eligible_sources = source_report
+        .sources
+        .into_iter()
+        .filter(|source| source.eligible_for_scored_observations)
+        .collect::<Vec<_>>();
+    SourceReviewPacketReport {
+        eligible_source_count: eligible_sources.len(),
+        eligible_sources,
+        required_review_steps: vec![
+            "Review each eligible source URL before drafting observation positions.",
+            "Record source-backed rationale and one position note per scored one-based K4 position.",
+            "Do not use public-anchor summary, public-clue context, methodology context, or archive-context-only sources as scored evidence.",
+            "Treat sources without local archives as review-required until an observation archive preserves the exact scored input.",
+            "Run the family-specific observation validator before any evaluator command.",
+        ],
+        observation_requirements: vec![
+            "registered eligible source ID",
+            "one-based non-anchor K4 positions",
+            "source-backed rationale",
+            "one non-empty position_notes entry per scored position",
+            "archived evaluation output that validates with validate-evaluation-archive",
+        ],
+        promoted_candidate: false,
+        note: "Source-review packet is a pre-score audit aid for future source-backed observations; it is not a claimed solution.",
+    }
+}
+
+fn print_source_review_packet(format: OutputFormat) -> Result<()> {
+    let report = source_review_packet_report();
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&report)?),
+        OutputFormat::Markdown => {
+            println!("# Source Review Packet\n");
+            println!("This is not a claimed solution.\n");
+            println!("eligible sources: {}", report.eligible_source_count);
+            println!("promoted: {}", report.promoted_candidate);
+            println!("note: {}\n", report.note);
+
+            println!("## Eligible Sources\n");
+            println!(
+                "| Source ID | Label | Local Archive | Accessed | Allowed Use | Use Boundary | URL |"
+            );
+            println!("| --- | --- | --- | --- | --- | --- | --- |");
+            for source in &report.eligible_sources {
+                let archive_status = if source.locally_archived {
+                    source.archive_url.unwrap_or("yes")
+                } else {
+                    "missing"
+                };
+                println!(
+                    "| `{}` | {} | {} | {} | {} | {} | {} |",
+                    source.id,
+                    source.label,
+                    archive_status,
+                    source.accessed_at,
+                    source.allowed_use,
+                    source.use_note,
+                    source.url
+                );
+            }
+
+            println!("\n## Required Review Steps\n");
+            for step in &report.required_review_steps {
+                println!("- {step}");
+            }
+
+            println!("\n## Observation Requirements\n");
+            for requirement in &report.observation_requirements {
+                println!("- {requirement}");
             }
         }
     }

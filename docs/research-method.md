@@ -112,6 +112,9 @@ prediction targets, and the exact command sequence required before a future
 source-backed observation can be treated as evidence. The gate repeats eligible
 source details so the source and archive boundary is visible at the point where
 an observation file would be scaffolded.
+Run `source-review-packet` when preparing a concrete observation pass. It
+separates the pre-score source-review checklist from the scoring commands and
+shows which eligible sources currently lack local archive URLs.
 Run `independent-evidence-status` to confirm whether any source-backed
 observation evaluation archives already exist before interpreting a lane as
 having evidence.

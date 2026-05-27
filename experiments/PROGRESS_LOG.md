@@ -27,6 +27,10 @@ Additional preregistration cleanup:
   observation file is scaffolded. Current eligible CIA sources are not locally
   archived, so future scoring still requires explicit source-backed
   per-position notes and archive validation.
+- `source-review-packet` now emits the eligible-source pre-score checklist as a
+  standalone Markdown/JSON command. This keeps source review, missing local
+  archive status, required observation fields, and no-promotion boundaries
+  visible before any period or spacing evaluator can be run.
 
 Current independent-lane status:
 

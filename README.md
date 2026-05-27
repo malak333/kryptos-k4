@@ -81,6 +81,8 @@ cargo run -- sources
 cargo run -- sources --format json
 cargo run -- observation-sources
 cargo run -- observation-sources --format json
+cargo run -- source-review-packet
+cargo run -- source-review-packet --format json
 cargo run -- export-data --directory data
 cargo run -- report --format markdown --output notes/k4-report.md
 cargo run -- report --format json
@@ -98,6 +100,9 @@ artifacts, so lane inventory is not confused with scored evidence or independent
 target count. The gate includes the eligible source URLs, access dates,
 local-archive status, and use-boundary notes so source review requirements are
 visible before an observation file is created.
+`source-review-packet` prints the same eligible-source review boundary as a
+standalone pre-score checklist, including missing local archives and the
+required observation fields that must be filled before any evaluator command.
 `non-anchor-positions` prints the one-based K4 position universe eligible for
 future source-backed observations and the public anchor ranges that must stay
 excluded from scored evidence.
@@ -271,6 +276,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `hypotheses` | Ranked source-grounded hypothesis register in Markdown or JSON. |
 | `sources` | Source provenance records in Markdown or JSON for source-policy audits. |
 | `observation-sources` | Focused source-use report showing which registered sources may support scored independent position observations and why other sources are context-only. |
+| `source-review-packet` | Pre-score source review packet for eligible observation sources, local archive status, source URLs, use boundaries, and required review steps. |
 | `export-data` | Machine-readable JSON for ciphertext, anchors, and sources. |
 | `report` | Full Markdown or JSON report. |
 

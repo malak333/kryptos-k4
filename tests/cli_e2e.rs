@@ -180,11 +180,65 @@ fn facts_hypotheses_sources_and_help_are_covered() {
         .stdout(predicate::str::contains("independent-lane-status"))
         .stdout(predicate::str::contains("next-evidence-gate"))
         .stdout(predicate::str::contains("independent-evidence-status"))
+        .stdout(predicate::str::contains("source-review-packet"))
         .stdout(predicate::str::contains("non-anchor-positions"))
         .stdout(predicate::str::contains("init-position-observations"))
         .stdout(predicate::str::contains("observation-sources"))
         .stdout(predicate::str::contains("evaluate-period-prediction"))
         .stdout(predicate::str::contains("evaluate-spacing-prediction"));
+}
+
+#[test]
+fn source_review_packet_exposes_prescore_source_checklist() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .arg("source-review-packet")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Source Review Packet"))
+        .stdout(predicate::str::contains("eligible sources: 2"))
+        .stdout(predicate::str::contains("cia-artifact"))
+        .stdout(predicate::str::contains("missing"))
+        .stdout(predicate::str::contains(
+            "Review each eligible source URL before drafting observation positions",
+        ))
+        .stdout(predicate::str::contains("one position note per scored"))
+        .stdout(predicate::str::contains("validate-evaluation-archive"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["source-review-packet", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["eligible_source_count"], 2);
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(
+        json["eligible_sources"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|source| source["id"] == "cia-sculpture"
+                && source["locally_archived"] == false
+                && source["use_note"]
+                    .as_str()
+                    .unwrap()
+                    .contains("97-character K4"))
+    );
+    assert!(
+        json["required_review_steps"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|step| step
+                .as_str()
+                .unwrap()
+                .contains("sources without local archives"))
+    );
 }
 
 #[test]
