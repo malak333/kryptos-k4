@@ -3,6 +3,43 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-27: Independent Lane Inventory Guardrails
+
+Current independent-lane status:
+
+```bash
+cargo run --locked -- independent-lane-status --format json
+cargo run --locked -- release-check --format json
+```
+
+Result summary:
+
+- independent lanes: `10`
+- ready for source-backed observations: `10`
+- invalid lanes: `0`
+- release-check failures: `0`
+- promoted: false
+
+Interpretation: the independent evidence workflow is ready for source-backed
+observation files, but no independent observation has been scored and no K4
+candidate, plaintext, or solution is promoted.
+
+Follow-up hardening:
+
+- `non-anchor-position-period-v6` and `non-anchor-position-period-v7` now have
+  committed preregistrations and deterministic prediction artifacts.
+- The findings ledger now guards `F5` against missing committed period
+  preregistration/artifact source inputs.
+- The findings ledger now guards `F7` against missing committed independent
+  lane preregistration/artifact source inputs, including the spacing lane.
+- The findings ledger now guards `F10` against stale independent-lane counts by
+  comparing its summary against the live preregistration directory.
+
+Next gate: do not add more public-anchor-derived candidate material. Before any
+new scoring, create or receive a source-backed non-anchor observation file,
+validate it with the family-specific observation validator, evaluate it with
+the matching preregistration and artifact, and archive the evaluation output.
+
 ## 2026-05-25: Methodology Context Source
 
 The public KryptosBot methodology page is now registered as
@@ -307,8 +344,8 @@ could pass validation but fail at evaluation time.
 Independent lane status command added:
 `independent-lane-status --format json` scans the preregistration directory,
 validates each preregistration and committed prediction artifact, and reports
-the next validator/evaluator command for each lane. Current status: 8 lanes,
-8 ready for source-backed observations, 0 invalid lanes, promoted false. This is
+the next validator/evaluator command for each lane. Current status: 10 lanes,
+10 ready for source-backed observations, 0 invalid lanes, promoted false. This is
 an operational gate summary only; it adds no plaintext, key material, or scored
 evidence.
 
