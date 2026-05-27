@@ -187,11 +187,17 @@ fn prediction_artifact_groups(
             continue;
         };
         groups
-            .entry(contents)
+            .entry(prediction_artifact_signature(&contents))
             .or_insert_with(Vec::new)
             .push((lane_id.clone(), artifact_path.clone()));
     }
     groups
+}
+
+fn prediction_artifact_signature(contents: &str) -> String {
+    serde_json::from_str::<serde_json::Value>(contents)
+        .and_then(|value| serde_json::to_string(&value))
+        .unwrap_or_else(|_| contents.to_string())
 }
 
 fn summarize_independent_lane(path: &Path, repo_root: &Path) -> IndependentLaneStatus {
@@ -800,6 +806,53 @@ mod tests {
                 .errors
                 .iter()
                 .any(|error| { error.contains("only supports `position-period-prediction`") })
+        );
+    }
+
+    #[test]
+    fn independent_lane_status_groups_json_equivalent_prediction_artifacts() {
+        let temp = TempDir::new().unwrap();
+        let preregistration_dir = temp.path().join("experiments/preregistrations");
+        let prediction_dir = temp.path().join("experiments/predictions");
+        std::fs::create_dir_all(&preregistration_dir).unwrap();
+        std::fs::create_dir_all(&prediction_dir).unwrap();
+        std::fs::write(
+            prediction_dir.join("artifact-a.json"),
+            r#"{"a":1,"b":[2,3]}"#,
+        )
+        .unwrap();
+        std::fs::write(
+            prediction_dir.join("artifact-b.json"),
+            "{\n  \"a\": 1,\n  \"b\": [\n    2,\n    3\n  ]\n}\n",
+        )
+        .unwrap();
+
+        for (id, artifact) in [
+            ("canonical-artifact-a", "artifact-a.json"),
+            ("canonical-artifact-b", "artifact-b.json"),
+        ] {
+            let mut registration = valid_registration();
+            registration.id = id.to_string();
+            registration.prediction_artifact = Some(format!("experiments/predictions/{artifact}"));
+            std::fs::write(
+                preregistration_dir.join(format!("{id}.json")),
+                serde_json::to_string_pretty(&registration).unwrap(),
+            )
+            .unwrap();
+        }
+
+        let report =
+            summarize_independent_lanes_with_repo_root(&preregistration_dir, temp.path()).unwrap();
+
+        assert_eq!(report.prediction_artifacts, 2);
+        assert_eq!(report.unique_prediction_artifacts, 1);
+        assert_eq!(report.duplicate_prediction_artifact_groups.len(), 1);
+        assert_eq!(
+            report.duplicate_prediction_artifact_groups[0].lane_ids,
+            vec![
+                "canonical-artifact-a".to_string(),
+                "canonical-artifact-b".to_string()
+            ]
         );
     }
 }
