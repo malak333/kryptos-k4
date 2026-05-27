@@ -365,6 +365,9 @@ enum Command {
         /// Per-position note as POS=NOTE. Repeat for each position when source evidence differs.
         #[arg(long = "position-note")]
         position_notes: Vec<String>,
+        /// Optional validated source-review JSON file that covers the listed source IDs.
+        #[arg(long = "source-review")]
+        source_review: Option<PathBuf>,
         /// Output JSON path.
         #[arg(long)]
         output: PathBuf,
@@ -586,6 +589,8 @@ struct KeyFragmentRow {
 struct PeriodPredictionObservationFile {
     id: String,
     source_ids: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    source_review_file: Option<String>,
     positions_one_based: Vec<usize>,
     #[serde(default)]
     position_notes: BTreeMap<String, String>,
@@ -848,6 +853,7 @@ struct InitPositionObservationOptions {
     positions: String,
     rationale: String,
     position_notes: Vec<String>,
+    source_review: Option<PathBuf>,
     output: PathBuf,
     force: bool,
     format: OutputFormat,
@@ -981,6 +987,41 @@ fn validate_period_prediction_observation_fields(
             );
         }
     }
+    if let Some(source_review_file) = &observations.source_review_file {
+        if source_review_file.trim().is_empty() {
+            errors.push("positions_file source_review_file must not be empty".to_string());
+        } else if contains_template_placeholder(source_review_file) {
+            errors.push(
+                "positions_file source_review_file still contains template placeholder text"
+                    .to_string(),
+            );
+        } else {
+            match validate_source_review_file(Path::new(source_review_file)) {
+                Ok(validation) => {
+                    if !validation.valid {
+                        errors.extend(
+                            validation
+                                .errors
+                                .into_iter()
+                                .map(|error| format!("source_review_file: {error}")),
+                        );
+                    }
+                    let reviewed_source_ids =
+                        validation.source_ids.into_iter().collect::<BTreeSet<_>>();
+                    for source_id in &observations.source_ids {
+                        if !reviewed_source_ids.contains(source_id) {
+                            errors.push(format!(
+                                "positions_file source_review_file `{source_review_file}` does not cover observation source_id `{source_id}`"
+                            ));
+                        }
+                    }
+                }
+                Err(error) => errors.push(format!(
+                    "positions_file source_review_file `{source_review_file}` failed validation: {error}"
+                )),
+            }
+        }
+    }
     if observations.rationale.trim().is_empty() {
         errors.push("positions_file rationale must not be empty".to_string());
     }
@@ -1108,14 +1149,19 @@ fn validate_position_observation_scaffold(
 }
 
 fn create_position_observation_file(
-    id: String,
-    source_ids: Vec<String>,
-    positions: String,
-    rationale: String,
-    position_note_inputs: Vec<String>,
-    output: PathBuf,
-    force: bool,
+    options: InitPositionObservationOptions,
 ) -> Result<PositionObservationScaffoldReport> {
+    let InitPositionObservationOptions {
+        id,
+        source_ids,
+        positions,
+        rationale,
+        position_notes: position_note_inputs,
+        source_review,
+        output,
+        force,
+        format: _,
+    } = options;
     if output.exists() && !force {
         anyhow::bail!(
             "output file already exists: {}; pass --force to overwrite",
@@ -1125,9 +1171,13 @@ fn create_position_observation_file(
 
     let positions_one_based = parse_position_list(&positions).map_err(anyhow::Error::msg)?;
     let position_notes = build_position_notes(&positions_one_based, &position_note_inputs)?;
+    let source_review_file = source_review
+        .as_ref()
+        .map(|path| path.display().to_string());
     let observation = PeriodPredictionObservationFile {
         id,
         source_ids,
+        source_review_file,
         positions_one_based,
         position_notes,
         rationale,
@@ -1687,6 +1737,7 @@ fn main() -> Result<()> {
             positions,
             rationale,
             position_notes,
+            source_review,
             output,
             force,
             format,
@@ -1696,6 +1747,7 @@ fn main() -> Result<()> {
             positions,
             rationale,
             position_notes,
+            source_review,
             output,
             force,
             format,
@@ -3539,7 +3591,7 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
             representative_preregistration: preregistration,
             representative_artifact: artifact,
             observation_scaffold_command:
-                "cargo run --locked -- init-position-observations --id <observation-id> --source-id <eligible-source-id> --positions <comma-separated-non-anchor-positions> --rationale \"<source-backed rationale>\" --position-note \"<position>=<source-backed note>\" --output <source-backed-observations.json>"
+                "cargo run --locked -- init-position-observations --id <observation-id> --source-id <eligible-source-id> --source-review <source-review.json> --positions <comma-separated-non-anchor-positions> --rationale \"<source-backed rationale>\" --position-note \"<position>=<source-backed note>\" --output <source-backed-observations.json>"
                     .to_string(),
             validation_command,
             evaluation_command,
@@ -4199,25 +4251,8 @@ fn print_independent_lane_status_report(report: &IndependentLaneStatusReport) {
 }
 
 fn print_init_position_observations(options: InitPositionObservationOptions) -> Result<()> {
-    let InitPositionObservationOptions {
-        id,
-        source_ids,
-        positions,
-        rationale,
-        position_notes,
-        output,
-        force,
-        format,
-    } = options;
-    let report = create_position_observation_file(
-        id,
-        source_ids,
-        positions,
-        rationale,
-        position_notes,
-        output,
-        force,
-    )?;
+    let format = options.format;
+    let report = create_position_observation_file(options)?;
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&report)?),
         OutputFormat::Markdown => print_position_observation_scaffold_report(&report),

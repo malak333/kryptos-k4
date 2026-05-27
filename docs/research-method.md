@@ -132,7 +132,9 @@ anchor positions, out-of-range positions, disallowed source uses, and accidental
 overwrites before the validator/evaluator commands can score the file. Scored
 observation files must also include a `position_notes` entry for every
 one-based position so a later archive reviewer can audit why each position was
-included.
+included. When a saved source-review artifact exists, pass it with
+`--source-review`; the scaffold and later validators re-run the source-review
+gate and require it to cover every observation source ID.
 
 Direct `evaluate-period-prediction --positions ...` and
 `evaluate-spacing-prediction --positions ...` runs are diagnostic only. They can

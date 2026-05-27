@@ -51,6 +51,7 @@ cargo run --locked -- validate-source-review \
 cargo run --locked -- init-position-observations \
   --id <observation-id> \
   --source-id <registered-public-facts-source-id> \
+  --source-review <source-review.json> \
   --positions <comma-separated-non-anchor-positions> \
   --rationale "<why these positions are independent observations>" \
   --position-note "<position>=<source-backed note for that position>" \
@@ -60,9 +61,11 @@ cargo run --locked -- init-position-observations \
 Repeat `--source-id` for every reviewed eligible source and repeat
 `--position-note` for every listed position. The source-review scaffold records
 pre-score review only, and the source-review validator rechecks the reviewed
-source metadata before any observation positions are scored. The observation
-scaffold rejects omitted notes instead of deriving them from the rationale, so
-every scored position has its own source-backed audit text.
+source metadata before any observation positions are scored. Passing
+`--source-review` links that validated review into the observation file and
+requires it to cover every cited source ID. The observation scaffold rejects
+omitted notes instead of deriving them from the rationale, so every scored
+position has its own source-backed audit text.
 
 Validate the observation file first:
 

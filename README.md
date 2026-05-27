@@ -53,7 +53,7 @@ cargo run -- independent-lane-status --format json
 cargo run -- next-evidence-gate --format json
 cargo run -- independent-evidence-status --format json
 cargo run -- non-anchor-positions --format json
-cargo run -- init-position-observations --id future-observation-v1 --source-id cia-artifact --positions 1,4,7 --rationale "Source-backed non-anchor observation rationale." --position-note "1=Source note for position 1." --position-note "4=Source note for position 4." --position-note "7=Source note for position 7." --output results/key-tests/future-observation-v1.json
+cargo run -- init-position-observations --id future-observation-v1 --source-id cia-artifact --source-review experiments/source-reviews/cia-source-review-v1.json --positions 1,4,7 --rationale "Source-backed non-anchor observation rationale." --position-note "1=Source note for position 1." --position-note "4=Source note for position 4." --position-note "7=Source note for position 7." --output results/key-tests/future-observation-v1.json
 cargo run -- period-prediction-plan --period 3
 cargo run -- period-prediction-plan --all
 cargo run -- period-prediction-plan --all --format json
@@ -111,6 +111,9 @@ before any non-anchor positions are selected.
 `validate-source-review` rechecks that artifact against the registered source
 metadata before observation scoring, catching stale URLs, disallowed source
 uses, placeholders, duplicate source IDs, and tampering.
+`init-position-observations --source-review <source-review.json>` links the
+saved review into the observation file and revalidates that it covers every
+observation source before scoring.
 `non-anchor-positions` prints the one-based K4 position universe eligible for
 future source-backed observations and the public anchor ranges that must stay
 excluded from scored evidence.
@@ -126,7 +129,9 @@ compatible with scored independent position evidence. Public-anchor summary,
 public-clue context, methodology context, and archive-context-only sources are
 rejected for scoring. Source-backed observation files must include
 `position_notes`, one note per listed position, so each scored position remains
-auditable. The observation template intentionally has an empty
+auditable. When `source_review_file` is present, the validators re-run the
+source-review gate and require it to cover every cited `source_id`. The
+observation template intentionally has an empty
 `positions_one_based` list and empty `position_notes` map, so copied lanes
 cannot accidentally score synthetic example positions.
 Pass one explicit `--position-note POS=NOTE` for every listed position; the
@@ -267,9 +272,9 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `next-evidence-gate` | Operational checklist combining independent-lane readiness, unique/duplicate prediction-target accounting, eligible observation sources, current evidence-archive status, required observation fields, and exact scaffold/validate/evaluate/archive commands before source-backed scoring. |
 | `independent-evidence-status` | Archive status for period/spacing independent observation evaluations, separating valid source-backed evidence, diagnostic archives, invalid archives, and no-evidence states. |
 | `non-anchor-positions` | Non-scoring one-based position universe for future source-backed observations, with excluded public anchor ranges and source IDs. |
-| `init-position-observations` | Guarded source-backed observation-file creator in Markdown or JSON; writes only registered-source, non-anchor K4 positions plus per-position notes and refuses placeholders, disallowed source uses, duplicate positions, anchors, out-of-range positions, and accidental overwrites unless `--force` is passed. |
-| `validate-period-observations` | Gate for source-backed independent position observations in Markdown or JSON; can also validate the prediction artifact preregistration, and rejects unregistered or disallowed source IDs, missing position notes, duplicates, and public-anchor positions before scoring. |
-| `validate-spacing-observations` | Gate for source-backed independent position observations with per-position notes before spacing scoring in Markdown or JSON; can also validate the spacing prediction artifact preregistration. |
+| `init-position-observations` | Guarded source-backed observation-file creator in Markdown or JSON; writes only registered-source, non-anchor K4 positions plus per-position notes, can link a validated `--source-review`, and refuses placeholders, disallowed source uses, duplicate positions, anchors, out-of-range positions, uncovered source-review files, and accidental overwrites unless `--force` is passed. |
+| `validate-period-observations` | Gate for source-backed independent position observations in Markdown or JSON; can also validate the prediction artifact preregistration and any linked source-review file, and rejects unregistered or disallowed source IDs, missing position notes, duplicates, and public-anchor positions before scoring. |
+| `validate-spacing-observations` | Gate for source-backed independent position observations with per-position notes before spacing scoring in Markdown or JSON; can also validate the spacing prediction artifact preregistration and any linked source-review file. |
 | `period-prediction-plan` | Emits non-anchor K4 position residue classes for one or all registered periods in Markdown or JSON without scoring fragment values or candidate material. |
 | `spacing-prediction-plan` | Emits non-anchor K4 spacing residue classes for registered moduli in Markdown or JSON without scoring fragment values or candidate material. |
 | `evaluate-period-prediction` | Scores independently supplied one-based non-anchor positions against a committed period prediction artifact with a best-of-period null control in Markdown or JSON; marks quick `--positions` input as diagnostic, requires `--preregistration` for source-backed `--positions-file` JSON records, and can archive `artifact.json`, `preregistration.json`, `observations.json`, `result.json`, `summary.md`, and `command.txt` with `--output-dir`. |

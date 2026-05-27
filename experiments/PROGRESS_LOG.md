@@ -49,6 +49,9 @@ Additional preregistration cleanup:
   the current source registry before observation scoring. It catches stale
   reviewed source metadata, duplicate source IDs, placeholders, context-only
   sources, and tampering while still making no cryptanalytic claim.
+- `init-position-observations` can now link a saved `--source-review` artifact,
+  and observation validators re-run that source-review gate and require coverage
+  for every cited observation source ID before any period/spacing scoring.
 
 Current independent-lane status:
 
