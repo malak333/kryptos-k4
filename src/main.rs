@@ -4,21 +4,21 @@ use kryptos_k4::{
     AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, BatchKeyMaterialCandidate,
     BatchKeyMaterialRun, BatchKeyRunHistory, CandidateTransform, FragmentMode,
     HeldoutKeyControlRun, IndependentLaneStatusReport, K4_CIPHERTEXT, KeyMaterialExplanation,
-    KeyMaterialOffsetSweep, KeyMaterialTest, PeriodPredictionEvaluation, PeriodPredictionPlan,
-    PeriodPredictionPlanSet, PositionStructureRun, PredictionArtifactValidation,
-    PreregistrationValidation, ReportFormat, RoutedBatchKeyMaterialRun,
-    SpacingPredictionEvaluation, SpacingPredictionPlanSet, StructuralModelRun, analyze_constraints,
-    analyze_known_plaintext_spans, batch_test_key_material_with_batch_baseline,
-    batch_test_routed_key_material, build_all_period_prediction_plans,
-    build_all_spacing_prediction_plans, build_period_prediction_plan, build_report,
-    candidate_sequences, evaluate_period_prediction_positions,
-    evaluate_spacing_prediction_positions, explain_key_material, findings, heldout_key_control,
-    hypotheses, known_anchors, load_and_validate_preregistration, render_report, run_baseline,
-    run_position_structure_control, run_release_checks, run_route_experiments,
-    run_structural_model_control, score_candidate_sequences, sources,
-    summarize_batch_key_material_runs, summarize_independent_lanes,
-    sweep_key_material_offsets_with_baseline, test_key_material, validate_prediction_artifact,
-    validation_exit_result,
+    KeyMaterialOffsetSweep, KeyMaterialTest, LanePreregistration, PeriodPredictionEvaluation,
+    PeriodPredictionPlan, PeriodPredictionPlanSet, PositionStructureRun,
+    PredictionArtifactValidation, PreregistrationValidation, ReportFormat,
+    RoutedBatchKeyMaterialRun, SpacingPredictionEvaluation, SpacingPredictionPlanSet,
+    StructuralModelRun, analyze_constraints, analyze_known_plaintext_spans,
+    batch_test_key_material_with_batch_baseline, batch_test_routed_key_material,
+    build_all_period_prediction_plans, build_all_spacing_prediction_plans,
+    build_period_prediction_plan, build_report, candidate_sequences,
+    evaluate_period_prediction_positions, evaluate_spacing_prediction_positions,
+    explain_key_material, findings, heldout_key_control, hypotheses, known_anchors,
+    load_and_validate_preregistration, render_report, run_baseline, run_position_structure_control,
+    run_release_checks, run_route_experiments, run_structural_model_control,
+    score_candidate_sequences, sources, summarize_batch_key_material_runs,
+    summarize_independent_lanes, sweep_key_material_offsets_with_baseline, test_key_material,
+    validate_prediction_artifact, validate_preregistration, validation_exit_result,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -1635,7 +1635,7 @@ fn validate_evaluation_archive(directory: &Path) -> Result<EvaluationArchiveVali
             &mut errors,
             &mut files_checked,
         );
-        read_archive_json(
+        let preregistration = read_archive_json(
             directory,
             "preregistration.json",
             &mut errors,
@@ -1643,6 +1643,22 @@ fn validate_evaluation_archive(directory: &Path) -> Result<EvaluationArchiveVali
         );
         if let (Some(observations), Some(result)) = (&observations, &result) {
             validate_observations_match_result(observations, result, &mut errors);
+        }
+        if let (Some(artifact), Some(preregistration)) = (&artifact, &preregistration) {
+            validate_archived_prediction_context(
+                &artifact_kind,
+                preregistration,
+                artifact,
+                &mut errors,
+            );
+        }
+        if let (Some(artifact), Some(observations)) = (&artifact, &observations) {
+            validate_archived_observations_against_artifact(
+                &artifact_kind,
+                observations,
+                artifact,
+                &mut errors,
+            );
         }
         if let Some(command) = &command {
             require_command_token(command, "--artifact artifact.json", &mut errors);
@@ -1697,6 +1713,151 @@ fn validate_evaluation_archive(directory: &Path) -> Result<EvaluationArchiveVali
         promoted_candidate: false,
         note: "Evaluation archive validation checks reproducibility artifacts only; it is not a claimed solution.",
     })
+}
+
+fn validate_archived_prediction_context(
+    artifact_kind: &str,
+    preregistration: &serde_json::Value,
+    artifact: &serde_json::Value,
+    errors: &mut Vec<String>,
+) {
+    match serde_json::to_string(preregistration)
+        .map_err(anyhow::Error::from)
+        .and_then(|input| validate_preregistration(&input))
+    {
+        Ok(validation) => {
+            errors.extend(
+                validation
+                    .errors
+                    .into_iter()
+                    .map(|error| format!("preregistration.json: {error}")),
+            );
+        }
+        Err(error) => errors.push(format!("preregistration.json is invalid: {error}")),
+    }
+
+    let registration = match serde_json::from_value::<LanePreregistration>(preregistration.clone())
+    {
+        Ok(registration) => registration,
+        Err(error) => {
+            errors.push(format!("preregistration.json is invalid: {error}"));
+            return;
+        }
+    };
+
+    let expected_kind = match registration.hypothesis_family.as_str() {
+        "position-period-prediction" => Some("period"),
+        "position-spacing-prediction" => Some("spacing"),
+        _ => None,
+    };
+    if expected_kind != Some(artifact_kind) {
+        errors.push(format!(
+            "preregistration.json hypothesis family `{}` does not match archived {artifact_kind} artifact",
+            registration.hypothesis_family
+        ));
+    }
+
+    let expected_artifact = match artifact_kind {
+        "period" => build_all_period_prediction_plans()
+            .and_then(|plans| serde_json::to_value(plans).map_err(Into::into)),
+        "spacing" => build_all_spacing_prediction_plans()
+            .and_then(|plans| serde_json::to_value(plans).map_err(Into::into)),
+        _ => return,
+    };
+    match expected_artifact {
+        Ok(expected_artifact) => {
+            if artifact != &expected_artifact {
+                errors.push(format!(
+                    "artifact.json does not match deterministic {artifact_kind} prediction plan output"
+                ));
+            }
+        }
+        Err(error) => errors.push(format!(
+            "could not build deterministic {artifact_kind} prediction artifact: {error}"
+        )),
+    }
+}
+
+fn validate_archived_observations_against_artifact(
+    artifact_kind: &str,
+    observations: &serde_json::Value,
+    artifact: &serde_json::Value,
+    errors: &mut Vec<String>,
+) {
+    let observations =
+        match serde_json::from_value::<PeriodPredictionObservationFile>(observations.clone()) {
+            Ok(observations) => observations,
+            Err(error) => {
+                errors.push(format!("observations.json is invalid: {error}"));
+                return;
+            }
+        };
+
+    errors.extend(
+        validate_period_prediction_observation_fields(&observations)
+            .into_iter()
+            .map(|error| format!("observations.json: {error}")),
+    );
+
+    if artifact_kind == "spacing" && observations.positions_one_based.len() < 2 {
+        errors.push(
+            "observations.json: spacing observation files must include at least two one-based K4 positions"
+                .to_string(),
+        );
+    }
+
+    let non_anchor_positions = match archived_artifact_positions(artifact_kind, artifact) {
+        Ok(positions) => positions,
+        Err(error) => {
+            errors.push(format!("artifact.json could not be validated: {error}"));
+            return;
+        }
+    };
+
+    let mut seen = HashSet::new();
+    for position in &observations.positions_one_based {
+        if !seen.insert(*position) {
+            errors.push(format!(
+                "observations.json: positions_one_based contains duplicate position `{position}`"
+            ));
+        }
+        if !non_anchor_positions.contains(position) {
+            let context = if artifact_kind == "spacing" {
+                "spacing prediction artifact"
+            } else {
+                "prediction artifact"
+            };
+            errors.push(format!(
+                "observations.json: position `{position}` is not in the {context} non-anchor universe"
+            ));
+        }
+    }
+}
+
+fn archived_artifact_positions(
+    artifact_kind: &str,
+    artifact: &serde_json::Value,
+) -> Result<HashSet<usize>> {
+    match artifact_kind {
+        "period" => {
+            let plans: PeriodPredictionPlanSet = serde_json::from_value(artifact.clone())?;
+            Ok(plans
+                .plans
+                .into_iter()
+                .flat_map(|plan| plan.residues)
+                .flat_map(|residue| residue.positions_one_based)
+                .collect())
+        }
+        "spacing" => {
+            let plans: SpacingPredictionPlanSet = serde_json::from_value(artifact.clone())?;
+            Ok(plans
+                .plans
+                .into_iter()
+                .flat_map(|plan| plan.positions_one_based)
+                .collect())
+        }
+        _ => Ok(HashSet::new()),
+    }
 }
 
 fn read_archive_json(

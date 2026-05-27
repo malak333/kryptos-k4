@@ -14,8 +14,8 @@ cargo run --locked -- release-check --format json
 
 Result summary:
 
-- independent lanes: `11`
-- ready for source-backed observations: `11`
+- independent lanes: `12`
+- ready for source-backed observations: `12`
 - invalid lanes: `0`
 - release-check failures: `0`
 - promoted: false
@@ -24,10 +24,10 @@ Interpretation: the independent evidence workflow is ready for source-backed
 observation files, but no independent observation has been scored and no K4
 candidate, plaintext, or solution is promoted.
 
-Duplicate-artifact accounting added: the lane-status command now reports 11
-declared prediction artifacts but only 2 unique artifact contents. The ten
+Duplicate-artifact accounting added: the lane-status command now reports 12
+declared prediction artifacts but only 2 unique artifact contents. The eleven
 period lanes currently share one deterministic position-period target; this is
-an operational readiness inventory, not ten independent cryptanalytic signals.
+an operational readiness inventory, not eleven independent cryptanalytic signals.
 Future interpretation should count unique prediction targets and source-backed
 observations, not just preregistration rows.
 
@@ -47,6 +47,13 @@ Next gate: do not add more public-anchor-derived candidate material. Before any
 new scoring, create or receive a source-backed non-anchor observation file,
 validate it with the family-specific observation validator, evaluate it with
 the matching preregistration and artifact, and archive the evaluation output.
+
+Archive validation hardening added: `validate-evaluation-archive` now revalidates
+archived source-backed evaluations against the archived preregistration,
+deterministic prediction artifact, and observation file. Tampered archives that
+rewrite both `observations.json` and `result.json`, or swap in a mismatched
+preregistration family, fail validation before they can be treated as
+reproducible evidence.
 
 ## 2026-05-25: Methodology Context Source
 
@@ -352,8 +359,8 @@ could pass validation but fail at evaluation time.
 Independent lane status command added:
 `independent-lane-status --format json` scans the preregistration directory,
 validates each preregistration and committed prediction artifact, and reports
-the next validator/evaluator command for each lane. Current status: 11 lanes,
-11 ready for source-backed observations, 0 invalid lanes, 11 prediction
+the next validator/evaluator command for each lane. Current status: 12 lanes,
+12 ready for source-backed observations, 0 invalid lanes, 12 prediction
 artifacts, 2 unique prediction artifact contents, 1 duplicate artifact group,
 promoted false. This is an operational gate summary only; it adds no plaintext,
 key material, or scored evidence.

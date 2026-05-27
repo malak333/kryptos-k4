@@ -1622,12 +1622,12 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Independent Lane Status"))
-        .stdout(predicate::str::contains("lanes: 11"))
+        .stdout(predicate::str::contains("lanes: 12"))
         .stdout(predicate::str::contains(
-            "ready for source-backed observations: 11",
+            "ready for source-backed observations: 12",
         ))
         .stdout(predicate::str::contains("invalid lanes: 0"))
-        .stdout(predicate::str::contains("prediction artifacts: 11"))
+        .stdout(predicate::str::contains("prediction artifacts: 12"))
         .stdout(predicate::str::contains("unique prediction artifacts: 2"))
         .stdout(predicate::str::contains("duplicate artifact groups: 1"))
         .stdout(predicate::str::contains("Duplicate Prediction Artifacts"))
@@ -1648,10 +1648,10 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["lane_count"], 11);
-    assert_eq!(json["ready_for_source_backed_observations"], 11);
+    assert_eq!(json["lane_count"], 12);
+    assert_eq!(json["ready_for_source_backed_observations"], 12);
     assert_eq!(json["invalid_lanes"], 0);
-    assert_eq!(json["prediction_artifacts"], 11);
+    assert_eq!(json["prediction_artifacts"], 12);
     assert_eq!(json["unique_prediction_artifacts"], 2);
     assert_eq!(
         json["duplicate_prediction_artifact_groups"]
@@ -2187,6 +2187,145 @@ fn validate_evaluation_archive_rejects_wrong_evaluator_command() {
         .stdout(predicate::str::contains("valid: false"))
         .stdout(predicate::str::contains(
             "command.txt must start with `evaluate-period-prediction`",
+        ))
+        .stderr(predicate::str::contains(
+            "evaluation archive failed validation",
+        ));
+}
+
+#[test]
+fn validate_evaluation_archive_rejects_tampered_source_backed_observations() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("observations.json");
+    let output_dir = temp.path().join("period-output");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "synthetic-tamper-test",
+  "source_ids": ["cia-artifact"],
+  "positions_one_based": [1, 4, 7],
+  "rationale": "Synthetic CLI test fixture for archive tamper validation."
+}"#,
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-period-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-period-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-period-v1.json",
+            "--positions-file",
+            observations_path.to_str().unwrap(),
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+            "--output-dir",
+            output_dir.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success();
+
+    let mut observations: Value = serde_json::from_str(
+        &std::fs::read_to_string(output_dir.join("observations.json")).unwrap(),
+    )
+    .unwrap();
+    observations["positions_one_based"] = serde_json::json!([22]);
+    std::fs::write(
+        output_dir.join("observations.json"),
+        serde_json::to_string_pretty(&observations).unwrap(),
+    )
+    .unwrap();
+
+    let mut result: Value =
+        serde_json::from_str(&std::fs::read_to_string(output_dir.join("result.json")).unwrap())
+            .unwrap();
+    result["observed_positions_one_based"] = serde_json::json!([22]);
+    std::fs::write(
+        output_dir.join("result.json"),
+        serde_json::to_string_pretty(&result).unwrap(),
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-evaluation-archive",
+            "--input",
+            output_dir.to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("valid: false"))
+        .stdout(predicate::str::contains(
+            "observations.json: position `22` is not in the prediction artifact non-anchor universe",
+        ))
+        .stderr(predicate::str::contains(
+            "evaluation archive failed validation",
+        ));
+}
+
+#[test]
+fn validate_evaluation_archive_rejects_preregistration_artifact_family_mismatch() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("observations.json");
+    let output_dir = temp.path().join("period-output");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "synthetic-family-mismatch-test",
+  "source_ids": ["cia-artifact"],
+  "positions_one_based": [1, 4, 7],
+  "rationale": "Synthetic CLI test fixture for archive family mismatch validation."
+}"#,
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-period-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-period-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-period-v1.json",
+            "--positions-file",
+            observations_path.to_str().unwrap(),
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+            "--output-dir",
+            output_dir.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success();
+
+    std::fs::copy(
+        "experiments/preregistrations/non-anchor-position-spacing-v1.json",
+        output_dir.join("preregistration.json"),
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-evaluation-archive",
+            "--input",
+            output_dir.to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("valid: false"))
+        .stdout(predicate::str::contains(
+            "preregistration.json hypothesis family `position-spacing-prediction` does not match archived period artifact",
         ))
         .stderr(predicate::str::contains(
             "evaluation archive failed validation",
