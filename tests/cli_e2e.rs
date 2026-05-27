@@ -2448,8 +2448,8 @@ fn next_evidence_gate_prints_operational_checklist() {
         ))
         .stdout(predicate::str::contains("cia-artifact, cia-sculpture"))
         .stdout(predicate::str::contains("valid source-backed archives: 0"))
-        .stdout(predicate::str::contains("source reviews scanned: 0"))
-        .stdout(predicate::str::contains("source review available: false"))
+        .stdout(predicate::str::contains("source reviews scanned: 1"))
+        .stdout(predicate::str::contains("source review available: true"))
         .stdout(predicate::str::contains("source-review-status"))
         .stdout(predicate::str::contains("evidence available: false"))
         .stdout(predicate::str::contains("Eligible Source Details"))
@@ -2483,10 +2483,10 @@ fn next_evidence_gate_prints_operational_checklist() {
     assert_eq!(json["duplicate_prediction_artifact_group_count"], 1);
     assert_eq!(json["valid_source_backed_archive_count"], 0);
     assert_eq!(json["invalid_archive_count"], 0);
-    assert_eq!(json["scanned_source_review_count"], 0);
-    assert_eq!(json["valid_source_review_count"], 0);
+    assert_eq!(json["scanned_source_review_count"], 1);
+    assert_eq!(json["valid_source_review_count"], 1);
     assert_eq!(json["invalid_source_review_count"], 0);
-    assert_eq!(json["source_review_available"], false);
+    assert_eq!(json["source_review_available"], true);
     assert_eq!(json["evidence_available"], false);
     assert!(
         json["readiness_note"]

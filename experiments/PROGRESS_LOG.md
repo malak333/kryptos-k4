@@ -573,7 +573,14 @@ invalid lanes; the lane remains an independent prediction target, not scored
 evidence.
 
 `source-review-status` now scans saved pre-score source-review artifacts before
-observation scaffolding. The current default source-review root is absent, so
-the evidence gate reports `source_review_available=false`: the next evidence
-step is still to create and validate a source-review artifact from eligible
-sources before any non-anchor observation file is scored.
+observation scaffolding. `experiments/source-reviews/cia-source-review-v1.json`
+records a pre-score review of the CIA Kryptos artifact and sculpture pages for
+`cia-artifact` and `cia-sculpture`; `validate-source-review --format json`
+reports `valid=true`, `reviewed_source_count=2`, and a warning that both sources
+lack local archive URLs.
+
+`next-evidence-gate --format json` now reports `source_review_available=true`
+with one valid source-review file, but `evidence_available=false` and zero valid
+source-backed archives. Interpretation: source eligibility has been reviewed
+before position selection, but no non-anchor positions have been selected,
+scored, archived, or promoted.

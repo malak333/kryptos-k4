@@ -125,6 +125,10 @@ been scored yet.
 `source-review-status` scans saved pre-score source-review artifacts and reports
 whether any valid review file is available before source-backed observations are
 scaffolded.
+The current committed source-review artifact is
+`experiments/source-reviews/cia-source-review-v1.json`; it records pre-score
+review of the eligible CIA artifact and sculpture pages only. It does not select
+positions, score observations, or make evidence available.
 Use `report --output notes/k4-report.md` to regenerate the Markdown report; the
 CLI writes through a temporary file and replaces the report only after the
 preflight-backed render succeeds.
@@ -249,6 +253,14 @@ a matching deterministic artifact at
 `experiments/predictions/non-anchor-position-period-v12.json`. It remains a
 period-family readiness lane sharing the same unique prediction target, not a
 new independent cryptanalytic signal.
+
+The populated period lane in
+`experiments/preregistrations/non-anchor-position-period-v16.json` carries a
+stable lane id, concrete non-anchor rationale, predeclared discovery and
+evaluation inputs, and controls for seeded shuffles, multiple comparisons, and
+best-of-period selection. It has a matching deterministic artifact at
+`experiments/predictions/non-anchor-position-period-v16.json`; it remains a
+pre-score prediction target, not scored evidence.
 
 Summarize a completed lane:
 

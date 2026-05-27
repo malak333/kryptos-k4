@@ -121,6 +121,9 @@ cited observation source.
 Run `source-review-status` to check whether a saved pre-score review artifact
 already exists and validates. A missing default review directory or zero valid
 reviews means the next step is still source review, not observation scoring.
+One valid source-review file only clears the pre-score source-review gate; it
+does not create evidence until a separate source-backed observation file is
+validated, scored, archived, and revalidated.
 Use `init-source-review` to materialize that pre-score review into JSON before
 choosing observation positions; it rejects context-only sources, duplicate
 source IDs, placeholders, and accidental overwrites.

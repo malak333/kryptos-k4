@@ -1,0 +1,56 @@
+{
+  "id": "cia-source-review-v1",
+  "source_ids": [
+    "cia-artifact",
+    "cia-sculpture"
+  ],
+  "sources": [
+    {
+      "id": "cia-artifact",
+      "label": "CIA Kryptos artifact page",
+      "url": "https://www.cia.gov/legacy/museum/artifact/kryptos/",
+      "archive_url": null,
+      "locally_archived": false,
+      "accessed_at": "2026-05-20",
+      "publication_date": null,
+      "source_type": "primary",
+      "allowed_use": "public-facts-only",
+      "use_note": "Installation context and unresolved fourth-section status.",
+      "eligible_for_scored_observations": true,
+      "reason": "allowed_use supports scored independent position observations"
+    },
+    {
+      "id": "cia-sculpture",
+      "label": "CIA Kryptos sculpture page",
+      "url": "https://www.cia.gov/legacy/headquarters/kryptos-sculpture/",
+      "archive_url": null,
+      "locally_archived": false,
+      "accessed_at": "2026-05-20",
+      "publication_date": null,
+      "source_type": "primary",
+      "allowed_use": "public-facts-only",
+      "use_note": "Sculpture components, Vigenere chart context, and 97-character K4 statement.",
+      "eligible_for_scored_observations": true,
+      "reason": "allowed_use supports scored independent position observations"
+    }
+  ],
+  "review_note": "Reviewed the CIA Kryptos artifact and Kryptos sculpture pages on 2026-05-27 before selecting any non-anchor positions. The review confirmed installation context, unresolved K4 status, Vigenere-table context, and the 97-character remaining-message boundary; no observation positions were selected or scored in this step.",
+  "required_review_steps": [
+    "Review each eligible source URL before drafting observation positions.",
+    "Record source-backed rationale and one position note per scored one-based K4 position.",
+    "Link the validated source-review artifact from the observation file.",
+    "Do not use public-anchor summary, public-clue context, methodology context, or archive-context-only sources as scored evidence.",
+    "Treat sources without local archives as review-required until an observation archive preserves the exact scored input.",
+    "Run the family-specific observation validator before any evaluator command."
+  ],
+  "observation_requirements": [
+    "registered eligible source ID",
+    "validated source-review file covering cited source IDs",
+    "one-based non-anchor K4 positions",
+    "source-backed rationale",
+    "one non-empty position_notes entry per scored position",
+    "archived evaluation output that validates with validate-evaluation-archive"
+  ],
+  "promoted_candidate": false,
+  "note": "Source-review file records pre-score source review only; it is not a claimed solution."
+}
