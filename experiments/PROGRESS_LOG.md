@@ -40,6 +40,11 @@ Additional preregistration cleanup:
   standalone Markdown/JSON command. This keeps source review, missing local
   archive status, required observation fields, and no-promotion boundaries
   visible before any period or spacing evaluator can be run.
+- `init-source-review` now materializes that pre-score source review as a JSON
+  artifact before any non-anchor observation positions are selected. It accepts
+  only registered scored-observation-eligible source IDs, rejects duplicate or
+  context-only sources, records missing local-archive status, and remains
+  non-promotional.
 
 Current independent-lane status:
 

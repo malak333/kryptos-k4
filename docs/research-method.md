@@ -115,6 +115,9 @@ an observation file would be scaffolded.
 Run `source-review-packet` when preparing a concrete observation pass. It
 separates the pre-score source-review checklist from the scoring commands and
 shows which eligible sources currently lack local archive URLs.
+Use `init-source-review` to materialize that pre-score review into JSON before
+choosing observation positions; it rejects context-only sources, duplicate
+source IDs, placeholders, and accidental overwrites.
 Run `independent-evidence-status` to confirm whether any source-backed
 observation evaluation archives already exist before interpreting a lane as
 having evidence.

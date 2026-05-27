@@ -181,6 +181,7 @@ fn facts_hypotheses_sources_and_help_are_covered() {
         .stdout(predicate::str::contains("next-evidence-gate"))
         .stdout(predicate::str::contains("independent-evidence-status"))
         .stdout(predicate::str::contains("source-review-packet"))
+        .stdout(predicate::str::contains("init-source-review"))
         .stdout(predicate::str::contains("non-anchor-positions"))
         .stdout(predicate::str::contains("init-position-observations"))
         .stdout(predicate::str::contains("observation-sources"))
@@ -239,6 +240,105 @@ fn source_review_packet_exposes_prescore_source_checklist() {
                 .unwrap()
                 .contains("sources without local archives"))
     );
+}
+
+#[test]
+fn init_source_review_writes_prescore_review_file() {
+    let temp = tempfile::tempdir().unwrap();
+    let output_path = temp.path().join("source-review.json");
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "init-source-review",
+            "--id",
+            "cia-source-review-v1",
+            "--source-id",
+            "cia-artifact",
+            "--source-id",
+            "cia-sculpture",
+            "--review-note",
+            "Reviewed eligible CIA source pages before selecting any non-anchor positions.",
+            "--output",
+            output_path.to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Source Review File"))
+        .stdout(predicate::str::contains(
+            "review id: `cia-source-review-v1`",
+        ))
+        .stdout(predicate::str::contains(
+            "source ids: cia-artifact, cia-sculpture",
+        ))
+        .stdout(predicate::str::contains("local archives missing: 2"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let file_json: Value =
+        serde_json::from_str(&std::fs::read_to_string(&output_path).unwrap()).unwrap();
+    assert_eq!(file_json["id"], "cia-source-review-v1");
+    assert_eq!(file_json["source_ids"].as_array().unwrap().len(), 2);
+    assert_eq!(file_json["sources"].as_array().unwrap().len(), 2);
+    assert_eq!(file_json["promoted_candidate"], false);
+    assert!(
+        file_json["required_review_steps"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|step| step
+                .as_str()
+                .unwrap()
+                .contains("Run the family-specific observation validator"))
+    );
+
+    let json_output_path = temp.path().join("source-review-json.json");
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "init-source-review",
+            "--id",
+            "cia-source-review-v2",
+            "--source-id",
+            "cia-artifact",
+            "--review-note",
+            "Reviewed source before JSON scaffold assertion.",
+            "--output",
+            json_output_path.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["valid"], true);
+    assert_eq!(json["review"]["id"], "cia-source-review-v2");
+    assert_eq!(json["review"]["promoted_candidate"], false);
+}
+
+#[test]
+fn init_source_review_rejects_context_only_sources() {
+    let temp = tempfile::tempdir().unwrap();
+    let output_path = temp.path().join("source-review.json");
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "init-source-review",
+            "--id",
+            "bad-source-review",
+            "--source-id",
+            "elonka-kryptos",
+            "--review-note",
+            "This should fail because the source is public-anchor context only.",
+            "--output",
+            output_path.to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("cannot be used for scored"));
 }
 
 #[test]
@@ -2005,6 +2105,7 @@ fn next_evidence_gate_prints_operational_checklist() {
             "Ready lane count is an operational inventory",
         ))
         .stdout(predicate::str::contains("validate-period-observations"))
+        .stdout(predicate::str::contains("init-source-review"))
         .stdout(predicate::str::contains("evaluate-period-prediction"))
         .stdout(predicate::str::contains("validate-spacing-observations"))
         .stdout(predicate::str::contains("evaluate-spacing-prediction"))
@@ -2032,6 +2133,12 @@ fn next_evidence_gate_prints_operational_checklist() {
             .as_str()
             .unwrap()
             .contains("unique ready prediction artifacts")
+    );
+    assert!(
+        json["source_review_scaffold_command"]
+            .as_str()
+            .unwrap()
+            .contains("init-source-review")
     );
     assert_eq!(json["promoted_candidate"], false);
     assert!(

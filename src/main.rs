@@ -312,6 +312,27 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
     },
+    /// Create a pre-score source-review JSON file for eligible observation sources.
+    InitSourceReview {
+        /// Stable source-review file ID.
+        #[arg(long)]
+        id: String,
+        /// Registered eligible source ID. Repeat for multiple sources.
+        #[arg(long = "source-id", required = true)]
+        source_ids: Vec<String>,
+        /// Reviewer note explaining what was checked before observation scoring.
+        #[arg(long = "review-note")]
+        review_note: String,
+        /// Output JSON path.
+        #[arg(long)]
+        output: PathBuf,
+        /// Overwrite an existing output file.
+        #[arg(long)]
+        force: bool,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Print the one-based K4 positions eligible for future non-anchor observations.
     NonAnchorPositions {
         /// Output format.
@@ -638,6 +659,7 @@ struct NextEvidenceGateReport {
     evidence_available: bool,
     readiness_note: &'static str,
     required_observation_fields: Vec<&'static str>,
+    source_review_scaffold_command: &'static str,
     gates: Vec<NextEvidenceGate>,
     promoted_candidate: bool,
     note: &'static str,
@@ -662,6 +684,28 @@ struct SourceReviewPacketReport {
     eligible_sources: Vec<ObservationSourceEligibility>,
     required_review_steps: Vec<&'static str>,
     observation_requirements: Vec<&'static str>,
+    promoted_candidate: bool,
+    note: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct SourceReviewFile {
+    id: String,
+    source_ids: Vec<String>,
+    sources: Vec<ObservationSourceEligibility>,
+    review_note: String,
+    required_review_steps: Vec<&'static str>,
+    observation_requirements: Vec<&'static str>,
+    promoted_candidate: bool,
+    note: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct SourceReviewScaffoldReport {
+    output_path: String,
+    review: SourceReviewFile,
+    valid: bool,
+    errors: Vec<String>,
     promoted_candidate: bool,
     note: &'static str,
 }
@@ -780,6 +824,15 @@ struct InitPositionObservationOptions {
     positions: String,
     rationale: String,
     position_notes: Vec<String>,
+    output: PathBuf,
+    force: bool,
+    format: OutputFormat,
+}
+
+struct InitSourceReviewOptions {
+    id: String,
+    source_ids: Vec<String>,
+    review_note: String,
     output: PathBuf,
     force: bool,
     format: OutputFormat,
@@ -1080,6 +1133,99 @@ fn create_position_observation_file(
     })
 }
 
+fn create_source_review_file(
+    id: String,
+    source_ids: Vec<String>,
+    review_note: String,
+    output: PathBuf,
+    force: bool,
+) -> Result<SourceReviewScaffoldReport> {
+    if output.exists() && !force {
+        anyhow::bail!(
+            "output file already exists: {}; pass --force to overwrite",
+            output.display()
+        );
+    }
+
+    if id.trim().is_empty() {
+        anyhow::bail!("source-review id must not be empty");
+    }
+    if contains_template_placeholder(&id) {
+        anyhow::bail!("source-review id still contains template placeholder text");
+    }
+    if review_note.trim().is_empty() {
+        anyhow::bail!("review-note must not be empty");
+    }
+    if contains_template_placeholder(&review_note) {
+        anyhow::bail!("review-note still contains template placeholder text");
+    }
+
+    let packet = source_review_packet_report();
+    let eligible_by_id: BTreeMap<_, _> = packet
+        .eligible_sources
+        .iter()
+        .cloned()
+        .map(|source| (source.id, source))
+        .collect();
+    let all_sources: BTreeMap<_, _> = observation_source_eligibility_report()
+        .sources
+        .into_iter()
+        .map(|source| (source.id, source))
+        .collect();
+
+    let mut selected_sources = Vec::new();
+    let mut normalized_source_ids = Vec::new();
+    let mut seen_source_ids = HashSet::new();
+    for source_id in source_ids {
+        let source_id = source_id.trim().to_string();
+        if source_id.is_empty() {
+            anyhow::bail!("source-id must not be empty");
+        }
+        if contains_template_placeholder(&source_id) {
+            anyhow::bail!("source-id `{source_id}` still contains template placeholder text");
+        }
+        if !seen_source_ids.insert(source_id.clone()) {
+            anyhow::bail!("source-id `{source_id}` was provided more than once");
+        }
+        if let Some(source) = eligible_by_id.get(source_id.as_str()) {
+            normalized_source_ids.push(source_id);
+            selected_sources.push(source.clone());
+        } else if let Some(source) = all_sources.get(source_id.as_str()) {
+            anyhow::bail!(
+                "source-id `{source_id}` has allowed_use `{}` and cannot be used for scored source-review evidence",
+                source.allowed_use
+            );
+        } else {
+            anyhow::bail!("source-id `{source_id}` is not registered");
+        }
+    }
+
+    let review = SourceReviewFile {
+        id,
+        source_ids: normalized_source_ids,
+        sources: selected_sources,
+        review_note: review_note.trim().to_string(),
+        required_review_steps: packet.required_review_steps,
+        observation_requirements: packet.observation_requirements,
+        promoted_candidate: false,
+        note: "Source-review file records pre-score source review only; it is not a claimed solution.",
+    };
+
+    write_output_file_atomically(
+        &output,
+        &format!("{}\n", serde_json::to_string_pretty(&review)?),
+    )?;
+
+    Ok(SourceReviewScaffoldReport {
+        output_path: output.display().to_string(),
+        review,
+        valid: true,
+        errors: Vec::new(),
+        promoted_candidate: false,
+        note: "Source-review scaffolding writes source eligibility and review notes only; it is not a claimed solution.",
+    })
+}
+
 fn build_position_notes(
     positions_one_based: &[usize],
     position_note_inputs: &[String],
@@ -1282,6 +1428,21 @@ fn main() -> Result<()> {
             print_independent_evidence_status(roots, format)?
         }
         Command::SourceReviewPacket { format } => print_source_review_packet(format)?,
+        Command::InitSourceReview {
+            id,
+            source_ids,
+            review_note,
+            output,
+            force,
+            format,
+        } => print_init_source_review(InitSourceReviewOptions {
+            id,
+            source_ids,
+            review_note,
+            output,
+            force,
+            format,
+        })?,
         Command::NonAnchorPositions { format } => print_non_anchor_positions(format)?,
         Command::InitPositionObservations {
             id,
@@ -3170,6 +3331,7 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
             "source-backed rationale",
             "one non-empty position_notes entry per scored position",
         ],
+        source_review_scaffold_command: "cargo run --locked -- init-source-review --id <source-review-id> --source-id <eligible-source-id> --review-note \"<what source pages were reviewed before choosing positions>\" --output <source-review.json>",
         gates,
         promoted_candidate: false,
         note: "Next-evidence-gate output is an operational checklist for future source-backed observations; it is not a claimed solution.",
@@ -3263,6 +3425,10 @@ fn print_next_evidence_gate(directory: PathBuf, format: OutputFormat) -> Result<
             for field in &report.required_observation_fields {
                 println!("- {field}");
             }
+            println!(
+                "\nsource review scaffold:\n```bash\n{}\n```",
+                report.source_review_scaffold_command
+            );
             println!("\n## Eligible Source Details\n");
             println!("| Source ID | Local Archive | Accessed | Source Type | Use Boundary | URL |");
             println!("| --- | --- | --- | --- | --- | --- |");
@@ -3385,6 +3551,67 @@ fn print_source_review_packet(format: OutputFormat) -> Result<()> {
         }
     }
     Ok(())
+}
+
+fn print_init_source_review(options: InitSourceReviewOptions) -> Result<()> {
+    let InitSourceReviewOptions {
+        id,
+        source_ids,
+        review_note,
+        output,
+        force,
+        format,
+    } = options;
+    let report = create_source_review_file(id, source_ids, review_note, output, force)?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&report)?),
+        OutputFormat::Markdown => print_source_review_scaffold_report(&report),
+    }
+    Ok(())
+}
+
+fn print_source_review_scaffold_report(report: &SourceReviewScaffoldReport) {
+    println!("# Source Review File\n");
+    println!("This is not a claimed solution.\n");
+    println!("output: `{}`", report.output_path);
+    println!("review id: `{}`", report.review.id);
+    println!("source ids: {}", report.review.source_ids.join(", "));
+    let missing_archives = report
+        .review
+        .sources
+        .iter()
+        .filter(|source| !source.locally_archived)
+        .count();
+    println!("local archives missing: {missing_archives}");
+    println!("valid: {}", report.valid);
+    println!("promoted: {}", report.promoted_candidate);
+    println!("note: {}\n", report.note);
+
+    println!("## Reviewed Sources\n");
+    println!("| Source ID | Local Archive | Accessed | Allowed Use | URL |");
+    println!("| --- | --- | --- | --- | --- |");
+    for source in &report.review.sources {
+        let archive_status = if source.locally_archived {
+            source.archive_url.unwrap_or("yes")
+        } else {
+            "missing"
+        };
+        println!(
+            "| `{}` | {} | {} | {} | {} |",
+            source.id, archive_status, source.accessed_at, source.allowed_use, source.url
+        );
+    }
+
+    println!("\n## Review Note\n");
+    println!("{}\n", report.review.review_note);
+
+    println!("## Next Gates\n");
+    println!(
+        "- Use `init-position-observations` only after selecting source-backed non-anchor positions from reviewed sources."
+    );
+    println!(
+        "- Run the family-specific observation validator and `validate-evaluation-archive` before interpreting any score."
+    );
 }
 
 fn independent_evidence_status_report(

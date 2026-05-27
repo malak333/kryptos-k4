@@ -41,6 +41,11 @@ lane-specific observation file:
 
 ```bash
 cargo run --locked -- observation-sources
+cargo run --locked -- init-source-review \
+  --id <source-review-id> \
+  --source-id <registered-public-facts-source-id> \
+  --review-note "<what source pages were reviewed before choosing positions>" \
+  --output <source-review.json>
 cargo run --locked -- init-position-observations \
   --id <observation-id> \
   --source-id <registered-public-facts-source-id> \
@@ -50,9 +55,11 @@ cargo run --locked -- init-position-observations \
   --output <source-backed-observations.json>
 ```
 
-Repeat `--position-note` for every listed position. The scaffold rejects omitted
-notes instead of deriving them from the rationale, so every scored position has
-its own source-backed audit text.
+Repeat `--source-id` for every reviewed eligible source and repeat
+`--position-note` for every listed position. The source-review scaffold records
+pre-score review only; the observation scaffold rejects omitted notes instead of
+deriving them from the rationale, so every scored position has its own
+source-backed audit text.
 
 Validate the observation file first:
 
