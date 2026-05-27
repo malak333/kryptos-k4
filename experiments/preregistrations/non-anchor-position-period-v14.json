@@ -1,0 +1,29 @@
+{
+  "id": "non-anchor-position-period-v14",
+  "title": "Non-anchor position-period prediction v14",
+  "hypothesis_family": "position-period-prediction",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane predeclares a position-period rule before scoring any new observations. It does not use public anchor-derived additive fragments, candidate words, routed key-material results, held-out anchor controls, or prior public-fragment structure screens as discovery evidence, so it is not another public-anchor mining pass.",
+  "prediction_target": "Future independently sourced non-anchor K4 position observations should be enriched in one or more predeclared residue classes from the registered period set before any candidate-word, key-material, route, or public-anchor-derived fragment scoring is performed.",
+  "prediction_artifact": "experiments/predictions/non-anchor-position-period-v14.json",
+  "discovery_inputs": [
+    "Predeclared structural rule over absolute K4 positions only.",
+    "Registered period set selected before evaluating any new observation file.",
+    "No candidate words, key-material offsets, routed span scores, or previously scored fragment values."
+  ],
+  "evaluation_inputs": [
+    "Future source-documented non-anchor K4 position observations recorded before scoring.",
+    "Observation files that declare source IDs, one-based positions, per-position notes, and rationale before evaluation.",
+    "Independent target rows that are not EAST, NORTHEAST, BERLIN, CLOCK, EASTNORTHEAST, or BERLINCLOCK public-anchor fragments."
+  ],
+  "controls": [
+    "seeded shuffle baseline",
+    "multiple-comparison correction across registered periods",
+    "best-of-period null control",
+    "held-out observation scoring when enough independent rows exist",
+    "source and archive validation before promotion"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

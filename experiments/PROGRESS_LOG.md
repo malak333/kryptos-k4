@@ -5,6 +5,23 @@ It is not a claimed solution.
 
 ## 2026-05-27: Independent Lane Inventory Guardrails
 
+Additional preregistration cleanup:
+
+- The copied preregistration placeholder was promoted to stable filename
+  `experiments/preregistrations/non-anchor-position-period-v14.json`. It now
+  declares stable lane ID `non-anchor-position-period-v14`, a position-period
+  hypothesis family, independent prediction target, non-anchor
+  discovery/evaluation boundaries, and explicit
+  seeded/null/multiple-comparison/source-validation controls.
+- `experiments/predictions/non-anchor-position-period-v14.json` was generated
+  deterministically with `period-prediction-plan --all --format json`.
+- `validate-preregistration` and `validate-prediction-artifact` both pass for
+  the v14 lane. `independent-lane-status` now reports 17 ready lanes but still
+  only 2 unique ready prediction artifacts, so this is another operational lane
+  definition and not a new cryptanalytic signal.
+- No source-backed observation archive exists yet, and no K4 candidate,
+  plaintext, key, or solution is promoted.
+
 Current independent-lane status:
 
 ```bash
@@ -14,8 +31,8 @@ cargo run --locked -- release-check --format json
 
 Result summary:
 
-- independent lanes: `15`
-- ready for source-backed observations: `16`
+- independent lanes: `17`
+- ready for source-backed observations: `17`
 - unique ready prediction targets: `2`
 - invalid lanes: `0`
 - release-check failures: `0`
@@ -25,16 +42,16 @@ Interpretation: the independent evidence workflow is ready for source-backed
 observation files, but no independent observation has been scored and no K4
 candidate, plaintext, or solution is promoted.
 
-Duplicate-artifact accounting added: the lane-status command now reports 16
+Duplicate-artifact accounting added: the lane-status command now reports 17
 declared prediction artifacts but only 2 unique artifact contents, and both
-unique artifacts are ready for source-backed observations. The fifteen
+unique artifacts are ready for source-backed observations. The sixteen
 period lanes currently share one deterministic position-period target; this is
-an operational readiness inventory, not fourteen independent cryptanalytic signals.
+an operational readiness inventory, not sixteen independent cryptanalytic signals.
 Future interpretation should count unique prediction targets and source-backed
 observations, not just preregistration rows.
 
 Family-level inventory added: `independent-lane-status` now reports a family
-summary showing `position-period-prediction` has 14 lanes but 1 unique ready
+summary showing `position-period-prediction` has 16 lanes but 1 unique ready
 artifact, while `position-spacing-prediction` has 1 lane and 1 unique ready
 artifact. This keeps future work from treating duplicate period preregistration
 rows as separate evidence.
