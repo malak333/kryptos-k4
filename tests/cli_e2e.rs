@@ -180,6 +180,7 @@ fn facts_hypotheses_sources_and_help_are_covered() {
         .stdout(predicate::str::contains("independent-lane-status"))
         .stdout(predicate::str::contains("next-evidence-gate"))
         .stdout(predicate::str::contains("independent-evidence-status"))
+        .stdout(predicate::str::contains("source-review-status"))
         .stdout(predicate::str::contains("source-review-packet"))
         .stdout(predicate::str::contains("init-source-review"))
         .stdout(predicate::str::contains("validate-source-review"))
@@ -434,6 +435,109 @@ fn validate_source_review_rejects_tampered_review_file() {
         .stderr(predicate::str::contains(
             "source-review file failed validation",
         ));
+}
+
+#[test]
+fn source_review_status_reports_missing_valid_and_invalid_reviews() {
+    let missing = tempfile::tempdir().unwrap().path().join("missing-reviews");
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "source-review-status",
+            "--root",
+            missing.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["scanned_review_count"], 0);
+    assert_eq!(json["valid_review_count"], 0);
+    assert_eq!(json["invalid_review_count"], 0);
+    assert_eq!(json["missing_root_count"], 1);
+    assert_eq!(json["source_review_available"], false);
+    assert_eq!(json["promoted_candidate"], false);
+
+    let temp = tempfile::tempdir().unwrap();
+    let valid_path = temp.path().join("valid-source-review.json");
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "init-source-review",
+            "--id",
+            "cia-source-review-v1",
+            "--source-id",
+            "cia-artifact",
+            "--source-id",
+            "cia-sculpture",
+            "--review-note",
+            "Reviewed eligible CIA source pages before selecting any non-anchor positions.",
+            "--output",
+            valid_path.to_str().unwrap(),
+        ])
+        .assert()
+        .success();
+
+    let invalid_path = temp.path().join("invalid-source-review.json");
+    let mut invalid_json: Value =
+        serde_json::from_str(&std::fs::read_to_string(&valid_path).unwrap()).unwrap();
+    invalid_json["id"] = Value::String("invalid-source-review-v1".to_string());
+    invalid_json["sources"][0]["url"] = Value::String("https://example.invalid/tampered".into());
+    std::fs::write(
+        &invalid_path,
+        serde_json::to_string_pretty(&invalid_json).unwrap(),
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "source-review-status",
+            "--root",
+            temp.path().to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Source Review Status"))
+        .stdout(predicate::str::contains("reviews scanned: 2"))
+        .stdout(predicate::str::contains("valid reviews: 1"))
+        .stdout(predicate::str::contains("invalid reviews: 1"))
+        .stdout(predicate::str::contains("source review available: true"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "source-review-status",
+            "--root",
+            temp.path().to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["scanned_review_count"], 2);
+    assert_eq!(json["valid_review_count"], 1);
+    assert_eq!(json["invalid_review_count"], 1);
+    assert_eq!(json["missing_root_count"], 0);
+    assert_eq!(json["source_review_available"], true);
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(json["reviews"].as_array().unwrap().iter().any(|review| {
+        review["review_id"] == "cia-source-review-v1"
+            && review["valid"] == true
+            && review["missing_local_archive_count"] == 2
+    }));
+    assert!(json["reviews"].as_array().unwrap().iter().any(|review| {
+        review["valid"] == false && !review["errors"].as_array().unwrap().is_empty()
+    }));
 }
 
 #[test]
@@ -1900,12 +2004,12 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Independent Lane Status"))
-        .stdout(predicate::str::contains("lanes: 18"))
+        .stdout(predicate::str::contains("lanes: 19"))
         .stdout(predicate::str::contains(
-            "ready for source-backed observations: 18",
+            "ready for source-backed observations: 19",
         ))
         .stdout(predicate::str::contains("invalid lanes: 0"))
-        .stdout(predicate::str::contains("prediction artifacts: 18"))
+        .stdout(predicate::str::contains("prediction artifacts: 19"))
         .stdout(predicate::str::contains("unique prediction artifacts: 2"))
         .stdout(predicate::str::contains(
             "unique ready prediction artifacts: 2",
@@ -1913,7 +2017,7 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout(predicate::str::contains("duplicate artifact groups: 1"))
         .stdout(predicate::str::contains("Family Summary"))
         .stdout(predicate::str::contains(
-            "| position-period-prediction | 17 | 17 | 17 | 1 | 1 | 1 |",
+            "| position-period-prediction | 18 | 18 | 18 | 1 | 1 | 1 |",
         ))
         .stdout(predicate::str::contains(
             "| position-spacing-prediction | 1 | 1 | 1 | 1 | 1 | 0 |",
@@ -1936,16 +2040,16 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["lane_count"], 18);
-    assert_eq!(json["ready_for_source_backed_observations"], 18);
+    assert_eq!(json["lane_count"], 19);
+    assert_eq!(json["ready_for_source_backed_observations"], 19);
     assert_eq!(json["invalid_lanes"], 0);
-    assert_eq!(json["prediction_artifacts"], 18);
+    assert_eq!(json["prediction_artifacts"], 19);
     assert_eq!(json["unique_prediction_artifacts"], 2);
     assert_eq!(json["unique_ready_prediction_artifacts"], 2);
     let families = json["family_summaries"].as_array().unwrap();
     assert!(families.iter().any(|family| {
         family["hypothesis_family"] == "position-period-prediction"
-            && family["lanes"] == 17
+            && family["lanes"] == 18
             && family["unique_ready_prediction_artifacts"] == 1
             && family["duplicate_artifact_groups"] == 1
     }));
@@ -2335,7 +2439,7 @@ fn next_evidence_gate_prints_operational_checklist() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Next Evidence Gate"))
-        .stdout(predicate::str::contains("ready lanes: 18"))
+        .stdout(predicate::str::contains("ready lanes: 19"))
         .stdout(predicate::str::contains(
             "unique ready prediction artifacts: 2",
         ))
@@ -2344,6 +2448,9 @@ fn next_evidence_gate_prints_operational_checklist() {
         ))
         .stdout(predicate::str::contains("cia-artifact, cia-sculpture"))
         .stdout(predicate::str::contains("valid source-backed archives: 0"))
+        .stdout(predicate::str::contains("source reviews scanned: 0"))
+        .stdout(predicate::str::contains("source review available: false"))
+        .stdout(predicate::str::contains("source-review-status"))
         .stdout(predicate::str::contains("evidence available: false"))
         .stdout(predicate::str::contains("Eligible Source Details"))
         .stdout(predicate::str::contains(
@@ -2370,18 +2477,28 @@ fn next_evidence_gate_prints_operational_checklist() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["ready_lanes"], 18);
+    assert_eq!(json["ready_lanes"], 19);
     assert_eq!(json["invalid_lanes"], 0);
     assert_eq!(json["unique_ready_prediction_artifacts"], 2);
     assert_eq!(json["duplicate_prediction_artifact_group_count"], 1);
     assert_eq!(json["valid_source_backed_archive_count"], 0);
     assert_eq!(json["invalid_archive_count"], 0);
+    assert_eq!(json["scanned_source_review_count"], 0);
+    assert_eq!(json["valid_source_review_count"], 0);
+    assert_eq!(json["invalid_source_review_count"], 0);
+    assert_eq!(json["source_review_available"], false);
     assert_eq!(json["evidence_available"], false);
     assert!(
         json["readiness_note"]
             .as_str()
             .unwrap()
             .contains("unique ready prediction artifacts")
+    );
+    assert!(
+        json["source_review_status_command"]
+            .as_str()
+            .unwrap()
+            .contains("source-review-status")
     );
     assert!(
         json["source_review_scaffold_command"]

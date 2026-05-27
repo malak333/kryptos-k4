@@ -59,8 +59,9 @@ The integration tests in `tests/cli_e2e.rs` execute the compiled CLI and verify:
 - validate-preregistration rejects new lanes that reuse public anchor-derived fragments as discovery inputs or primary evidence;
 - validate-prediction-artifact checks committed independent prediction artifacts against the deterministic generator;
 - independent-lane-status summarizes preregistered lanes, artifact validity, readiness for source-backed observations, and the next validator or evaluator command;
-- next-evidence-gate combines lane readiness, unique/duplicate prediction-target accounting, eligible scored-observation sources, current evidence-archive status, required observation fields, and the exact scaffold/validate/evaluate/archive command sequence before any future source-backed scoring is interpreted;
+- next-evidence-gate combines lane readiness, unique/duplicate prediction-target accounting, eligible scored-observation sources, current evidence-archive status, current source-review status, required observation fields, and the exact scaffold/validate/evaluate/archive command sequence before any future source-backed scoring is interpreted;
 - independent-evidence-status scans archived period/spacing source-backed evaluation outputs and reports whether valid independent evidence is available;
+- source-review-status scans saved pre-score source-review artifacts and reports whether any valid source-review file is available before observation scaffolding;
 - non-anchor-positions prints the one-based K4 position universe allowed for future source-backed observation files, with excluded public anchor ranges;
 - validate-period-observations and validate-spacing-observations reject unregistered source IDs, disallowed source-use boundaries, duplicate positions, public-anchor positions, and unchanged observation templates before scoring;
 - period-prediction-plan emits predeclared non-anchor residue-class targets from K4 positions only, without scoring public fragment values or candidate material;
@@ -117,6 +118,9 @@ separates the pre-score source-review checklist from the scoring commands and
 shows which eligible sources currently lack local archive URLs. Its observation
 requirements include the validated source-review artifact that must cover every
 cited observation source.
+Run `source-review-status` to check whether a saved pre-score review artifact
+already exists and validates. A missing default review directory or zero valid
+reviews means the next step is still source review, not observation scoring.
 Use `init-source-review` to materialize that pre-score review into JSON before
 choosing observation positions; it rejects context-only sources, duplicate
 source IDs, placeholders, and accidental overwrites.

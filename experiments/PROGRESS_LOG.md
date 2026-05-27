@@ -563,3 +563,17 @@ Before implementation, validate a lane-specific preregistration:
 ```bash
 cargo run --locked -- validate-preregistration --input <lane-preregistration.json>
 ```
+
+## Source-Review Status Gate
+
+`non-anchor-position-period-v16.json` has been populated with the matching
+deterministic period prediction artifact. Single-lane validation, artifact
+validation, `independent-lane-status`, and `next-evidence-gate` all report zero
+invalid lanes; the lane remains an independent prediction target, not scored
+evidence.
+
+`source-review-status` now scans saved pre-score source-review artifacts before
+observation scaffolding. The current default source-review root is absent, so
+the evidence gate reports `source_review_available=false`: the next evidence
+step is still to create and validate a source-review artifact from eligible
+sources before any non-anchor observation file is scored.

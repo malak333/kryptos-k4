@@ -306,6 +306,15 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
     },
+    /// Report whether pre-score source-review artifacts exist and validate.
+    SourceReviewStatus {
+        /// Source-review root or JSON file to scan. Repeat to override the default source-review root.
+        #[arg(long = "root")]
+        roots: Vec<PathBuf>,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Print a pre-score review packet for eligible observation sources.
     SourceReviewPacket {
         /// Output format.
@@ -673,9 +682,15 @@ struct NextEvidenceGateReport {
     ineligible_source_count: usize,
     valid_source_backed_archive_count: usize,
     invalid_archive_count: usize,
+    source_review_roots: Vec<String>,
+    scanned_source_review_count: usize,
+    valid_source_review_count: usize,
+    invalid_source_review_count: usize,
+    source_review_available: bool,
     evidence_available: bool,
     readiness_note: &'static str,
     required_observation_fields: Vec<&'static str>,
+    source_review_status_command: &'static str,
     source_review_scaffold_command: &'static str,
     source_review_validation_command: &'static str,
     gates: Vec<NextEvidenceGate>,
@@ -728,7 +743,7 @@ struct SourceReviewScaffoldReport {
     note: &'static str,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 struct SourceReviewValidation {
     input_path: String,
     review_id: Option<String>,
@@ -740,6 +755,31 @@ struct SourceReviewValidation {
     warnings: Vec<String>,
     promoted_candidate: bool,
     note: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct SourceReviewStatusReport {
+    roots: Vec<String>,
+    scanned_review_count: usize,
+    valid_review_count: usize,
+    invalid_review_count: usize,
+    missing_root_count: usize,
+    source_review_available: bool,
+    reviews: Vec<SourceReviewStatusEntry>,
+    promoted_candidate: bool,
+    note: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct SourceReviewStatusEntry {
+    path: String,
+    review_id: Option<String>,
+    source_ids: Vec<String>,
+    reviewed_source_count: usize,
+    missing_local_archive_count: usize,
+    valid: bool,
+    errors: Vec<String>,
+    warnings: Vec<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -1715,6 +1755,7 @@ fn main() -> Result<()> {
         Command::IndependentEvidenceStatus { roots, format } => {
             print_independent_evidence_status(roots, format)?
         }
+        Command::SourceReviewStatus { roots, format } => print_source_review_status(roots, format)?,
         Command::SourceReviewPacket { format } => print_source_review_packet(format)?,
         Command::InitSourceReview {
             id,
@@ -3596,6 +3637,7 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
     let lane_report = summarize_independent_lanes(directory)?;
     let source_report = observation_source_eligibility_report();
     let evidence_report = independent_evidence_status_report(Vec::new())?;
+    let source_review_report = source_review_status_report(Vec::new())?;
     let eligible_source_ids = source_report
         .sources
         .iter()
@@ -3654,6 +3696,11 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
         ineligible_source_count: source_report.ineligible_count,
         valid_source_backed_archive_count: evidence_report.valid_source_backed_archive_count,
         invalid_archive_count: evidence_report.invalid_archive_count,
+        source_review_roots: source_review_report.roots,
+        scanned_source_review_count: source_review_report.scanned_review_count,
+        valid_source_review_count: source_review_report.valid_review_count,
+        invalid_source_review_count: source_review_report.invalid_review_count,
+        source_review_available: source_review_report.source_review_available,
         evidence_available: evidence_report.evidence_available,
         readiness_note: "Ready lane count is an operational inventory; use unique ready prediction artifacts and validated source-backed archives as the evidence counts.",
         required_observation_fields: vec![
@@ -3663,6 +3710,7 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
             "source-backed rationale",
             "one non-empty position_notes entry per scored position",
         ],
+        source_review_status_command: "cargo run --locked -- source-review-status --format json",
         source_review_scaffold_command: "cargo run --locked -- init-source-review --id <source-review-id> --source-id <eligible-source-id> --review-note \"<what source pages were reviewed before choosing positions>\" --output <source-review.json>",
         source_review_validation_command: "cargo run --locked -- validate-source-review --input <source-review.json> --format json",
         gates,
@@ -3750,6 +3798,23 @@ fn print_next_evidence_gate(directory: PathBuf, format: OutputFormat) -> Result<
                 report.valid_source_backed_archive_count
             );
             println!("invalid archives: {}", report.invalid_archive_count);
+            println!(
+                "source-review roots: {}",
+                report.source_review_roots.join(", ")
+            );
+            println!(
+                "source reviews scanned: {}",
+                report.scanned_source_review_count
+            );
+            println!("valid source reviews: {}", report.valid_source_review_count);
+            println!(
+                "invalid source reviews: {}",
+                report.invalid_source_review_count
+            );
+            println!(
+                "source review available: {}",
+                report.source_review_available
+            );
             println!("evidence available: {}", report.evidence_available);
             println!("promoted: {}", report.promoted_candidate);
             println!("readiness note: {}", report.readiness_note);
@@ -3759,7 +3824,11 @@ fn print_next_evidence_gate(directory: PathBuf, format: OutputFormat) -> Result<
                 println!("- {field}");
             }
             println!(
-                "\nsource review scaffold:\n```bash\n{}\n```",
+                "\nsource review status:\n```bash\n{}\n```",
+                report.source_review_status_command
+            );
+            println!(
+                "source review scaffold:\n```bash\n{}\n```",
                 report.source_review_scaffold_command
             );
             println!(
@@ -3958,6 +4027,126 @@ fn print_source_review_validation(validation: &SourceReviewValidation) {
             println!("- {warning}");
         }
     }
+}
+
+fn source_review_status_report(mut roots: Vec<PathBuf>) -> Result<SourceReviewStatusReport> {
+    if roots.is_empty() {
+        roots = vec![PathBuf::from("experiments/source-reviews")];
+    }
+
+    let mut reviews = Vec::new();
+    let mut missing_root_count = 0;
+    for root in &roots {
+        if root.is_file() {
+            reviews.push(summarize_source_review(root));
+            continue;
+        }
+        let Ok(entries) = fs::read_dir(root) else {
+            missing_root_count += 1;
+            continue;
+        };
+        for entry in entries {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_file()
+                && path
+                    .extension()
+                    .is_some_and(|extension| extension == "json")
+            {
+                reviews.push(summarize_source_review(&path));
+            }
+        }
+    }
+    reviews.sort_by(|left, right| left.path.cmp(&right.path));
+
+    let valid_review_count = reviews.iter().filter(|review| review.valid).count();
+    let invalid_review_count = reviews.iter().filter(|review| !review.valid).count();
+
+    Ok(SourceReviewStatusReport {
+        roots: roots
+            .iter()
+            .map(|root| root.display().to_string())
+            .collect(),
+        scanned_review_count: reviews.len(),
+        valid_review_count,
+        invalid_review_count,
+        missing_root_count,
+        source_review_available: valid_review_count > 0,
+        reviews,
+        promoted_candidate: false,
+        note: "Source-review status scans pre-score source-review artifacts; it is not a claimed solution.",
+    })
+}
+
+fn summarize_source_review(path: &Path) -> SourceReviewStatusEntry {
+    match validate_source_review_file(path) {
+        Ok(validation) => SourceReviewStatusEntry {
+            path: validation.input_path,
+            review_id: validation.review_id,
+            source_ids: validation.source_ids,
+            reviewed_source_count: validation.reviewed_source_count,
+            missing_local_archive_count: validation.missing_local_archive_count,
+            valid: validation.valid,
+            errors: validation.errors,
+            warnings: validation.warnings,
+        },
+        Err(error) => SourceReviewStatusEntry {
+            path: path.display().to_string(),
+            review_id: None,
+            source_ids: Vec::new(),
+            reviewed_source_count: 0,
+            missing_local_archive_count: 0,
+            valid: false,
+            errors: vec![error.to_string()],
+            warnings: Vec::new(),
+        },
+    }
+}
+
+fn print_source_review_status(roots: Vec<PathBuf>, format: OutputFormat) -> Result<()> {
+    let report = source_review_status_report(roots)?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&report)?),
+        OutputFormat::Markdown => {
+            println!("# Source Review Status\n");
+            println!("This is not a claimed solution.\n");
+            println!("roots: {}", report.roots.join(", "));
+            println!("reviews scanned: {}", report.scanned_review_count);
+            println!("valid reviews: {}", report.valid_review_count);
+            println!("invalid reviews: {}", report.invalid_review_count);
+            println!("missing roots: {}", report.missing_root_count);
+            println!(
+                "source review available: {}",
+                report.source_review_available
+            );
+            println!("promoted: {}", report.promoted_candidate);
+            println!("note: {}\n", report.note);
+
+            if report.reviews.is_empty() {
+                println!("No pre-score source-review artifacts were found.");
+            } else {
+                println!(
+                    "| Path | Review ID | Source IDs | Reviewed Sources | Missing Local Archives | Valid | Errors | Warnings |"
+                );
+                println!("| --- | --- | --- | --- | --- | --- | --- | --- |");
+                for review in &report.reviews {
+                    let review_id = review.review_id.as_deref().unwrap_or("unavailable");
+                    println!(
+                        "| `{}` | `{}` | `{}` | {} | {} | {} | {} | {} |",
+                        review.path,
+                        review_id,
+                        review.source_ids.join("`, `"),
+                        review.reviewed_source_count,
+                        review.missing_local_archive_count,
+                        review.valid,
+                        review.errors.join("; "),
+                        review.warnings.join("; ")
+                    );
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 fn print_source_review_scaffold_report(report: &SourceReviewScaffoldReport) {

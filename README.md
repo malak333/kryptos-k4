@@ -52,6 +52,7 @@ cargo run -- validate-prediction-artifact --preregistration experiments/preregis
 cargo run -- independent-lane-status --format json
 cargo run -- next-evidence-gate --format json
 cargo run -- independent-evidence-status --format json
+cargo run -- source-review-status --format json
 cargo run -- non-anchor-positions --format json
 cargo run -- init-position-observations --id future-observation-v1 --source-id cia-artifact --source-review experiments/source-reviews/cia-source-review-v1.json --positions 1,4,7 --rationale "Source-backed non-anchor observation rationale." --position-note "1=Source note for position 1." --position-note "4=Source note for position 4." --position-note "7=Source note for position 7." --output results/key-tests/future-observation-v1.json
 cargo run -- period-prediction-plan --period 3
@@ -121,6 +122,9 @@ excluded from scored evidence.
 `independent-evidence-status` scans archived period/spacing observation
 evaluations and reports whether any valid source-backed evidence has actually
 been scored yet.
+`source-review-status` scans saved pre-score source-review artifacts and reports
+whether any valid review file is available before source-backed observations are
+scaffolded.
 Use `report --output notes/k4-report.md` to regenerate the Markdown report; the
 CLI writes through a temporary file and replaces the report only after the
 preflight-backed render succeeds.
@@ -272,7 +276,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `validate-preregistration` | Gate for proposed new lanes in Markdown or JSON; rejects reuse of public anchor-derived fragments as discovery inputs or primary evidence. |
 | `validate-prediction-artifact` | Gate for committed independent prediction artifacts in Markdown or JSON; checks the preregistration and deterministic generator output still match. |
 | `independent-lane-status` | Operational summary of preregistered independent lanes, artifact validity, readiness for source-backed observations, family summaries, unique ready prediction artifacts, duplicate artifact groups, and next required validator/evaluator command. |
-| `next-evidence-gate` | Operational checklist combining independent-lane readiness, unique/duplicate prediction-target accounting, eligible observation sources, current evidence-archive status, required observation fields including source-review coverage, and exact scaffold/validate/evaluate/archive commands before source-backed scoring. |
+| `next-evidence-gate` | Operational checklist combining independent-lane readiness, unique/duplicate prediction-target accounting, eligible observation sources, current evidence-archive and source-review status, required observation fields including source-review coverage, and exact scaffold/validate/evaluate/archive commands before source-backed scoring. |
 | `independent-evidence-status` | Archive status for period/spacing independent observation evaluations, separating valid source-backed evidence, diagnostic archives, invalid archives, and no-evidence states. |
 | `non-anchor-positions` | Non-scoring one-based position universe for future source-backed observations, with excluded public anchor ranges and source IDs. |
 | `init-position-observations` | Guarded source-backed observation-file creator in Markdown or JSON; writes only registered-source, non-anchor K4 positions plus per-position notes, can link a validated `--source-review`, and refuses placeholders, disallowed source uses, duplicate positions, anchors, out-of-range positions, uncovered source-review files, and accidental overwrites unless `--force` is passed. |
@@ -293,6 +297,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `sources` | Source provenance records in Markdown or JSON for source-policy audits. |
 | `observation-sources` | Focused source-use report showing which registered sources may support scored independent position observations and why other sources are context-only. |
 | `source-review-packet` | Pre-score source review packet for eligible observation sources, local archive status, source URLs, use boundaries, required review steps, and the observation requirement to link the validated source-review file. |
+| `source-review-status` | Pre-score source-review artifact scanner, separating valid reviews, invalid reviews, missing review roots, and no-review states. |
 | `init-source-review` | Guarded pre-score source-review file creator that writes reviewed eligible sources and review notes before any observation positions are selected. |
 | `validate-source-review` | Gate for pre-score source-review artifacts, checking reviewed source IDs and metadata against the registered eligible source set. |
 | `export-data` | Machine-readable JSON for ciphertext, anchors, and sources. |
