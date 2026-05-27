@@ -69,9 +69,10 @@ position has its own source-backed audit text.
 
 The committed pre-score review artifact
 `experiments/source-reviews/cia-source-review-v1.json` covers the eligible
-`cia-artifact` and `cia-sculpture` source IDs. It makes the source-review gate
-available for a future observation file, but it is not itself an observation
-file and contains no selected positions.
+`cia-artifact` and `cia-sculpture` source IDs and links quote-free local
+snapshots under `sources/archives/`. It makes the source-review gate available
+for a future observation file, but it is not itself an observation file and
+contains no selected positions.
 
 Validate the observation file first:
 

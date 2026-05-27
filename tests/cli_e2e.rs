@@ -201,7 +201,7 @@ fn source_review_packet_exposes_prescore_source_checklist() {
         .stdout(predicate::str::contains("Source Review Packet"))
         .stdout(predicate::str::contains("eligible sources: 2"))
         .stdout(predicate::str::contains("cia-artifact"))
-        .stdout(predicate::str::contains("missing"))
+        .stdout(predicate::str::contains("archived"))
         .stdout(predicate::str::contains(
             "Review each eligible source URL before drafting observation positions",
         ))
@@ -226,7 +226,8 @@ fn source_review_packet_exposes_prescore_source_checklist() {
             .unwrap()
             .iter()
             .any(|source| source["id"] == "cia-sculpture"
-                && source["locally_archived"] == false
+                && source["locally_archived"] == true
+                && source["archive_url"] == "sources/archives/cia-sculpture-2026-05-27.md"
                 && source["use_note"]
                     .as_str()
                     .unwrap()
@@ -280,7 +281,7 @@ fn init_source_review_writes_prescore_review_file() {
         .stdout(predicate::str::contains(
             "source ids: cia-artifact, cia-sculpture",
         ))
-        .stdout(predicate::str::contains("local archives missing: 2"))
+        .stdout(predicate::str::contains("local archives missing: 0"))
         .stdout(predicate::str::contains("promoted: false"));
 
     let file_json: Value =
@@ -371,7 +372,7 @@ fn validate_source_review_checks_prescore_review_file() {
             "review id: `cia-source-review-v1`",
         ))
         .stdout(predicate::str::contains("reviewed sources: 2"))
-        .stdout(predicate::str::contains("local archives missing: 2"))
+        .stdout(predicate::str::contains("local archives missing: 0"))
         .stdout(predicate::str::contains("valid: true"))
         .stdout(predicate::str::contains("promoted: false"));
 
@@ -393,7 +394,7 @@ fn validate_source_review_checks_prescore_review_file() {
     assert_eq!(json["valid"], true);
     assert_eq!(json["review_id"], "cia-source-review-v1");
     assert_eq!(json["source_ids"].as_array().unwrap().len(), 2);
-    assert_eq!(json["missing_local_archive_count"], 2);
+    assert_eq!(json["missing_local_archive_count"], 0);
     assert_eq!(json["promoted_candidate"], false);
 }
 
@@ -533,7 +534,7 @@ fn source_review_status_reports_missing_valid_and_invalid_reviews() {
     assert!(json["reviews"].as_array().unwrap().iter().any(|review| {
         review["review_id"] == "cia-source-review-v1"
             && review["valid"] == true
-            && review["missing_local_archive_count"] == 2
+            && review["missing_local_archive_count"] == 0
     }));
     assert!(json["reviews"].as_array().unwrap().iter().any(|review| {
         review["valid"] == false && !review["errors"].as_array().unwrap().is_empty()
@@ -2423,7 +2424,8 @@ fn observation_sources_reports_scoring_eligible_sources() {
         source["id"] == "cia-artifact"
             && source["eligible_for_scored_observations"] == true
             && source["url"] == "https://www.cia.gov/legacy/museum/artifact/kryptos/"
-            && source["locally_archived"] == false
+            && source["locally_archived"] == true
+            && source["archive_url"] == "sources/archives/cia-artifact-2026-05-27.md"
             && source["accessed_at"] == "2026-05-20"
     }));
     assert!(json["sources"].as_array().unwrap().iter().any(|source| {
@@ -2534,7 +2536,7 @@ fn next_evidence_gate_prints_operational_checklist() {
             .iter()
             .any(|source| source["id"] == "cia-artifact"
                 && source["url"] == "https://www.cia.gov/legacy/museum/artifact/kryptos/"
-                && source["locally_archived"] == false)
+                && source["locally_archived"] == true)
     );
     let gates = json["gates"].as_array().unwrap();
     assert_eq!(gates.len(), 2);
@@ -3902,6 +3904,7 @@ fn release_check_json_exposes_all_local_preflight_gates() {
         "independent-lanes-ready",
         "position-observation-template-guarded",
         "source-packet-registry-aligned",
+        "source-archives-present",
         "no-plaintext-leakage-markers",
     ] {
         assert!(names.contains(expected_name));

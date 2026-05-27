@@ -127,8 +127,11 @@ whether any valid review file is available before source-backed observations are
 scaffolded.
 The current committed source-review artifact is
 `experiments/source-reviews/cia-source-review-v1.json`; it records pre-score
-review of the eligible CIA artifact and sculpture pages only. It does not select
+review of the eligible CIA artifact and sculpture pages only, backed by
+quote-free local source snapshots under `sources/archives/`. It does not select
 positions, score observations, or make evidence available.
+`release-check` requires registered local source archive paths to exist, so the
+source registry cannot silently point at missing snapshots.
 Use `report --output notes/k4-report.md` to regenerate the Markdown report; the
 CLI writes through a temporary file and replaces the report only after the
 preflight-backed render succeeds.

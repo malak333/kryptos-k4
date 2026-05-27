@@ -576,8 +576,10 @@ evidence.
 observation scaffolding. `experiments/source-reviews/cia-source-review-v1.json`
 records a pre-score review of the CIA Kryptos artifact and sculpture pages for
 `cia-artifact` and `cia-sculpture`; `validate-source-review --format json`
-reports `valid=true`, `reviewed_source_count=2`, and a warning that both sources
-lack local archive URLs.
+reports `valid=true`, `reviewed_source_count=2`, and
+`missing_local_archive_count=0`. The reviewed source snapshots are stored in
+`sources/archives/cia-artifact-2026-05-27.md` and
+`sources/archives/cia-sculpture-2026-05-27.md`.
 
 `next-evidence-gate --format json` now reports `source_review_available=true`
 with one valid source-review file, but `evidence_available=false` and zero valid

@@ -91,7 +91,12 @@ Then create the tag and release manually with `git` and `gh release create`.
 
 The `release-check` command verifies the no-Actions/no-Dependabot policy, required release docs, generated Markdown report presence, candidate CSV/registry alignment, committed preregistration validity, committed prediction-artifact validity, independent-lane readiness for source-backed observations, intentionally non-scorable observation-template status, findings source-input integrity, source-packet/source-registry field alignment, latest source access-date metadata, and absence of explicit leaked/full-plaintext sentinel markers before release.
 
-The source packet and `src/data.rs` source registry must stay aligned. Archive-sale reporting and community archive-research pages are historical or preregistration context only; they must not introduce archive-discovered plaintext, private auction material, or unregistered community interpretations into the data model, reports, exports, or tests.
+The source packet and `src/data.rs` source registry must stay aligned.
+Registered local source archive paths must exist, and `release-check` verifies
+them before release. Archive-sale reporting and community archive-research pages
+are historical or preregistration context only; they must not introduce
+archive-discovered plaintext, private auction material, or unregistered
+community interpretations into the data model, reports, exports, or tests.
 
 The candidate CSV and candidate registry must also stay aligned. Candidate words
 remain stopped-lane exploratory inputs unless they are represented in
@@ -124,6 +129,9 @@ reviews means the next step is still source review, not observation scoring.
 One valid source-review file only clears the pre-score source-review gate; it
 does not create evidence until a separate source-backed observation file is
 validated, scored, archived, and revalidated.
+Local source snapshots under `sources/archives/` are quote-free review records
+for auditability; they are not raw page mirrors and do not define scored
+positions.
 Use `init-source-review` to materialize that pre-score review into JSON before
 choosing observation positions; it rejects context-only sources, duplicate
 source IDs, placeholders, and accidental overwrites.

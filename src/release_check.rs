@@ -123,6 +123,7 @@ fn run_release_checks_inner(
     checks.push(check_findings_source_inputs_validate(repo_root));
     checks.push(check_source_packet_latest_access_date(repo_root));
     checks.push(check_source_packet_registry_alignment(repo_root));
+    checks.push(check_source_archives_exist(repo_root));
     checks.push(check_no_plaintext_leakage_markers(repo_root));
 
     if checks.iter().any(|check| !check.passed) {
@@ -581,6 +582,15 @@ fn check_source_packet_registry_alignment(repo_root: &Path) -> ReleaseCheck {
         if !source_packet_allowed_use_matches(line, source.allowed_use) {
             mismatches.push(format!("{}:allowed-use", source.id));
         }
+        match source.archive_url {
+            Some(archive_url) if !line.contains(archive_url) => {
+                mismatches.push(format!("{}:archive-url", source.id));
+            }
+            None if !line.contains("Not locally archived") => {
+                mismatches.push(format!("{}:archive-status", source.id));
+            }
+            _ => {}
+        }
     }
 
     ReleaseCheck {
@@ -625,6 +635,43 @@ fn check_source_packet_latest_access_date(repo_root: &Path) -> ReleaseCheck {
                 "Source packet is missing the latest registered source access date. path={}; latest_access_date={}",
                 path.display(),
                 latest_access_date
+            )
+        },
+    }
+}
+
+fn check_source_archives_exist(repo_root: &Path) -> ReleaseCheck {
+    let mut missing = Vec::new();
+    let mut checked = 0;
+
+    for source in sources() {
+        let Some(archive_url) = source.archive_url else {
+            continue;
+        };
+
+        checked += 1;
+        if archive_url.starts_with("http://") || archive_url.starts_with("https://") {
+            continue;
+        }
+
+        if !repo_root.join(archive_url).is_file() {
+            missing.push(format!("{}:{archive_url}", source.id));
+        }
+    }
+
+    ReleaseCheck {
+        name: "source-archives-present",
+        passed: missing.is_empty(),
+        detail: if missing.is_empty() {
+            format!(
+                "Registered local source archive paths exist. path={}; checked={checked}",
+                repo_root.display()
+            )
+        } else {
+            format!(
+                "Registered local source archive paths are missing. path={}; missing={}",
+                repo_root.display(),
+                missing.join(", ")
             )
         },
     }
@@ -806,6 +853,18 @@ mod tests {
     }
 
     #[test]
+    fn release_checks_fail_when_registered_source_archive_is_missing() {
+        let temp = release_ready_temp_dir();
+        fs::remove_file(
+            temp.path()
+                .join("sources/archives/cia-artifact-2026-05-27.md"),
+        )
+        .unwrap();
+
+        assert!(run_release_checks(temp.path()).is_err());
+    }
+
+    #[test]
     fn release_checks_fail_when_source_packet_has_stale_access_date() {
         let temp = release_ready_temp_dir();
         let packet = source_packet_fixture().replace("2026-05-25", "2026-05-20");
@@ -937,6 +996,7 @@ mod tests {
         for directory in [
             "docs",
             "sources",
+            "sources/archives",
             "notes",
             "experiments",
             "experiments/preregistrations",
@@ -962,6 +1022,19 @@ mod tests {
             source_packet_fixture(),
         )
         .unwrap();
+        for source in sources() {
+            let Some(archive_url) = source.archive_url else {
+                continue;
+            };
+            if archive_url.starts_with("http://") || archive_url.starts_with("https://") {
+                continue;
+            }
+            fs::write(
+                temp.path().join(archive_url),
+                format!("source_id: `{}`\npromoted_candidate: false\n", source.id),
+            )
+            .unwrap();
+        }
         fs::write(
             temp.path()
                 .join("experiments/preregistrations/non-anchor-position-period-v1.json"),
@@ -1011,9 +1084,15 @@ mod tests {
                     "archive-context-only" => "Archive-sale context only",
                     allowed_use => allowed_use,
                 };
+                let archive_status = source.archive_url.unwrap_or("Not locally archived");
                 format!(
-                    "| `{}` | {} | {} | Not locally archived | {} | {} |",
-                    source.id, source.source_type, source.url, allowed_use_summary, source.use_note
+                    "| `{}` | {} | {} | {} | {} | {} |",
+                    source.id,
+                    source.source_type,
+                    source.url,
+                    archive_status,
+                    allowed_use_summary,
+                    source.use_note
                 )
             })
             .collect::<Vec<_>>()
