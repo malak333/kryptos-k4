@@ -1396,6 +1396,9 @@ fn committed_period_prediction_artifact_matches_cli_output() {
         "experiments/predictions/non-anchor-position-period-v5.json",
         "experiments/predictions/non-anchor-position-period-v6.json",
         "experiments/predictions/non-anchor-position-period-v7.json",
+        "experiments/predictions/non-anchor-position-period-v8.json",
+        "experiments/predictions/non-anchor-position-period-v9.json",
+        "experiments/predictions/non-anchor-position-period-v10.json",
     ] {
         let fixture: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
 
@@ -1622,12 +1625,12 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Independent Lane Status"))
-        .stdout(predicate::str::contains("lanes: 12"))
+        .stdout(predicate::str::contains("lanes: 13"))
         .stdout(predicate::str::contains(
-            "ready for source-backed observations: 12",
+            "ready for source-backed observations: 13",
         ))
         .stdout(predicate::str::contains("invalid lanes: 0"))
-        .stdout(predicate::str::contains("prediction artifacts: 12"))
+        .stdout(predicate::str::contains("prediction artifacts: 13"))
         .stdout(predicate::str::contains("unique prediction artifacts: 2"))
         .stdout(predicate::str::contains(
             "unique ready prediction artifacts: 2",
@@ -1651,10 +1654,10 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["lane_count"], 12);
-    assert_eq!(json["ready_for_source_backed_observations"], 12);
+    assert_eq!(json["lane_count"], 13);
+    assert_eq!(json["ready_for_source_backed_observations"], 13);
     assert_eq!(json["invalid_lanes"], 0);
-    assert_eq!(json["prediction_artifacts"], 12);
+    assert_eq!(json["prediction_artifacts"], 13);
     assert_eq!(json["unique_prediction_artifacts"], 2);
     assert_eq!(json["unique_ready_prediction_artifacts"], 2);
     assert_eq!(

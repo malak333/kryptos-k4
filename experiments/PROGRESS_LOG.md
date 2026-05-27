@@ -14,8 +14,8 @@ cargo run --locked -- release-check --format json
 
 Result summary:
 
-- independent lanes: `12`
-- ready for source-backed observations: `12`
+- independent lanes: `13`
+- ready for source-backed observations: `13`
 - unique ready prediction targets: `2`
 - invalid lanes: `0`
 - release-check failures: `0`
@@ -25,18 +25,19 @@ Interpretation: the independent evidence workflow is ready for source-backed
 observation files, but no independent observation has been scored and no K4
 candidate, plaintext, or solution is promoted.
 
-Duplicate-artifact accounting added: the lane-status command now reports 12
+Duplicate-artifact accounting added: the lane-status command now reports 13
 declared prediction artifacts but only 2 unique artifact contents, and both
-unique artifacts are ready for source-backed observations. The eleven
+unique artifacts are ready for source-backed observations. The twelve
 period lanes currently share one deterministic position-period target; this is
-an operational readiness inventory, not eleven independent cryptanalytic signals.
+an operational readiness inventory, not twelve independent cryptanalytic signals.
 Future interpretation should count unique prediction targets and source-backed
 observations, not just preregistration rows.
 
 Follow-up hardening:
 
-- `non-anchor-position-period-v6`, `non-anchor-position-period-v7`, and
-  `non-anchor-position-period-v8` now have
+- `non-anchor-position-period-v6`, `non-anchor-position-period-v7`,
+  `non-anchor-position-period-v8`, `non-anchor-position-period-v9`, and
+  `non-anchor-position-period-v10` now have
   committed preregistrations and deterministic prediction artifacts.
 - The findings ledger now guards `F5` against missing committed period
   preregistration/artifact source inputs.
@@ -361,8 +362,8 @@ could pass validation but fail at evaluation time.
 Independent lane status command added:
 `independent-lane-status --format json` scans the preregistration directory,
 validates each preregistration and committed prediction artifact, and reports
-the next validator/evaluator command for each lane. Current status: 12 lanes,
-12 ready for source-backed observations, 0 invalid lanes, 12 prediction
+the next validator/evaluator command for each lane. Current status: 13 lanes,
+13 ready for source-backed observations, 0 invalid lanes, 13 prediction
 artifacts, 2 unique prediction artifact contents, 2 unique ready prediction
 artifact contents, 1 duplicate artifact group, promoted false. This is an
 operational gate summary only; it adds no plaintext, key material, or scored

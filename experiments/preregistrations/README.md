@@ -127,6 +127,12 @@ Current independent period lanes:
 - `non-anchor-position-period-v8.json`, a populated follow-up lane
   with committed artifact
   `experiments/predictions/non-anchor-position-period-v8.json`
+- `non-anchor-position-period-v9.json`, a populated follow-up lane
+  with committed artifact
+  `experiments/predictions/non-anchor-position-period-v9.json`
+- `non-anchor-position-period-v10.json`, a populated follow-up lane
+  with committed artifact
+  `experiments/predictions/non-anchor-position-period-v10.json`
 - `non-anchor-position-spacing-v1.json`, a populated position-only spacing lane
   with committed artifact
   `experiments/predictions/non-anchor-position-spacing-v1.json`
