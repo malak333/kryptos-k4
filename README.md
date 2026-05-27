@@ -171,10 +171,10 @@ same non-anchor, position-only prediction boundary and exists to lock the next
 period target before any source-backed observation scoring.
 
 The latest populated period lane,
-`experiments/preregistrations/non-anchor-position-period-v7.json`, replaces the
-temporary copied filename with stable lane id `non-anchor-position-period-v7`
+`experiments/preregistrations/non-anchor-position-period-v8.json`, replaces the
+temporary copied filename with stable lane id `non-anchor-position-period-v8`
 and has a matching deterministic artifact at
-`experiments/predictions/non-anchor-position-period-v7.json`. It remains a
+`experiments/predictions/non-anchor-position-period-v8.json`. It remains a
 pre-scoring independent prediction target; it adds no candidate material and
 does not reuse public-anchor fragments as evidence.
 
@@ -211,7 +211,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `spacing-prediction-plan` | Emits non-anchor K4 spacing residue classes for registered moduli in Markdown or JSON without scoring fragment values or candidate material. |
 | `evaluate-period-prediction` | Scores independently supplied one-based non-anchor positions against a committed period prediction artifact with a best-of-period null control in Markdown or JSON; marks quick `--positions` input as diagnostic, requires `--preregistration` for source-backed `--positions-file` JSON records, and can archive `artifact.json`, `preregistration.json`, `observations.json`, `result.json`, `summary.md`, and `command.txt` with `--output-dir`. |
 | `evaluate-spacing-prediction` | Scores independently supplied one-based non-anchor positions against a committed spacing prediction artifact with a best-of-modulus null control in Markdown or JSON; marks quick `--positions` input as diagnostic, requires `--preregistration` for source-backed `--positions-file` JSON records, and can archive `artifact.json`, `preregistration.json`, `observations.json`, `result.json`, `summary.md`, and `command.txt` with `--output-dir`. |
-| `validate-evaluation-archive` | Gate for archived independent observation evaluations in Markdown or JSON; checks archive files, local replay command paths, source-backed observation consistency, artifact kind, and no-promotion boundaries. |
+| `validate-evaluation-archive` | Gate for archived independent observation evaluations in Markdown or JSON; checks archive files, matching evaluator command name, local replay command paths, source-backed observation consistency, artifact kind, and no-promotion boundaries. |
 | `summarize-key-runs` | Historical scanner for batch result folders, ranking individual runs and per-candidate p-value stability. |
 | `baseline` | Seeded false-positive controls for the generic recurrence screen. |
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |

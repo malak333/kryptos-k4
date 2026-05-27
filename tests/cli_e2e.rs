@@ -1622,9 +1622,9 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Independent Lane Status"))
-        .stdout(predicate::str::contains("lanes: 10"))
+        .stdout(predicate::str::contains("lanes: 11"))
         .stdout(predicate::str::contains(
-            "ready for source-backed observations: 10",
+            "ready for source-backed observations: 11",
         ))
         .stdout(predicate::str::contains("invalid lanes: 0"))
         .stdout(predicate::str::contains(
@@ -1644,8 +1644,8 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["lane_count"], 10);
-    assert_eq!(json["ready_for_source_backed_observations"], 10);
+    assert_eq!(json["lane_count"], 11);
+    assert_eq!(json["ready_for_source_backed_observations"], 11);
     assert_eq!(json["invalid_lanes"], 0);
     assert_eq!(json["promoted_candidate"], false);
     assert!(json["lanes"].as_array().unwrap().iter().all(|lane| {
@@ -2113,6 +2113,68 @@ fn validate_evaluation_archive_rejects_incomplete_archive() {
         .failure()
         .stdout(predicate::str::contains("valid: false"))
         .stdout(predicate::str::contains("artifact.json is missing"))
+        .stderr(predicate::str::contains(
+            "evaluation archive failed validation",
+        ));
+}
+
+#[test]
+fn validate_evaluation_archive_rejects_wrong_evaluator_command() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("observations.json");
+    let output_dir = temp.path().join("period-output");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "synthetic-command-mismatch-test",
+  "source_ids": ["cia-artifact"],
+  "positions_one_based": [1, 4, 7],
+  "rationale": "Synthetic CLI test fixture for archive command mismatch validation."
+}"#,
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-period-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-period-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-period-v1.json",
+            "--positions-file",
+            observations_path.to_str().unwrap(),
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+            "--output-dir",
+            output_dir.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success();
+
+    std::fs::write(
+        output_dir.join("command.txt"),
+        "evaluate-spacing-prediction --artifact artifact.json --preregistration preregistration.json --positions-file observations.json --iterations 100 --seed 67\n",
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-evaluation-archive",
+            "--input",
+            output_dir.to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("valid: false"))
+        .stdout(predicate::str::contains(
+            "command.txt must start with `evaluate-period-prediction`",
+        ))
         .stderr(predicate::str::contains(
             "evaluation archive failed validation",
         ));

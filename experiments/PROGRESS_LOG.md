@@ -14,8 +14,8 @@ cargo run --locked -- release-check --format json
 
 Result summary:
 
-- independent lanes: `10`
-- ready for source-backed observations: `10`
+- independent lanes: `11`
+- ready for source-backed observations: `11`
 - invalid lanes: `0`
 - release-check failures: `0`
 - promoted: false
@@ -26,7 +26,8 @@ candidate, plaintext, or solution is promoted.
 
 Follow-up hardening:
 
-- `non-anchor-position-period-v6` and `non-anchor-position-period-v7` now have
+- `non-anchor-position-period-v6`, `non-anchor-position-period-v7`, and
+  `non-anchor-position-period-v8` now have
   committed preregistrations and deterministic prediction artifacts.
 - The findings ledger now guards `F5` against missing committed period
   preregistration/artifact source inputs.
@@ -344,8 +345,8 @@ could pass validation but fail at evaluation time.
 Independent lane status command added:
 `independent-lane-status --format json` scans the preregistration directory,
 validates each preregistration and committed prediction artifact, and reports
-the next validator/evaluator command for each lane. Current status: 10 lanes,
-10 ready for source-backed observations, 0 invalid lanes, promoted false. This is
+the next validator/evaluator command for each lane. Current status: 11 lanes,
+11 ready for source-backed observations, 0 invalid lanes, promoted false. This is
 an operational gate summary only; it adds no plaintext, key material, or scored
 evidence.
 

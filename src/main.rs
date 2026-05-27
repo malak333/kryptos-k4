@@ -1596,6 +1596,14 @@ fn validate_evaluation_archive(directory: &Path) -> Result<EvaluationArchiveVali
         .and_then(serde_json::Value::as_bool)
         .unwrap_or(false);
 
+    if let Some(command) = &command {
+        match artifact_kind.as_str() {
+            "period" => require_command_name(command, "evaluate-period-prediction", &mut errors),
+            "spacing" => require_command_name(command, "evaluate-spacing-prediction", &mut errors),
+            _ => {}
+        }
+    }
+
     if let Some(result) = &result {
         if result
             .get("promoted_candidate")
@@ -1806,6 +1814,13 @@ fn json_string_array(value: &serde_json::Value, key: &str) -> Option<Vec<String>
 fn require_command_token(command: &str, token: &str, errors: &mut Vec<String>) {
     if !command.contains(token) {
         errors.push(format!("command.txt must contain `{token}`"));
+    }
+}
+
+fn require_command_name(command: &str, expected_command: &str, errors: &mut Vec<String>) {
+    let command_name = command.split_whitespace().next();
+    if command_name != Some(expected_command) {
+        errors.push(format!("command.txt must start with `{expected_command}`"));
     }
 }
 
