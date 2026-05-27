@@ -65,6 +65,7 @@ pub struct IndependentLaneStatusReport {
     pub invalid_lanes: usize,
     pub prediction_artifacts: usize,
     pub unique_prediction_artifacts: usize,
+    pub unique_ready_prediction_artifacts: usize,
     pub duplicate_prediction_artifact_groups: Vec<DuplicatePredictionArtifactGroup>,
     pub lanes: Vec<IndependentLaneStatus>,
     pub promoted_candidate: bool,
@@ -138,6 +139,13 @@ pub fn summarize_independent_lanes_with_repo_root(
     let artifact_groups = prediction_artifact_groups(&lanes, repo_root);
     let prediction_artifacts = artifact_groups.values().map(Vec::len).sum::<usize>();
     let unique_prediction_artifacts = artifact_groups.len();
+    let ready_lanes = lanes
+        .iter()
+        .filter(|lane| lane.ready_for_source_backed_observations)
+        .cloned()
+        .collect::<Vec<_>>();
+    let unique_ready_prediction_artifacts =
+        prediction_artifact_groups(&ready_lanes, repo_root).len();
     let duplicate_prediction_artifact_groups = artifact_groups
         .into_values()
         .filter(|group| group.len() > 1)
@@ -166,6 +174,7 @@ pub fn summarize_independent_lanes_with_repo_root(
         invalid_lanes,
         prediction_artifacts,
         unique_prediction_artifacts,
+        unique_ready_prediction_artifacts,
         duplicate_prediction_artifact_groups,
         lanes,
         promoted_candidate: false,
@@ -846,6 +855,7 @@ mod tests {
 
         assert_eq!(report.prediction_artifacts, 2);
         assert_eq!(report.unique_prediction_artifacts, 1);
+        assert_eq!(report.unique_ready_prediction_artifacts, 0);
         assert_eq!(report.duplicate_prediction_artifact_groups.len(), 1);
         assert_eq!(
             report.duplicate_prediction_artifact_groups[0].lane_ids,

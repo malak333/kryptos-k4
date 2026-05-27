@@ -2842,6 +2842,10 @@ fn print_independent_lane_status_report(report: &IndependentLaneStatusReport) {
         report.unique_prediction_artifacts
     );
     println!(
+        "unique ready prediction artifacts: {}",
+        report.unique_ready_prediction_artifacts
+    );
+    println!(
         "duplicate artifact groups: {}",
         report.duplicate_prediction_artifact_groups.len()
     );

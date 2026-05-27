@@ -1629,6 +1629,9 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout(predicate::str::contains("invalid lanes: 0"))
         .stdout(predicate::str::contains("prediction artifacts: 12"))
         .stdout(predicate::str::contains("unique prediction artifacts: 2"))
+        .stdout(predicate::str::contains(
+            "unique ready prediction artifacts: 2",
+        ))
         .stdout(predicate::str::contains("duplicate artifact groups: 1"))
         .stdout(predicate::str::contains("Duplicate Prediction Artifacts"))
         .stdout(predicate::str::contains(
@@ -1653,6 +1656,7 @@ fn independent_lane_status_summarizes_ready_lanes() {
     assert_eq!(json["invalid_lanes"], 0);
     assert_eq!(json["prediction_artifacts"], 12);
     assert_eq!(json["unique_prediction_artifacts"], 2);
+    assert_eq!(json["unique_ready_prediction_artifacts"], 2);
     assert_eq!(
         json["duplicate_prediction_artifact_groups"]
             .as_array()

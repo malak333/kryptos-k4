@@ -310,12 +310,13 @@ fn check_independent_lanes_ready(repo_root: &Path) -> ReleaseCheck {
                 passed: report.lane_count > 0 && blocked_lanes.is_empty(),
                 detail: if report.lane_count > 0 && blocked_lanes.is_empty() {
                     format!(
-                        "Independent preregistered lanes are ready for source-backed observation files. path={}; ready={}; checked={}; prediction_artifacts={}; unique_prediction_artifacts={}; duplicate_artifact_groups={}",
+                        "Independent preregistered lanes are ready for source-backed observation files. path={}; ready={}; checked={}; prediction_artifacts={}; unique_prediction_artifacts={}; unique_ready_prediction_artifacts={}; duplicate_artifact_groups={}",
                         directory.display(),
                         report.ready_for_source_backed_observations,
                         report.lane_count,
                         report.prediction_artifacts,
                         report.unique_prediction_artifacts,
+                        report.unique_ready_prediction_artifacts,
                         report.duplicate_prediction_artifact_groups.len()
                     )
                 } else if report.lane_count == 0 {

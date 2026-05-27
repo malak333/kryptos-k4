@@ -16,6 +16,7 @@ Result summary:
 
 - independent lanes: `12`
 - ready for source-backed observations: `12`
+- unique ready prediction targets: `2`
 - invalid lanes: `0`
 - release-check failures: `0`
 - promoted: false
@@ -25,7 +26,8 @@ observation files, but no independent observation has been scored and no K4
 candidate, plaintext, or solution is promoted.
 
 Duplicate-artifact accounting added: the lane-status command now reports 12
-declared prediction artifacts but only 2 unique artifact contents. The eleven
+declared prediction artifacts but only 2 unique artifact contents, and both
+unique artifacts are ready for source-backed observations. The eleven
 period lanes currently share one deterministic position-period target; this is
 an operational readiness inventory, not eleven independent cryptanalytic signals.
 Future interpretation should count unique prediction targets and source-backed
@@ -361,9 +363,10 @@ Independent lane status command added:
 validates each preregistration and committed prediction artifact, and reports
 the next validator/evaluator command for each lane. Current status: 12 lanes,
 12 ready for source-backed observations, 0 invalid lanes, 12 prediction
-artifacts, 2 unique prediction artifact contents, 1 duplicate artifact group,
-promoted false. This is an operational gate summary only; it adds no plaintext,
-key material, or scored evidence.
+artifacts, 2 unique prediction artifact contents, 2 unique ready prediction
+artifact contents, 1 duplicate artifact group, promoted false. This is an
+operational gate summary only; it adds no plaintext, key material, or scored
+evidence.
 
 2026 archive-research context registered:
 `kryptosbot-sanborn-papers-2026` was added to the source registry after checking

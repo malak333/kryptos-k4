@@ -240,7 +240,7 @@ pub fn findings() -> Vec<Finding> {
                 "validate each preregistration and declared prediction artifact",
                 "report lane readiness and the next observation validator or evaluator command",
             ],
-            output_summary: "The lane-status command reports 12 lanes, 12 ready for source-backed observations, 0 invalid lanes, 12 prediction artifacts, 2 unique prediction artifact contents, 1 duplicate artifact group, and promoted false.",
+            output_summary: "The lane-status command reports 12 lanes, 12 ready for source-backed observations, 0 invalid lanes, 12 prediction artifacts, 2 unique prediction artifact contents, 2 unique ready prediction artifact contents, 1 duplicate artifact group, and promoted false.",
             baseline_comparison: "This is an operational gate summary rather than a statistical cryptanalytic baseline.",
             interpretation: "All current independent prediction lanes are ready for future source-backed observation files, but no observation has been scored and no candidate is promoted.",
             next_test: "Use independent-lane-status before adding any observation file, then run the family-specific observation validator and evaluator named by the lane status output.",
@@ -306,9 +306,10 @@ mod tests {
             report.lane_count, report.ready_for_source_backed_observations, report.invalid_lanes
         )));
         assert!(finding.output_summary.contains(&format!(
-            "{} prediction artifacts, {} unique prediction artifact contents, {} duplicate artifact group",
+            "{} prediction artifacts, {} unique prediction artifact contents, {} unique ready prediction artifact contents, {} duplicate artifact group",
             report.prediction_artifacts,
             report.unique_prediction_artifacts,
+            report.unique_ready_prediction_artifacts,
             report.duplicate_prediction_artifact_groups.len()
         )));
         assert!(!report.promoted_candidate);

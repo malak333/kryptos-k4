@@ -26,7 +26,7 @@ This report uses public anchors only and is not a claimed solution. Production r
 | `structural-models` | Pre-registered period-model controls over public fragment positions in Markdown or JSON. |
 | `validate-preregistration` | Research-lane gate for future source evidence or independent prediction targets in Markdown or JSON. |
 | `validate-prediction-artifact` | Gate confirming committed independent prediction artifacts still match their preregistration and deterministic generator in Markdown or JSON. |
-| `independent-lane-status` | Operational summary of preregistered independent lanes, artifact validity, and the next source-backed observation gate in Markdown or JSON. |
+| `independent-lane-status` | Operational summary of preregistered independent lanes, artifact validity, unique ready prediction artifacts, duplicate artifact groups, and the next source-backed observation gate in Markdown or JSON. |
 | `init-position-observations` | Guarded source-backed observation-file creator that writes registered-source non-anchor positions only, without scoring, in Markdown or JSON. |
 | `observation-sources` | Focused source-use report for scored independent position observations, separating eligible public-facts sources from context-only sources in Markdown or JSON. |
 | `validate-period-observations` | Gate for source-backed independent position observations, source allowed-use compatibility, and optional prediction-artifact preregistration validation before period prediction scoring in Markdown or JSON. |
@@ -811,7 +811,7 @@ Findings are reproducible research observations, not promoted solution claims.
 - **F10 Independent lane status exposes the next evidence gate (H3)**
   - Sources: `src/preregistration.rs`, `src/main.rs`, `tests/cli_e2e.rs`, `experiments/PROGRESS_LOG.md`
   - Steps: scan committed preregistration files except the template; validate each preregistration and declared prediction artifact; report lane readiness and the next observation validator or evaluator command
-  - Output: The lane-status command reports 12 lanes, 12 ready for source-backed observations, 0 invalid lanes, 12 prediction artifacts, 2 unique prediction artifact contents, 1 duplicate artifact group, and promoted false.
+  - Output: The lane-status command reports 12 lanes, 12 ready for source-backed observations, 0 invalid lanes, 12 prediction artifacts, 2 unique prediction artifact contents, 2 unique ready prediction artifact contents, 1 duplicate artifact group, and promoted false.
   - Baseline: This is an operational gate summary rather than a statistical cryptanalytic baseline.
   - Interpretation: All current independent prediction lanes are ready for future source-backed observation files, but no observation has been scored and no candidate is promoted.
   - Next test: Use independent-lane-status before adding any observation file, then run the family-specific observation validator and evaluator named by the lane status output.
@@ -837,7 +837,7 @@ Local preflight only. This repo does not use GitHub Actions.
 - candidate-registry-aligned: true (Candidate CSV rows are represented in the candidate registry with source IDs and rationale. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/k4-candidates.csv; registry_path=/Users/michaelnobile/Antigravity/Ciphers/experiments/k4-candidates.md)
 - preregistrations-valid: true (Committed non-template preregistrations validate. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/preregistrations; checked=12)
 - prediction-artifacts-valid: true (Committed prediction artifacts match their preregistrations and deterministic generators. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/predictions; checked=12)
-- independent-lanes-ready: true (Independent preregistered lanes are ready for source-backed observation files. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/preregistrations; ready=12; checked=12; prediction_artifacts=12; unique_prediction_artifacts=2; duplicate_artifact_groups=1)
+- independent-lanes-ready: true (Independent preregistered lanes are ready for source-backed observation files. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/preregistrations; ready=12; checked=12; prediction_artifacts=12; unique_prediction_artifacts=2; unique_ready_prediction_artifacts=2; duplicate_artifact_groups=1)
 - position-observation-template-guarded: true (Position observation template remains intentionally non-scorable. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/position-observations-template.json)
 - findings-source-inputs-valid: true (Findings source inputs resolve to registered sources, committed files, or known local command references. path=/Users/michaelnobile/Antigravity/Ciphers/src/findings.rs; checked=10)
 - source-packet-latest-access-date: true (Source packet includes latest registered source access date. path=/Users/michaelnobile/Antigravity/Ciphers/sources/source-packet.md; latest_access_date=2026-05-25)
