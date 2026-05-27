@@ -116,6 +116,11 @@ readiness note. Current repo state has 16 ready lanes, 2 unique ready prediction
 artifacts, and 1 duplicate prediction-artifact group, so lane count remains an
 operational inventory rather than an independent evidence count.
 
+Observation scaffold hardening: `init-position-observations` now rejects omitted
+`--position-note` values instead of deriving notes from the rationale. Future
+source-backed observation files must provide one explicit `POS=NOTE` entry per
+scored position before validation or evaluation.
+
 ## 2026-05-25: Methodology Context Source
 
 The public KryptosBot methodology page is now registered as

@@ -114,8 +114,9 @@ rejected for scoring. Source-backed observation files must include
 auditable. The observation template intentionally has an empty
 `positions_one_based` list and empty `position_notes` map, so copied lanes
 cannot accidentally score synthetic example positions.
-When notes differ by position, pass one `--position-note POS=NOTE` for every
-listed position; if omitted, the scaffold falls back to rationale-derived notes.
+Pass one explicit `--position-note POS=NOTE` for every listed position; the
+scaffold rejects omitted notes so each scored position has its own source-backed
+audit text.
 
 Direct `evaluate-period-prediction --positions ...` and
 `evaluate-spacing-prediction --positions ...` runs are diagnostic only.

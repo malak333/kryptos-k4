@@ -1776,6 +1776,8 @@ fn init_position_observations_rejects_anchor_positions_and_disallowed_sources() 
             "22",
             "--rationale",
             "Source-backed non-anchor observation mechanics check.",
+            "--position-note",
+            "22=Position 22 note.",
             "--output",
             temp.path().join("anchor.json").to_str().unwrap(),
         ])
@@ -1795,12 +1797,39 @@ fn init_position_observations_rejects_anchor_positions_and_disallowed_sources() 
             "1,4,7",
             "--rationale",
             "Source-backed non-anchor observation mechanics check.",
+            "--position-note",
+            "1=Position 1 note.",
+            "--position-note",
+            "4=Position 4 note.",
+            "--position-note",
+            "7=Position 7 note.",
             "--output",
             temp.path().join("source.json").to_str().unwrap(),
         ])
         .assert()
         .failure()
         .stderr(predicate::str::contains("cannot be scored"));
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "init-position-observations",
+            "--id",
+            "missing-position-notes-observation-v1",
+            "--source-id",
+            "cia-artifact",
+            "--positions",
+            "1,4,7",
+            "--rationale",
+            "Source-backed non-anchor observation mechanics check.",
+            "--output",
+            temp.path().join("no-notes.json").to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "provide one --position-note POS=NOTE entry",
+        ));
 
     Command::cargo_bin("kryptos-k4")
         .unwrap()

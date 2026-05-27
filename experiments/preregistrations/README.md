@@ -50,9 +50,9 @@ cargo run --locked -- init-position-observations \
   --output <source-backed-observations.json>
 ```
 
-Repeat `--position-note` for every listed position when source evidence differs
-by position. If the option is omitted, the scaffold writes rationale-derived
-notes for every position.
+Repeat `--position-note` for every listed position. The scaffold rejects omitted
+notes instead of deriving them from the rationale, so every scored position has
+its own source-backed audit text.
 
 Validate the observation file first:
 

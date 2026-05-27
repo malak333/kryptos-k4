@@ -1023,8 +1023,7 @@ fn create_position_observation_file(
     }
 
     let positions_one_based = parse_position_list(&positions).map_err(anyhow::Error::msg)?;
-    let position_notes =
-        build_position_notes(&positions_one_based, &rationale, &position_note_inputs)?;
+    let position_notes = build_position_notes(&positions_one_based, &position_note_inputs)?;
     let observation = PeriodPredictionObservationFile {
         id,
         source_ids,
@@ -1059,19 +1058,10 @@ fn create_position_observation_file(
 
 fn build_position_notes(
     positions_one_based: &[usize],
-    rationale: &str,
     position_note_inputs: &[String],
 ) -> Result<BTreeMap<String, String>> {
     if position_note_inputs.is_empty() {
-        return Ok(positions_one_based
-            .iter()
-            .map(|position| {
-                (
-                    position.to_string(),
-                    format!("Source-backed note for one-based K4 position {position}: {rationale}"),
-                )
-            })
-            .collect());
+        anyhow::bail!("provide one --position-note POS=NOTE entry for every --positions value");
     }
 
     let allowed_positions: HashSet<_> = positions_one_based.iter().copied().collect();
