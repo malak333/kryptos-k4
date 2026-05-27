@@ -116,10 +116,10 @@ the matching preregistration and artifact, and archive the evaluation output.
 
 Archive validation hardening added: `validate-evaluation-archive` now revalidates
 archived source-backed evaluations against the archived preregistration,
-deterministic prediction artifact, and observation file. Tampered archives that
-rewrite both `observations.json` and `result.json`, or swap in a mismatched
-preregistration family, fail validation before they can be treated as
-reproducible evidence.
+deterministic prediction artifact, linked source-review file, and observation
+file. Tampered archives that rewrite both `observations.json` and `result.json`,
+drop `source-review.json`, or swap in a mismatched preregistration family fail
+validation before they can be treated as reproducible evidence.
 
 Observation-note hardening added: source-backed observation files now require a
 `position_notes` entry for every scored one-based position. The scaffold command

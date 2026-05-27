@@ -2611,21 +2611,43 @@ fn evaluate_period_prediction_scores_independent_position_set() {
 #[test]
 fn evaluate_period_prediction_accepts_source_backed_position_file() {
     let temp = tempfile::tempdir().unwrap();
+    let source_review_path = temp.path().join("source-review.json");
     let observations_path = temp.path().join("observations.json");
     let output_dir = temp.path().join("period-output");
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "init-source-review",
+            "--id",
+            "synthetic-source-review-v1",
+            "--source-id",
+            "cia-artifact",
+            "--review-note",
+            "Reviewed eligible CIA source page before synthetic archive fixture.",
+            "--output",
+            source_review_path.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success();
+
+    let observations = serde_json::json!({
+        "id": "synthetic-non-anchor-test",
+        "source_ids": ["cia-artifact"],
+        "source_review_file": source_review_path.to_str().unwrap(),
+        "positions_one_based": [1, 4, 7],
+        "position_notes": {
+            "1": "Synthetic source-backed note for position 1.",
+            "4": "Synthetic source-backed note for position 4.",
+            "7": "Synthetic source-backed note for position 7."
+        },
+        "rationale": "Synthetic CLI test fixture for the observation-file input path."
+    });
     std::fs::write(
         &observations_path,
-        r#"{
-  "id": "synthetic-non-anchor-test",
-  "source_ids": ["cia-artifact"],
-  "positions_one_based": [1, 4, 7],
-  "position_notes": {
-    "1": "Synthetic source-backed note for position 1.",
-    "4": "Synthetic source-backed note for position 4.",
-    "7": "Synthetic source-backed note for position 7."
-  },
-  "rationale": "Synthetic CLI test fixture for the observation-file input path."
-}"#,
+        format!("{}\n", serde_json::to_string_pretty(&observations).unwrap()),
     )
     .unwrap();
 
@@ -2657,6 +2679,10 @@ fn evaluate_period_prediction_accepts_source_backed_position_file() {
     let json: Value = serde_json::from_slice(&output).unwrap();
     assert_eq!(json["observation_id"], "synthetic-non-anchor-test");
     assert_eq!(json["observation_source_ids"][0], "cia-artifact");
+    assert_eq!(
+        json["observation_source_review_file"],
+        source_review_path.to_str().unwrap()
+    );
     assert_eq!(json["source_backed_observation"], true);
     assert_eq!(json["observation_warning"], Value::Null);
     assert_eq!(
@@ -2671,6 +2697,7 @@ fn evaluate_period_prediction_accepts_source_backed_position_file() {
         "observations.json",
         "preregistration.json",
         "result.json",
+        "source-review.json",
         "summary.md",
         "command.txt",
     ] {
@@ -2689,6 +2716,15 @@ fn evaluate_period_prediction_accepts_source_backed_position_file() {
         serde_json::from_str(&std::fs::read_to_string(output_dir.join("result.json")).unwrap())
             .unwrap();
     assert_eq!(archived_json["observation_id"], "synthetic-non-anchor-test");
+    assert_eq!(
+        archived_json["observation_source_review_file"],
+        source_review_path.to_str().unwrap()
+    );
+    let archived_source_review: Value = serde_json::from_str(
+        &std::fs::read_to_string(output_dir.join("source-review.json")).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(archived_source_review["id"], "synthetic-source-review-v1");
     let archived_summary = std::fs::read_to_string(output_dir.join("summary.md")).unwrap();
     assert!(archived_summary.contains("Period Prediction Evaluation"));
     assert!(archived_summary.contains("source-backed observation: true"));
@@ -2715,7 +2751,26 @@ fn evaluate_period_prediction_accepts_source_backed_position_file() {
     assert_eq!(validation["valid"], true);
     assert_eq!(validation["artifact_kind"], "period");
     assert_eq!(validation["source_backed_observation"], true);
+    assert!(
+        validation["files_checked"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|file| file == "source-review.json")
+    );
     assert_eq!(validation["promoted_candidate"], false);
+
+    std::fs::remove_file(output_dir.join("source-review.json")).unwrap();
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-evaluation-archive",
+            "--input",
+            output_dir.to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("must include source-review.json"));
 }
 
 #[test]

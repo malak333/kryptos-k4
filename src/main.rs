@@ -601,6 +601,7 @@ struct PeriodPredictionObservationFile {
 struct PeriodPredictionObservationInput {
     id: Option<String>,
     source_ids: Vec<String>,
+    source_review_file: Option<String>,
     rationale: Option<String>,
     positions_one_based: Vec<usize>,
     position_notes: BTreeMap<String, String>,
@@ -1112,6 +1113,7 @@ fn load_period_prediction_observations(path: &Path) -> Result<PeriodPredictionOb
     Ok(PeriodPredictionObservationInput {
         id: Some(observations.id),
         source_ids: observations.source_ids,
+        source_review_file: observations.source_review_file,
         rationale: Some(observations.rationale),
         positions_one_based: observations.positions_one_based,
         position_notes: observations.position_notes,
@@ -2249,7 +2251,19 @@ fn write_evaluation_archive_context(
         }
         EvaluationArchiveInput::PositionsFile(path) => {
             fs::copy(path, output_dir.join("observations.json"))?;
+            copy_observation_source_review_to_archive(path, output_dir)?;
         }
+    }
+    Ok(())
+}
+
+fn copy_observation_source_review_to_archive(
+    observations_path: &Path,
+    output_dir: &Path,
+) -> Result<()> {
+    let observations = read_period_prediction_observation_file(observations_path)?;
+    if let Some(source_review_file) = observations.source_review_file {
+        fs::copy(source_review_file, output_dir.join("source-review.json"))?;
     }
     Ok(())
 }
@@ -2377,6 +2391,8 @@ fn validate_evaluation_archive(directory: &Path) -> Result<EvaluationArchiveVali
                 &artifact_kind,
                 observations,
                 artifact,
+                directory,
+                &mut files_checked,
                 &mut errors,
             );
         }
@@ -2502,9 +2518,11 @@ fn validate_archived_observations_against_artifact(
     artifact_kind: &str,
     observations: &serde_json::Value,
     artifact: &serde_json::Value,
+    directory: &Path,
+    files_checked: &mut Vec<String>,
     errors: &mut Vec<String>,
 ) {
-    let observations =
+    let mut observations =
         match serde_json::from_value::<PeriodPredictionObservationFile>(observations.clone()) {
             Ok(observations) => observations,
             Err(error) => {
@@ -2512,6 +2530,20 @@ fn validate_archived_observations_against_artifact(
                 return;
             }
         };
+
+    let archived_source_review_path = directory.join("source-review.json");
+    if observations.source_review_file.is_some() {
+        if archived_source_review_path.exists() {
+            files_checked.push("source-review.json".to_string());
+            observations.source_review_file =
+                Some(archived_source_review_path.display().to_string());
+        } else {
+            errors.push(
+                "source-backed archive with source_review_file must include source-review.json"
+                    .to_string(),
+            );
+        }
+    }
 
     errors.extend(
         validate_period_prediction_observation_fields(&observations)
@@ -2660,6 +2692,14 @@ fn validate_observations_match_result(
     {
         errors.push(
             "observations.json source_ids do not match result observation_source_ids".to_string(),
+        );
+    }
+    if observations.get("source_review_file").is_some()
+        && observations.get("source_review_file") != result.get("observation_source_review_file")
+    {
+        errors.push(
+            "observations.json source_review_file does not match result observation_source_review_file"
+                .to_string(),
         );
     }
     if json_usize_array(observations, "positions_one_based")
@@ -4723,6 +4763,7 @@ fn print_evaluate_period_prediction(options: PeriodPredictionEvaluationOptions) 
         (Some(positions), None) => PeriodPredictionObservationInput {
             id: None,
             source_ids: Vec::new(),
+            source_review_file: None,
             rationale: None,
             positions_one_based: parse_position_list(&positions).map_err(anyhow::Error::msg)?,
             position_notes: BTreeMap::new(),
@@ -4738,6 +4779,7 @@ fn print_evaluate_period_prediction(options: PeriodPredictionEvaluationOptions) 
     )?;
     evaluation.observation_id = observation_input.id;
     evaluation.observation_source_ids = observation_input.source_ids;
+    evaluation.observation_source_review_file = observation_input.source_review_file;
     evaluation.observation_rationale = observation_input.rationale;
     evaluation.observation_position_notes = observation_input.position_notes;
     if !evaluation.observation_source_ids.is_empty() {
@@ -4797,6 +4839,7 @@ fn print_evaluate_spacing_prediction(options: SpacingPredictionEvaluationOptions
         (Some(positions), None) => PeriodPredictionObservationInput {
             id: None,
             source_ids: Vec::new(),
+            source_review_file: None,
             rationale: None,
             positions_one_based: parse_position_list(&positions).map_err(anyhow::Error::msg)?,
             position_notes: BTreeMap::new(),
@@ -4812,6 +4855,7 @@ fn print_evaluate_spacing_prediction(options: SpacingPredictionEvaluationOptions
     )?;
     evaluation.observation_id = observation_input.id;
     evaluation.observation_source_ids = observation_input.source_ids;
+    evaluation.observation_source_review_file = observation_input.source_review_file;
     evaluation.observation_rationale = observation_input.rationale;
     evaluation.observation_position_notes = observation_input.position_notes;
     if !evaluation.observation_source_ids.is_empty() {

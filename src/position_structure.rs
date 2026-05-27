@@ -173,6 +173,8 @@ pub struct PeriodPredictionEvaluation {
     pub artifact_path: String,
     pub observation_id: Option<String>,
     pub observation_source_ids: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub observation_source_review_file: Option<String>,
     pub observation_rationale: Option<String>,
     pub observation_position_notes: BTreeMap<String, String>,
     pub source_backed_observation: bool,
@@ -214,6 +216,8 @@ pub struct SpacingPredictionEvaluation {
     pub artifact_path: String,
     pub observation_id: Option<String>,
     pub observation_source_ids: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub observation_source_review_file: Option<String>,
     pub observation_rationale: Option<String>,
     pub observation_position_notes: BTreeMap<String, String>,
     pub source_backed_observation: bool,
@@ -599,6 +603,7 @@ pub fn evaluate_period_prediction_positions(
         artifact_path: artifact_path.display().to_string(),
         observation_id: None,
         observation_source_ids: Vec::new(),
+        observation_source_review_file: None,
         observation_rationale: None,
         observation_position_notes: BTreeMap::new(),
         source_backed_observation: false,
@@ -684,6 +689,7 @@ pub fn evaluate_spacing_prediction_positions(
         artifact_path: artifact_path.display().to_string(),
         observation_id: None,
         observation_source_ids: Vec::new(),
+        observation_source_review_file: None,
         observation_rationale: None,
         observation_position_notes: BTreeMap::new(),
         source_backed_observation: false,
