@@ -31,7 +31,7 @@ const REQUIRED_RELEASE_FILES: [(&str, &str); 10] = [
 const REQUIRED_GENERATED_REPORTS: [(&str, &str); 1] =
     [("markdown-report-present", "notes/k4-report.md")];
 
-const REQUIRED_REPORT_MARKERS: [&str; 10] = [
+const REQUIRED_REPORT_MARKERS: [&str; 11] = [
     "`validate-prediction-artifact`",
     "`independent-lane-status`",
     "`observation-sources`",
@@ -42,6 +42,7 @@ const REQUIRED_REPORT_MARKERS: [&str; 10] = [
     "`position-structure`",
     "findings-source-inputs-valid",
     "position-observation-template-guarded",
+    "family_summary=position-period-prediction",
 ];
 
 const PLAINTEXT_LEAKAGE_SCAN_FILES: [&str; 4] = [
