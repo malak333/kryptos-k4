@@ -297,6 +297,15 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
     },
+    /// Report whether source-backed independent observation archives exist.
+    IndependentEvidenceStatus {
+        /// Evaluation archive root to scan. Repeat to override the default period and spacing roots.
+        #[arg(long = "root")]
+        roots: Vec<PathBuf>,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Print the one-based K4 positions eligible for future non-anchor observations.
     NonAnchorPositions {
         /// Output format.
@@ -637,6 +646,29 @@ struct NonAnchorPositionReport {
     excluded_anchor_ranges: Vec<ExcludedAnchorRange>,
     promoted_candidate: bool,
     note: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct IndependentEvidenceStatusReport {
+    roots: Vec<String>,
+    scanned_archive_count: usize,
+    valid_source_backed_archive_count: usize,
+    valid_diagnostic_archive_count: usize,
+    invalid_archive_count: usize,
+    evidence_available: bool,
+    archives: Vec<IndependentEvidenceArchiveSummary>,
+    promoted_candidate: bool,
+    note: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct IndependentEvidenceArchiveSummary {
+    directory: String,
+    artifact_kind: String,
+    source_backed_observation: bool,
+    valid: bool,
+    errors: Vec<String>,
+    warnings: Vec<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -1226,6 +1258,9 @@ fn main() -> Result<()> {
         }
         Command::NextEvidenceGate { directory, format } => {
             print_next_evidence_gate(directory, format)?
+        }
+        Command::IndependentEvidenceStatus { roots, format } => {
+            print_independent_evidence_status(roots, format)?
         }
         Command::NonAnchorPositions { format } => print_non_anchor_positions(format)?,
         Command::InitPositionObservations {
@@ -3208,6 +3243,133 @@ fn print_next_evidence_gate(directory: PathBuf, format: OutputFormat) -> Result<
                     "archive check:\n```bash\n{}\n```\n",
                     gate.archive_validation_command
                 );
+            }
+        }
+    }
+    Ok(())
+}
+
+fn independent_evidence_status_report(
+    mut roots: Vec<PathBuf>,
+) -> Result<IndependentEvidenceStatusReport> {
+    if roots.is_empty() {
+        roots = vec![
+            PathBuf::from("results/period-observations"),
+            PathBuf::from("results/spacing-observations"),
+        ];
+    }
+
+    let mut archives = Vec::new();
+    for root in &roots {
+        if is_evaluation_archive_directory(root) {
+            archives.push(summarize_evaluation_archive(root));
+            continue;
+        }
+        let Ok(entries) = fs::read_dir(root) else {
+            continue;
+        };
+        for entry in entries {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() && is_evaluation_archive_directory(&path) {
+                archives.push(summarize_evaluation_archive(&path));
+            }
+        }
+    }
+    archives.sort_by(|left, right| left.directory.cmp(&right.directory));
+
+    let valid_source_backed_archive_count = archives
+        .iter()
+        .filter(|archive| archive.valid && archive.source_backed_observation)
+        .count();
+    let valid_diagnostic_archive_count = archives
+        .iter()
+        .filter(|archive| archive.valid && !archive.source_backed_observation)
+        .count();
+    let invalid_archive_count = archives.iter().filter(|archive| !archive.valid).count();
+
+    Ok(IndependentEvidenceStatusReport {
+        roots: roots
+            .iter()
+            .map(|root| root.display().to_string())
+            .collect(),
+        scanned_archive_count: archives.len(),
+        valid_source_backed_archive_count,
+        valid_diagnostic_archive_count,
+        invalid_archive_count,
+        evidence_available: valid_source_backed_archive_count > 0,
+        archives,
+        promoted_candidate: false,
+        note: "Independent evidence status scans archived source-backed observation evaluations; it is not a claimed solution.",
+    })
+}
+
+fn is_evaluation_archive_directory(path: &Path) -> bool {
+    path.join("artifact.json").is_file()
+        || path.join("result.json").is_file()
+        || path.join("command.txt").is_file()
+}
+
+fn summarize_evaluation_archive(path: &Path) -> IndependentEvidenceArchiveSummary {
+    match validate_evaluation_archive(path) {
+        Ok(validation) => IndependentEvidenceArchiveSummary {
+            directory: validation.directory,
+            artifact_kind: validation.artifact_kind,
+            source_backed_observation: validation.source_backed_observation,
+            valid: validation.valid,
+            errors: validation.errors,
+            warnings: validation.warnings,
+        },
+        Err(error) => IndependentEvidenceArchiveSummary {
+            directory: path.display().to_string(),
+            artifact_kind: "unknown".to_string(),
+            source_backed_observation: false,
+            valid: false,
+            errors: vec![error.to_string()],
+            warnings: Vec::new(),
+        },
+    }
+}
+
+fn print_independent_evidence_status(roots: Vec<PathBuf>, format: OutputFormat) -> Result<()> {
+    let report = independent_evidence_status_report(roots)?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&report)?),
+        OutputFormat::Markdown => {
+            println!("# Independent Evidence Status\n");
+            println!("This is not a claimed solution.\n");
+            println!("roots: {}", report.roots.join(", "));
+            println!("archives scanned: {}", report.scanned_archive_count);
+            println!(
+                "valid source-backed archives: {}",
+                report.valid_source_backed_archive_count
+            );
+            println!(
+                "valid diagnostic archives: {}",
+                report.valid_diagnostic_archive_count
+            );
+            println!("invalid archives: {}", report.invalid_archive_count);
+            println!("evidence available: {}", report.evidence_available);
+            println!("promoted: {}", report.promoted_candidate);
+            println!("note: {}\n", report.note);
+            if report.archives.is_empty() {
+                println!(
+                    "No archived source-backed independent observation evaluations were found."
+                );
+            } else {
+                println!("| Directory | Kind | Source-Backed | Valid | Errors | Warnings |");
+                println!("| --- | --- | --- | --- | --- | --- |");
+                for archive in &report.archives {
+                    println!(
+                        "| `{}` | {} | {} | {} | {} | {} |",
+                        archive.directory,
+                        archive.artifact_kind,
+                        archive.source_backed_observation,
+                        archive.valid,
+                        archive.errors.join("; "),
+                        archive.warnings.join("; ")
+                    );
+                }
             }
         }
     }

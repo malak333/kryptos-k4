@@ -179,6 +179,7 @@ fn facts_hypotheses_sources_and_help_are_covered() {
         .stdout(predicate::str::contains("validate-spacing-observations"))
         .stdout(predicate::str::contains("independent-lane-status"))
         .stdout(predicate::str::contains("next-evidence-gate"))
+        .stdout(predicate::str::contains("independent-evidence-status"))
         .stdout(predicate::str::contains("non-anchor-positions"))
         .stdout(predicate::str::contains("init-position-observations"))
         .stdout(predicate::str::contains("observation-sources"))
@@ -1951,6 +1952,52 @@ fn next_evidence_gate_prints_operational_checklist() {
                 .unwrap()
                 .contains("evaluate-spacing-prediction")
     }));
+}
+
+#[test]
+fn independent_evidence_status_reports_missing_and_invalid_archives() {
+    let temp = tempfile::tempdir().unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "independent-evidence-status",
+            "--root",
+            temp.path().to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Independent Evidence Status"))
+        .stdout(predicate::str::contains("archives scanned: 0"))
+        .stdout(predicate::str::contains("valid source-backed archives: 0"))
+        .stdout(predicate::str::contains("evidence available: false"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let invalid_archive = temp.path().join("invalid");
+    std::fs::create_dir(&invalid_archive).unwrap();
+    std::fs::write(invalid_archive.join("result.json"), "{}").unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "independent-evidence-status",
+            "--root",
+            temp.path().to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["scanned_archive_count"], 1);
+    assert_eq!(json["valid_source_backed_archive_count"], 0);
+    assert_eq!(json["invalid_archive_count"], 1);
+    assert_eq!(json["evidence_available"], false);
+    assert_eq!(json["promoted_candidate"], false);
+    assert_eq!(json["archives"][0]["valid"], false);
 }
 
 #[test]

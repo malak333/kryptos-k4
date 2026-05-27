@@ -60,6 +60,7 @@ The integration tests in `tests/cli_e2e.rs` execute the compiled CLI and verify:
 - validate-prediction-artifact checks committed independent prediction artifacts against the deterministic generator;
 - independent-lane-status summarizes preregistered lanes, artifact validity, readiness for source-backed observations, and the next validator or evaluator command;
 - next-evidence-gate combines lane readiness, eligible scored-observation sources, required observation fields, and the exact scaffold/validate/evaluate/archive command sequence before any future source-backed scoring is interpreted;
+- independent-evidence-status scans archived period/spacing source-backed evaluation outputs and reports whether valid independent evidence is available;
 - non-anchor-positions prints the one-based K4 position universe allowed for future source-backed observation files, with excluded public anchor ranges;
 - validate-period-observations and validate-spacing-observations reject unregistered source IDs, disallowed source-use boundaries, duplicate positions, public-anchor positions, and unchanged observation templates before scoring;
 - period-prediction-plan emits predeclared non-anchor residue-class targets from K4 positions only, without scoring public fragment values or candidate material;
@@ -107,6 +108,9 @@ registered sources are eligible for scored independent position observations.
 Run `next-evidence-gate` to see the current eligible source IDs, unique ready
 prediction targets, and the exact command sequence required before a future
 source-backed observation can be treated as evidence.
+Run `independent-evidence-status` to confirm whether any source-backed
+observation evaluation archives already exist before interpreting a lane as
+having evidence.
 Run `non-anchor-positions` when preparing that observation file so the selected
 positions come from the non-anchor universe and not from the public clue ranges.
 Use `init-position-observations` to create the JSON file for a future

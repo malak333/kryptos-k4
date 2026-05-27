@@ -99,6 +99,13 @@ file in the destination directory before replacing the generated report path.
 Use this instead of shell redirection so a failed preflight-backed render cannot
 truncate `notes/k4-report.md` before the command returns an error.
 
+Independent evidence status added: `independent-evidence-status` now scans the
+period and spacing observation-evaluation archive roots and reports whether any
+valid source-backed independent evidence has actually been scored. Current repo
+state has 0 archived source-backed independent evaluations, so the next
+productive step remains a source-backed non-anchor observation file followed by
+the validator/evaluator/archive gate sequence.
+
 ## 2026-05-25: Methodology Context Source
 
 The public KryptosBot methodology page is now registered as
