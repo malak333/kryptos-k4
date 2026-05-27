@@ -21,6 +21,12 @@ Additional preregistration cleanup:
   definition and not a new cryptanalytic signal.
 - No source-backed observation archive exists yet, and no K4 candidate,
   plaintext, key, or solution is promoted.
+- Source traceability was added to the observation-source and next-evidence
+  gates: eligible sources now expose URL, access date, source type,
+  local-archive status, and use-boundary notes before any source-backed
+  observation file is scaffolded. Current eligible CIA sources are not locally
+  archived, so future scoring still requires explicit source-backed
+  per-position notes and archive validation.
 
 Current independent-lane status:
 

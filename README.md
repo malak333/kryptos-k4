@@ -95,7 +95,9 @@ commands that must pass before future source-backed observations can be
 interpreted. It also reports whether any valid source-backed observation
 archives already exist and whether ready lanes share duplicate prediction
 artifacts, so lane inventory is not confused with scored evidence or independent
-target count.
+target count. The gate includes the eligible source URLs, access dates,
+local-archive status, and use-boundary notes so source review requirements are
+visible before an observation file is created.
 `non-anchor-positions` prints the one-based K4 position universe eligible for
 future source-backed observations and the public anchor ranges that must stay
 excluded from scored evidence.

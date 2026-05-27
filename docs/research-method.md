@@ -104,10 +104,14 @@ context, methodology context, and archive-context-only sources as scored
 independent position evidence. Those sources can still document context or
 controls, but not the held-out target being scored.
 Run `observation-sources` before creating an observation file to see which
-registered sources are eligible for scored independent position observations.
+registered sources are eligible for scored independent position observations,
+including their URLs, access dates, source types, local-archive status, and
+use-boundary notes.
 Run `next-evidence-gate` to see the current eligible source IDs, unique ready
 prediction targets, and the exact command sequence required before a future
-source-backed observation can be treated as evidence.
+source-backed observation can be treated as evidence. The gate repeats eligible
+source details so the source and archive boundary is visible at the point where
+an observation file would be scaffolded.
 Run `independent-evidence-status` to confirm whether any source-backed
 observation evaluation archives already exist before interpreting a lane as
 having evidence.

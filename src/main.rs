@@ -601,11 +601,18 @@ struct ObservationSourceEligibilityReport {
     note: &'static str,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 struct ObservationSourceEligibility {
     id: &'static str,
     label: &'static str,
+    url: &'static str,
+    archive_url: Option<&'static str>,
+    locally_archived: bool,
+    accessed_at: &'static str,
+    publication_date: Option<&'static str>,
+    source_type: &'static str,
     allowed_use: &'static str,
+    use_note: &'static str,
     eligible_for_scored_observations: bool,
     reason: String,
 }
@@ -618,6 +625,7 @@ struct NextEvidenceGateReport {
     unique_ready_prediction_artifacts: usize,
     duplicate_prediction_artifact_group_count: usize,
     eligible_source_ids: Vec<String>,
+    eligible_sources: Vec<ObservationSourceEligibility>,
     ineligible_source_count: usize,
     valid_source_backed_archive_count: usize,
     invalid_archive_count: usize,
@@ -3085,6 +3093,12 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
         .filter(|source| source.eligible_for_scored_observations)
         .map(|source| source.id.to_string())
         .collect::<Vec<_>>();
+    let eligible_sources = source_report
+        .sources
+        .iter()
+        .filter(|source| source.eligible_for_scored_observations)
+        .cloned()
+        .collect::<Vec<_>>();
 
     let mut gates = Vec::new();
     for family in &lane_report.family_summaries {
@@ -3127,6 +3141,7 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
             .duplicate_prediction_artifact_groups
             .len(),
         eligible_source_ids,
+        eligible_sources,
         ineligible_source_count: source_report.ineligible_count,
         valid_source_backed_archive_count: evidence_report.valid_source_backed_archive_count,
         invalid_archive_count: evidence_report.invalid_archive_count,
@@ -3230,6 +3245,21 @@ fn print_next_evidence_gate(directory: PathBuf, format: OutputFormat) -> Result<
             println!("required observation fields:");
             for field in &report.required_observation_fields {
                 println!("- {field}");
+            }
+            println!("\n## Eligible Source Details\n");
+            println!("| Source ID | Local Archive | Accessed | Source Type | Use Boundary | URL |");
+            println!("| --- | --- | --- | --- | --- | --- |");
+            for source in &report.eligible_sources {
+                let archive_status = if source.locally_archived { "yes" } else { "no" };
+                println!(
+                    "| `{}` | {} | {} | {} | {} | {} |",
+                    source.id,
+                    archive_status,
+                    source.accessed_at,
+                    source.source_type,
+                    source.use_note,
+                    source.url
+                );
             }
             println!("\n## Gates\n");
             for gate in &report.gates {
@@ -4499,7 +4529,14 @@ fn observation_source_eligibility_report() -> ObservationSourceEligibilityReport
             ObservationSourceEligibility {
                 id: source.id,
                 label: source.label,
+                url: source.url,
+                archive_url: source.archive_url,
+                locally_archived: source.archive_url.is_some(),
+                accessed_at: source.accessed_at,
+                publication_date: source.publication_date,
+                source_type: source.source_type,
                 allowed_use: source.allowed_use,
+                use_note: source.use_note,
                 eligible_for_scored_observations: eligible,
                 reason,
             }
@@ -4529,15 +4566,22 @@ fn print_observation_sources(format: OutputFormat) -> Result<()> {
             println!("ineligible sources: {}", report.ineligible_count);
             println!("promoted: {}", report.promoted_candidate);
             println!("note: {}\n", report.note);
-            println!("| Source ID | Allowed Use | Eligible | Reason |");
-            println!("| --- | --- | --- | --- |");
+            println!(
+                "| Source ID | Allowed Use | Eligible | Local Archive | Accessed | Source Type | Reason | URL |"
+            );
+            println!("| --- | --- | --- | --- | --- | --- | --- | --- |");
             for source in &report.sources {
+                let archive_status = if source.locally_archived { "yes" } else { "no" };
                 println!(
-                    "| `{}` | {} | {} | {} |",
+                    "| `{}` | {} | {} | {} | {} | {} | {} | {} |",
                     source.id,
                     source.allowed_use,
                     source.eligible_for_scored_observations,
-                    source.reason
+                    archive_status,
+                    source.accessed_at,
+                    source.source_type,
+                    source.reason,
+                    source.url
                 );
             }
         }

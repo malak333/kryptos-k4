@@ -1894,6 +1894,10 @@ fn observation_sources_reports_scoring_eligible_sources() {
         .stdout(predicate::str::contains("Observation Sources"))
         .stdout(predicate::str::contains("eligible sources: 2"))
         .stdout(predicate::str::contains("cia-artifact"))
+        .stdout(predicate::str::contains(
+            "https://www.cia.gov/legacy/museum/artifact/kryptos/",
+        ))
+        .stdout(predicate::str::contains("2026-05-20"))
         .stdout(predicate::str::contains("elonka-kryptos"))
         .stdout(predicate::str::contains("context-only"))
         .stdout(predicate::str::contains("promoted: false"));
@@ -1910,7 +1914,11 @@ fn observation_sources_reports_scoring_eligible_sources() {
     assert_eq!(json["eligible_count"], 2);
     assert_eq!(json["promoted_candidate"], false);
     assert!(json["sources"].as_array().unwrap().iter().any(|source| {
-        source["id"] == "cia-artifact" && source["eligible_for_scored_observations"] == true
+        source["id"] == "cia-artifact"
+            && source["eligible_for_scored_observations"] == true
+            && source["url"] == "https://www.cia.gov/legacy/museum/artifact/kryptos/"
+            && source["locally_archived"] == false
+            && source["accessed_at"] == "2026-05-20"
     }));
     assert!(json["sources"].as_array().unwrap().iter().any(|source| {
         source["id"] == "elonka-kryptos" && source["eligible_for_scored_observations"] == false
@@ -1925,7 +1933,7 @@ fn next_evidence_gate_prints_operational_checklist() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Next Evidence Gate"))
-        .stdout(predicate::str::contains("ready lanes: 16"))
+        .stdout(predicate::str::contains("ready lanes: 17"))
         .stdout(predicate::str::contains(
             "unique ready prediction artifacts: 2",
         ))
@@ -1935,6 +1943,10 @@ fn next_evidence_gate_prints_operational_checklist() {
         .stdout(predicate::str::contains("cia-artifact, cia-sculpture"))
         .stdout(predicate::str::contains("valid source-backed archives: 0"))
         .stdout(predicate::str::contains("evidence available: false"))
+        .stdout(predicate::str::contains("Eligible Source Details"))
+        .stdout(predicate::str::contains(
+            "https://www.cia.gov/legacy/museum/artifact/kryptos/",
+        ))
         .stdout(predicate::str::contains(
             "Ready lane count is an operational inventory",
         ))
@@ -1974,6 +1986,15 @@ fn next_evidence_gate_prints_operational_checklist() {
             .unwrap()
             .iter()
             .any(|source| source == "cia-artifact")
+    );
+    assert!(
+        json["eligible_sources"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|source| source["id"] == "cia-artifact"
+                && source["url"] == "https://www.cia.gov/legacy/museum/artifact/kryptos/"
+                && source["locally_archived"] == false)
     );
     let gates = json["gates"].as_array().unwrap();
     assert_eq!(gates.len(), 2);
