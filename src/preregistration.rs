@@ -1,7 +1,7 @@
 use crate::{build_all_period_prediction_plans, build_all_spacing_prediction_plans, sources};
 use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashSet};
 use std::fs;
 use std::path::Path;
 
@@ -63,9 +63,18 @@ pub struct IndependentLaneStatusReport {
     pub lane_count: usize,
     pub ready_for_source_backed_observations: usize,
     pub invalid_lanes: usize,
+    pub prediction_artifacts: usize,
+    pub unique_prediction_artifacts: usize,
+    pub duplicate_prediction_artifact_groups: Vec<DuplicatePredictionArtifactGroup>,
     pub lanes: Vec<IndependentLaneStatus>,
     pub promoted_candidate: bool,
     pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct DuplicatePredictionArtifactGroup {
+    pub artifact_paths: Vec<String>,
+    pub lane_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -126,16 +135,63 @@ pub fn summarize_independent_lanes_with_repo_root(
         .iter()
         .filter(|lane| !lane.preregistration_valid || lane.prediction_artifact_valid == Some(false))
         .count();
+    let artifact_groups = prediction_artifact_groups(&lanes, repo_root);
+    let prediction_artifacts = artifact_groups.values().map(Vec::len).sum::<usize>();
+    let unique_prediction_artifacts = artifact_groups.len();
+    let duplicate_prediction_artifact_groups = artifact_groups
+        .into_values()
+        .filter(|group| group.len() > 1)
+        .map(|group| {
+            let mut artifact_paths = group
+                .iter()
+                .map(|(_, artifact_path)| artifact_path.clone())
+                .collect::<Vec<_>>();
+            artifact_paths.sort();
+            let mut lane_ids = group
+                .iter()
+                .map(|(lane_id, _)| lane_id.clone())
+                .collect::<Vec<_>>();
+            lane_ids.sort();
+            DuplicatePredictionArtifactGroup {
+                artifact_paths,
+                lane_ids,
+            }
+        })
+        .collect::<Vec<_>>();
 
     Ok(IndependentLaneStatusReport {
         directory: directory.display().to_string(),
         lane_count: lanes.len(),
         ready_for_source_backed_observations,
         invalid_lanes,
+        prediction_artifacts,
+        unique_prediction_artifacts,
+        duplicate_prediction_artifact_groups,
         lanes,
         promoted_candidate: false,
         note: "Independent lane status is an operational gate summary; it is not a claimed solution.",
     })
+}
+
+fn prediction_artifact_groups(
+    lanes: &[IndependentLaneStatus],
+    repo_root: &Path,
+) -> BTreeMap<String, Vec<(String, String)>> {
+    let mut groups = BTreeMap::new();
+    for lane in lanes {
+        let (Some(lane_id), Some(artifact_path)) = (&lane.id, &lane.prediction_artifact) else {
+            continue;
+        };
+        let path = repo_root.join(artifact_path);
+        let Ok(contents) = fs::read_to_string(path) else {
+            continue;
+        };
+        groups
+            .entry(contents)
+            .or_insert_with(Vec::new)
+            .push((lane_id.clone(), artifact_path.clone()));
+    }
+    groups
 }
 
 fn summarize_independent_lane(path: &Path, repo_root: &Path) -> IndependentLaneStatus {

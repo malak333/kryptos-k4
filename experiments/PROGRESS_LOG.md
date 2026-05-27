@@ -24,6 +24,13 @@ Interpretation: the independent evidence workflow is ready for source-backed
 observation files, but no independent observation has been scored and no K4
 candidate, plaintext, or solution is promoted.
 
+Duplicate-artifact accounting added: the lane-status command now reports 11
+declared prediction artifacts but only 2 unique artifact contents. The ten
+period lanes currently share one deterministic position-period target; this is
+an operational readiness inventory, not ten independent cryptanalytic signals.
+Future interpretation should count unique prediction targets and source-backed
+observations, not just preregistration rows.
+
 Follow-up hardening:
 
 - `non-anchor-position-period-v6`, `non-anchor-position-period-v7`, and

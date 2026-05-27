@@ -2675,8 +2675,39 @@ fn print_independent_lane_status_report(report: &IndependentLaneStatusReport) {
         report.ready_for_source_backed_observations
     );
     println!("invalid lanes: {}", report.invalid_lanes);
+    println!("prediction artifacts: {}", report.prediction_artifacts);
+    println!(
+        "unique prediction artifacts: {}",
+        report.unique_prediction_artifacts
+    );
+    println!(
+        "duplicate artifact groups: {}",
+        report.duplicate_prediction_artifact_groups.len()
+    );
     println!("promoted: {}", report.promoted_candidate);
     println!("note: {}\n", report.note);
+
+    if !report.duplicate_prediction_artifact_groups.is_empty() {
+        println!("## Duplicate Prediction Artifacts\n");
+        println!("| Lanes | Artifacts |");
+        println!("| --- | --- |");
+        for group in &report.duplicate_prediction_artifact_groups {
+            let lanes = group
+                .lane_ids
+                .iter()
+                .map(|lane| format!("`{lane}`"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            let artifacts = group
+                .artifact_paths
+                .iter()
+                .map(|artifact| format!("`{artifact}`"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            println!("| {} | {} |", lanes, artifacts);
+        }
+        println!();
+    }
 
     println!("| Lane | Family | Artifact | Status | Next Step |");
     println!("| --- | --- | --- | --- | --- |");

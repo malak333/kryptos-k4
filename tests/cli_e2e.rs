@@ -1627,6 +1627,10 @@ fn independent_lane_status_summarizes_ready_lanes() {
             "ready for source-backed observations: 11",
         ))
         .stdout(predicate::str::contains("invalid lanes: 0"))
+        .stdout(predicate::str::contains("prediction artifacts: 11"))
+        .stdout(predicate::str::contains("unique prediction artifacts: 2"))
+        .stdout(predicate::str::contains("duplicate artifact groups: 1"))
+        .stdout(predicate::str::contains("Duplicate Prediction Artifacts"))
         .stdout(predicate::str::contains(
             "non-anchor-position-period-followup-v1",
         ))
@@ -1647,6 +1651,15 @@ fn independent_lane_status_summarizes_ready_lanes() {
     assert_eq!(json["lane_count"], 11);
     assert_eq!(json["ready_for_source_backed_observations"], 11);
     assert_eq!(json["invalid_lanes"], 0);
+    assert_eq!(json["prediction_artifacts"], 11);
+    assert_eq!(json["unique_prediction_artifacts"], 2);
+    assert_eq!(
+        json["duplicate_prediction_artifact_groups"]
+            .as_array()
+            .unwrap()
+            .len(),
+        1
+    );
     assert_eq!(json["promoted_candidate"], false);
     assert!(json["lanes"].as_array().unwrap().iter().all(|lane| {
         lane["ready_for_source_backed_observations"] == true
