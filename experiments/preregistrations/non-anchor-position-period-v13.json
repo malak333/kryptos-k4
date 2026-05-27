@@ -1,0 +1,31 @@
+{
+  "id": "non-anchor-position-period-v13",
+  "title": "Non-anchor position period prediction v13",
+  "hypothesis_family": "position-period-prediction",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane fixes a position-only period prediction before scoring any future evidence. It does not add key material, tune offsets, route public known-plaintext spans, or reuse EAST, NORTHEAST, BERLIN, or CLOCK public-anchor fragments as the evidentiary target.",
+  "prediction_target": "Future independently documented non-anchor K4 observations should be enriched in the predeclared absolute-position residue classes for the registered periods before any candidate-word, offset, transform, or route tuning is performed.",
+  "prediction_artifact": "experiments/predictions/non-anchor-position-period-v13.json",
+  "discovery_inputs": [
+    "Absolute one-based K4 position numbers only",
+    "Non-anchor position universe emitted by non-anchor-positions",
+    "Registered periods fixed before evaluation: 2, 3, 4, 5, 7, 8, 13",
+    "Deterministic residue-class rule emitted before observing any new source-backed evidence"
+  ],
+  "evaluation_inputs": [
+    "Future source-documented non-anchor K4 observations",
+    "Committed observation files that reject public anchor positions 22 through 34 and 64 through 74",
+    "Independent target rows not derived from EAST, NORTHEAST, BERLIN, CLOCK, or any other public known-plaintext anchor fragment"
+  ],
+  "controls": [
+    "seeded position-shuffle baseline",
+    "best-of-period null control",
+    "multiple-comparison correction across registered periods and residue classes",
+    "duplicate-position rejection",
+    "public-anchor-position rejection",
+    "held-out non-anchor observation scoring before any lane promotion"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

@@ -59,7 +59,7 @@ The integration tests in `tests/cli_e2e.rs` execute the compiled CLI and verify:
 - validate-preregistration rejects new lanes that reuse public anchor-derived fragments as discovery inputs or primary evidence;
 - validate-prediction-artifact checks committed independent prediction artifacts against the deterministic generator;
 - independent-lane-status summarizes preregistered lanes, artifact validity, readiness for source-backed observations, and the next validator or evaluator command;
-- next-evidence-gate combines lane readiness, eligible scored-observation sources, required observation fields, and the exact scaffold/validate/evaluate/archive command sequence before any future source-backed scoring is interpreted;
+- next-evidence-gate combines lane readiness, eligible scored-observation sources, current evidence-archive status, required observation fields, and the exact scaffold/validate/evaluate/archive command sequence before any future source-backed scoring is interpreted;
 - independent-evidence-status scans archived period/spacing source-backed evaluation outputs and reports whether valid independent evidence is available;
 - non-anchor-positions prints the one-based K4 position universe allowed for future source-backed observation files, with excluded public anchor ranges;
 - validate-period-observations and validate-spacing-observations reject unregistered source IDs, disallowed source-use boundaries, duplicate positions, public-anchor positions, and unchanged observation templates before scoring;

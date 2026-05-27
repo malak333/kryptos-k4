@@ -15,7 +15,7 @@ cargo run --locked -- release-check --format json
 Result summary:
 
 - independent lanes: `15`
-- ready for source-backed observations: `15`
+- ready for source-backed observations: `16`
 - unique ready prediction targets: `2`
 - invalid lanes: `0`
 - release-check failures: `0`
@@ -25,9 +25,9 @@ Interpretation: the independent evidence workflow is ready for source-backed
 observation files, but no independent observation has been scored and no K4
 candidate, plaintext, or solution is promoted.
 
-Duplicate-artifact accounting added: the lane-status command now reports 15
+Duplicate-artifact accounting added: the lane-status command now reports 16
 declared prediction artifacts but only 2 unique artifact contents, and both
-unique artifacts are ready for source-backed observations. The fourteen
+unique artifacts are ready for source-backed observations. The fifteen
 period lanes currently share one deterministic position-period target; this is
 an operational readiness inventory, not fourteen independent cryptanalytic signals.
 Future interpretation should count unique prediction targets and source-backed
@@ -84,7 +84,7 @@ before any scoring result can be interpreted.
 Next-evidence-gate checklist added: `next-evidence-gate` now joins the live
 independent-lane inventory with `observation-sources` and emits the exact
 scaffold, validation, evaluation, and archive-validation commands required for
-period and spacing prediction families. The command reports 15 ready lanes but
+period and spacing prediction families. The command reports 16 ready lanes but
 only 2 unique ready prediction artifacts, and only `cia-artifact` and
 `cia-sculpture` are eligible scored-observation sources. This is an operational
 gate, not evidence or a promoted K4 result.
@@ -105,6 +105,11 @@ valid source-backed independent evidence has actually been scored. Current repo
 state has 0 archived source-backed independent evaluations, so the next
 productive step remains a source-backed non-anchor observation file followed by
 the validator/evaluator/archive gate sequence.
+
+Next-evidence-gate now includes evidence archive status directly: it reports
+0 valid source-backed archives and `evidence_available: false` in the current
+repo state. This keeps the 16 ready lanes from being mistaken for scored
+independent evidence.
 
 ## 2026-05-25: Methodology Context Source
 
@@ -412,10 +417,10 @@ could pass validation but fail at evaluation time.
 Independent lane status command added:
 `independent-lane-status --format json` scans the preregistration directory,
 validates each preregistration and committed prediction artifact, and reports
-the next validator/evaluator command for each lane. Current status: 15 lanes,
-15 ready for source-backed observations, 0 invalid lanes, 15 prediction
+the next validator/evaluator command for each lane. Current status: 16 lanes,
+16 ready for source-backed observations, 0 invalid lanes, 16 prediction
 artifacts, 2 unique prediction artifact contents, 2 unique ready prediction
-artifact contents, 1 duplicate artifact group, period family 14 lanes/1 unique
+artifact contents, 1 duplicate artifact group, period family 15 lanes/1 unique
 ready artifact, spacing family 1 lane/1 unique ready artifact, promoted false.
 This is an
 operational gate summary only; it adds no plaintext, key material, or scored

@@ -92,7 +92,8 @@ while the spacing family is the second unique ready target.
 `next-evidence-gate` combines the live lane inventory with source eligibility
 and prints the exact scaffold, validation, evaluation, and archive-check
 commands that must pass before future source-backed observations can be
-interpreted.
+interpreted. It also reports whether any valid source-backed observation
+archives already exist, so ready lanes are not confused with scored evidence.
 `non-anchor-positions` prints the one-based K4 position universe eligible for
 future source-backed observations and the public anchor ranges that must stay
 excluded from scored evidence.

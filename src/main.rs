@@ -618,6 +618,9 @@ struct NextEvidenceGateReport {
     unique_ready_prediction_artifacts: usize,
     eligible_source_ids: Vec<String>,
     ineligible_source_count: usize,
+    valid_source_backed_archive_count: usize,
+    invalid_archive_count: usize,
+    evidence_available: bool,
     required_observation_fields: Vec<&'static str>,
     gates: Vec<NextEvidenceGate>,
     promoted_candidate: bool,
@@ -3083,6 +3086,7 @@ fn print_independent_lane_status(directory: PathBuf, format: OutputFormat) -> Re
 fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateReport> {
     let lane_report = summarize_independent_lanes(directory)?;
     let source_report = observation_source_eligibility_report();
+    let evidence_report = independent_evidence_status_report(Vec::new())?;
     let eligible_source_ids = source_report
         .sources
         .iter()
@@ -3129,6 +3133,9 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
         unique_ready_prediction_artifacts: lane_report.unique_ready_prediction_artifacts,
         eligible_source_ids,
         ineligible_source_count: source_report.ineligible_count,
+        valid_source_backed_archive_count: evidence_report.valid_source_backed_archive_count,
+        invalid_archive_count: evidence_report.invalid_archive_count,
+        evidence_available: evidence_report.evidence_available,
         required_observation_fields: vec![
             "registered eligible source ID",
             "one-based non-anchor K4 positions",
@@ -3211,6 +3218,12 @@ fn print_next_evidence_gate(directory: PathBuf, format: OutputFormat) -> Result<
                 report.eligible_source_ids.join(", ")
             );
             println!("ineligible sources: {}", report.ineligible_source_count);
+            println!(
+                "valid source-backed archives: {}",
+                report.valid_source_backed_archive_count
+            );
+            println!("invalid archives: {}", report.invalid_archive_count);
+            println!("evidence available: {}", report.evidence_available);
             println!("promoted: {}", report.promoted_candidate);
             println!("note: {}\n", report.note);
             println!("required observation fields:");

@@ -1628,12 +1628,12 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Independent Lane Status"))
-        .stdout(predicate::str::contains("lanes: 15"))
+        .stdout(predicate::str::contains("lanes: 16"))
         .stdout(predicate::str::contains(
-            "ready for source-backed observations: 15",
+            "ready for source-backed observations: 16",
         ))
         .stdout(predicate::str::contains("invalid lanes: 0"))
-        .stdout(predicate::str::contains("prediction artifacts: 15"))
+        .stdout(predicate::str::contains("prediction artifacts: 16"))
         .stdout(predicate::str::contains("unique prediction artifacts: 2"))
         .stdout(predicate::str::contains(
             "unique ready prediction artifacts: 2",
@@ -1641,7 +1641,7 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout(predicate::str::contains("duplicate artifact groups: 1"))
         .stdout(predicate::str::contains("Family Summary"))
         .stdout(predicate::str::contains(
-            "| position-period-prediction | 14 | 14 | 14 | 1 | 1 | 1 |",
+            "| position-period-prediction | 15 | 15 | 15 | 1 | 1 | 1 |",
         ))
         .stdout(predicate::str::contains(
             "| position-spacing-prediction | 1 | 1 | 1 | 1 | 1 | 0 |",
@@ -1664,16 +1664,16 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["lane_count"], 15);
-    assert_eq!(json["ready_for_source_backed_observations"], 15);
+    assert_eq!(json["lane_count"], 16);
+    assert_eq!(json["ready_for_source_backed_observations"], 16);
     assert_eq!(json["invalid_lanes"], 0);
-    assert_eq!(json["prediction_artifacts"], 15);
+    assert_eq!(json["prediction_artifacts"], 16);
     assert_eq!(json["unique_prediction_artifacts"], 2);
     assert_eq!(json["unique_ready_prediction_artifacts"], 2);
     let families = json["family_summaries"].as_array().unwrap();
     assert!(families.iter().any(|family| {
         family["hypothesis_family"] == "position-period-prediction"
-            && family["lanes"] == 14
+            && family["lanes"] == 15
             && family["unique_ready_prediction_artifacts"] == 1
             && family["duplicate_artifact_groups"] == 1
     }));
@@ -1896,11 +1896,13 @@ fn next_evidence_gate_prints_operational_checklist() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Next Evidence Gate"))
-        .stdout(predicate::str::contains("ready lanes: 15"))
+        .stdout(predicate::str::contains("ready lanes: 16"))
         .stdout(predicate::str::contains(
             "unique ready prediction artifacts: 2",
         ))
         .stdout(predicate::str::contains("cia-artifact, cia-sculpture"))
+        .stdout(predicate::str::contains("valid source-backed archives: 0"))
+        .stdout(predicate::str::contains("evidence available: false"))
         .stdout(predicate::str::contains("validate-period-observations"))
         .stdout(predicate::str::contains("evaluate-period-prediction"))
         .stdout(predicate::str::contains("validate-spacing-observations"))
@@ -1917,9 +1919,12 @@ fn next_evidence_gate_prints_operational_checklist() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["ready_lanes"], 15);
+    assert_eq!(json["ready_lanes"], 16);
     assert_eq!(json["invalid_lanes"], 0);
     assert_eq!(json["unique_ready_prediction_artifacts"], 2);
+    assert_eq!(json["valid_source_backed_archive_count"], 0);
+    assert_eq!(json["invalid_archive_count"], 0);
+    assert_eq!(json["evidence_available"], false);
     assert_eq!(json["promoted_candidate"], false);
     assert!(
         json["eligible_source_ids"]
