@@ -6,7 +6,7 @@ use anyhow::{Result, bail};
 use rand::seq::SliceRandom;
 use rand_chacha::{ChaCha8Rng, rand_core::SeedableRng};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 const MIN_FRAGMENTS_FOR_PROMOTION: usize = 20;
 const DEFAULT_MIN_MODULUS: usize = 2;
@@ -174,6 +174,7 @@ pub struct PeriodPredictionEvaluation {
     pub observation_id: Option<String>,
     pub observation_source_ids: Vec<String>,
     pub observation_rationale: Option<String>,
+    pub observation_position_notes: BTreeMap<String, String>,
     pub source_backed_observation: bool,
     pub observation_warning: Option<&'static str>,
     pub observed_position_count: usize,
@@ -214,6 +215,7 @@ pub struct SpacingPredictionEvaluation {
     pub observation_id: Option<String>,
     pub observation_source_ids: Vec<String>,
     pub observation_rationale: Option<String>,
+    pub observation_position_notes: BTreeMap<String, String>,
     pub source_backed_observation: bool,
     pub observation_warning: Option<&'static str>,
     pub observed_position_count: usize,
@@ -598,6 +600,7 @@ pub fn evaluate_period_prediction_positions(
         observation_id: None,
         observation_source_ids: Vec::new(),
         observation_rationale: None,
+        observation_position_notes: BTreeMap::new(),
         source_backed_observation: false,
         observation_warning: Some(
             "Ad hoc --positions input is diagnostic only; use --positions-file with validated source IDs before treating observations as evidence.",
@@ -682,6 +685,7 @@ pub fn evaluate_spacing_prediction_positions(
         observation_id: None,
         observation_source_ids: Vec::new(),
         observation_rationale: None,
+        observation_position_notes: BTreeMap::new(),
         source_backed_observation: false,
         observation_warning: Some(
             "Ad hoc --positions input is diagnostic only; use --positions-file with validated source IDs before treating observations as evidence.",

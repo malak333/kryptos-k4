@@ -31,7 +31,7 @@ const REQUIRED_RELEASE_FILES: [(&str, &str); 10] = [
 const REQUIRED_GENERATED_REPORTS: [(&str, &str); 1] =
     [("markdown-report-present", "notes/k4-report.md")];
 
-const REQUIRED_REPORT_MARKERS: [&str; 12] = [
+const REQUIRED_REPORT_MARKERS: [&str; 13] = [
     "`validate-prediction-artifact`",
     "`independent-lane-status`",
     "`observation-sources`",
@@ -44,6 +44,7 @@ const REQUIRED_REPORT_MARKERS: [&str; 12] = [
     "position-observation-template-guarded",
     "family_summary=position-period-prediction",
     "position-spacing-prediction:1_lanes/1_unique_ready",
+    "per-position notes",
 ];
 
 const PLAINTEXT_LEAKAGE_SCAN_FILES: [&str; 4] = [
@@ -412,6 +413,13 @@ fn check_position_observation_template_guarded(repo_root: &Path) -> ReleaseCheck
                 .is_some_and(|positions| positions.is_empty())
             {
                 mismatches.push("positions_one_based must remain empty".to_string());
+            }
+            if !value
+                .get("position_notes")
+                .and_then(serde_json::Value::as_object)
+                .is_some_and(|notes| notes.is_empty())
+            {
+                mismatches.push("position_notes must remain empty".to_string());
             }
         }
         Err(error) => mismatches.push(format!("template is not valid JSON: {error}")),
@@ -1036,7 +1044,7 @@ mod tests {
   ],
   "evaluation_inputs": [
     "Source-backed non-anchor position observations that are not public EAST, NORTHEAST, BERLIN, or CLOCK anchor fragments.",
-    "Observation files that declare source IDs, one-based positions, and rationale before evaluation."
+    "Observation files that declare source IDs, one-based positions, per-position notes, and rationale before evaluation."
   ],
   "controls": [
     "seeded shuffle baseline over non-anchor positions",
@@ -1056,6 +1064,7 @@ mod tests {
     "replace-with-registered-source-id"
   ],
   "positions_one_based": [],
+  "position_notes": {},
   "rationale": "Explain why these are independent non-anchor K4 positions before evaluating them."
 }"#
         .to_string()

@@ -64,6 +64,14 @@ rewrite both `observations.json` and `result.json`, or swap in a mismatched
 preregistration family, fail validation before they can be treated as
 reproducible evidence.
 
+Observation-note hardening added: source-backed observation files now require a
+`position_notes` entry for every scored one-based position. The scaffold command
+emits those notes, period and spacing validators reject missing or placeholder
+notes, and archived source-backed evaluations require `observations.json`
+`position_notes` to match `result.json` `observation_position_notes`. This keeps
+future non-anchor evidence auditable before any scoring result can be
+interpreted.
+
 ## 2026-05-25: Methodology Context Source
 
 The public KryptosBot methodology page is now registered as
@@ -265,14 +273,16 @@ and remains non-promotional.
 
 Evaluator input hardened: `evaluate-period-prediction` now also accepts
 `--positions-file`, a JSON observation record with registered `source_ids`,
-`positions_one_based`, and rationale. This keeps future non-anchor position
-evidence source-backed instead of only accepting ad hoc comma-separated inputs.
+`positions_one_based`, per-position `position_notes`, and rationale. This keeps
+future non-anchor position evidence source-backed and auditable instead of only
+accepting ad hoc comma-separated inputs.
 `validate-period-observations` now checks those files before scoring, rejecting
 unregistered source IDs, duplicate positions, and positions outside the
 committed non-anchor prediction artifact. It also rejects unchanged template
-placeholder text and carries observation rationale into validation/evaluation
-output. Pass `--preregistration` to validate the committed prediction artifact
-and observation file in one pre-score gate; the same preregistration guard is
+placeholder text, requires a position note for every scored position, and
+carries observation rationale into validation/evaluation output. Pass
+`--preregistration` to validate the committed prediction artifact and
+observation file in one pre-score gate; the same preregistration guard is
 available on `evaluate-period-prediction` before scoring.
 
 Concrete follow-up lane registered:

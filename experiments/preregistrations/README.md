@@ -96,8 +96,9 @@ boundary compatible with scored independent position evidence. Sources marked
 observation evidence.
 
 The template intentionally fails validation until every `replace-with...` field,
-the explanatory rationale, and the empty `positions_one_based` list are
-replaced with a source-backed non-anchor target.
+the explanatory rationale, the empty `positions_one_based` list, and the empty
+`position_notes` map are replaced with a source-backed non-anchor target. Every
+scored position must carry its own note.
 
 Current independent period lanes:
 

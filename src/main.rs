@@ -22,7 +22,7 @@ use kryptos_k4::{
 };
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::HashSet,
+    collections::{BTreeMap, HashSet},
     fs,
     path::{Path, PathBuf},
 };
@@ -524,6 +524,8 @@ struct PeriodPredictionObservationFile {
     id: String,
     source_ids: Vec<String>,
     positions_one_based: Vec<usize>,
+    #[serde(default)]
+    position_notes: BTreeMap<String, String>,
     rationale: String,
 }
 
@@ -533,6 +535,7 @@ struct PeriodPredictionObservationInput {
     source_ids: Vec<String>,
     rationale: Option<String>,
     positions_one_based: Vec<usize>,
+    position_notes: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -545,6 +548,7 @@ struct PeriodPredictionObservationValidation {
     observation_rationale: String,
     observed_position_count: usize,
     observed_positions_one_based: Vec<usize>,
+    observation_position_notes: BTreeMap<String, String>,
     valid: bool,
     errors: Vec<String>,
     promoted_candidate: bool,
@@ -773,6 +777,12 @@ fn validate_period_prediction_observation_fields(
     if observations.positions_one_based.is_empty() {
         errors.push("positions_file must include at least one one-based K4 position".to_string());
     }
+    if observations.position_notes.is_empty() {
+        errors.push(
+            "positions_file position_notes must include one note for each one-based K4 position"
+                .to_string(),
+        );
+    }
 
     let registered_sources: std::collections::BTreeMap<_, _> = sources()
         .into_iter()
@@ -796,6 +806,38 @@ fn validate_period_prediction_observation_fields(
         }
     }
 
+    let observed_positions: HashSet<_> = observations.positions_one_based.iter().copied().collect();
+    for position in &observations.positions_one_based {
+        let key = position.to_string();
+        match observations.position_notes.get(&key) {
+            Some(note) if note.trim().is_empty() => {
+                errors.push(format!(
+                    "position_notes entry for position `{position}` is empty"
+                ));
+            }
+            Some(note) if contains_template_placeholder(note) => {
+                errors.push(format!(
+                    "position_notes entry for position `{position}` still contains template placeholder text"
+                ));
+            }
+            Some(_) => {}
+            None => errors.push(format!(
+                "position_notes is missing an entry for position `{position}`"
+            )),
+        }
+    }
+    for position_key in observations.position_notes.keys() {
+        match position_key.parse::<usize>() {
+            Ok(position) if observed_positions.contains(&position) => {}
+            Ok(position) => errors.push(format!(
+                "position_notes includes position `{position}` that is not listed in positions_one_based"
+            )),
+            Err(_) => errors.push(format!(
+                "position_notes key `{position_key}` is not a one-based K4 position"
+            )),
+        }
+    }
+
     errors
 }
 
@@ -815,6 +857,7 @@ fn load_period_prediction_observations(path: &Path) -> Result<PeriodPredictionOb
         source_ids: observations.source_ids,
         rationale: Some(observations.rationale),
         positions_one_based: observations.positions_one_based,
+        position_notes: observations.position_notes,
     })
 }
 
@@ -865,10 +908,21 @@ fn create_position_observation_file(
         );
     }
 
+    let positions_one_based = parse_position_list(&positions).map_err(anyhow::Error::msg)?;
+    let position_notes = positions_one_based
+        .iter()
+        .map(|position| {
+            (
+                position.to_string(),
+                format!("Source-backed note for one-based K4 position {position}: {rationale}"),
+            )
+        })
+        .collect();
     let observation = PeriodPredictionObservationFile {
         id,
         source_ids,
-        positions_one_based: parse_position_list(&positions).map_err(anyhow::Error::msg)?,
+        positions_one_based,
+        position_notes,
         rationale,
     };
     let errors = validate_position_observation_scaffold(&observation);
@@ -1948,6 +2002,12 @@ fn validate_observations_match_result(
         errors
             .push("observations.json positions do not match result observed positions".to_string());
     }
+    if observations.get("position_notes") != result.get("observation_position_notes") {
+        errors.push(
+            "observations.json position_notes do not match result observation_position_notes"
+                .to_string(),
+        );
+    }
 }
 
 fn json_usize_array(value: &serde_json::Value, key: &str) -> Option<Vec<usize>> {
@@ -2942,6 +3002,10 @@ fn print_position_observation_scaffold_report(report: &PositionObservationScaffo
             .collect::<Vec<_>>()
             .join(", ")
     );
+    println!(
+        "position notes: {}",
+        report.observation.position_notes.len()
+    );
     println!("valid: {}", report.valid);
     println!("promoted: {}", report.promoted_candidate);
     println!("note: {}\n", report.note);
@@ -3062,6 +3126,7 @@ fn validate_period_observations(
         observation_rationale: observations.rationale,
         observed_position_count: observations.positions_one_based.len(),
         observed_positions_one_based: observations.positions_one_based,
+        observation_position_notes: observations.position_notes,
         valid: errors.is_empty(),
         errors,
         promoted_candidate: false,
@@ -3137,6 +3202,7 @@ fn validate_spacing_observations(
         observation_rationale: observations.rationale,
         observed_position_count: observations.positions_one_based.len(),
         observed_positions_one_based: observations.positions_one_based,
+        observation_position_notes: observations.position_notes,
         valid: errors.is_empty(),
         errors,
         promoted_candidate: false,
@@ -3182,6 +3248,10 @@ fn print_position_observation_validation(
     println!(
         "observed position count: {}",
         validation.observed_position_count
+    );
+    println!(
+        "position notes: {}",
+        validation.observation_position_notes.len()
     );
     println!("valid: {}", validation.valid);
     println!("promoted: {}", validation.promoted_candidate);
@@ -3371,6 +3441,7 @@ fn print_evaluate_period_prediction(options: PeriodPredictionEvaluationOptions) 
             source_ids: Vec::new(),
             rationale: None,
             positions_one_based: parse_position_list(&positions).map_err(anyhow::Error::msg)?,
+            position_notes: BTreeMap::new(),
         },
         (None, Some(path)) => load_period_prediction_observations(&path)?,
         _ => anyhow::bail!("provide exactly one of --positions or --positions-file"),
@@ -3384,6 +3455,7 @@ fn print_evaluate_period_prediction(options: PeriodPredictionEvaluationOptions) 
     evaluation.observation_id = observation_input.id;
     evaluation.observation_source_ids = observation_input.source_ids;
     evaluation.observation_rationale = observation_input.rationale;
+    evaluation.observation_position_notes = observation_input.position_notes;
     if !evaluation.observation_source_ids.is_empty() {
         evaluation.source_backed_observation = true;
         evaluation.observation_warning = None;
@@ -3443,6 +3515,7 @@ fn print_evaluate_spacing_prediction(options: SpacingPredictionEvaluationOptions
             source_ids: Vec::new(),
             rationale: None,
             positions_one_based: parse_position_list(&positions).map_err(anyhow::Error::msg)?,
+            position_notes: BTreeMap::new(),
         },
         (None, Some(path)) => load_period_prediction_observations(&path)?,
         _ => anyhow::bail!("provide exactly one of --positions or --positions-file"),
@@ -3456,6 +3529,7 @@ fn print_evaluate_spacing_prediction(options: SpacingPredictionEvaluationOptions
     evaluation.observation_id = observation_input.id;
     evaluation.observation_source_ids = observation_input.source_ids;
     evaluation.observation_rationale = observation_input.rationale;
+    evaluation.observation_position_notes = observation_input.position_notes;
     if !evaluation.observation_source_ids.is_empty() {
         evaluation.source_backed_observation = true;
         evaluation.observation_warning = None;
@@ -3491,6 +3565,12 @@ fn render_period_prediction_evaluation(evaluation: &PeriodPredictionEvaluation) 
     }
     if let Some(observation_rationale) = &evaluation.observation_rationale {
         output.push_str(&format!("observation rationale: {observation_rationale}\n"));
+    }
+    if !evaluation.observation_position_notes.is_empty() {
+        output.push_str(&format!(
+            "position notes: {}\n",
+            evaluation.observation_position_notes.len()
+        ));
     }
     output.push_str(&format!(
         "source-backed observation: {}",
@@ -3617,6 +3697,12 @@ fn render_spacing_prediction_evaluation(evaluation: &SpacingPredictionEvaluation
     }
     if let Some(observation_rationale) = &evaluation.observation_rationale {
         output.push_str(&format!("observation rationale: {observation_rationale}\n"));
+    }
+    if !evaluation.observation_position_notes.is_empty() {
+        output.push_str(&format!(
+            "position notes: {}\n",
+            evaluation.observation_position_notes.len()
+        ));
     }
     output.push_str(&format!(
         "source-backed observation: {}",

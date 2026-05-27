@@ -104,7 +104,10 @@ registered sources are eligible for scored independent position observations.
 Use `init-position-observations` to create the JSON file for a future
 source-backed observation; it refuses placeholders, duplicate positions, public
 anchor positions, out-of-range positions, disallowed source uses, and accidental
-overwrites before the validator/evaluator commands can score the file.
+overwrites before the validator/evaluator commands can score the file. Scored
+observation files must also include a `position_notes` entry for every
+one-based position so a later archive reviewer can audit why each position was
+included.
 
 Direct `evaluate-period-prediction --positions ...` and
 `evaluate-spacing-prediction --positions ...` runs are diagnostic only. They can

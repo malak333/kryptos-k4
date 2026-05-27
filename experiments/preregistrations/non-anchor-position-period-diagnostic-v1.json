@@ -13,7 +13,7 @@
   ],
   "evaluation_inputs": [
     "Source-backed non-anchor position observations that are not public EAST, NORTHEAST, BERLIN, or CLOCK anchor fragments.",
-    "Observation files that declare source IDs, one-based positions, and rationale before evaluation."
+    "Observation files that declare source IDs, one-based positions, per-position notes, and rationale before evaluation."
   ],
   "controls": [
     "seeded shuffle baseline over non-anchor positions",

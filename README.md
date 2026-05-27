@@ -90,9 +90,11 @@ while the spacing family is the second unique ready target.
 Observation files must cite registered sources whose `allowed_use` boundary is
 compatible with scored independent position evidence. Public-anchor summary,
 public-clue context, methodology context, and archive-context-only sources are
-rejected for scoring. The observation template intentionally has an empty
-`positions_one_based` list, so copied lanes cannot accidentally score synthetic
-example positions.
+rejected for scoring. Source-backed observation files must include
+`position_notes`, one note per listed position, so each scored position remains
+auditable. The observation template intentionally has an empty
+`positions_one_based` list and empty `position_notes` map, so copied lanes
+cannot accidentally score synthetic example positions.
 
 Direct `evaluate-period-prediction --positions ...` and
 `evaluate-spacing-prediction --positions ...` runs are diagnostic only.
@@ -210,9 +212,9 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `validate-preregistration` | Gate for proposed new lanes in Markdown or JSON; rejects reuse of public anchor-derived fragments as discovery inputs or primary evidence. |
 | `validate-prediction-artifact` | Gate for committed independent prediction artifacts in Markdown or JSON; checks the preregistration and deterministic generator output still match. |
 | `independent-lane-status` | Operational summary of preregistered independent lanes, artifact validity, readiness for source-backed observations, family summaries, unique ready prediction artifacts, duplicate artifact groups, and next required validator/evaluator command. |
-| `init-position-observations` | Guarded source-backed observation-file creator in Markdown or JSON; writes only registered-source, non-anchor K4 positions and refuses placeholders, disallowed source uses, duplicate positions, anchors, out-of-range positions, and accidental overwrites unless `--force` is passed. |
-| `validate-period-observations` | Gate for source-backed independent position observations in Markdown or JSON; can also validate the prediction artifact preregistration, and rejects unregistered or disallowed source IDs, duplicates, and public-anchor positions before scoring. |
-| `validate-spacing-observations` | Gate for source-backed independent position observations before spacing scoring in Markdown or JSON; can also validate the spacing prediction artifact preregistration. |
+| `init-position-observations` | Guarded source-backed observation-file creator in Markdown or JSON; writes only registered-source, non-anchor K4 positions plus per-position notes and refuses placeholders, disallowed source uses, duplicate positions, anchors, out-of-range positions, and accidental overwrites unless `--force` is passed. |
+| `validate-period-observations` | Gate for source-backed independent position observations in Markdown or JSON; can also validate the prediction artifact preregistration, and rejects unregistered or disallowed source IDs, missing position notes, duplicates, and public-anchor positions before scoring. |
+| `validate-spacing-observations` | Gate for source-backed independent position observations with per-position notes before spacing scoring in Markdown or JSON; can also validate the spacing prediction artifact preregistration. |
 | `period-prediction-plan` | Emits non-anchor K4 position residue classes for one or all registered periods in Markdown or JSON without scoring fragment values or candidate material. |
 | `spacing-prediction-plan` | Emits non-anchor K4 spacing residue classes for registered moduli in Markdown or JSON without scoring fragment values or candidate material. |
 | `evaluate-period-prediction` | Scores independently supplied one-based non-anchor positions against a committed period prediction artifact with a best-of-period null control in Markdown or JSON; marks quick `--positions` input as diagnostic, requires `--preregistration` for source-backed `--positions-file` JSON records, and can archive `artifact.json`, `preregistration.json`, `observations.json`, `result.json`, `summary.md`, and `command.txt` with `--output-dir`. |

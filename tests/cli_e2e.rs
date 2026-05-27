@@ -1727,6 +1727,12 @@ fn init_position_observations_writes_guarded_source_backed_file() {
     assert_eq!(file_json["id"], "source-backed-observation-v1");
     assert_eq!(file_json["source_ids"][0], "cia-artifact");
     assert_eq!(file_json["positions_one_based"][0], 1);
+    assert!(
+        file_json["position_notes"]["1"]
+            .as_str()
+            .unwrap()
+            .contains("one-based K4 position 1")
+    );
 
     Command::cargo_bin("kryptos-k4")
         .unwrap()
@@ -1903,6 +1909,11 @@ fn evaluate_period_prediction_accepts_source_backed_position_file() {
   "id": "synthetic-non-anchor-test",
   "source_ids": ["cia-artifact"],
   "positions_one_based": [1, 4, 7],
+  "position_notes": {
+    "1": "Synthetic source-backed note for position 1.",
+    "4": "Synthetic source-backed note for position 4.",
+    "7": "Synthetic source-backed note for position 7."
+  },
   "rationale": "Synthetic CLI test fixture for the observation-file input path."
 }"#,
     )
@@ -1960,6 +1971,10 @@ fn evaluate_period_prediction_accepts_source_backed_position_file() {
     )
     .unwrap();
     assert_eq!(archived_observations["id"], "synthetic-non-anchor-test");
+    assert_eq!(
+        archived_observations["position_notes"]["1"],
+        "Synthetic source-backed note for position 1."
+    );
     let archived_json: Value =
         serde_json::from_str(&std::fs::read_to_string(output_dir.join("result.json")).unwrap())
             .unwrap();
@@ -2063,6 +2078,11 @@ fn evaluate_spacing_prediction_accepts_source_backed_position_file() {
   "id": "synthetic-spacing-test",
   "source_ids": ["cia-artifact"],
   "positions_one_based": [1, 3, 5],
+  "position_notes": {
+    "1": "Synthetic source-backed note for position 1.",
+    "3": "Synthetic source-backed note for position 3.",
+    "5": "Synthetic source-backed note for position 5."
+  },
   "rationale": "Synthetic CLI test fixture for the spacing observation-file input path."
 }"#,
     )
@@ -2169,6 +2189,11 @@ fn validate_evaluation_archive_rejects_wrong_evaluator_command() {
   "id": "synthetic-command-mismatch-test",
   "source_ids": ["cia-artifact"],
   "positions_one_based": [1, 4, 7],
+  "position_notes": {
+    "1": "Synthetic source-backed note for position 1.",
+    "4": "Synthetic source-backed note for position 4.",
+    "7": "Synthetic source-backed note for position 7."
+  },
   "rationale": "Synthetic CLI test fixture for archive command mismatch validation."
 }"#,
     )
@@ -2231,6 +2256,11 @@ fn validate_evaluation_archive_rejects_tampered_source_backed_observations() {
   "id": "synthetic-tamper-test",
   "source_ids": ["cia-artifact"],
   "positions_one_based": [1, 4, 7],
+  "position_notes": {
+    "1": "Synthetic source-backed note for position 1.",
+    "4": "Synthetic source-backed note for position 4.",
+    "7": "Synthetic source-backed note for position 7."
+  },
   "rationale": "Synthetic CLI test fixture for archive tamper validation."
 }"#,
     )
@@ -2263,6 +2293,8 @@ fn validate_evaluation_archive_rejects_tampered_source_backed_observations() {
     )
     .unwrap();
     observations["positions_one_based"] = serde_json::json!([22]);
+    observations["position_notes"] =
+        serde_json::json!({"22": "Tampered source-backed note for position 22."});
     std::fs::write(
         output_dir.join("observations.json"),
         serde_json::to_string_pretty(&observations).unwrap(),
@@ -2308,6 +2340,11 @@ fn validate_evaluation_archive_rejects_preregistration_artifact_family_mismatch(
   "id": "synthetic-family-mismatch-test",
   "source_ids": ["cia-artifact"],
   "positions_one_based": [1, 4, 7],
+  "position_notes": {
+    "1": "Synthetic source-backed note for position 1.",
+    "4": "Synthetic source-backed note for position 4.",
+    "7": "Synthetic source-backed note for position 7."
+  },
   "rationale": "Synthetic CLI test fixture for archive family mismatch validation."
 }"#,
     )
@@ -2400,6 +2437,11 @@ fn validate_period_observations_accepts_source_backed_non_anchor_positions() {
   "id": "synthetic-validation-test",
   "source_ids": ["cia-artifact"],
   "positions_one_based": [1, 4, 7],
+  "position_notes": {
+    "1": "Synthetic source-backed note for position 1.",
+    "4": "Synthetic source-backed note for position 4.",
+    "7": "Synthetic source-backed note for position 7."
+  },
   "rationale": "Synthetic CLI test fixture for observation validation."
 }"#,
     )
@@ -2448,6 +2490,11 @@ fn validate_spacing_observations_accepts_source_backed_non_anchor_positions() {
   "id": "synthetic-spacing-validation-test",
   "source_ids": ["cia-artifact"],
   "positions_one_based": [1, 3, 5],
+  "position_notes": {
+    "1": "Synthetic source-backed note for position 1.",
+    "3": "Synthetic source-backed note for position 3.",
+    "5": "Synthetic source-backed note for position 5."
+  },
   "rationale": "Synthetic CLI test fixture for spacing observation validation."
 }"#,
     )
@@ -2484,6 +2531,40 @@ fn validate_spacing_observations_accepts_source_backed_non_anchor_positions() {
     );
     assert_eq!(json["observed_position_count"], 3);
     assert_eq!(json["promoted_candidate"], false);
+}
+
+#[test]
+fn validate_period_observations_requires_position_notes() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("observations.json");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "missing-position-notes-test",
+  "source_ids": ["cia-artifact"],
+  "positions_one_based": [1, 4, 7],
+  "rationale": "Synthetic CLI test fixture for position-note validation."
+}"#,
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-period-observations",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-period-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-period-v1.json",
+            "--input",
+            observations_path.to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("position_notes"))
+        .stderr(predicate::str::contains(
+            "period observations failed validation",
+        ));
 }
 
 #[test]
