@@ -76,6 +76,14 @@ placeholder notes, and archived source-backed evaluations require
 `observation_position_notes`. This keeps future non-anchor evidence auditable
 before any scoring result can be interpreted.
 
+Next-evidence-gate checklist added: `next-evidence-gate` now joins the live
+independent-lane inventory with `observation-sources` and emits the exact
+scaffold, validation, evaluation, and archive-validation commands required for
+period and spacing prediction families. The command reports 14 ready lanes but
+only 2 unique ready prediction artifacts, and only `cia-artifact` and
+`cia-sculpture` are eligible scored-observation sources. This is an operational
+gate, not evidence or a promoted K4 result.
+
 ## 2026-05-25: Methodology Context Source
 
 The public KryptosBot methodology page is now registered as

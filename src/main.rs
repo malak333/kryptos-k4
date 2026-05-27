@@ -3,10 +3,10 @@ use clap::{Parser, Subcommand, ValueEnum};
 use kryptos_k4::{
     AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, BatchKeyMaterialCandidate,
     BatchKeyMaterialRun, BatchKeyRunHistory, CandidateTransform, FragmentMode,
-    HeldoutKeyControlRun, IndependentLaneStatusReport, K4_CIPHERTEXT, KeyMaterialExplanation,
-    KeyMaterialOffsetSweep, KeyMaterialTest, LanePreregistration, PeriodPredictionEvaluation,
-    PeriodPredictionPlan, PeriodPredictionPlanSet, PositionStructureRun,
-    PredictionArtifactValidation, PreregistrationValidation, ReportFormat,
+    HeldoutKeyControlRun, IndependentLaneStatus, IndependentLaneStatusReport, K4_CIPHERTEXT,
+    KeyMaterialExplanation, KeyMaterialOffsetSweep, KeyMaterialTest, LanePreregistration,
+    PeriodPredictionEvaluation, PeriodPredictionPlan, PeriodPredictionPlanSet,
+    PositionStructureRun, PredictionArtifactValidation, PreregistrationValidation, ReportFormat,
     RoutedBatchKeyMaterialRun, SpacingPredictionEvaluation, SpacingPredictionPlanSet,
     StructuralModelRun, analyze_constraints, analyze_known_plaintext_spans,
     batch_test_key_material_with_batch_baseline, batch_test_routed_key_material,
@@ -281,6 +281,15 @@ enum Command {
     },
     /// Summarize preregistered independent lanes and their next required gate.
     IndependentLaneStatus {
+        /// Directory containing lane preregistration JSON files.
+        #[arg(long, default_value = "experiments/preregistrations")]
+        directory: PathBuf,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Print the next source-backed evidence gate and exact command sequence.
+    NextEvidenceGate {
         /// Directory containing lane preregistration JSON files.
         #[arg(long, default_value = "experiments/preregistrations")]
         directory: PathBuf,
@@ -584,6 +593,33 @@ struct ObservationSourceEligibility {
     allowed_use: &'static str,
     eligible_for_scored_observations: bool,
     reason: String,
+}
+
+#[derive(Debug, Serialize)]
+struct NextEvidenceGateReport {
+    lane_directory: String,
+    ready_lanes: usize,
+    invalid_lanes: usize,
+    unique_ready_prediction_artifacts: usize,
+    eligible_source_ids: Vec<String>,
+    ineligible_source_count: usize,
+    required_observation_fields: Vec<&'static str>,
+    gates: Vec<NextEvidenceGate>,
+    promoted_candidate: bool,
+    note: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct NextEvidenceGate {
+    hypothesis_family: String,
+    ready_lanes: usize,
+    unique_ready_prediction_artifacts: usize,
+    representative_preregistration: String,
+    representative_artifact: String,
+    observation_scaffold_command: String,
+    validation_command: String,
+    evaluation_command: String,
+    archive_validation_command: String,
 }
 
 #[derive(Debug, Clone, Copy, ValueEnum)]
@@ -1161,6 +1197,9 @@ fn main() -> Result<()> {
         } => print_validate_prediction_artifact(preregistration, format)?,
         Command::IndependentLaneStatus { directory, format } => {
             print_independent_lane_status(directory, format)?
+        }
+        Command::NextEvidenceGate { directory, format } => {
+            print_next_evidence_gate(directory, format)?
         }
         Command::InitPositionObservations {
             id,
@@ -2953,6 +2992,175 @@ fn print_independent_lane_status(directory: PathBuf, format: OutputFormat) -> Re
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&report)?),
         OutputFormat::Markdown => print_independent_lane_status_report(&report),
+    }
+    Ok(())
+}
+
+fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateReport> {
+    let lane_report = summarize_independent_lanes(directory)?;
+    let source_report = observation_source_eligibility_report();
+    let eligible_source_ids = source_report
+        .sources
+        .iter()
+        .filter(|source| source.eligible_for_scored_observations)
+        .map(|source| source.id.to_string())
+        .collect::<Vec<_>>();
+
+    let mut gates = Vec::new();
+    for family in &lane_report.family_summaries {
+        if family.unique_ready_prediction_artifacts == 0 {
+            continue;
+        }
+        let Some(lane) = representative_ready_lane(&lane_report, &family.hypothesis_family) else {
+            continue;
+        };
+        let Some(preregistration) = lane.id.as_ref().map(|_| lane.path.clone()) else {
+            continue;
+        };
+        let Some(artifact) = lane.prediction_artifact.clone() else {
+            continue;
+        };
+
+        let (validation_command, evaluation_command, archive_validation_command) =
+            evidence_gate_commands(&family.hypothesis_family, &artifact, &preregistration);
+        gates.push(NextEvidenceGate {
+            hypothesis_family: family.hypothesis_family.clone(),
+            ready_lanes: family.ready_for_source_backed_observations,
+            unique_ready_prediction_artifacts: family.unique_ready_prediction_artifacts,
+            representative_preregistration: preregistration,
+            representative_artifact: artifact,
+            observation_scaffold_command:
+                "cargo run --locked -- init-position-observations --id <observation-id> --source-id <eligible-source-id> --positions <comma-separated-non-anchor-positions> --rationale \"<source-backed rationale>\" --position-note \"<position>=<source-backed note>\" --output <source-backed-observations.json>"
+                    .to_string(),
+            validation_command,
+            evaluation_command,
+            archive_validation_command,
+        });
+    }
+
+    Ok(NextEvidenceGateReport {
+        lane_directory: lane_report.directory,
+        ready_lanes: lane_report.ready_for_source_backed_observations,
+        invalid_lanes: lane_report.invalid_lanes,
+        unique_ready_prediction_artifacts: lane_report.unique_ready_prediction_artifacts,
+        eligible_source_ids,
+        ineligible_source_count: source_report.ineligible_count,
+        required_observation_fields: vec![
+            "registered eligible source ID",
+            "one-based non-anchor K4 positions",
+            "source-backed rationale",
+            "one non-empty position_notes entry per scored position",
+        ],
+        gates,
+        promoted_candidate: false,
+        note: "Next-evidence-gate output is an operational checklist for future source-backed observations; it is not a claimed solution.",
+    })
+}
+
+fn representative_ready_lane<'a>(
+    report: &'a IndependentLaneStatusReport,
+    hypothesis_family: &str,
+) -> Option<&'a IndependentLaneStatus> {
+    let lanes = report
+        .lanes
+        .iter()
+        .filter(|lane| {
+            lane.hypothesis_family.as_deref() == Some(hypothesis_family)
+                && lane.ready_for_source_backed_observations
+                && lane.prediction_artifact.is_some()
+        })
+        .collect::<Vec<_>>();
+    lanes
+        .iter()
+        .find(|lane| {
+            matches!(
+                lane.id.as_deref(),
+                Some("non-anchor-position-period-v1") | Some("non-anchor-position-spacing-v1")
+            )
+        })
+        .copied()
+        .or_else(|| lanes.first().copied())
+}
+
+fn evidence_gate_commands(
+    hypothesis_family: &str,
+    artifact: &str,
+    preregistration: &str,
+) -> (String, String, String) {
+    match hypothesis_family {
+        "position-spacing-prediction" => (
+            format!(
+                "cargo run --locked -- validate-spacing-observations --artifact {artifact} --preregistration {preregistration} --input <source-backed-observations.json> --format json"
+            ),
+            format!(
+                "cargo run --locked -- evaluate-spacing-prediction --artifact {artifact} --preregistration {preregistration} --positions-file <source-backed-observations.json> --iterations 100000 --seed 67 --output-dir results/spacing-observations/<observation-id> --format json"
+            ),
+            "cargo run --locked -- validate-evaluation-archive --input results/spacing-observations/<observation-id> --format json".to_string(),
+        ),
+        _ => (
+            format!(
+                "cargo run --locked -- validate-period-observations --artifact {artifact} --preregistration {preregistration} --input <source-backed-observations.json> --format json"
+            ),
+            format!(
+                "cargo run --locked -- evaluate-period-prediction --artifact {artifact} --preregistration {preregistration} --positions-file <source-backed-observations.json> --iterations 100000 --seed 67 --output-dir results/period-observations/<observation-id> --format json"
+            ),
+            "cargo run --locked -- validate-evaluation-archive --input results/period-observations/<observation-id> --format json".to_string(),
+        ),
+    }
+}
+
+fn print_next_evidence_gate(directory: PathBuf, format: OutputFormat) -> Result<()> {
+    let report = build_next_evidence_gate_report(&directory)?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&report)?),
+        OutputFormat::Markdown => {
+            println!("# Next Evidence Gate\n");
+            println!("This is not a claimed solution.\n");
+            println!("lane directory: `{}`", report.lane_directory);
+            println!("ready lanes: {}", report.ready_lanes);
+            println!(
+                "unique ready prediction artifacts: {}",
+                report.unique_ready_prediction_artifacts
+            );
+            println!(
+                "eligible scored-observation sources: {}",
+                report.eligible_source_ids.join(", ")
+            );
+            println!("ineligible sources: {}", report.ineligible_source_count);
+            println!("promoted: {}", report.promoted_candidate);
+            println!("note: {}\n", report.note);
+            println!("required observation fields:");
+            for field in &report.required_observation_fields {
+                println!("- {field}");
+            }
+            println!("\n## Gates\n");
+            for gate in &report.gates {
+                println!("### {}", gate.hypothesis_family);
+                println!("ready lanes: {}", gate.ready_lanes);
+                println!(
+                    "unique ready artifacts: {}",
+                    gate.unique_ready_prediction_artifacts
+                );
+                println!(
+                    "representative preregistration: `{}`",
+                    gate.representative_preregistration
+                );
+                println!(
+                    "representative artifact: `{}`",
+                    gate.representative_artifact
+                );
+                println!(
+                    "scaffold:\n```bash\n{}\n```",
+                    gate.observation_scaffold_command
+                );
+                println!("validate:\n```bash\n{}\n```", gate.validation_command);
+                println!("evaluate:\n```bash\n{}\n```", gate.evaluation_command);
+                println!(
+                    "archive check:\n```bash\n{}\n```\n",
+                    gate.archive_validation_command
+                );
+            }
+        }
     }
     Ok(())
 }

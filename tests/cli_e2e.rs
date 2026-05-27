@@ -178,6 +178,7 @@ fn facts_hypotheses_sources_and_help_are_covered() {
         .stdout(predicate::str::contains("validate-period-observations"))
         .stdout(predicate::str::contains("validate-spacing-observations"))
         .stdout(predicate::str::contains("independent-lane-status"))
+        .stdout(predicate::str::contains("next-evidence-gate"))
         .stdout(predicate::str::contains("init-position-observations"))
         .stdout(predicate::str::contains("observation-sources"))
         .stdout(predicate::str::contains("evaluate-period-prediction"))
@@ -1882,6 +1883,72 @@ fn observation_sources_reports_scoring_eligible_sources() {
     }));
     assert!(json["sources"].as_array().unwrap().iter().any(|source| {
         source["id"] == "elonka-kryptos" && source["eligible_for_scored_observations"] == false
+    }));
+}
+
+#[test]
+fn next_evidence_gate_prints_operational_checklist() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .arg("next-evidence-gate")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Next Evidence Gate"))
+        .stdout(predicate::str::contains("ready lanes: 14"))
+        .stdout(predicate::str::contains(
+            "unique ready prediction artifacts: 2",
+        ))
+        .stdout(predicate::str::contains("cia-artifact, cia-sculpture"))
+        .stdout(predicate::str::contains("validate-period-observations"))
+        .stdout(predicate::str::contains("evaluate-period-prediction"))
+        .stdout(predicate::str::contains("validate-spacing-observations"))
+        .stdout(predicate::str::contains("evaluate-spacing-prediction"))
+        .stdout(predicate::str::contains("validate-evaluation-archive"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["next-evidence-gate", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["ready_lanes"], 14);
+    assert_eq!(json["invalid_lanes"], 0);
+    assert_eq!(json["unique_ready_prediction_artifacts"], 2);
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(
+        json["eligible_source_ids"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|source| source == "cia-artifact")
+    );
+    let gates = json["gates"].as_array().unwrap();
+    assert_eq!(gates.len(), 2);
+    assert!(gates.iter().any(|gate| {
+        gate["hypothesis_family"] == "position-period-prediction"
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("validate-period-observations")
+            && gate["evaluation_command"]
+                .as_str()
+                .unwrap()
+                .contains("evaluate-period-prediction")
+    }));
+    assert!(gates.iter().any(|gate| {
+        gate["hypothesis_family"] == "position-spacing-prediction"
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("validate-spacing-observations")
+            && gate["evaluation_command"]
+                .as_str()
+                .unwrap()
+                .contains("evaluate-spacing-prediction")
     }));
 }
 

@@ -50,6 +50,7 @@ cargo run -- validate-prediction-artifact --preregistration experiments/preregis
 cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-spacing-v1.json --format json
 cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-spacing-v1.json --format json
 cargo run -- independent-lane-status --format json
+cargo run -- next-evidence-gate --format json
 cargo run -- init-position-observations --id future-observation-v1 --source-id cia-artifact --positions 1,4,7 --rationale "Source-backed non-anchor observation rationale." --position-note "1=Source note for position 1." --position-note "4=Source note for position 4." --position-note "7=Source note for position 7." --output results/key-tests/future-observation-v1.json
 cargo run -- period-prediction-plan --period 3
 cargo run -- period-prediction-plan --all
@@ -86,6 +87,10 @@ cargo run -- report --format json
 `independent-lane-status` includes a family summary that should be used as the
 current evidence count: the period-family files share one deterministic target,
 while the spacing family is the second unique ready target.
+`next-evidence-gate` combines the live lane inventory with source eligibility
+and prints the exact scaffold, validation, evaluation, and archive-check
+commands that must pass before future source-backed observations can be
+interpreted.
 
 Observation files must cite registered sources whose `allowed_use` boundary is
 compatible with scored independent position evidence. Public-anchor summary,
@@ -221,6 +226,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `validate-preregistration` | Gate for proposed new lanes in Markdown or JSON; rejects reuse of public anchor-derived fragments as discovery inputs or primary evidence. |
 | `validate-prediction-artifact` | Gate for committed independent prediction artifacts in Markdown or JSON; checks the preregistration and deterministic generator output still match. |
 | `independent-lane-status` | Operational summary of preregistered independent lanes, artifact validity, readiness for source-backed observations, family summaries, unique ready prediction artifacts, duplicate artifact groups, and next required validator/evaluator command. |
+| `next-evidence-gate` | Operational checklist combining independent-lane readiness, eligible observation sources, required observation fields, and exact scaffold/validate/evaluate/archive commands before source-backed scoring. |
 | `init-position-observations` | Guarded source-backed observation-file creator in Markdown or JSON; writes only registered-source, non-anchor K4 positions plus per-position notes and refuses placeholders, disallowed source uses, duplicate positions, anchors, out-of-range positions, and accidental overwrites unless `--force` is passed. |
 | `validate-period-observations` | Gate for source-backed independent position observations in Markdown or JSON; can also validate the prediction artifact preregistration, and rejects unregistered or disallowed source IDs, missing position notes, duplicates, and public-anchor positions before scoring. |
 | `validate-spacing-observations` | Gate for source-backed independent position observations with per-position notes before spacing scoring in Markdown or JSON; can also validate the spacing prediction artifact preregistration. |
