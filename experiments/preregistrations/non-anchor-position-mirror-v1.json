@@ -1,0 +1,29 @@
+{
+  "id": "non-anchor-position-mirror-v1",
+  "title": "Non-anchor mirror-pair prediction",
+  "hypothesis_family": "position-mirror-prediction",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [
+    "cia-artifact",
+    "cia-sculpture"
+  ],
+  "rationale": "Predeclare a physical-symmetry target from registered sculpture context before any future non-anchor observation scoring. This is a distinct structural target, not another candidate-word or public-fragment mining pass.",
+  "prediction_target": "Future independently documented non-anchor K4 position observations should show enrichment or closure among one-based mirror pairs across the 97-character axis if physical front/back orientation is relevant.",
+  "prediction_artifact": "experiments/predictions/non-anchor-position-mirror-v1.json",
+  "discovery_inputs": [
+    "K4 ciphertext length of 97 characters",
+    "Registered CIA source-review context for the physical copper screen and back-side chart orientation",
+    "Predeclared one-based mirror rule: position i pairs with position 98-i"
+  ],
+  "evaluation_inputs": [
+    "Future independently documented non-anchor K4 position observations",
+    "Source-backed position sets not used to construct the mirror-pair artifact"
+  ],
+  "controls": [
+    "seeded null over sampled non-anchor position sets",
+    "multiple-comparison correction if evaluated beside period or spacing families",
+    "validate-mirror-observations and evaluate-mirror-prediction required before interpreting source-backed observations"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

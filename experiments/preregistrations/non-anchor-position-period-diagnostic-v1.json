@@ -9,7 +9,7 @@
   "prediction_artifact": "experiments/predictions/non-anchor-position-period-diagnostic-v1.json",
   "discovery_inputs": [
     "Predeclared period-residue rule over non-anchor K4 positions only.",
-    "Registered period set {2,3,4,5,7,8,13} emitted before any observation scoring."
+    "Registered period set {2,3,4,5,7,8,13,14} emitted before any observation scoring."
   ],
   "evaluation_inputs": [
     "Source-backed non-anchor position observations that are not public EAST, NORTHEAST, BERLIN, or CLOCK anchor fragments.",

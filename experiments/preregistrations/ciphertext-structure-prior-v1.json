@@ -1,0 +1,32 @@
+{
+  "id": "ciphertext-structure-prior-v1",
+  "title": "Ciphertext-only structure prior",
+  "hypothesis_family": "ciphertext-only-position-prior",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane predeclares a ciphertext-only position prior before scoring any source-backed observations. It is not another public-anchor mining pass because discovery uses only K4 ciphertext repeated-ngram gap factors, shifted ciphertext coincidences, and seeded letter-shuffle diagnostics; public anchor positions are used only to exclude anchor ranges from future residue targets.",
+  "prediction_target": "Future source-reviewed non-anchor K4 position observations should be enriched in the predeclared ciphertext-derived residue classes for the selected periods only if they beat same-size non-anchor position-shuffle, selected-period, and multiple-comparison controls.",
+  "prediction_artifact": "experiments/predictions/ciphertext-structure-prior-v1.json",
+  "discovery_inputs": [
+    "Public K4 ciphertext letters only",
+    "Repeated n-gram gap-factor profile over ciphertext positions",
+    "Shifted ciphertext coincidence profile over ciphertext positions",
+    "Seeded letter-shuffle diagnostics preserving the K4 ciphertext letter multiset",
+    "Known solved clue positions used only as an exclusion mask for future non-anchor targets"
+  ],
+  "evaluation_inputs": [
+    "Future source-reviewed non-anchor K4 position observations selected before scoring",
+    "Observation files with per-position source notes and validation against the registered non-anchor universe",
+    "Independent target positions that are not public known-plaintext anchor fragments and are not derived from anchor additive-key values"
+  ],
+  "controls": [
+    "seeded ciphertext letter-shuffle diagnostics for selecting weak prior periods",
+    "seeded same-size non-anchor position-shuffle baseline for observation scoring",
+    "best-of-selected-period null control",
+    "multiple-comparison correction before interpretation",
+    "source-review gate before observation scoring",
+    "promotion blocked unless future independent observations beat all predeclared controls without post-hoc retuning"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

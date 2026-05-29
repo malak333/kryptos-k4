@@ -4,6 +4,7 @@ source_id: `cia-artifact`
 source_url: https://www.cia.gov/legacy/museum/artifact/kryptos/
 reviewed_at: 2026-05-27
 archive_kind: quote-free local review snapshot
+non_scorable_reason: Reviewed facts provide installation and artwork context but no one-based non-anchor K4 positions or position-selection rule.
 promoted_candidate: false
 
 This local snapshot records what was reviewed before selecting any scored

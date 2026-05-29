@@ -1,4 +1,5 @@
 use assert_cmd::Command;
+use kryptos_k4::{K4_CIPHERTEXT, known_anchors};
 use predicates::prelude::*;
 use serde_json::Value;
 use std::collections::HashSet;
@@ -166,6 +167,34 @@ fn facts_hypotheses_sources_and_help_are_covered() {
         source["id"] == "kryptosbot-sanborn-papers-2026"
             && source["allowed_use"] == "archive-context-only"
     }));
+    assert!(json.as_array().unwrap().iter().any(|source| {
+        source["id"] == "smithsonian-2026-archive-discovery"
+            && source["allowed_use"] == "archive-context-only"
+    }));
+    assert!(json.as_array().unwrap().iter().any(|source| {
+        source["id"] == "nsa-kryptos-doc1-resolution-memo"
+            && source["allowed_use"] == "archive-context-only"
+    }));
+    assert!(json.as_array().unwrap().iter().any(|source| {
+        source["id"] == "nsa-declassified-kryptos-doc3"
+            && source["allowed_use"] == "archive-context-only"
+    }));
+    assert!(json.as_array().unwrap().iter().any(|source| {
+        source["id"] == "nsa-kryptos-foia-release-index"
+            && source["allowed_use"] == "archive-context-only"
+    }));
+    assert!(json.as_array().unwrap().iter().any(|source| {
+        source["id"] == "nsa-kryptos-summary-revelations"
+            && source["allowed_use"] == "archive-context-only"
+    }));
+    assert!(json.as_array().unwrap().iter().any(|source| {
+        source["id"] == "nsa-kryptos-doc8-cryptogram"
+            && source["allowed_use"] == "public-anchor-summary"
+    }));
+    assert!(json.as_array().unwrap().iter().any(|source| {
+        source["id"] == "solvekryptos-2026-claim"
+            && source["allowed_use"] == "unverified-solution-claim"
+    }));
 
     Command::cargo_bin("kryptos-k4")
         .unwrap()
@@ -179,16 +208,842 @@ fn facts_hypotheses_sources_and_help_are_covered() {
         .stdout(predicate::str::contains("validate-spacing-observations"))
         .stdout(predicate::str::contains("independent-lane-status"))
         .stdout(predicate::str::contains("next-evidence-gate"))
+        .stdout(predicate::str::contains("ciphertext-profile"))
+        .stdout(predicate::str::contains("ciphertext-structure-prior"))
+        .stdout(predicate::str::contains("evaluate-ciphertext-prior"))
         .stdout(predicate::str::contains("independent-evidence-status"))
         .stdout(predicate::str::contains("source-review-status"))
+        .stdout(predicate::str::contains("source-observation-status"))
         .stdout(predicate::str::contains("source-review-packet"))
+        .stdout(predicate::str::contains("source-frontier"))
         .stdout(predicate::str::contains("init-source-review"))
         .stdout(predicate::str::contains("validate-source-review"))
         .stdout(predicate::str::contains("non-anchor-positions"))
         .stdout(predicate::str::contains("init-position-observations"))
         .stdout(predicate::str::contains("observation-sources"))
+        .stdout(predicate::str::contains("verify-plaintext-claim"))
+        .stdout(predicate::str::contains("verify-claim-reconciliation"))
+        .stdout(predicate::str::contains("mirror-prediction-plan"))
+        .stdout(predicate::str::contains("grid-layout-prediction-plan"))
         .stdout(predicate::str::contains("evaluate-period-prediction"))
-        .stdout(predicate::str::contains("evaluate-spacing-prediction"));
+        .stdout(predicate::str::contains("evaluate-spacing-prediction"))
+        .stdout(predicate::str::contains("validate-mirror-observations"))
+        .stdout(predicate::str::contains("evaluate-mirror-prediction"))
+        .stdout(predicate::str::contains("validate-grid-observations"))
+        .stdout(predicate::str::contains(
+            "validate-tableau-hill-observations",
+        ))
+        .stdout(predicate::str::contains("evaluate-grid-prediction"))
+        .stdout(predicate::str::contains("evaluate-tableau-hill-prediction"));
+}
+
+#[test]
+fn ciphertext_profile_is_ciphertext_only_and_parseable() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "ciphertext-profile",
+            "--max-period",
+            "8",
+            "--max-ngram",
+            "3",
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("K4 Ciphertext Profile"))
+        .stdout(predicate::str::contains("This is not a claimed solution."))
+        .stdout(predicate::str::contains("index of coincidence:"))
+        .stdout(predicate::str::contains(
+            "Repeated N-gram Spacing Diagnostics",
+        ))
+        .stdout(predicate::str::contains("Repeated N-gram Spacing Baseline"))
+        .stdout(predicate::str::contains("Period Coincidence Diagnostics"))
+        .stdout(predicate::str::contains("Ciphertext-Only Baseline"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "ciphertext-profile",
+            "--max-period",
+            "8",
+            "--max-ngram",
+            "3",
+            "--top",
+            "5",
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["ciphertext_length"], 97);
+    assert_eq!(json["period_profiles"].as_array().unwrap().len(), 8);
+    assert_eq!(json["kasiski_factor_profiles"].as_array().unwrap().len(), 7);
+    assert_eq!(json["baseline"]["iterations"], 100);
+    assert_eq!(json["kasiski_baseline"]["iterations"], 100);
+    assert!(
+        json["kasiski_factor_profiles"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|period| period["period"] == 2
+                && period["supporting_gaps"]
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .all(|gap| {
+                        gap["right_position_one_based"].as_u64().unwrap()
+                            > gap["left_position_one_based"].as_u64().unwrap()
+                    }))
+    );
+    assert!(
+        json["period_profiles"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|period| {
+                period["period"] == 7
+                    && period["shifted_matches"]
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .all(|shifted_match| {
+                            shifted_match["right_position_one_based"].as_u64().unwrap()
+                                > shifted_match["left_position_one_based"].as_u64().unwrap()
+                        })
+            })
+    );
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(json["note"].as_str().unwrap().contains("ciphertext-only"));
+    assert!(json["letter_frequencies"].as_array().unwrap().iter().any(
+        |frequency| frequency["letter"] == "K" && frequency["count"].as_u64().unwrap() > 1
+    ));
+    assert!(json["repeated_ngrams"].as_array().unwrap().len() <= 5);
+}
+
+#[test]
+fn ciphertext_structure_prior_is_planning_only_and_parseable() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "ciphertext-structure-prior",
+            "--max-period",
+            "20",
+            "--max-ngram",
+            "4",
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Ciphertext Structure Prior"))
+        .stdout(predicate::str::contains("This is not a claimed solution."))
+        .stdout(predicate::str::contains("repeated-ngram-gap-factor"))
+        .stdout(predicate::str::contains("shifted-ciphertext-coincidence"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "ciphertext-structure-prior",
+            "--max-period",
+            "20",
+            "--max-ngram",
+            "4",
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["artifact_kind"], "ciphertext-structure-prior");
+    assert_eq!(json["hypothesis_family"], "ciphertext-only-position-prior");
+    assert_eq!(json["promoted_candidate"], false);
+    assert_eq!(json["public_anchor_fragments_used_for_discovery"], false);
+    assert_eq!(
+        json["public_anchor_fragments_used_as_primary_evidence"],
+        false
+    );
+    assert!(
+        json["selected_periods"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|period| period["period"] == 2
+                && period["support_kind"] == "repeated-ngram-gap-factor")
+    );
+    assert!(
+        json["selected_periods"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|period| period["period"] == 7
+                && period["support_kind"] == "shifted-ciphertext-coincidence")
+    );
+}
+
+#[test]
+fn evaluate_ciphertext_prior_scores_source_backed_positions_without_promotion() {
+    let temp = tempfile::tempdir().unwrap();
+    let archive_dir = temp.path().join("ciphertext-prior-archive");
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-ciphertext-prior-observations",
+            "--artifact",
+            "experiments/predictions/ciphertext-structure-prior-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/ciphertext-structure-prior-v1.json",
+            "--input",
+            "experiments/position-observations/cia-k4-row-boundaries-v1.json",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("\"valid\": true"))
+        .stdout(predicate::str::contains("\"artifact_valid\": true"))
+        .stdout(predicate::str::contains(
+            "\"artifact_path\": \"experiments/predictions/ciphertext-structure-prior-v1.json\"",
+        ));
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-ciphertext-prior",
+            "--positions-file",
+            "experiments/position-observations/cia-k4-row-boundaries-v1.json",
+            "--prior-iterations",
+            "100",
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+            "--prior-seed",
+            "67",
+            "--output-dir",
+            archive_dir.to_str().unwrap(),
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Ciphertext Prior Evaluation"))
+        .stdout(predicate::str::contains("This is not a claimed solution."))
+        .stdout(predicate::str::contains(
+            "observation id: `cia-k4-row-boundaries-v1`",
+        ))
+        .stdout(predicate::str::contains("source-backed observation: true"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-ciphertext-prior",
+            "--positions-file",
+            "experiments/position-observations/cia-k4-row-boundaries-v1.json",
+            "--prior-iterations",
+            "100",
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+            "--prior-seed",
+            "67",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["observation_id"], "cia-k4-row-boundaries-v1");
+    assert_eq!(json["source_backed_observation"], true);
+    assert_eq!(json["promoted_candidate"], false);
+    assert_eq!(json["best_period"], 2);
+    assert!(
+        json["period_results"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|period| period["period"] == 7
+                && period["support_kind"] == "shifted-ciphertext-coincidence")
+    );
+
+    let validation_output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-evaluation-archive",
+            "--input",
+            archive_dir.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let validation: Value = serde_json::from_slice(&validation_output).unwrap();
+    assert_eq!(validation["artifact_kind"], "ciphertext-prior");
+    assert_eq!(validation["source_backed_observation"], true);
+    assert_eq!(validation["valid"], true);
+    assert_eq!(validation["promoted_candidate"], false);
+}
+
+#[test]
+fn ciphertext_residue_balance_prior_has_committed_prediction_artifact() {
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["ciphertext-residue-balance-prior", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    let fixture: Value = serde_json::from_str(
+        &std::fs::read_to_string(
+            "experiments/predictions/ciphertext-residue-balance-prior-v1.json",
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(fixture, json);
+    assert_eq!(json["artifact_kind"], "ciphertext-residue-balance-prior");
+    assert_eq!(
+        json["hypothesis_family"],
+        "ciphertext-residue-balance-position-prior"
+    );
+    assert_eq!(json["selected_moduli_count"], 12);
+    assert_eq!(json["promoted_candidate"], false);
+
+    let validation_output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-prediction-artifact",
+            "--preregistration",
+            "experiments/preregistrations/ciphertext-residue-balance-prior-v1.json",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let validation: Value = serde_json::from_slice(&validation_output).unwrap();
+    assert_eq!(validation["valid"], true);
+    assert_eq!(validation["artifact_kind"], "ciphertext-residue-balance");
+    assert_eq!(validation["expected_plan_count"], 12);
+    assert_eq!(validation["artifact_plan_count"], 12);
+}
+
+#[test]
+fn ciphertext_window_balance_prior_has_committed_prediction_artifact() {
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["ciphertext-window-balance-prior", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    let fixture: Value = serde_json::from_str(
+        &std::fs::read_to_string("experiments/predictions/ciphertext-window-balance-v1.json")
+            .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(fixture, json);
+    assert_eq!(json["artifact_kind"], "ciphertext-window-balance-prior");
+    assert_eq!(
+        json["hypothesis_family"],
+        "ciphertext-window-balance-position-prior"
+    );
+    assert_eq!(json["window_balance_position_count"], 20);
+    assert_eq!(json["promoted_candidate"], false);
+
+    let validation_output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-prediction-artifact",
+            "--preregistration",
+            "experiments/preregistrations/ciphertext-window-balance-v1.json",
+            "--require-unique-artifact",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let validation: Value = serde_json::from_slice(&validation_output).unwrap();
+    assert_eq!(validation["valid"], true);
+    assert_eq!(validation["artifact_kind"], "ciphertext-window-balance");
+    assert_eq!(validation["expected_plan_count"], 20);
+    assert_eq!(validation["duplicate_artifact_paths"].as_array(), None);
+}
+
+#[test]
+fn ciphertext_hotspot_prior_and_evaluation_are_preregistration_gated() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("hotspot-observations.json");
+    let archive_dir = temp.path().join("ciphertext-hotspot-archive");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "synthetic-ciphertext-hotspot-test",
+  "source_ids": ["cia-sculpture"],
+  "source_review_file": "experiments/source-reviews/cia-source-review-v1.json",
+  "positions_one_based": [1, 14, 15],
+  "position_notes": {
+    "1": "Synthetic source-backed note for position 1.",
+    "14": "Synthetic source-backed note for position 14.",
+    "15": "Synthetic source-backed note for position 15."
+  },
+  "rationale": "Synthetic CLI test fixture for ciphertext-hotspot validation."
+}"#,
+    )
+    .unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["ciphertext-hotspot-prior", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    let fixture: Value = serde_json::from_str(
+        &std::fs::read_to_string("experiments/predictions/ciphertext-hotspot-prior-v1.json")
+            .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(fixture, json);
+    assert_eq!(json["artifact_kind"], "ciphertext-hotspot-prior");
+    assert_eq!(
+        json["hypothesis_family"],
+        "ciphertext-hotspot-position-prior"
+    );
+    assert_eq!(json["hotspot_count"], 20);
+    assert_eq!(json["promoted_candidate"], false);
+
+    let validation_output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-ciphertext-hotspot-observations",
+            "--artifact",
+            "experiments/predictions/ciphertext-hotspot-prior-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/ciphertext-hotspot-prior-v1.json",
+            "--input",
+            observations_path.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let validation: Value = serde_json::from_slice(&validation_output).unwrap();
+    assert_eq!(validation["valid"], true);
+    assert_eq!(
+        validation["preregistration_id"],
+        "ciphertext-hotspot-prior-v1"
+    );
+    assert_eq!(validation["artifact_valid"], true);
+    assert_eq!(
+        validation["observation_id"],
+        "synthetic-ciphertext-hotspot-test"
+    );
+    assert_eq!(validation["observed_position_count"], 3);
+    assert_eq!(validation["promoted_candidate"], false);
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-ciphertext-hotspot",
+            "--artifact",
+            "experiments/predictions/ciphertext-hotspot-prior-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/ciphertext-hotspot-prior-v1.json",
+            "--positions-file",
+            observations_path.to_str().unwrap(),
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+            "--output-dir",
+            archive_dir.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["observation_id"], "synthetic-ciphertext-hotspot-test");
+    assert_eq!(json["source_backed_observation"], true);
+    assert_eq!(json["hotspot_hits"], 2);
+    assert_eq!(
+        json["matching_hotspot_positions_one_based"],
+        serde_json::json!([14, 15])
+    );
+    assert_eq!(json["promoted_candidate"], false);
+
+    let validation_output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-evaluation-archive",
+            "--input",
+            archive_dir.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let archive_validation: Value = serde_json::from_slice(&validation_output).unwrap();
+    assert_eq!(archive_validation["artifact_kind"], "ciphertext-hotspot");
+    assert_eq!(archive_validation["source_backed_observation"], true);
+    assert_eq!(archive_validation["valid"], true);
+    assert_eq!(archive_validation["promoted_candidate"], false);
+}
+
+#[test]
+fn ciphertext_rarity_prior_and_evaluation_are_preregistration_gated() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("rarity-observations.json");
+    let archive_dir = temp.path().join("ciphertext-rarity-archive");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "synthetic-ciphertext-rarity-test",
+  "source_ids": ["cia-sculpture"],
+  "source_review_file": "experiments/source-reviews/cia-source-review-v1.json",
+  "positions_one_based": [4, 61, 97],
+  "position_notes": {
+    "4": "Synthetic source-backed note for position 4.",
+    "61": "Synthetic source-backed note for position 61.",
+    "97": "Synthetic source-backed note for position 97."
+  },
+  "rationale": "Synthetic CLI test fixture for ciphertext-rarity validation."
+}"#,
+    )
+    .unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["ciphertext-rarity-prior", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    let fixture: Value = serde_json::from_str(
+        &std::fs::read_to_string("experiments/predictions/ciphertext-rarity-prior-v1.json")
+            .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(fixture, json);
+    assert_eq!(json["artifact_kind"], "ciphertext-rarity-prior");
+    assert_eq!(
+        json["hypothesis_family"],
+        "ciphertext-rarity-position-prior"
+    );
+    assert_eq!(json["rare_position_count"], 20);
+    assert_eq!(json["promoted_candidate"], false);
+
+    let validation_output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-ciphertext-rarity-observations",
+            "--artifact",
+            "experiments/predictions/ciphertext-rarity-prior-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/ciphertext-rarity-prior-v1.json",
+            "--input",
+            observations_path.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let validation: Value = serde_json::from_slice(&validation_output).unwrap();
+    assert_eq!(validation["valid"], true);
+    assert_eq!(
+        validation["preregistration_id"],
+        "ciphertext-rarity-prior-v1"
+    );
+    assert_eq!(validation["artifact_valid"], true);
+    assert_eq!(
+        validation["observation_id"],
+        "synthetic-ciphertext-rarity-test"
+    );
+    assert_eq!(validation["observed_position_count"], 3);
+    assert_eq!(validation["promoted_candidate"], false);
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-ciphertext-rarity",
+            "--artifact",
+            "experiments/predictions/ciphertext-rarity-prior-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/ciphertext-rarity-prior-v1.json",
+            "--positions-file",
+            observations_path.to_str().unwrap(),
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+            "--output-dir",
+            archive_dir.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["observation_id"], "synthetic-ciphertext-rarity-test");
+    assert_eq!(json["source_backed_observation"], true);
+    assert_eq!(json["rare_hits"], 3);
+    assert_eq!(
+        json["matching_rare_positions_one_based"],
+        serde_json::json!([4, 61, 97])
+    );
+    assert_eq!(json["promoted_candidate"], false);
+
+    let validation_output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-evaluation-archive",
+            "--input",
+            archive_dir.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let archive_validation: Value = serde_json::from_slice(&validation_output).unwrap();
+    assert_eq!(archive_validation["artifact_kind"], "ciphertext-rarity");
+    assert_eq!(archive_validation["source_backed_observation"], true);
+    assert_eq!(archive_validation["valid"], true);
+    assert_eq!(archive_validation["promoted_candidate"], false);
+}
+
+fn public_anchor_compatible_claim_fixture() -> String {
+    let mut letters = vec![b'A'; K4_CIPHERTEXT.len()];
+    for anchor in known_anchors() {
+        for (index, value) in anchor.plaintext.bytes().enumerate() {
+            letters[anchor.start_zero_based + index] = value;
+        }
+    }
+    String::from_utf8(letters).unwrap()
+}
+
+fn public_anchor_compatible_reconciliation_fixture() -> String {
+    let claim = public_anchor_compatible_claim_fixture();
+    let mut table = String::from("i,C,P\n");
+    for (index, (ciphertext, plaintext)) in K4_CIPHERTEXT.chars().zip(claim.chars()).enumerate() {
+        table.push_str(&format!("{},{},{}\n", index + 1, ciphertext, plaintext));
+    }
+    table
+}
+
+#[test]
+fn verify_plaintext_claim_reports_structure_without_leaking_claim_text() {
+    let temp = tempfile::tempdir().unwrap();
+    let claim_path = temp.path().join("claim.txt");
+    let claim = public_anchor_compatible_claim_fixture();
+    std::fs::write(&claim_path, &claim).unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "verify-plaintext-claim",
+            "--input",
+            claim_path.to_str().unwrap(),
+            "--source-id",
+            "solvekryptos-2026-claim",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let stdout = String::from_utf8(output.clone()).unwrap();
+    assert!(!stdout.contains(&claim));
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["source_id"], "solvekryptos-2026-claim");
+    assert_eq!(json["normalized_letter_count"], 97);
+    assert_eq!(json["public_anchor_match_count"], 4);
+    assert_eq!(json["structural_checks_passed"], true);
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(json["implied_shift_distinct_values"].as_u64().unwrap() > 0);
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "verify-plaintext-claim",
+            "--input",
+            claim_path.to_str().unwrap(),
+            "--source-id",
+            "solvekryptos-2026-claim",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("# Plaintext Claim Verification"))
+        .stdout(predicate::str::contains("public anchors: 4/4"))
+        .stdout(predicate::str::contains("structural checks passed: true"))
+        .stdout(predicate::str::contains("promoted: false"))
+        .stdout(predicate::str::contains("AAAA").not());
+}
+
+#[test]
+fn verify_claim_reconciliation_reports_structure_without_leaking_claim_text() {
+    let temp = tempfile::tempdir().unwrap();
+    let table_path = temp.path().join("claim-table.csv");
+    let table = public_anchor_compatible_reconciliation_fixture();
+    let claim = public_anchor_compatible_claim_fixture();
+    std::fs::write(&table_path, table).unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "verify-claim-reconciliation",
+            "--input",
+            table_path.to_str().unwrap(),
+            "--source-id",
+            "solvekryptos-2026-claim",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let stdout = String::from_utf8(output.clone()).unwrap();
+    assert!(!stdout.contains(&claim));
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["source_id"], "solvekryptos-2026-claim");
+    assert_eq!(json["row_count"], 97);
+    assert_eq!(json["row_count_matches"], true);
+    assert_eq!(json["all_ciphertext_matches"], true);
+    assert_eq!(json["public_anchor_match_count"], 4);
+    assert_eq!(json["structural_checks_passed"], true);
+    assert_eq!(json["promoted_candidate"], false);
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "verify-claim-reconciliation",
+            "--input",
+            table_path.to_str().unwrap(),
+            "--source-id",
+            "solvekryptos-2026-claim",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "# Claim Reconciliation Verification",
+        ))
+        .stdout(predicate::str::contains("rows: 97/97"))
+        .stdout(predicate::str::contains("all ciphertext matches: true"))
+        .stdout(predicate::str::contains("public anchors: 4/4"))
+        .stdout(predicate::str::contains("promoted: false"))
+        .stdout(predicate::str::contains(&claim).not());
+}
+
+#[test]
+fn verify_claim_reconciliation_rejects_non_quarantined_sources() {
+    let temp = tempfile::tempdir().unwrap();
+    let table_path = temp.path().join("claim-table.csv");
+    std::fs::write(
+        &table_path,
+        public_anchor_compatible_reconciliation_fixture(),
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "verify-claim-reconciliation",
+            "--input",
+            table_path.to_str().unwrap(),
+            "--source-id",
+            "cia-artifact",
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("unverified-solution-claim"));
+}
+
+#[test]
+fn verify_plaintext_claim_rejects_non_quarantined_sources() {
+    let temp = tempfile::tempdir().unwrap();
+    let claim_path = temp.path().join("claim.txt");
+    std::fs::write(&claim_path, public_anchor_compatible_claim_fixture()).unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "verify-plaintext-claim",
+            "--input",
+            claim_path.to_str().unwrap(),
+            "--source-id",
+            "cia-artifact",
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("unverified-solution-claim"));
 }
 
 #[test]
@@ -205,8 +1060,10 @@ fn source_review_packet_exposes_prescore_source_checklist() {
         .stdout(predicate::str::contains(
             "Review each eligible source URL before drafting observation positions",
         ))
+        .stdout(predicate::str::contains("local source archive"))
         .stdout(predicate::str::contains("one position note per scored"))
         .stdout(predicate::str::contains("validate-evaluation-archive"))
+        .stdout(predicate::str::contains("source-observation-status"))
         .stdout(predicate::str::contains("promoted: false"));
 
     let output = Command::cargo_bin("kryptos-k4")
@@ -249,6 +1106,22 @@ fn source_review_packet_exposes_prescore_source_checklist() {
             .unwrap()
             .iter()
             .any(|requirement| requirement.as_str().unwrap().contains("source-review file"))
+    );
+    assert!(
+        json["observation_requirements"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|requirement| requirement
+                .as_str()
+                .unwrap()
+                .contains("local source archive"))
+    );
+    assert!(
+        json["source_observation_status_command"]
+            .as_str()
+            .unwrap()
+            .contains("source-observation-status")
     );
 }
 
@@ -539,6 +1412,534 @@ fn source_review_status_reports_missing_valid_and_invalid_reviews() {
     assert!(json["reviews"].as_array().unwrap().iter().any(|review| {
         review["valid"] == false && !review["errors"].as_array().unwrap().is_empty()
     }));
+}
+
+#[test]
+fn source_observation_status_reports_reviewed_used_and_blocked_sources() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .arg("source-observation-status")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Source Observation Status"))
+        .stdout(predicate::str::contains("eligible sources: 2"))
+        .stdout(predicate::str::contains("reviewed eligible sources: 2"))
+        .stdout(predicate::str::contains("used eligible sources: 1"))
+        .stdout(predicate::str::contains("unused eligible sources: 1"))
+        .stdout(predicate::str::contains(
+            "all source-backed archives negative: true",
+        ))
+        .stdout(predicate::str::contains(
+            "new-source-backed-rationale-new-source-or-distinct-prediction-artifact",
+        ))
+        .stdout(predicate::str::contains("cia-artifact"))
+        .stdout(predicate::str::contains("cia-sculpture"))
+        .stdout(predicate::str::contains("null_mean="))
+        .stdout(predicate::str::contains("negative/non-significant"))
+        .stdout(predicate::str::contains("explicitly marked non-scorable"))
+        .stdout(predicate::str::contains("non-scorable"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["source-observation-status", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["eligible_source_count"], 2);
+    assert_eq!(json["reviewed_eligible_source_count"], 2);
+    assert_eq!(json["used_eligible_source_count"], 1);
+    assert_eq!(json["unused_eligible_source_count"], 1);
+    assert_eq!(json["sources_with_scored_position_markers"], 1);
+    assert_eq!(json["all_source_backed_archives_negative"], true);
+    assert_eq!(
+        json["next_action_kind"],
+        "new-source-backed-rationale-new-source-or-distinct-prediction-artifact"
+    );
+    assert!(
+        json["recommended_next_step"]
+            .as_str()
+            .unwrap()
+            .contains("explicitly marked non-scorable")
+    );
+    assert_eq!(json["promoted_candidate"], false);
+
+    let statuses = json["statuses"].as_array().unwrap();
+    let artifact = statuses
+        .iter()
+        .find(|status| status["source_id"] == "cia-artifact")
+        .unwrap();
+    assert_eq!(artifact["reviewed_by_valid_source_review"], true);
+    assert_eq!(artifact["used_in_source_backed_archive"], false);
+    assert_eq!(artifact["current_archive_has_scored_positions"], false);
+    assert!(
+        artifact["non_scorable_reason"]
+            .as_str()
+            .unwrap()
+            .contains("no one-based non-anchor K4 positions")
+    );
+    assert!(
+        artifact["archived_evidence_summaries"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
+    assert!(
+        artifact["action_status"]
+            .as_str()
+            .unwrap()
+            .contains("marks it non-scorable")
+    );
+
+    let sculpture = statuses
+        .iter()
+        .find(|status| status["source_id"] == "cia-sculpture")
+        .unwrap();
+    assert_eq!(sculpture["reviewed_by_valid_source_review"], true);
+    assert_eq!(sculpture["used_in_source_backed_archive"], true);
+    assert_eq!(sculpture["current_archive_has_scored_positions"], true);
+    let evidence_summaries = sculpture["archived_evidence_summaries"].as_array().unwrap();
+    assert!(evidence_summaries.iter().any(|summary| {
+        summary["artifact_kind"] == "period"
+            && summary["support_status"] == "negative/non-significant"
+            && summary["null_mean_best_hits"].as_f64().unwrap() > 0.0
+            && summary["empirical_p_value"].as_f64().unwrap() > 0.05
+    }));
+    assert!(evidence_summaries.iter().any(|summary| {
+        summary["artifact_kind"] == "tableau-hill"
+            && summary["support_status"] == "negative/non-significant"
+            && summary["best_model"] == "7x14 row 1 concentration"
+            && summary["observed_hits"] == "3/6 positions"
+            && summary["empirical_p_value"].as_f64().unwrap() > 0.05
+    }));
+    assert!(
+        sculpture["source_backed_archive_directories"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|directory| directory
+                .as_str()
+                .unwrap()
+                .contains("results/grid-observations/cia-k4-row-boundaries-v1"))
+    );
+    assert!(
+        sculpture["source_backed_archive_directories"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|directory| directory
+                .as_str()
+                .unwrap()
+                .contains("results/grid-observations/cia-k4-row-boundaries-column-v1"))
+    );
+    assert!(
+        sculpture["source_backed_archive_directories"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|directory| directory
+                .as_str()
+                .unwrap()
+                .contains("results/grid-observations/cia-k4-row-boundaries-compass-axis-v1"))
+    );
+    assert!(evidence_summaries.iter().any(|summary| {
+        summary["artifact_kind"] == "grid"
+            && summary["support_status"] == "negative/non-significant"
+            && summary["best_model"] == "7x14 column edges"
+            && summary["observed_hits"] == "4/6 positions"
+            && summary["empirical_p_value"].as_f64().unwrap() > 0.05
+    }));
+    assert!(evidence_summaries.iter().any(|summary| {
+        summary["artifact_kind"] == "grid"
+            && summary["support_status"] == "negative/non-significant"
+            && summary["best_model"] == "7x14 compass-axis positions"
+            && summary["observed_hits"] == "1/6 positions"
+            && summary["empirical_p_value"].as_f64().unwrap() > 0.05
+    }));
+    assert!(
+        sculpture["source_backed_archive_directories"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|directory| directory
+                .as_str()
+                .unwrap()
+                .contains("results/tableau-hill-observations/cia-k4-row-boundaries-v1"))
+    );
+}
+
+#[test]
+fn source_frontier_classifies_all_registered_sources() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .arg("source-frontier")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Source Frontier"))
+        .stdout(predicate::str::contains("sources: 18"))
+        .stdout(predicate::str::contains(
+            "scored-observation eligible sources: 2",
+        ))
+        .stdout(predicate::str::contains(
+            "sources with scored-position markers: 1",
+        ))
+        .stdout(predicate::str::contains("valid source-backed archives: 23"))
+        .stdout(predicate::str::contains(
+            "all source-backed archives negative: true",
+        ))
+        .stdout(predicate::str::contains("Frontier Blocking Conditions"))
+        .stdout(predicate::str::contains(
+            "source-backed-evidence-negative-or-non-significant",
+        ))
+        .stdout(predicate::str::contains("Required Next Evidence"))
+        .stdout(predicate::str::contains(
+            "validate-prediction-artifact --require-unique-artifact",
+        ))
+        .stdout(predicate::str::contains("Disallowed Next Actions"))
+        .stdout(predicate::str::contains("Archived Evaluations"))
+        .stdout(predicate::str::contains(
+            "Already used in 23 source-backed evaluation archives",
+        ))
+        .stdout(predicate::str::contains("context-only"))
+        .stdout(predicate::str::contains("quarantined-claim"))
+        .stdout(predicate::str::contains(
+            "eligible-but-currently-non-scorable",
+        ))
+        .stdout(predicate::str::contains("scored-observation-ready"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["source-frontier", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["source_count"], 18);
+    assert_eq!(json["scored_observation_eligible_count"], 2);
+    assert_eq!(json["scored_position_marker_count"], 1);
+    assert_eq!(json["valid_source_backed_archive_count"], 23);
+    assert_eq!(json["all_source_backed_archives_negative"], true);
+    assert_eq!(json["quarantined_claim_count"], 1);
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(
+        json["frontier_blocking_conditions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|condition| condition.as_str().unwrap()
+                == "source-backed-evidence-negative-or-non-significant")
+    );
+    assert!(
+        json["required_next_evidence"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|requirement| requirement
+                .as_str()
+                .unwrap()
+                .contains("validate-prediction-artifact --require-unique-artifact"))
+    );
+    assert!(
+        json["disallowed_next_actions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|action| action
+                .as_str()
+                .unwrap()
+                .contains("do not score cia-artifact"))
+    );
+    assert!(
+        json["recommended_next_step"]
+            .as_str()
+            .unwrap()
+            .contains("new source-backed rationale")
+    );
+
+    let sources = json["frontier_sources"].as_array().unwrap();
+    let cia_artifact = sources
+        .iter()
+        .find(|source| source["id"] == "cia-artifact")
+        .unwrap();
+    assert_eq!(
+        cia_artifact["frontier_class"],
+        "eligible-but-currently-non-scorable"
+    );
+    assert!(
+        cia_artifact["non_scorable_reason"]
+            .as_str()
+            .unwrap()
+            .contains("no one-based non-anchor K4 positions")
+    );
+
+    let cia_sculpture = sources
+        .iter()
+        .find(|source| source["id"] == "cia-sculpture")
+        .unwrap();
+    assert_eq!(cia_sculpture["frontier_class"], "scored-observation-ready");
+    assert_eq!(cia_sculpture["current_archive_has_scored_positions"], true);
+    assert_eq!(cia_sculpture["source_backed_archive_count"], 23);
+    assert!(
+        cia_sculpture["allowed_next_action"]
+            .as_str()
+            .unwrap()
+            .contains("inspect archived support statuses")
+    );
+    assert!(
+        cia_sculpture["archived_support_statuses"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|status| status
+                .as_str()
+                .unwrap()
+                .contains("period:negative/non-significant"))
+    );
+
+    let claim = sources
+        .iter()
+        .find(|source| source["id"] == "solvekryptos-2026-claim")
+        .unwrap();
+    assert_eq!(claim["frontier_class"], "quarantined-claim");
+    assert!(
+        claim["allowed_next_action"]
+            .as_str()
+            .unwrap()
+            .contains("temporary local claim verifiers")
+    );
+
+    let ap = sources
+        .iter()
+        .find(|source| source["id"] == "ap-2025-auction")
+        .unwrap();
+    assert_eq!(ap["frontier_class"], "context-only");
+
+    let smithsonian = sources
+        .iter()
+        .find(|source| source["id"] == "smithsonian-2026-archive-discovery")
+        .unwrap();
+    assert_eq!(smithsonian["frontier_class"], "context-only");
+    assert!(
+        smithsonian["allowed_next_action"]
+            .as_str()
+            .unwrap()
+            .contains("preregistration rationale")
+    );
+
+    let nsa = sources
+        .iter()
+        .find(|source| source["id"] == "nsa-declassified-kryptos-doc3")
+        .unwrap();
+    assert_eq!(nsa["frontier_class"], "context-only");
+    assert_eq!(nsa["allowed_use"], "archive-context-only");
+    assert_eq!(nsa["current_archive_has_scored_positions"], false);
+
+    let nsa_doc7 = sources
+        .iter()
+        .find(|source| source["id"] == "nsa-kryptos-doc7-technical-analysis")
+        .unwrap();
+    assert_eq!(nsa_doc7["frontier_class"], "context-only");
+    assert_eq!(nsa_doc7["allowed_use"], "archive-context-only");
+    assert_eq!(nsa_doc7["current_archive_has_scored_positions"], false);
+    assert!(
+        nsa_doc7["non_scorable_reason"]
+            .as_str()
+            .unwrap()
+            .contains("no one-based non-anchor K4 positions")
+    );
+
+    let nsa_index = sources
+        .iter()
+        .find(|source| source["id"] == "nsa-kryptos-foia-release-index")
+        .unwrap();
+    assert_eq!(nsa_index["frontier_class"], "context-only");
+    assert_eq!(nsa_index["allowed_use"], "archive-context-only");
+    assert_eq!(nsa_index["current_archive_has_scored_positions"], false);
+
+    let nsa_doc1 = sources
+        .iter()
+        .find(|source| source["id"] == "nsa-kryptos-doc1-resolution-memo")
+        .unwrap();
+    assert_eq!(nsa_doc1["frontier_class"], "context-only");
+    assert_eq!(nsa_doc1["allowed_use"], "archive-context-only");
+    assert_eq!(nsa_doc1["current_archive_has_scored_positions"], false);
+
+    let nsa_summary = sources
+        .iter()
+        .find(|source| source["id"] == "nsa-kryptos-summary-revelations")
+        .unwrap();
+    assert_eq!(nsa_summary["frontier_class"], "context-only");
+    assert_eq!(nsa_summary["allowed_use"], "archive-context-only");
+    assert_eq!(nsa_summary["current_archive_has_scored_positions"], false);
+
+    let nsa_doc8 = sources
+        .iter()
+        .find(|source| source["id"] == "nsa-kryptos-doc8-cryptogram")
+        .unwrap();
+    assert_eq!(nsa_doc8["frontier_class"], "context-only");
+    assert_eq!(nsa_doc8["allowed_use"], "public-anchor-summary");
+    assert_eq!(nsa_doc8["current_archive_has_scored_positions"], false);
+}
+
+#[test]
+fn source_frontier_summary_prints_compact_next_action() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["source-frontier", "--summary"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Source Frontier"))
+        .stdout(predicate::str::contains("Operational Summary"))
+        .stdout(predicate::str::contains(
+            "source-backed-evidence-negative-or-non-significant",
+        ))
+        .stdout(predicate::str::contains(
+            "scored-observation-ready sources: cia-sculpture",
+        ))
+        .stdout(predicate::str::contains(
+            "eligible but currently non-scorable sources: cia-artifact",
+        ))
+        .stdout(predicate::str::contains(
+            "already-scored source-backed archives: cia-sculpture (23 archived evaluations)",
+        ))
+        .stdout(predicate::str::contains(
+            "do not rerun negative row-boundary evidence as new evidence",
+        ))
+        .stdout(predicate::str::contains("promoted: false"))
+        .stdout(predicate::str::contains("## Sources").not());
+}
+
+#[test]
+fn source_intake_packet_documents_new_source_gate() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .arg("source-intake-packet")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Source Intake Packet"))
+        .stdout(predicate::str::contains("This is not a claimed solution."))
+        .stdout(predicate::str::contains("public-facts-only"))
+        .stdout(predicate::str::contains("scored_positions_one_based"))
+        .stdout(predicate::str::contains("non_scorable_reason"))
+        .stdout(predicate::str::contains("validate-evaluation-archive"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["source-intake-packet", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(
+        json["registry_fields"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|field| field.as_str().unwrap().contains("allowed_use"))
+    );
+    assert!(
+        json["scoreable_evidence_requirements"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|requirement| requirement
+                .as_str()
+                .unwrap()
+                .contains("validated source-review artifact"))
+    );
+    assert!(
+        json["rejection_rules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|rule| rule
+                .as_str()
+                .unwrap()
+                .contains("unverified solution claims"))
+    );
+    assert!(
+        json["archive_template"]
+            .as_str()
+            .unwrap()
+            .contains("quote-free local review snapshot")
+    );
+}
+
+#[test]
+fn validate_source_archive_checks_registered_metadata_and_boundaries() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-source-archive",
+            "--source-id",
+            "cia-sculpture",
+            "--input",
+            "sources/archives/cia-sculpture-2026-05-27.md",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("\"valid\": true"))
+        .stdout(predicate::str::contains(
+            "\"archive_has_scored_positions\": true",
+        ))
+        .stdout(predicate::str::contains("\"promoted_candidate\": false"));
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-source-archive",
+            "--source-id",
+            "cia-artifact",
+            "--input",
+            "sources/archives/cia-artifact-2026-05-27.md",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Source Archive Validation"))
+        .stdout(predicate::str::contains("valid: true"))
+        .stdout(predicate::str::contains(
+            "no one-based non-anchor K4 positions",
+        ));
+}
+
+#[test]
+fn validate_source_archive_rejects_wrong_source_or_forbidden_scored_context() {
+    let temp = tempfile::tempdir().unwrap();
+    let archive_path = temp.path().join("bad-archive.md");
+    std::fs::write(
+        &archive_path,
+        "# Source Snapshot\n\nsource_id: `elonka-kryptos`\nsource_url: https://www.elonka.com/kryptos/\nreviewed_at: 2026-05-28\narchive_kind: quote-free local review snapshot\npromoted_candidate: false\n\n## Reviewed Facts\n\n- scored_positions_one_based: 1,2,3\n\n## Boundary\n\n- No candidate material, key stream, route, or plaintext is promoted.\n",
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-source-archive",
+            "--source-id",
+            "elonka-kryptos",
+            "--input",
+            archive_path.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("\"valid\": false"))
+        .stdout(predicate::str::contains(
+            "scored_positions_one_based is only allowed for public-facts-only sources",
+        ));
 }
 
 #[test]
@@ -1692,7 +3093,7 @@ fn period_prediction_plan_all_emits_registered_period_set() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Period Prediction Plan Set"))
-        .stdout(predicate::str::contains("periods: 7"))
+        .stdout(predicate::str::contains("periods: 8"))
         .stdout(predicate::str::contains("future independent evidence"))
         .stdout(predicate::str::contains("promoted: false"));
 
@@ -1705,9 +3106,9 @@ fn period_prediction_plan_all_emits_registered_period_set() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["period_count"], 7);
+    assert_eq!(json["period_count"], 8);
     assert_eq!(json["promoted_candidate"], false);
-    assert_eq!(json["plans"].as_array().unwrap().len(), 7);
+    assert_eq!(json["plans"].as_array().unwrap().len(), 8);
     assert!(
         json["plans"]
             .as_array()
@@ -1727,7 +3128,7 @@ fn spacing_prediction_plan_emits_registered_modulus_set() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Spacing Prediction Plan Set"))
-        .stdout(predicate::str::contains("moduli: 7"))
+        .stdout(predicate::str::contains("moduli: 8"))
         .stdout(predicate::str::contains("future independent evidence"))
         .stdout(predicate::str::contains("promoted: false"));
 
@@ -1740,9 +3141,9 @@ fn spacing_prediction_plan_emits_registered_modulus_set() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["modulus_count"], 7);
+    assert_eq!(json["modulus_count"], 8);
     assert_eq!(json["promoted_candidate"], false);
-    assert_eq!(json["plans"].as_array().unwrap().len(), 7);
+    assert_eq!(json["plans"].as_array().unwrap().len(), 8);
     assert!(
         json["plans"]
             .as_array()
@@ -1751,6 +3152,85 @@ fn spacing_prediction_plan_emits_registered_modulus_set() {
             .all(|plan| plan["non_anchor_position_count"] == 73
                 && plan["anchor_position_count"] == 24
                 && plan["promoted_candidate"] == false)
+    );
+}
+
+#[test]
+fn tableau_hill_prediction_plan_is_tooling_ready_and_non_promotional() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["tableau-hill-prediction-plan"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Tableau/HILL Prediction Plan"))
+        .stdout(predicate::str::contains("evaluator status: tooling-ready"))
+        .stdout(predicate::str::contains(
+            "mapping status: fixed-before-scoring",
+        ))
+        .stdout(predicate::str::contains(
+            "tableau dimensions: 7 rows x 14 columns (98 cells)",
+        ))
+        .stdout(predicate::str::contains(
+            "candidate material allowed: false",
+        ))
+        .stdout(predicate::str::contains("promoted: false"))
+        .stdout(predicate::str::contains("not a claimed solution"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["tableau-hill-prediction-plan", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["hypothesis_family"], "tableau-hill-prediction");
+    assert_eq!(json["artifact_kind"], "tableau-hill-source-mapping-plan");
+    assert_eq!(json["evaluator_status"], "tooling-ready");
+    assert_eq!(json["mapping_status"], "fixed-before-scoring");
+    assert_eq!(json["row_count"], 7);
+    assert_eq!(json["column_count"], 14);
+    assert_eq!(json["cell_count"], 98);
+    assert_eq!(json["k4_position_count"], 97);
+    assert_eq!(json["padding_cell_count"], 1);
+    assert_eq!(json["padding_cell_index_one_based"], 98);
+    assert_eq!(json["candidate_material_allowed"], false);
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(
+        json["required_next_steps"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|step| step
+                .as_str()
+                .unwrap()
+                .contains("evaluate-tableau-hill-prediction"))
+    );
+    let coordinate_mapping = json["coordinate_mapping"].as_array().unwrap();
+    assert_eq!(coordinate_mapping.len(), 98);
+    assert_eq!(coordinate_mapping[0]["k4_position_one_based"], 1);
+    assert_eq!(coordinate_mapping[0]["row_one_based"], 1);
+    assert_eq!(coordinate_mapping[0]["column_one_based"], 1);
+    assert_eq!(coordinate_mapping[97]["k4_position_one_based"], Value::Null);
+    assert_eq!(coordinate_mapping[97]["is_padding"], true);
+    assert_eq!(
+        json["source_ids"].as_array().unwrap()[0],
+        "rumkin-k4-reference"
+    );
+    assert!(
+        json["source_ids"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|source| source == "cia-sculpture")
+    );
+    assert!(
+        json["fixed_questions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|question| question["fixed_before_scoring"] == true)
     );
 }
 
@@ -1783,7 +3263,7 @@ fn committed_period_prediction_artifact_matches_cli_output() {
         let fixture: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
 
         assert_eq!(fixture, generated, "{path} is stale");
-        assert_eq!(fixture["period_count"], 7);
+        assert_eq!(fixture["period_count"], 8);
         assert_eq!(fixture["promoted_candidate"], false);
         assert!(fixture["plans"].as_array().unwrap().iter().all(
             |plan| plan["non_anchor_position_count"] == 73
@@ -1811,7 +3291,7 @@ fn committed_spacing_prediction_artifact_matches_cli_output() {
     .unwrap();
 
     assert_eq!(fixture, generated);
-    assert_eq!(fixture["modulus_count"], 7);
+    assert_eq!(fixture["modulus_count"], 8);
     assert_eq!(fixture["promoted_candidate"], false);
     assert!(fixture["plans"].as_array().unwrap().iter().all(
         |plan| plan["non_anchor_position_count"] == 73
@@ -1821,9 +3301,44 @@ fn committed_spacing_prediction_artifact_matches_cli_output() {
 }
 
 #[test]
+fn mirror_prediction_plan_emits_committed_artifact() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .arg("mirror-prediction-plan")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Mirror Prediction Plan"))
+        .stdout(predicate::str::contains("mirror pairs: 35"))
+        .stdout(predicate::str::contains("center position: 49"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["mirror-prediction-plan", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let generated: Value = serde_json::from_slice(&output).unwrap();
+    let fixture: Value = serde_json::from_str(
+        &std::fs::read_to_string("experiments/predictions/non-anchor-position-mirror-v1.json")
+            .unwrap(),
+    )
+    .unwrap();
+
+    assert_eq!(fixture, generated);
+    assert_eq!(fixture["pair_count"], 35);
+    assert_eq!(fixture["center_position_one_based"], 49);
+    assert_eq!(fixture["non_anchor_position_count"], 73);
+    assert_eq!(fixture["anchor_position_count"], 24);
+    assert_eq!(fixture["promoted_candidate"], false);
+}
+
+#[test]
 fn validate_preregistration_accepts_independent_prediction_target() {
     let temp = tempfile::tempdir().unwrap();
-    let input_path = temp.path().join("lane.json");
+    let input_path = temp.path().join("independent-target-v1.json");
     std::fs::write(
         &input_path,
         r#"{
@@ -1873,6 +3388,47 @@ fn validate_preregistration_accepts_independent_prediction_target() {
     let json: Value = serde_json::from_slice(&output).unwrap();
     assert_eq!(json["valid"], true);
     assert_eq!(json["promoted_candidate"], false);
+}
+
+#[test]
+fn validate_preregistration_rejects_filename_id_mismatch() {
+    let temp = tempfile::tempdir().unwrap();
+    let input_path = temp.path().join("copied-placeholder-name.json");
+    std::fs::write(
+        &input_path,
+        r#"{
+  "id": "independent-target-v1",
+  "title": "Independent target",
+  "hypothesis_family": "structural-routing",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "Tests a target before adding candidate material.",
+  "prediction_target": "Predict a non-anchor position class.",
+  "discovery_inputs": ["pre-declared structural rule"],
+  "evaluation_inputs": ["withheld non-anchor prediction target"],
+  "controls": ["seeded shuffle baseline"],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}"#,
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-preregistration",
+            "--input",
+            input_path.to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("valid: false"))
+        .stdout(predicate::str::contains(
+            "filename must match preregistration id `independent-target-v1`",
+        ))
+        .stderr(predicate::str::contains(
+            "preregistration failed validation",
+        ));
 }
 
 #[test]
@@ -1956,8 +3512,8 @@ fn validate_prediction_artifact_checks_committed_independent_target() {
             .success()
             .stdout(predicate::str::contains("Prediction Artifact Validation"))
             .stdout(predicate::str::contains("valid: true"))
-            .stdout(predicate::str::contains("expected periods: 7"))
-            .stdout(predicate::str::contains("artifact periods: 7"))
+            .stdout(predicate::str::contains("expected periods: 8"))
+            .stdout(predicate::str::contains("artifact periods: 8"))
             .stdout(predicate::str::contains("promoted: false"));
     }
 
@@ -1972,8 +3528,8 @@ fn validate_prediction_artifact_checks_committed_independent_target() {
         .success()
         .stdout(predicate::str::contains("Prediction Artifact Validation"))
         .stdout(predicate::str::contains("valid: true"))
-        .stdout(predicate::str::contains("expected moduli: 7"))
-        .stdout(predicate::str::contains("artifact moduli: 7"))
+        .stdout(predicate::str::contains("expected moduli: 8"))
+        .stdout(predicate::str::contains("artifact moduli: 8"))
         .stdout(predicate::str::contains("promoted: false"));
 
     let output = Command::cargo_bin("kryptos-k4")
@@ -1992,9 +3548,92 @@ fn validate_prediction_artifact_checks_committed_independent_target() {
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
     assert_eq!(json["valid"], true);
-    assert_eq!(json["expected_period_count"], 7);
-    assert_eq!(json["artifact_period_count"], 7);
+    assert_eq!(json["expected_period_count"], 8);
+    assert_eq!(json["artifact_period_count"], 8);
+    assert!(json["warnings"].as_array().unwrap().iter().any(|warning| {
+        warning
+            .as_str()
+            .unwrap()
+            .contains("duplicate readiness lanes are inventory only")
+    }));
+    assert!(
+        json["duplicate_artifact_paths"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|path| path == "experiments/predictions/non-anchor-position-period-v35.json")
+    );
     assert_eq!(json["promoted_candidate"], false);
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-prediction-artifact",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-period-v35.json",
+            "--require-unique-artifact",
+        ])
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains("valid: false"))
+        .stdout(predicate::str::contains("duplicate artifacts:"))
+        .stdout(predicate::str::contains(
+            "rerun without --require-unique-artifact only when duplicate readiness inventory is intentional",
+        ))
+        .stderr(predicate::str::contains(
+            "prediction artifact failed validation",
+        ));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-prediction-artifact",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-period-v40.json",
+            "--require-unique-artifact",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["valid"], true);
+    assert_eq!(json["artifact_kind"], "period");
+    assert_eq!(json["artifact_period_count"], 1);
+    assert_eq!(json["duplicate_artifact_paths"].as_array(), None);
+    assert_eq!(json["promoted_candidate"], false);
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-prediction-artifact",
+            "--preregistration",
+            "experiments/preregistrations/ciphertext-structure-prior-v1.json",
+            "--require-unique-artifact",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("valid: true"))
+        .stdout(predicate::str::contains("duplicate artifacts: 0"));
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-prediction-artifact",
+            "--preregistration",
+            "experiments/preregistrations/ciphertext-hotspot-prior-v1.json",
+            "--require-unique-artifact",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "artifact kind: ciphertext-hotspot",
+        ))
+        .stdout(predicate::str::contains("valid: true"))
+        .stdout(predicate::str::contains("duplicate artifacts: 0"));
 }
 
 #[test]
@@ -2005,28 +3644,78 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Independent Lane Status"))
-        .stdout(predicate::str::contains("lanes: 19"))
+        .stdout(predicate::str::contains("lanes: 67"))
         .stdout(predicate::str::contains(
-            "ready for source-backed observations: 19",
+            "ready for source-backed observations: 66",
         ))
         .stdout(predicate::str::contains("invalid lanes: 0"))
-        .stdout(predicate::str::contains("prediction artifacts: 19"))
-        .stdout(predicate::str::contains("unique prediction artifacts: 2"))
+        .stdout(predicate::str::contains("prediction artifacts: 67"))
+        .stdout(predicate::str::contains("unique prediction artifacts: 25"))
         .stdout(predicate::str::contains(
-            "unique ready prediction artifacts: 2",
+            "unique ready prediction artifacts: 24",
         ))
         .stdout(predicate::str::contains("duplicate artifact groups: 1"))
+        .stdout(predicate::str::contains("duplicate artifact lanes: 43"))
+        .stdout(predicate::str::contains(
+            "extra duplicate artifact lanes: 42",
+        ))
         .stdout(predicate::str::contains("Family Summary"))
         .stdout(predicate::str::contains(
-            "| position-period-prediction | 18 | 18 | 18 | 1 | 1 | 1 |",
+            "| ciphertext-adjacent-contrast-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
+        ))
+        .stdout(predicate::str::contains(
+            "| ciphertext-hotspot-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
+        ))
+        .stdout(predicate::str::contains(
+            "| ciphertext-only-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
+        ))
+        .stdout(predicate::str::contains(
+            "| ciphertext-rarity-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
+        ))
+        .stdout(predicate::str::contains(
+            "| ciphertext-repeat-distance-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
+        ))
+        .stdout(predicate::str::contains(
+            "| ciphertext-period-match-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
+        ))
+        .stdout(predicate::str::contains(
+            "| ciphertext-residue-balance-position-prior | 4 | 4 | 4 | 4 | 4 | 0 |",
+        ))
+        .stdout(predicate::str::contains(
+            "| ciphertext-skip-transition-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
+        ))
+        .stdout(predicate::str::contains(
+            "| ciphertext-transition-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
+        ))
+        .stdout(predicate::str::contains(
+            "| ciphertext-turning-point-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
+        ))
+        .stdout(predicate::str::contains(
+            "| ciphertext-window-balance-position-prior | 1 | 0 | 1 | 1 | 0 | 0 |",
+        ))
+        .stdout(predicate::str::contains(
+            "| position-grid-layout-prediction | 3 | 3 | 3 | 3 | 3 | 0 |",
+        ))
+        .stdout(predicate::str::contains(
+            "| position-mirror-prediction | 1 | 1 | 1 | 1 | 1 | 0 |",
+        ))
+        .stdout(predicate::str::contains(
+            "| position-period-prediction | 47 | 47 | 47 | 5 | 5 | 1 |",
         ))
         .stdout(predicate::str::contains(
             "| position-spacing-prediction | 1 | 1 | 1 | 1 | 1 | 0 |",
+        ))
+        .stdout(predicate::str::contains(
+            "| tableau-hill-prediction | 1 | 1 | 1 | 1 | 1 | 0 |",
         ))
         .stdout(predicate::str::contains("Duplicate Prediction Artifacts"))
         .stdout(predicate::str::contains(
             "non-anchor-position-period-followup-v1",
         ))
+        .stdout(predicate::str::contains("non-anchor-position-period-v45"))
+        .stdout(predicate::str::contains("ciphertext-window-balance-v1"))
+        .stdout(predicate::str::contains("evaluator-pending"))
+        .stdout(predicate::str::contains("tableau-hill-v1"))
         .stdout(predicate::str::contains(
             "ready-for-source-backed-observations",
         ))
@@ -2041,22 +3730,115 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["lane_count"], 19);
-    assert_eq!(json["ready_for_source_backed_observations"], 19);
+    assert_eq!(json["lane_count"], 67);
+    assert_eq!(json["ready_for_source_backed_observations"], 66);
     assert_eq!(json["invalid_lanes"], 0);
-    assert_eq!(json["prediction_artifacts"], 19);
-    assert_eq!(json["unique_prediction_artifacts"], 2);
-    assert_eq!(json["unique_ready_prediction_artifacts"], 2);
+    assert_eq!(json["prediction_artifacts"], 67);
+    assert_eq!(json["unique_prediction_artifacts"], 25);
+    assert_eq!(json["unique_ready_prediction_artifacts"], 24);
+    assert_eq!(json["duplicate_prediction_artifact_lane_count"], 43);
+    assert_eq!(json["duplicate_prediction_artifact_extra_lane_count"], 42);
     let families = json["family_summaries"].as_array().unwrap();
     assert!(families.iter().any(|family| {
-        family["hypothesis_family"] == "position-period-prediction"
-            && family["lanes"] == 18
+        family["hypothesis_family"] == "ciphertext-adjacent-contrast-position-prior"
+            && family["lanes"] == 1
             && family["unique_ready_prediction_artifacts"] == 1
+            && family["duplicate_artifact_groups"] == 0
+    }));
+    assert!(families.iter().any(|family| {
+        family["hypothesis_family"] == "ciphertext-hotspot-position-prior"
+            && family["lanes"] == 1
+            && family["unique_ready_prediction_artifacts"] == 1
+            && family["duplicate_artifact_groups"] == 0
+    }));
+    assert!(families.iter().any(|family| {
+        family["hypothesis_family"] == "ciphertext-only-position-prior"
+            && family["lanes"] == 1
+            && family["unique_ready_prediction_artifacts"] == 1
+            && family["duplicate_artifact_groups"] == 0
+    }));
+    assert!(families.iter().any(|family| {
+        family["hypothesis_family"] == "ciphertext-rarity-position-prior"
+            && family["lanes"] == 1
+            && family["unique_ready_prediction_artifacts"] == 1
+            && family["duplicate_artifact_groups"] == 0
+    }));
+    assert!(families.iter().any(|family| {
+        family["hypothesis_family"] == "ciphertext-repeat-distance-position-prior"
+            && family["lanes"] == 1
+            && family["unique_ready_prediction_artifacts"] == 1
+            && family["duplicate_artifact_groups"] == 0
+    }));
+    assert!(families.iter().any(|family| {
+        family["hypothesis_family"] == "ciphertext-period-match-position-prior"
+            && family["lanes"] == 1
+            && family["unique_ready_prediction_artifacts"] == 1
+            && family["duplicate_artifact_groups"] == 0
+    }));
+    assert!(families.iter().any(|family| {
+        family["hypothesis_family"] == "ciphertext-residue-balance-position-prior"
+            && family["lanes"] == 4
+            && family["unique_ready_prediction_artifacts"] == 4
+            && family["duplicate_artifact_groups"] == 0
+    }));
+    assert!(families.iter().any(|family| {
+        family["hypothesis_family"] == "ciphertext-skip-transition-position-prior"
+            && family["lanes"] == 1
+            && family["unique_ready_prediction_artifacts"] == 1
+            && family["duplicate_artifact_groups"] == 0
+    }));
+    assert!(families.iter().any(|family| {
+        family["hypothesis_family"] == "ciphertext-transition-position-prior"
+            && family["lanes"] == 1
+            && family["unique_ready_prediction_artifacts"] == 1
+            && family["duplicate_artifact_groups"] == 0
+    }));
+    assert!(families.iter().any(|family| {
+        family["hypothesis_family"] == "ciphertext-turning-point-position-prior"
+            && family["lanes"] == 1
+            && family["unique_ready_prediction_artifacts"] == 1
+            && family["duplicate_artifact_groups"] == 0
+    }));
+    assert!(families.iter().any(|family| {
+        family["hypothesis_family"] == "ciphertext-window-balance-position-prior"
+            && family["lanes"] == 1
+            && family["ready_for_source_backed_observations"] == 0
+            && family["prediction_artifacts"] == 1
+            && family["unique_prediction_artifacts"] == 1
+            && family["unique_ready_prediction_artifacts"] == 0
+            && family["duplicate_artifact_groups"] == 0
+    }));
+    assert!(families.iter().any(|family| {
+        family["hypothesis_family"] == "position-grid-layout-prediction"
+            && family["lanes"] == 3
+            && family["unique_ready_prediction_artifacts"] == 3
+            && family["duplicate_artifact_groups"] == 0
+    }));
+    assert!(families.iter().any(|family| {
+        family["hypothesis_family"] == "position-mirror-prediction"
+            && family["lanes"] == 1
+            && family["unique_ready_prediction_artifacts"] == 1
+            && family["duplicate_artifact_groups"] == 0
+    }));
+    assert!(families.iter().any(|family| {
+        family["hypothesis_family"] == "position-period-prediction"
+            && family["lanes"] == 47
+            && family["ready_for_source_backed_observations"] == 47
+            && family["prediction_artifacts"] == 47
+            && family["unique_ready_prediction_artifacts"] == 5
             && family["duplicate_artifact_groups"] == 1
     }));
     assert!(families.iter().any(|family| {
         family["hypothesis_family"] == "position-spacing-prediction"
             && family["lanes"] == 1
+            && family["unique_ready_prediction_artifacts"] == 1
+            && family["duplicate_artifact_groups"] == 0
+    }));
+    assert!(families.iter().any(|family| {
+        family["hypothesis_family"] == "tableau-hill-prediction"
+            && family["lanes"] == 1
+            && family["ready_for_source_backed_observations"] == 1
+            && family["unique_prediction_artifacts"] == 1
             && family["unique_ready_prediction_artifacts"] == 1
             && family["duplicate_artifact_groups"] == 0
     }));
@@ -2068,8 +3850,15 @@ fn independent_lane_status_summarizes_ready_lanes() {
         1
     );
     assert_eq!(json["promoted_candidate"], false);
+    assert!(json["lanes"].as_array().unwrap().iter().any(|lane| {
+        lane["id"] == "non-anchor-position-period-v45"
+            && lane["ready_for_source_backed_observations"] == true
+            && lane["prediction_artifact_valid"] == true
+            && lane["promoted_candidate"] == false
+    }));
     assert!(json["lanes"].as_array().unwrap().iter().all(|lane| {
-        lane["ready_for_source_backed_observations"] == true
+        (lane["ready_for_source_backed_observations"] == true
+            || lane["status"] == "evaluator-pending")
             && lane["prediction_artifact_valid"] == true
             && lane["promoted_candidate"] == false
     }));
@@ -2441,19 +4230,94 @@ fn next_evidence_gate_prints_operational_checklist() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Next Evidence Gate"))
-        .stdout(predicate::str::contains("ready lanes: 19"))
+        .stdout(predicate::str::contains("total ready lanes: 66"))
         .stdout(predicate::str::contains(
-            "unique ready prediction artifacts: 2",
+            "ciphertext-adjacent-contrast-position-prior",
+        ))
+        .stdout(predicate::str::contains(
+            "ciphertext-hotspot-position-prior",
+        ))
+        .stdout(predicate::str::contains("ciphertext-only-position-prior"))
+        .stdout(predicate::str::contains("ciphertext-rarity-position-prior"))
+        .stdout(predicate::str::contains(
+            "ciphertext-repeat-distance-position-prior",
+        ))
+        .stdout(predicate::str::contains(
+            "ciphertext-period-match-position-prior",
+        ))
+        .stdout(predicate::str::contains(
+            "ciphertext-residue-balance-position-prior",
+        ))
+        .stdout(predicate::str::contains(
+            "ciphertext-skip-transition-position-prior",
+        ))
+        .stdout(predicate::str::contains(
+            "ciphertext-transition-position-prior",
+        ))
+        .stdout(predicate::str::contains(
+            "ciphertext-turning-point-position-prior",
+        ))
+        .stdout(predicate::str::contains(
+            "ciphertext-window-balance-position-prior",
+        ))
+        .stdout(predicate::str::contains("position-grid-layout-prediction"))
+        .stdout(predicate::str::contains("position-mirror-prediction"))
+        .stdout(predicate::str::contains("family ready lanes: 47"))
+        .stdout(predicate::str::contains("family unique ready artifacts: 5"))
+        .stdout(predicate::str::contains(
+            "unique ready prediction artifacts: 24",
         ))
         .stdout(predicate::str::contains(
             "duplicate prediction artifact groups: 1",
         ))
+        .stdout(predicate::str::contains(
+            "duplicate prediction artifact details",
+        ))
+        .stdout(predicate::str::contains("non-anchor-position-period-v35"))
+        .stdout(predicate::str::contains("non-anchor-position-period-v36"))
+        .stdout(predicate::str::contains("non-anchor-position-period-v37"))
+        .stdout(predicate::str::contains("non-anchor-position-period-v38"))
+        .stdout(predicate::str::contains("non-anchor-position-period-v39"))
+        .stdout(predicate::str::contains("non-anchor-position-period-v45"))
+        .stdout(predicate::str::contains("evaluator-pending lanes: 1"))
+        .stdout(predicate::str::contains("ciphertext-window-balance-v1"))
+        .stdout(predicate::str::contains("tableau-hill-prediction"))
         .stdout(predicate::str::contains("cia-artifact, cia-sculpture"))
-        .stdout(predicate::str::contains("valid source-backed archives: 0"))
+        .stdout(predicate::str::contains(
+            "quarantined plaintext-claim sources: solvekryptos-2026-claim",
+        ))
+        .stdout(predicate::str::contains("valid source-backed archives:"))
+        .stdout(predicate::str::contains(
+            "used eligible sources: cia-sculpture",
+        ))
+        .stdout(predicate::str::contains(
+            "all source-backed archives negative: true",
+        ))
+        .stdout(predicate::str::contains(
+            "unused eligible sources: cia-artifact",
+        ))
+        .stdout(predicate::str::contains("unused eligible source status:"))
+        .stdout(predicate::str::contains("scored-position markers=false"))
         .stdout(predicate::str::contains("source reviews scanned: 1"))
         .stdout(predicate::str::contains("source review available: true"))
         .stdout(predicate::str::contains("source-review-status"))
-        .stdout(predicate::str::contains("evidence available: false"))
+        .stdout(predicate::str::contains("evidence available:"))
+        .stdout(predicate::str::contains("next action kind:"))
+        .stdout(predicate::str::contains(
+            "new-source-backed-rationale-or-distinct-prediction-artifact",
+        ))
+        .stdout(predicate::str::contains("blocking conditions:"))
+        .stdout(predicate::str::contains(
+            "source-backed-evidence-negative-or-non-significant",
+        ))
+        .stdout(predicate::str::contains(
+            "unused-eligible-source-marked-non-scorable",
+        ))
+        .stdout(predicate::str::contains("recommended next step:"))
+        .stdout(predicate::str::contains("next check commands:"))
+        .stdout(predicate::str::contains("--require-unique-artifact"))
+        .stdout(predicate::str::contains("negative/non-significant"))
+        .stdout(predicate::str::contains("explicitly marked non-scorable"))
         .stdout(predicate::str::contains("Eligible Source Details"))
         .stdout(predicate::str::contains(
             "https://www.cia.gov/legacy/museum/artifact/kryptos/",
@@ -2461,13 +4325,72 @@ fn next_evidence_gate_prints_operational_checklist() {
         .stdout(predicate::str::contains(
             "Ready lane count is an operational inventory",
         ))
-        .stdout(predicate::str::contains("validate-period-observations"))
+        .stdout(predicate::str::contains(
+            "validate-ciphertext-prior-observations",
+        ))
+        .stdout(predicate::str::contains("evaluate-ciphertext-prior"))
+        .stdout(predicate::str::contains(
+            "validate-ciphertext-hotspot-observations",
+        ))
+        .stdout(predicate::str::contains("evaluate-ciphertext-hotspot"))
+        .stdout(predicate::str::contains(
+            "validate-ciphertext-rarity-observations",
+        ))
+        .stdout(predicate::str::contains("evaluate-ciphertext-rarity"))
+        .stdout(predicate::str::contains(
+            "validate-ciphertext-repeat-distance-observations",
+        ))
+        .stdout(predicate::str::contains(
+            "evaluate-ciphertext-repeat-distance",
+        ))
+        .stdout(predicate::str::contains(
+            "validate-ciphertext-period-match-observations",
+        ))
+        .stdout(predicate::str::contains("evaluate-ciphertext-period-match"))
+        .stdout(predicate::str::contains(
+            "validate-ciphertext-adjacent-contrast-observations",
+        ))
+        .stdout(predicate::str::contains(
+            "evaluate-ciphertext-adjacent-contrast",
+        ))
+        .stdout(predicate::str::contains(
+            "validate-ciphertext-residue-balance-observations",
+        ))
+        .stdout(predicate::str::contains(
+            "evaluate-ciphertext-residue-balance",
+        ))
+        .stdout(predicate::str::contains(
+            "validate-ciphertext-transition-observations",
+        ))
+        .stdout(predicate::str::contains("evaluate-ciphertext-transition"))
+        .stdout(predicate::str::contains(
+            "validate-ciphertext-turning-point-observations",
+        ))
+        .stdout(predicate::str::contains(
+            "evaluate-ciphertext-turning-point",
+        ))
         .stdout(predicate::str::contains("init-source-review"))
         .stdout(predicate::str::contains("validate-source-review"))
+        .stdout(predicate::str::contains("claim quarantine verifier"))
+        .stdout(predicate::str::contains("verify-plaintext-claim"))
+        .stdout(predicate::str::contains("verify-claim-reconciliation"))
         .stdout(predicate::str::contains("evaluate-period-prediction"))
         .stdout(predicate::str::contains("validate-spacing-observations"))
         .stdout(predicate::str::contains("evaluate-spacing-prediction"))
+        .stdout(predicate::str::contains("validate-mirror-observations"))
+        .stdout(predicate::str::contains("evaluate-mirror-prediction"))
+        .stdout(predicate::str::contains("validate-grid-observations"))
+        .stdout(predicate::str::contains("evaluate-grid-prediction"))
+        .stdout(predicate::str::contains(
+            "validate-tableau-hill-observations",
+        ))
+        .stdout(predicate::str::contains("evaluate-tableau-hill-prediction"))
+        .stdout(predicate::str::contains("--edge-axis column"))
         .stdout(predicate::str::contains("validate-evaluation-archive"))
+        .stdout(predicate::str::contains("evidence support details"))
+        .stdout(predicate::str::contains(
+            "results/period-observations/cia-k4-row-boundaries-v1",
+        ))
         .stdout(predicate::str::contains("promoted: false"));
 
     let output = Command::cargo_bin("kryptos-k4")
@@ -2479,17 +4402,94 @@ fn next_evidence_gate_prints_operational_checklist() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["ready_lanes"], 19);
+    assert_eq!(json["ready_lanes"], 66);
     assert_eq!(json["invalid_lanes"], 0);
-    assert_eq!(json["unique_ready_prediction_artifacts"], 2);
+    assert_eq!(json["unique_ready_prediction_artifacts"], 24);
     assert_eq!(json["duplicate_prediction_artifact_group_count"], 1);
-    assert_eq!(json["valid_source_backed_archive_count"], 0);
+    assert_eq!(
+        json["duplicate_prediction_artifact_groups"][0]["lane_ids"]
+            .as_array()
+            .unwrap()
+            .len(),
+        43
+    );
+    assert!(
+        json["duplicate_prediction_artifact_groups"][0]["lane_ids"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|lane| lane == "non-anchor-position-period-v35")
+    );
+    assert!(
+        json["duplicate_prediction_artifact_groups"][0]["lane_ids"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|lane| lane == "non-anchor-position-period-v36")
+    );
+    assert!(
+        json["duplicate_prediction_artifact_groups"][0]["lane_ids"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|lane| lane == "non-anchor-position-period-v37")
+    );
+    assert!(
+        json["duplicate_prediction_artifact_groups"][0]["lane_ids"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|lane| lane == "non-anchor-position-period-v39")
+    );
+    assert!(
+        json["duplicate_prediction_artifact_groups"][0]["lane_ids"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|lane| lane == "non-anchor-position-period-v45")
+    );
+    assert_eq!(json["evaluator_pending_lane_count"], 1);
+    assert_eq!(json["evaluator_pending_lanes"].as_array().unwrap().len(), 1);
+    assert_eq!(
+        json["evaluator_pending_lanes"][0]["id"],
+        "ciphertext-window-balance-v1"
+    );
+    assert_eq!(
+        json["quarantined_claim_source_ids"][0],
+        "solvekryptos-2026-claim"
+    );
+    assert!(
+        json["claim_verification_command"]
+            .as_str()
+            .unwrap()
+            .contains("verify-plaintext-claim")
+    );
+    assert!(
+        json["claim_verification_command"]
+            .as_str()
+            .unwrap()
+            .contains("verify-claim-reconciliation")
+    );
+    let valid_source_backed_archives = json["valid_source_backed_archive_count"]
+        .as_u64()
+        .expect("valid_source_backed_archive_count should be numeric");
     assert_eq!(json["invalid_archive_count"], 0);
+    assert_eq!(json["all_source_backed_archives_negative"], true);
+    assert_eq!(json["used_eligible_source_ids"][0], "cia-sculpture");
+    assert_eq!(json["unused_eligible_source_ids"][0], "cia-artifact");
+    assert_eq!(
+        json["unused_eligible_source_status"][0]["source_id"],
+        "cia-artifact"
+    );
+    assert_eq!(
+        json["unused_eligible_source_status"][0]["current_archive_has_scored_positions"],
+        false
+    );
     assert_eq!(json["scanned_source_review_count"], 1);
     assert_eq!(json["valid_source_review_count"], 1);
     assert_eq!(json["invalid_source_review_count"], 0);
     assert_eq!(json["source_review_available"], true);
-    assert_eq!(json["evidence_available"], false);
+    assert_eq!(json["evidence_available"], valid_source_backed_archives > 0);
     assert!(
         json["readiness_note"]
             .as_str()
@@ -2497,10 +4497,191 @@ fn next_evidence_gate_prints_operational_checklist() {
             .contains("unique ready prediction artifacts")
     );
     assert!(
+        json["recommended_next_step"]
+            .as_str()
+            .unwrap()
+            .contains("explicitly marked non-scorable")
+    );
+    assert_eq!(
+        json["next_action_kind"],
+        "new-source-backed-rationale-or-distinct-prediction-artifact"
+    );
+    assert!(
+        json["blocking_conditions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|condition| condition
+                .as_str()
+                .unwrap()
+                .contains("source-backed-evidence-negative-or-non-significant"))
+    );
+    assert!(
+        json["blocking_conditions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|condition| condition
+                .as_str()
+                .unwrap()
+                .contains("unused-eligible-source-marked-non-scorable"))
+    );
+    assert!(
+        json["evidence_support_summary"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|summary| summary
+                .as_str()
+                .unwrap()
+                .contains("negative/non-significant"))
+    );
+    let support_details = json["evidence_support_details"].as_array().unwrap();
+    assert_eq!(support_details.len(), valid_source_backed_archives as usize);
+    assert!(support_details.iter().any(|detail| {
+        detail["directory"]
+            .as_str()
+            .unwrap()
+            .contains("results/period-observations/cia-k4-row-boundaries-v1")
+            && detail["artifact_kind"] == "period"
+            && detail["observation_source_ids"][0] == "cia-sculpture"
+            && detail["best_model"] == "period 2 residue 0"
+            && detail["observed_hits"] == "4/6 positions"
+            && detail["null_mean_best_hits"].as_f64().unwrap() > 0.0
+            && detail["empirical_p_value"].as_f64().unwrap() > 0.05
+            && detail["support_status"] == "negative/non-significant"
+    }));
+    assert!(support_details.iter().any(|detail| {
+        detail["directory"]
+            .as_str()
+            .unwrap()
+            .contains("results/ciphertext-adjacent-contrast-observations/cia-k4-row-boundaries-v1")
+            && detail["artifact_kind"] == "ciphertext-adjacent-contrast"
+            && detail["observation_source_ids"][0] == "cia-sculpture"
+            && detail["best_model"] == "ciphertext adjacent-contrast positions"
+            && detail["observed_hits"] == "2/6 positions"
+            && detail["empirical_p_value"].as_f64().unwrap() > 0.05
+            && detail["support_status"] == "negative/non-significant"
+    }));
+    assert!(support_details.iter().any(|detail| {
+        detail["directory"]
+            .as_str()
+            .unwrap()
+            .contains("results/grid-observations/cia-k4-row-boundaries-column-v1")
+            && detail["artifact_kind"] == "grid"
+            && detail["observation_source_ids"][0] == "cia-sculpture"
+            && detail["best_model"] == "7x14 column edges"
+            && detail["observed_hits"] == "4/6 positions"
+            && detail["empirical_p_value"].as_f64().unwrap() > 0.05
+            && detail["support_status"] == "negative/non-significant"
+    }));
+    assert!(support_details.iter().any(|detail| {
+        detail["directory"]
+            .as_str()
+            .unwrap()
+            .contains("results/grid-observations/cia-k4-row-boundaries-compass-axis-v1")
+            && detail["artifact_kind"] == "grid"
+            && detail["observation_source_ids"][0] == "cia-sculpture"
+            && detail["best_model"] == "7x14 compass-axis positions"
+            && detail["observed_hits"] == "1/6 positions"
+            && detail["empirical_p_value"].as_f64().unwrap() > 0.05
+            && detail["support_status"] == "negative/non-significant"
+    }));
+    assert!(support_details.iter().any(|detail| {
+        detail["directory"]
+            .as_str()
+            .unwrap()
+            .contains("results/ciphertext-residue-balance-observations/cia-k4-row-boundaries-v1")
+            && detail["artifact_kind"] == "ciphertext-residue-balance"
+            && detail["observation_source_ids"][0] == "cia-sculpture"
+            && detail["best_model"] == "ciphertext residue-balance modulus 2 residue 0"
+            && detail["observed_hits"] == "4/6 positions"
+            && detail["empirical_p_value"].as_f64().unwrap() > 0.05
+            && detail["support_status"] == "negative/non-significant"
+    }));
+    assert!(support_details.iter().any(|detail| {
+        detail["directory"]
+            .as_str()
+            .unwrap()
+            .contains("results/ciphertext-hotspot-observations/cia-k4-row-boundaries-v1")
+            && detail["artifact_kind"] == "ciphertext-hotspot"
+            && detail["observation_source_ids"][0] == "cia-sculpture"
+            && detail["best_model"] == "ciphertext hotspot positions"
+            && detail["observed_hits"] == "0/6 positions"
+            && detail["empirical_p_value"].as_f64().unwrap() > 0.05
+            && detail["support_status"] == "negative/non-significant"
+    }));
+    assert!(support_details.iter().any(|detail| {
+        detail["directory"]
+            .as_str()
+            .unwrap()
+            .contains("results/ciphertext-rarity-observations/cia-k4-row-boundaries-v1")
+            && detail["artifact_kind"] == "ciphertext-rarity"
+            && detail["observation_source_ids"][0] == "cia-sculpture"
+            && detail["best_model"] == "ciphertext rare-letter positions"
+            && detail["observed_hits"] == "2/6 positions"
+            && detail["empirical_p_value"].as_f64().unwrap() > 0.05
+            && detail["support_status"] == "negative/non-significant"
+    }));
+    assert!(support_details.iter().any(|detail| {
+        detail["directory"]
+            .as_str()
+            .unwrap()
+            .contains("results/ciphertext-repeat-distance-observations/cia-k4-row-boundaries-v1")
+            && detail["artifact_kind"] == "ciphertext-repeat-distance"
+            && detail["observation_source_ids"][0] == "cia-sculpture"
+            && detail["best_model"] == "ciphertext repeat-distance positions"
+            && detail["observed_hits"] == "2/6 positions"
+            && detail["empirical_p_value"].as_f64().unwrap() > 0.05
+            && detail["support_status"] == "negative/non-significant"
+    }));
+    assert!(support_details.iter().any(|detail| {
+        detail["directory"]
+            .as_str()
+            .unwrap()
+            .contains("results/ciphertext-period-match-observations/cia-k4-row-boundaries-v1")
+            && detail["artifact_kind"] == "ciphertext-period-match"
+            && detail["observation_source_ids"][0] == "cia-sculpture"
+            && detail["best_model"] == "ciphertext shifted same-letter period 2 endpoints"
+            && detail["observed_hits"] == "1/6 positions"
+            && detail["empirical_p_value"].as_f64().unwrap() > 0.05
+            && detail["support_status"] == "negative/non-significant"
+    }));
+    assert!(support_details.iter().any(|detail| {
+        detail["directory"]
+            .as_str()
+            .unwrap()
+            .contains("results/ciphertext-transition-observations/cia-k4-row-boundaries-v1")
+            && detail["artifact_kind"] == "ciphertext-transition"
+            && detail["observation_source_ids"][0] == "cia-sculpture"
+            && detail["best_model"] == "ciphertext transition-pressure positions"
+            && detail["observed_hits"] == "0/6 positions"
+            && detail["empirical_p_value"].as_f64().unwrap() > 0.05
+            && detail["support_status"] == "negative/non-significant"
+    }));
+    assert!(support_details.iter().any(|detail| {
+        detail["directory"]
+            .as_str()
+            .unwrap()
+            .contains("results/ciphertext-turning-point-observations/cia-k4-row-boundaries-v1")
+            && detail["artifact_kind"] == "ciphertext-turning-point"
+            && detail["observation_source_ids"][0] == "cia-sculpture"
+            && detail["best_model"] == "ciphertext turning-point positions"
+            && detail["observed_hits"] == "2/6 positions"
+            && detail["empirical_p_value"].as_f64().unwrap() > 0.05
+            && detail["support_status"] == "negative/non-significant"
+    }));
+    assert!(
         json["source_review_status_command"]
             .as_str()
             .unwrap()
             .contains("source-review-status")
+    );
+    assert!(
+        json["source_observation_status_command"]
+            .as_str()
+            .unwrap()
+            .contains("source-observation-status")
     );
     assert!(
         json["source_review_scaffold_command"]
@@ -2515,11 +4696,28 @@ fn next_evidence_gate_prints_operational_checklist() {
             .contains("validate-source-review")
     );
     assert!(
+        json["next_check_commands"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|command| command
+                .as_str()
+                .unwrap()
+                .contains("--require-unique-artifact"))
+    );
+    assert!(
         json["required_observation_fields"]
             .as_array()
             .unwrap()
             .iter()
             .any(|field| field.as_str().unwrap().contains("source-review file"))
+    );
+    assert!(
+        json["required_observation_fields"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|field| field.as_str().unwrap().contains("local source archive"))
     );
     assert_eq!(json["promoted_candidate"], false);
     assert!(
@@ -2539,7 +4737,253 @@ fn next_evidence_gate_prints_operational_checklist() {
                 && source["locally_archived"] == true)
     );
     let gates = json["gates"].as_array().unwrap();
-    assert_eq!(gates.len(), 2);
+    assert_eq!(gates.len(), 15);
+    assert!(gates.iter().any(|gate| {
+        gate["hypothesis_family"] == "ciphertext-adjacent-contrast-position-prior"
+            && gate["representative_preregistration"]
+                == "experiments/preregistrations/ciphertext-adjacent-contrast-prior-v1.json"
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("validate-ciphertext-adjacent-contrast-observations")
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("experiments/predictions/ciphertext-adjacent-contrast-prior-v1.json")
+            && gate["evaluation_command"]
+                .as_str()
+                .unwrap()
+                .contains("evaluate-ciphertext-adjacent-contrast")
+            && gate["archive_validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("results/ciphertext-adjacent-contrast-observations")
+    }));
+    assert!(gates.iter().any(|gate| {
+        gate["hypothesis_family"] == "ciphertext-hotspot-position-prior"
+            && gate["representative_preregistration"]
+                == "experiments/preregistrations/ciphertext-hotspot-prior-v1.json"
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("validate-ciphertext-hotspot-observations")
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("experiments/predictions/ciphertext-hotspot-prior-v1.json")
+            && gate["evaluation_command"]
+                .as_str()
+                .unwrap()
+                .contains("evaluate-ciphertext-hotspot")
+            && gate["archive_validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("results/ciphertext-hotspot-observations")
+    }));
+    assert!(gates.iter().any(|gate| {
+        gate["hypothesis_family"] == "ciphertext-only-position-prior"
+            && gate["representative_preregistration"]
+                == "experiments/preregistrations/ciphertext-structure-prior-v1.json"
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("validate-ciphertext-prior-observations")
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("experiments/predictions/ciphertext-structure-prior-v1.json")
+            && gate["evaluation_command"]
+                .as_str()
+                .unwrap()
+                .contains("evaluate-ciphertext-prior")
+            && gate["archive_validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("results/ciphertext-prior-observations")
+    }));
+    assert!(gates.iter().any(|gate| {
+        gate["hypothesis_family"] == "ciphertext-rarity-position-prior"
+            && gate["representative_preregistration"]
+                == "experiments/preregistrations/ciphertext-rarity-prior-v1.json"
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("validate-ciphertext-rarity-observations")
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("experiments/predictions/ciphertext-rarity-prior-v1.json")
+            && gate["evaluation_command"]
+                .as_str()
+                .unwrap()
+                .contains("evaluate-ciphertext-rarity")
+            && gate["archive_validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("results/ciphertext-rarity-observations")
+    }));
+    assert!(gates.iter().any(|gate| {
+        gate["hypothesis_family"] == "ciphertext-repeat-distance-position-prior"
+            && gate["representative_preregistration"]
+                == "experiments/preregistrations/ciphertext-repeat-distance-v1.json"
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("validate-ciphertext-repeat-distance-observations")
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("experiments/predictions/ciphertext-repeat-distance-v1.json")
+            && gate["evaluation_command"]
+                .as_str()
+                .unwrap()
+                .contains("evaluate-ciphertext-repeat-distance")
+            && gate["archive_validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("results/ciphertext-repeat-distance-observations")
+    }));
+    assert!(gates.iter().any(|gate| {
+        gate["hypothesis_family"] == "ciphertext-period-match-position-prior"
+            && gate["representative_preregistration"]
+                == "experiments/preregistrations/ciphertext-period-match-v1.json"
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("validate-ciphertext-period-match-observations")
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("experiments/predictions/ciphertext-period-match-v1.json")
+            && gate["evaluation_command"]
+                .as_str()
+                .unwrap()
+                .contains("evaluate-ciphertext-period-match")
+            && gate["archive_validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("results/ciphertext-period-match-observations")
+    }));
+    assert!(gates.iter().any(|gate| {
+        gate["hypothesis_family"] == "ciphertext-residue-balance-position-prior"
+            && gate["representative_preregistration"]
+                == "experiments/preregistrations/ciphertext-residue-balance-high-moduli-v1.json"
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("validate-ciphertext-residue-balance-observations")
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("experiments/predictions/ciphertext-residue-balance-high-moduli-v1.json")
+            && gate["evaluation_command"]
+                .as_str()
+                .unwrap()
+                .contains("evaluate-ciphertext-residue-balance")
+            && gate["archive_validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("results/ciphertext-residue-balance-observations")
+    }));
+    assert!(gates.iter().any(|gate| {
+        gate["hypothesis_family"] == "ciphertext-skip-transition-position-prior"
+            && gate["representative_preregistration"]
+                == "experiments/preregistrations/ciphertext-skip-transition-v1.json"
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("validate-ciphertext-skip-transition-observations")
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("experiments/predictions/ciphertext-skip-transition-v1.json")
+            && gate["evaluation_command"]
+                .as_str()
+                .unwrap()
+                .contains("evaluate-ciphertext-skip-transition")
+            && gate["archive_validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("results/ciphertext-skip-transition-observations")
+    }));
+    assert!(gates.iter().any(|gate| {
+        gate["hypothesis_family"] == "ciphertext-transition-position-prior"
+            && gate["representative_preregistration"]
+                == "experiments/preregistrations/ciphertext-transition-prior-v1.json"
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("validate-ciphertext-transition-observations")
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("experiments/predictions/ciphertext-transition-prior-v1.json")
+            && gate["evaluation_command"]
+                .as_str()
+                .unwrap()
+                .contains("evaluate-ciphertext-transition")
+            && gate["archive_validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("results/ciphertext-transition-observations")
+    }));
+    assert!(gates.iter().any(|gate| {
+        gate["hypothesis_family"] == "ciphertext-turning-point-position-prior"
+            && gate["representative_preregistration"]
+                == "experiments/preregistrations/ciphertext-turning-point-v1.json"
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("validate-ciphertext-turning-point-observations")
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("experiments/predictions/ciphertext-turning-point-v1.json")
+            && gate["evaluation_command"]
+                .as_str()
+                .unwrap()
+                .contains("evaluate-ciphertext-turning-point")
+            && gate["archive_validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("results/ciphertext-turning-point-observations")
+    }));
+    assert!(gates.iter().any(|gate| {
+        gate["hypothesis_family"] == "position-grid-layout-prediction"
+            && gate["representative_preregistration"]
+                == "experiments/preregistrations/non-anchor-position-grid-column-v1.json"
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("validate-grid-observations")
+            && gate["evaluation_command"]
+                .as_str()
+                .unwrap()
+                .contains("evaluate-grid-prediction")
+            && gate["evaluation_command"]
+                .as_str()
+                .unwrap()
+                .contains("--edge-axis column")
+            && gate["archive_validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("results/grid-observations")
+    }));
+    assert!(gates.iter().any(|gate| {
+        gate["hypothesis_family"] == "position-mirror-prediction"
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("validate-mirror-observations")
+            && gate["evaluation_command"]
+                .as_str()
+                .unwrap()
+                .contains("evaluate-mirror-prediction")
+            && gate["archive_validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("results/mirror-observations")
+    }));
     assert!(gates.iter().any(|gate| {
         gate["hypothesis_family"] == "position-period-prediction"
             && gate["validation_command"]
@@ -2565,6 +5009,21 @@ fn next_evidence_gate_prints_operational_checklist() {
                 .as_str()
                 .unwrap()
                 .contains("evaluate-spacing-prediction")
+    }));
+    assert!(gates.iter().any(|gate| {
+        gate["hypothesis_family"] == "tableau-hill-prediction"
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("validate-tableau-hill-observations")
+            && gate["evaluation_command"]
+                .as_str()
+                .unwrap()
+                .contains("evaluate-tableau-hill-prediction")
+            && gate["archive_validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("results/tableau-hill-observations")
     }));
 }
 
@@ -2612,6 +5071,196 @@ fn independent_evidence_status_reports_missing_and_invalid_archives() {
     assert_eq!(json["evidence_available"], false);
     assert_eq!(json["promoted_candidate"], false);
     assert_eq!(json["archives"][0]["valid"], false);
+    assert_eq!(json["archives"][0]["support_status"], "invalid");
+}
+
+#[test]
+fn independent_evidence_status_reports_archive_scores() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .arg("independent-evidence-status")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("period 2 residue 0"))
+        .stdout(predicate::str::contains("4/6 positions"))
+        .stdout(predicate::str::contains("modulus 2 residue 1"))
+        .stdout(predicate::str::contains("8/15 pairs"))
+        .stdout(predicate::str::contains("7x14 row 1 concentration"))
+        .stdout(predicate::str::contains("3/6 positions"))
+        .stdout(predicate::str::contains("7x14 compass-axis positions"))
+        .stdout(predicate::str::contains(
+            "ciphertext prior period 2 residue 0",
+        ))
+        .stdout(predicate::str::contains("ciphertext hotspot positions"))
+        .stdout(predicate::str::contains("ciphertext rare-letter positions"))
+        .stdout(predicate::str::contains(
+            "ciphertext turning-point positions",
+        ))
+        .stdout(predicate::str::contains("negative/non-significant"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["independent-evidence-status", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    let archives = json["archives"].as_array().unwrap();
+    let period = archives
+        .iter()
+        .find(|archive| {
+            archive["artifact_kind"] == "period"
+                && archive["directory"]
+                    .as_str()
+                    .unwrap()
+                    .contains("results/period-observations/cia-k4-row-boundaries-v1")
+        })
+        .expect("period evidence archive should be present");
+    let period5 = archives
+        .iter()
+        .find(|archive| {
+            archive["artifact_kind"] == "period"
+                && archive["directory"]
+                    .as_str()
+                    .unwrap()
+                    .contains("results/period-observations/cia-k4-row-boundaries-period5-v42")
+        })
+        .expect("period-5 evidence archive should be present");
+    let spacing = archives
+        .iter()
+        .find(|archive| archive["artifact_kind"] == "spacing")
+        .expect("spacing evidence archive should be present");
+    let tableau_hill = archives
+        .iter()
+        .find(|archive| archive["artifact_kind"] == "tableau-hill")
+        .expect("tableau/HILL evidence archive should be present");
+    let grid_compass_axis = archives
+        .iter()
+        .find(|archive| {
+            archive["directory"]
+                .as_str()
+                .unwrap()
+                .contains("results/grid-observations/cia-k4-row-boundaries-compass-axis-v1")
+        })
+        .expect("grid compass-axis evidence archive should be present");
+    let ciphertext_prior = archives
+        .iter()
+        .find(|archive| archive["artifact_kind"] == "ciphertext-prior")
+        .expect("ciphertext-prior evidence archive should be present");
+    let ciphertext_hotspot = archives
+        .iter()
+        .find(|archive| archive["artifact_kind"] == "ciphertext-hotspot")
+        .expect("ciphertext-hotspot evidence archive should be present");
+    let ciphertext_rarity = archives
+        .iter()
+        .find(|archive| archive["artifact_kind"] == "ciphertext-rarity")
+        .expect("ciphertext-rarity evidence archive should be present");
+    let ciphertext_repeat_distance = archives
+        .iter()
+        .find(|archive| archive["artifact_kind"] == "ciphertext-repeat-distance")
+        .expect("ciphertext-repeat-distance evidence archive should be present");
+    let ciphertext_period_match = archives
+        .iter()
+        .find(|archive| archive["artifact_kind"] == "ciphertext-period-match")
+        .expect("ciphertext-period-match evidence archive should be present");
+    let ciphertext_transition = archives
+        .iter()
+        .find(|archive| archive["artifact_kind"] == "ciphertext-transition")
+        .expect("ciphertext-transition evidence archive should be present");
+    let ciphertext_turning_point = archives
+        .iter()
+        .find(|archive| archive["artifact_kind"] == "ciphertext-turning-point")
+        .expect("ciphertext-turning-point evidence archive should be present");
+    assert_eq!(period["best_model"], "period 2 residue 0");
+    assert_eq!(period["observed_hits"], "4/6 positions");
+    assert_eq!(period["observation_source_ids"][0], "cia-sculpture");
+    assert_eq!(period["support_status"], "negative/non-significant");
+    assert_eq!(period5["best_model"], "period 5 residue 0");
+    assert_eq!(period5["observed_hits"], "2/6 positions");
+    assert_eq!(period5["observation_source_ids"][0], "cia-sculpture");
+    assert_eq!(period5["support_status"], "negative/non-significant");
+    assert_eq!(spacing["best_model"], "modulus 2 residue 1");
+    assert_eq!(spacing["observed_hits"], "8/15 pairs");
+    assert_eq!(spacing["support_status"], "negative/non-significant");
+    assert_eq!(tableau_hill["best_model"], "7x14 row 1 concentration");
+    assert_eq!(tableau_hill["observed_hits"], "3/6 positions");
+    assert_eq!(tableau_hill["support_status"], "negative/non-significant");
+    assert_eq!(
+        grid_compass_axis["best_model"],
+        "7x14 compass-axis positions"
+    );
+    assert_eq!(grid_compass_axis["observed_hits"], "1/6 positions");
+    assert_eq!(
+        grid_compass_axis["support_status"],
+        "negative/non-significant"
+    );
+    assert_eq!(
+        ciphertext_prior["best_model"],
+        "ciphertext prior period 2 residue 0"
+    );
+    assert_eq!(ciphertext_prior["observed_hits"], "4/6 positions");
+    assert_eq!(
+        ciphertext_prior["support_status"],
+        "negative/non-significant"
+    );
+    assert_eq!(
+        ciphertext_hotspot["best_model"],
+        "ciphertext hotspot positions"
+    );
+    assert_eq!(ciphertext_hotspot["observed_hits"], "0/6 positions");
+    assert_eq!(
+        ciphertext_hotspot["support_status"],
+        "negative/non-significant"
+    );
+    assert_eq!(
+        ciphertext_rarity["best_model"],
+        "ciphertext rare-letter positions"
+    );
+    assert_eq!(ciphertext_rarity["observed_hits"], "2/6 positions");
+    assert_eq!(
+        ciphertext_rarity["support_status"],
+        "negative/non-significant"
+    );
+    assert_eq!(
+        ciphertext_repeat_distance["best_model"],
+        "ciphertext repeat-distance positions"
+    );
+    assert_eq!(ciphertext_repeat_distance["observed_hits"], "2/6 positions");
+    assert_eq!(
+        ciphertext_repeat_distance["support_status"],
+        "negative/non-significant"
+    );
+    assert_eq!(
+        ciphertext_period_match["best_model"],
+        "ciphertext shifted same-letter period 2 endpoints"
+    );
+    assert_eq!(ciphertext_period_match["observed_hits"], "1/6 positions");
+    assert_eq!(
+        ciphertext_period_match["support_status"],
+        "negative/non-significant"
+    );
+    assert_eq!(
+        ciphertext_transition["best_model"],
+        "ciphertext transition-pressure positions"
+    );
+    assert_eq!(ciphertext_transition["observed_hits"], "0/6 positions");
+    assert_eq!(
+        ciphertext_transition["support_status"],
+        "negative/non-significant"
+    );
+    assert_eq!(
+        ciphertext_turning_point["best_model"],
+        "ciphertext turning-point positions"
+    );
+    assert_eq!(ciphertext_turning_point["observed_hits"], "2/6 positions");
+    assert_eq!(
+        ciphertext_turning_point["support_status"],
+        "negative/non-significant"
+    );
+    assert_eq!(json["promoted_candidate"], false);
 }
 
 #[test]
@@ -3038,6 +5687,157 @@ fn evaluate_spacing_prediction_accepts_source_backed_position_file() {
 }
 
 #[test]
+fn evaluate_mirror_prediction_scores_independent_position_set() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-mirror-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-mirror-v1.json",
+            "--positions",
+            "1,97",
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Mirror Prediction Evaluation"))
+        .stdout(predicate::str::contains("mirror pair hits: 1/1"))
+        .stdout(predicate::str::contains("promoted: false"))
+        .stdout(predicate::str::contains("not a claimed solution"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-mirror-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-mirror-v1.json",
+            "--positions",
+            "1,97",
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["observed_position_count"], 2);
+    assert_eq!(json["possible_observed_mirror_pairs"], 1);
+    assert_eq!(json["mirror_pair_hits"], 1);
+    assert_eq!(json["matching_pairs_one_based"][0][0], 1);
+    assert_eq!(json["matching_pairs_one_based"][0][1], 97);
+    assert_eq!(json["source_backed_observation"], false);
+    assert!(
+        json["observation_warning"]
+            .as_str()
+            .unwrap()
+            .contains("diagnostic")
+    );
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(json["empirical_p_value"].is_number());
+}
+
+#[test]
+fn evaluate_mirror_prediction_accepts_source_backed_position_file() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("observations.json");
+    let output_dir = temp.path().join("mirror-output");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "synthetic-mirror-test",
+  "source_ids": ["cia-artifact"],
+  "positions_one_based": [1, 97],
+  "position_notes": {
+    "1": "Synthetic source-backed note for position 1.",
+    "97": "Synthetic source-backed note for position 97."
+  },
+  "rationale": "Synthetic CLI test fixture for the mirror observation-file input path."
+}"#,
+    )
+    .unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-mirror-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-mirror-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-mirror-v1.json",
+            "--positions-file",
+            observations_path.to_str().unwrap(),
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+            "--output-dir",
+            output_dir.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["observation_id"], "synthetic-mirror-test");
+    assert_eq!(json["observation_source_ids"][0], "cia-artifact");
+    assert_eq!(json["source_backed_observation"], true);
+    assert_eq!(json["observation_warning"], Value::Null);
+    assert_eq!(json["mirror_pair_hits"], 1);
+    assert_eq!(json["promoted_candidate"], false);
+
+    for file_name in [
+        "artifact.json",
+        "observations.json",
+        "preregistration.json",
+        "result.json",
+        "summary.md",
+        "command.txt",
+    ] {
+        assert!(output_dir.join(file_name).exists(), "{file_name} missing");
+    }
+    let archived_summary = std::fs::read_to_string(output_dir.join("summary.md")).unwrap();
+    assert!(archived_summary.contains("Mirror Prediction Evaluation"));
+    assert!(archived_summary.contains("source-backed observation: true"));
+    let archived_command = std::fs::read_to_string(output_dir.join("command.txt")).unwrap();
+    assert!(archived_command.contains("evaluate-mirror-prediction"));
+    assert!(archived_command.contains("--artifact artifact.json"));
+    assert!(archived_command.contains("--preregistration preregistration.json"));
+    assert!(archived_command.contains("--positions-file observations.json"));
+
+    let validation_output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-evaluation-archive",
+            "--input",
+            output_dir.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let validation: Value = serde_json::from_slice(&validation_output).unwrap();
+    assert_eq!(validation["valid"], true);
+    assert_eq!(validation["artifact_kind"], "mirror");
+    assert_eq!(validation["source_backed_observation"], true);
+}
+
+#[test]
 fn validate_evaluation_archive_rejects_incomplete_archive() {
     let temp = tempfile::tempdir().unwrap();
     std::fs::write(
@@ -3415,6 +6215,520 @@ fn validate_spacing_observations_accepts_source_backed_non_anchor_positions() {
     );
     assert_eq!(json["observed_position_count"], 3);
     assert_eq!(json["promoted_candidate"], false);
+}
+
+#[test]
+fn validate_mirror_observations_accepts_source_backed_non_anchor_positions() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("observations.json");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "synthetic-mirror-validation-test",
+  "source_ids": ["cia-artifact"],
+  "positions_one_based": [1, 97],
+  "position_notes": {
+    "1": "Synthetic source-backed note for position 1.",
+    "97": "Synthetic source-backed note for position 97."
+  },
+  "rationale": "Synthetic CLI test fixture for mirror observation validation."
+}"#,
+    )
+    .unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-mirror-observations",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-mirror-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-mirror-v1.json",
+            "--input",
+            observations_path.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["valid"], true);
+    assert_eq!(json["preregistration_id"], "non-anchor-position-mirror-v1");
+    assert_eq!(json["artifact_valid"], true);
+    assert_eq!(json["observation_id"], "synthetic-mirror-validation-test");
+    assert_eq!(json["observation_source_ids"][0], "cia-artifact");
+    assert_eq!(
+        json["observation_rationale"],
+        "Synthetic CLI test fixture for mirror observation validation."
+    );
+    assert_eq!(json["observed_position_count"], 2);
+    assert_eq!(json["promoted_candidate"], false);
+}
+
+#[test]
+fn grid_layout_prediction_plan_and_validation_cover_source_backed_positions() {
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["grid-layout-prediction-plan", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    let row_fixture: Value = serde_json::from_str(
+        &std::fs::read_to_string("experiments/predictions/non-anchor-position-grid-layout-v1.json")
+            .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(row_fixture, json);
+    assert_eq!(json["row_count"], 7);
+    assert_eq!(json["column_count"], 14);
+    assert_eq!(json["padded_position_count"], 98);
+    assert_eq!(json["pad_positions_one_based"][0], 98);
+    assert_eq!(json["scored_edge_axis"], "row");
+    assert_eq!(
+        json["row_edge_positions_one_based"]
+            .as_array()
+            .unwrap()
+            .len(),
+        9
+    );
+    assert_eq!(
+        json["column_edge_positions_one_based"]
+            .as_array()
+            .unwrap()
+            .len(),
+        27
+    );
+    assert_eq!(json["columns"].as_array().unwrap().len(), 14);
+    assert_eq!(json["promoted_candidate"], false);
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "grid-layout-prediction-plan",
+            "--edge-axis",
+            "column",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let column_json: Value = serde_json::from_slice(&output).unwrap();
+    let column_fixture: Value = serde_json::from_str(
+        &std::fs::read_to_string("experiments/predictions/non-anchor-position-grid-column-v1.json")
+            .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(column_fixture, column_json);
+    assert_eq!(column_json["scored_edge_axis"], "column");
+    assert!(
+        column_json["prediction_rule"]
+            .as_str()
+            .unwrap()
+            .contains("column-edge positions")
+    );
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "grid-layout-prediction-plan",
+            "--edge-axis",
+            "compass-axis",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let compass_json: Value = serde_json::from_slice(&output).unwrap();
+    let compass_fixture: Value = serde_json::from_str(
+        &std::fs::read_to_string(
+            "experiments/predictions/non-anchor-position-grid-compass-axis-v1.json",
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(compass_fixture, compass_json);
+    assert_eq!(compass_json["scored_edge_axis"], "compass-axis");
+    assert!(
+        compass_json["prediction_rule"]
+            .as_str()
+            .unwrap()
+            .contains("compass-axis")
+    );
+
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("observations.json");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "synthetic-grid-validation-test",
+  "source_ids": ["cia-artifact"],
+  "positions_one_based": [1, 14, 15],
+  "position_notes": {
+    "1": "Synthetic source-backed note for position 1.",
+    "14": "Synthetic source-backed note for position 14.",
+    "15": "Synthetic source-backed note for position 15."
+  },
+  "rationale": "Synthetic CLI test fixture for grid observation validation."
+}"#,
+    )
+    .unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-grid-observations",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-grid-layout-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-grid-layout-v1.json",
+            "--input",
+            observations_path.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["valid"], true);
+    assert_eq!(
+        json["preregistration_id"],
+        "non-anchor-position-grid-layout-v1"
+    );
+    assert_eq!(json["artifact_valid"], true);
+    assert_eq!(json["observation_id"], "synthetic-grid-validation-test");
+    assert_eq!(json["observed_position_count"], 3);
+    assert_eq!(json["promoted_candidate"], false);
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-grid-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-grid-layout-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-grid-layout-v1.json",
+            "--positions-file",
+            observations_path.to_str().unwrap(),
+            "--edge-axis",
+            "column",
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "does not match preregistered grid_edge_axis `row`",
+        ));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-grid-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-grid-compass-axis-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/non-anchor-position-grid-compass-axis-v1.json",
+            "--positions",
+            "36,43,97",
+            "--edge-axis",
+            "compass-axis",
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["edge_axis"], "compass-axis");
+    assert_eq!(json["edge_hits"], 2);
+    assert_eq!(json["matching_edge_positions_one_based"][0], 36);
+    assert_eq!(json["matching_edge_positions_one_based"][1], 43);
+    assert_eq!(json["promoted_candidate"], false);
+}
+
+#[test]
+fn validate_tableau_hill_observations_accepts_source_mapped_non_anchor_positions() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("tableau-hill-observations.json");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "synthetic-tableau-hill-validation-test",
+  "source_ids": ["cia-sculpture"],
+  "source_review_file": "experiments/source-reviews/cia-source-review-v1.json",
+  "positions_one_based": [1, 14, 15],
+  "position_notes": {
+    "1": "Synthetic source-backed note for position 1.",
+    "14": "Synthetic source-backed note for position 14.",
+    "15": "Synthetic source-backed note for position 15."
+  },
+  "rationale": "Synthetic CLI test fixture for Tableau/HILL source-map observation validation."
+}"#,
+    )
+    .unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-tableau-hill-observations",
+            "--artifact",
+            "experiments/predictions/tableau-hill-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/tableau-hill-v1.json",
+            "--input",
+            observations_path.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["valid"], true);
+    assert_eq!(json["preregistration_id"], "tableau-hill-v1");
+    assert_eq!(json["artifact_valid"], true);
+    assert_eq!(
+        json["observation_id"],
+        "synthetic-tableau-hill-validation-test"
+    );
+    assert_eq!(json["observation_source_ids"][0], "cia-sculpture");
+    assert_eq!(json["observed_position_count"], 3);
+    assert_eq!(json["promoted_candidate"], false);
+}
+
+#[test]
+fn validate_tableau_hill_observations_rejects_public_anchor_positions() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("tableau-hill-anchor-observations.json");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "synthetic-tableau-hill-anchor-rejection-test",
+  "source_ids": ["cia-sculpture"],
+  "source_review_file": "experiments/source-reviews/cia-source-review-v1.json",
+  "positions_one_based": [1, 22],
+  "position_notes": {
+    "1": "Synthetic source-backed note for position 1.",
+    "22": "Synthetic source-backed note for public-anchor position 22."
+  },
+  "rationale": "Synthetic CLI test fixture for Tableau/HILL public-anchor rejection."
+}"#,
+    )
+    .unwrap();
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-tableau-hill-observations",
+            "--artifact",
+            "experiments/predictions/tableau-hill-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/tableau-hill-v1.json",
+            "--input",
+            observations_path.to_str().unwrap(),
+        ])
+        .assert()
+        .failure()
+        .stdout(predicate::str::contains(
+            "position `22` is a public-anchor position",
+        ))
+        .stderr(predicate::str::contains(
+            "tableau/HILL observations failed validation",
+        ));
+}
+
+#[test]
+fn evaluate_tableau_hill_prediction_scores_source_mapped_observations() {
+    let temp = tempfile::tempdir().unwrap();
+    let observations_path = temp.path().join("tableau-hill-observations.json");
+    let output_dir = temp.path().join("tableau-hill-archive");
+    std::fs::write(
+        &observations_path,
+        r#"{
+  "id": "synthetic-tableau-hill-evaluation-test",
+  "source_ids": ["cia-sculpture"],
+  "source_review_file": "experiments/source-reviews/cia-source-review-v1.json",
+  "positions_one_based": [1, 2, 15],
+  "position_notes": {
+    "1": "Synthetic source-backed note for position 1.",
+    "2": "Synthetic source-backed note for position 2.",
+    "15": "Synthetic source-backed note for position 15."
+  },
+  "rationale": "Synthetic CLI test fixture for Tableau/HILL source-map evaluation."
+}"#,
+    )
+    .unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-tableau-hill-prediction",
+            "--artifact",
+            "experiments/predictions/tableau-hill-v1.json",
+            "--preregistration",
+            "experiments/preregistrations/tableau-hill-v1.json",
+            "--positions-file",
+            observations_path.to_str().unwrap(),
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+            "--output-dir",
+            output_dir.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["source_backed_observation"], true);
+    assert_eq!(
+        json["observation_id"],
+        "synthetic-tableau-hill-evaluation-test"
+    );
+    assert_eq!(json["best_hits"], 2);
+    assert_eq!(json["best_axis"], "row");
+    assert_eq!(json["promoted_candidate"], false);
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "validate-evaluation-archive",
+            "--input",
+            output_dir.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "\"artifact_kind\": \"tableau-hill\"",
+        ))
+        .stdout(predicate::str::contains("\"valid\": true"));
+}
+
+#[test]
+fn evaluate_grid_prediction_scores_independent_position_set() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-grid-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-grid-layout-v1.json",
+            "--positions",
+            "1,14,16",
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Grid Layout Prediction Evaluation",
+        ))
+        .stdout(predicate::str::contains("row-edge hits: 2/3"))
+        .stdout(predicate::str::contains("promoted: false"))
+        .stdout(predicate::str::contains("not a claimed solution"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-grid-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-grid-layout-v1.json",
+            "--positions",
+            "1,14,16",
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["observed_position_count"], 3);
+    assert_eq!(json["edge_axis"], "row");
+    assert_eq!(json["edge_hits"], 2);
+    assert_eq!(json["row_edge_hits"], 2);
+    assert_eq!(json["matching_row_edge_positions_one_based"][0], 1);
+    assert_eq!(json["matching_row_edge_positions_one_based"][1], 14);
+    assert_eq!(json["source_backed_observation"], false);
+    assert!(
+        json["observation_warning"]
+            .as_str()
+            .unwrap()
+            .contains("diagnostic")
+    );
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(json["empirical_p_value"].is_number());
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "evaluate-grid-prediction",
+            "--artifact",
+            "experiments/predictions/non-anchor-position-grid-layout-v1.json",
+            "--positions",
+            "1,4,16",
+            "--edge-axis",
+            "column",
+            "--iterations",
+            "100",
+            "--seed",
+            "67",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["edge_axis"], "column");
+    assert_eq!(json["edge_hits"], 2);
+    assert_eq!(json["row_edge_hits"], 1);
+    assert_eq!(json["column_edge_hits"], 2);
+    assert_eq!(json["matching_edge_positions_one_based"][0], 1);
+    assert_eq!(json["matching_edge_positions_one_based"][1], 4);
 }
 
 #[test]
@@ -3834,7 +7148,7 @@ fn findings_json_is_parseable_and_non_promotional() {
             && finding["output_summary"]
                 .as_str()
                 .unwrap()
-                .contains("seven registered periods")
+                .contains("eight registered periods")
             && finding["interpretation"]
                 .as_str()
                 .unwrap()
@@ -3901,10 +7215,21 @@ fn release_check_json_exposes_all_local_preflight_gates() {
         "lockfile-present",
         "markdown-report-present",
         "findings-source-inputs-valid",
+        "preregistration-readme-current",
         "independent-lanes-ready",
         "position-observation-template-guarded",
+        "position-observations-valid",
+        "evidence-summaries-present",
         "source-packet-registry-aligned",
+        "source-archives-complete",
         "source-archives-present",
+        "source-archives-structured",
+        "observation-source-archives-cover-positions",
+        "source-reviews-valid",
+        "source-readiness-commands-documented",
+        "next-evidence-structured-support-documented",
+        "stopped-lanes-documented",
+        "progress-log-current",
         "no-plaintext-leakage-markers",
     ] {
         assert!(names.contains(expected_name));
@@ -4074,8 +7399,36 @@ fn export_data_writes_machine_readable_files() {
             && source["allowed_use"] == "archive-context-only"
     }));
     assert!(sources.as_array().unwrap().iter().any(|source| {
+        source["id"] == "smithsonian-2026-archive-discovery"
+            && source["allowed_use"] == "archive-context-only"
+    }));
+    assert!(sources.as_array().unwrap().iter().any(|source| {
+        source["id"] == "nsa-kryptos-doc1-resolution-memo"
+            && source["allowed_use"] == "archive-context-only"
+    }));
+    assert!(sources.as_array().unwrap().iter().any(|source| {
+        source["id"] == "nsa-declassified-kryptos-doc3"
+            && source["allowed_use"] == "archive-context-only"
+    }));
+    assert!(sources.as_array().unwrap().iter().any(|source| {
+        source["id"] == "nsa-kryptos-foia-release-index"
+            && source["allowed_use"] == "archive-context-only"
+    }));
+    assert!(sources.as_array().unwrap().iter().any(|source| {
+        source["id"] == "nsa-kryptos-summary-revelations"
+            && source["allowed_use"] == "archive-context-only"
+    }));
+    assert!(sources.as_array().unwrap().iter().any(|source| {
+        source["id"] == "nsa-kryptos-doc8-cryptogram"
+            && source["allowed_use"] == "public-anchor-summary"
+    }));
+    assert!(sources.as_array().unwrap().iter().any(|source| {
         source["id"] == "kryptosbot-methodology-2026"
             && source["allowed_use"] == "methodology-context"
+    }));
+    assert!(sources.as_array().unwrap().iter().any(|source| {
+        source["id"] == "solvekryptos-2026-claim"
+            && source["allowed_use"] == "unverified-solution-claim"
     }));
     assert!(sources.as_array().unwrap().iter().all(|source| {
         source["url"].as_str().unwrap().starts_with("https://")

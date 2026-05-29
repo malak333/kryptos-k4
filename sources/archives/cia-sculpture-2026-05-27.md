@@ -24,10 +24,21 @@ observation file.
 - The page states that K4, the fourth section, was designed to be difficult and
   remains unbroken.
 - The page frames the remaining message as 97 characters.
+- In the page's encoded-text rendering, the K4 ciphertext appears as a short
+  suffix on one encoded-text line followed by three subsequent rendered lines;
+  this gives pre-score row-boundary positions 1, 4, 5, 36, 37, 68, 69, and 97.
+  Public-anchor positions are excluded before scoring, leaving positions 1, 4,
+  5, 36, 37, and 97 for source-backed observation tests.
 
 ## Boundary
 
-- No non-anchor K4 positions were selected from this source snapshot.
+- Source-backed non-anchor row-boundary positions selected from this snapshot
+  are recorded only in
+  `experiments/position-observations/cia-k4-row-boundaries-v1.json` and
+  summarized in
+  `experiments/evidence-summaries/cia-k4-row-boundaries-v1.md`.
+- scored_observation: `experiments/position-observations/cia-k4-row-boundaries-v1.json`
+- scored_positions_one_based: 1,4,5,36,37,97
 - No candidate material, key stream, route, or plaintext is promoted.
 - Any future observation file must cite this source ID, include one note per
   scored position, pass the family validator, and archive the evaluation output.

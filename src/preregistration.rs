@@ -1,4 +1,15 @@
-use crate::{build_all_period_prediction_plans, build_all_spacing_prediction_plans, sources};
+use crate::{
+    CiphertextResidueBalancePrior, GridLayoutEdgeAxis, PeriodPredictionPlanSet,
+    build_all_period_prediction_plans, build_all_spacing_prediction_plans,
+    build_ciphertext_residue_balance_prior, build_committed_ciphertext_adjacent_contrast_prior,
+    build_committed_ciphertext_hotspot_prior, build_committed_ciphertext_period_match_prior,
+    build_committed_ciphertext_rarity_prior, build_committed_ciphertext_repeat_distance_prior,
+    build_committed_ciphertext_residue_balance_prior,
+    build_committed_ciphertext_skip_transition_prior, build_committed_ciphertext_structure_prior,
+    build_committed_ciphertext_transition_prior, build_committed_ciphertext_turning_point_prior,
+    build_committed_ciphertext_window_balance_prior, build_grid_layout_prediction_plan_for_axis,
+    build_mirror_prediction_plan, build_period_prediction_plan, sources,
+};
 use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashSet};
@@ -23,6 +34,8 @@ pub struct LanePreregistration {
     pub prediction_target: String,
     #[serde(default)]
     pub prediction_artifact: Option<String>,
+    #[serde(default)]
+    pub grid_edge_axis: Option<GridLayoutEdgeAxis>,
     pub discovery_inputs: Vec<String>,
     pub evaluation_inputs: Vec<String>,
     pub controls: Vec<String>,
@@ -49,10 +62,14 @@ pub struct PredictionArtifactValidation {
     pub valid: bool,
     pub errors: Vec<String>,
     pub warnings: Vec<String>,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub duplicate_artifact_paths: Vec<String>,
     pub expected_plan_count: usize,
     pub artifact_plan_count: Option<usize>,
     pub expected_period_count: usize,
     pub artifact_period_count: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub registered_grid_edge_axis: Option<String>,
     pub promoted_candidate: bool,
     pub note: &'static str,
 }
@@ -66,6 +83,8 @@ pub struct IndependentLaneStatusReport {
     pub prediction_artifacts: usize,
     pub unique_prediction_artifacts: usize,
     pub unique_ready_prediction_artifacts: usize,
+    pub duplicate_prediction_artifact_lane_count: usize,
+    pub duplicate_prediction_artifact_extra_lane_count: usize,
     pub family_summaries: Vec<IndependentLaneFamilySummary>,
     pub duplicate_prediction_artifact_groups: Vec<DuplicatePredictionArtifactGroup>,
     pub lanes: Vec<IndependentLaneStatus>,
@@ -179,6 +198,14 @@ pub fn summarize_independent_lanes_with_repo_root(
             }
         })
         .collect::<Vec<_>>();
+    let duplicate_prediction_artifact_lane_count = duplicate_prediction_artifact_groups
+        .iter()
+        .map(|group| group.lane_ids.len())
+        .sum::<usize>();
+    let duplicate_prediction_artifact_extra_lane_count = duplicate_prediction_artifact_groups
+        .iter()
+        .map(|group| group.lane_ids.len().saturating_sub(1))
+        .sum::<usize>();
 
     Ok(IndependentLaneStatusReport {
         directory: directory.display().to_string(),
@@ -188,6 +215,8 @@ pub fn summarize_independent_lanes_with_repo_root(
         prediction_artifacts,
         unique_prediction_artifacts,
         unique_ready_prediction_artifacts,
+        duplicate_prediction_artifact_lane_count,
+        duplicate_prediction_artifact_extra_lane_count,
         family_summaries,
         duplicate_prediction_artifact_groups,
         lanes,
@@ -290,7 +319,7 @@ fn summarize_independent_lane(path: &Path, repo_root: &Path) -> IndependentLaneS
         }
     };
     let registration = serde_json::from_str::<LanePreregistration>(&input);
-    let validation = validate_preregistration(&input);
+    let validation = load_and_validate_preregistration(path);
 
     match (registration, validation) {
         (Ok(registration), Ok(validation)) => {
@@ -307,8 +336,16 @@ fn summarize_independent_lane(path: &Path, repo_root: &Path) -> IndependentLaneS
             if let Some(Err(error)) = artifact_validation {
                 errors.push(error.to_string());
             }
-            let ready = validation.valid && artifact_valid.unwrap_or(false);
-            let (status, next_step) = lane_status_next_step(&registration, ready, artifact_valid);
+            let family_has_evaluator =
+                has_family_specific_evaluator(&registration.hypothesis_family);
+            let ready = validation.valid && artifact_valid.unwrap_or(false) && family_has_evaluator;
+            let (status, next_step) = lane_status_next_step(
+                &registration,
+                validation.valid,
+                ready,
+                artifact_valid,
+                family_has_evaluator,
+            );
 
             IndependentLaneStatus {
                 path: path_label,
@@ -369,10 +406,19 @@ fn summarize_independent_lane(path: &Path, repo_root: &Path) -> IndependentLaneS
 
 fn lane_status_next_step(
     registration: &LanePreregistration,
+    preregistration_valid: bool,
     ready: bool,
     artifact_valid: Option<bool>,
+    family_has_evaluator: bool,
 ) -> (String, String) {
     if !ready {
+        if !preregistration_valid {
+            return (
+                "preregistration-invalid".to_string(),
+                "Fix preregistration validation errors before adding observations or scoring."
+                    .to_string(),
+            );
+        }
         if artifact_valid == Some(false) {
             return (
                 "prediction-artifact-invalid".to_string(),
@@ -385,6 +431,12 @@ fn lane_status_next_step(
                 "awaiting-prediction-artifact".to_string(),
                 "Declare and commit a deterministic prediction artifact before scoring observations."
                     .to_string(),
+            );
+        }
+        if !family_has_evaluator {
+            return (
+                "evaluator-pending".to_string(),
+                "Add a family-specific observation validator/evaluator before scoring.".to_string(),
             );
         }
         return (
@@ -400,16 +452,102 @@ fn lane_status_next_step(
             "Run validate-spacing-observations, then evaluate-spacing-prediction with --positions-file."
                 .to_string(),
         ),
+        "position-mirror-prediction" => (
+            "ready-for-source-backed-observations".to_string(),
+            "Run validate-mirror-observations, then evaluate-mirror-prediction with --positions-file."
+                .to_string(),
+        ),
+        "position-grid-layout-prediction" => (
+            "ready-for-source-backed-observations".to_string(),
+            "Run validate-grid-observations, then evaluate-grid-prediction with --positions-file."
+                .to_string(),
+        ),
+        "tableau-hill-prediction" => (
+            "ready-for-source-backed-observations".to_string(),
+            "Run validate-tableau-hill-observations, then evaluate-tableau-hill-prediction with --positions-file."
+                .to_string(),
+        ),
+        "ciphertext-only-position-prior" => (
+            "ready-for-source-backed-observations".to_string(),
+            "Run validate-ciphertext-prior-observations for the source-backed positions, then evaluate-ciphertext-prior with --positions-file."
+                .to_string(),
+        ),
+        "ciphertext-residue-balance-position-prior" => (
+            "ready-for-source-backed-observations".to_string(),
+            "Run validate-ciphertext-residue-balance-observations for the source-backed positions, then evaluate-ciphertext-residue-balance with --positions-file."
+                .to_string(),
+        ),
+        "ciphertext-hotspot-position-prior" => (
+            "ready-for-source-backed-observations".to_string(),
+            "Run validate-ciphertext-hotspot-observations for the source-backed positions, then evaluate-ciphertext-hotspot with --positions-file."
+                .to_string(),
+        ),
+        "ciphertext-rarity-position-prior" => (
+            "ready-for-source-backed-observations".to_string(),
+            "Run validate-ciphertext-rarity-observations for the source-backed positions, then evaluate-ciphertext-rarity with --positions-file."
+                .to_string(),
+        ),
+        "ciphertext-repeat-distance-position-prior" => (
+            "ready-for-source-backed-observations".to_string(),
+            "Run validate-ciphertext-repeat-distance-observations for the source-backed positions, then evaluate-ciphertext-repeat-distance with --positions-file."
+                .to_string(),
+        ),
+        "ciphertext-adjacent-contrast-position-prior" => (
+            "ready-for-source-backed-observations".to_string(),
+            "Run validate-ciphertext-adjacent-contrast-observations for the source-backed positions, then evaluate-ciphertext-adjacent-contrast with --positions-file."
+                .to_string(),
+        ),
+        "ciphertext-transition-position-prior" => (
+            "ready-for-source-backed-observations".to_string(),
+            "Run validate-ciphertext-transition-observations for the source-backed positions, then evaluate-ciphertext-transition with --positions-file."
+                .to_string(),
+        ),
+        "ciphertext-skip-transition-position-prior" => (
+            "ready-for-source-backed-observations".to_string(),
+            "Run validate-ciphertext-skip-transition-observations for the source-backed positions, then evaluate-ciphertext-skip-transition with --positions-file."
+                .to_string(),
+        ),
+        "ciphertext-turning-point-position-prior" => (
+            "ready-for-source-backed-observations".to_string(),
+            "Run validate-ciphertext-turning-point-observations for the source-backed positions, then evaluate-ciphertext-turning-point with --positions-file."
+                .to_string(),
+        ),
+        "ciphertext-period-match-position-prior" => (
+            "ready-for-source-backed-observations".to_string(),
+            "Run validate-ciphertext-period-match-observations for the source-backed positions, then evaluate-ciphertext-period-match with --positions-file."
+                .to_string(),
+        ),
         "position-period-prediction" => (
             "ready-for-source-backed-observations".to_string(),
             "Run validate-period-observations, then evaluate-period-prediction with --positions-file."
                 .to_string(),
         ),
         _ => (
-            "ready-needs-family-specific-evaluator".to_string(),
+            "evaluator-pending".to_string(),
             "Add a family-specific observation validator/evaluator before scoring.".to_string(),
         ),
     }
+}
+
+fn has_family_specific_evaluator(hypothesis_family: &str) -> bool {
+    matches!(
+        hypothesis_family,
+        "position-spacing-prediction"
+            | "position-mirror-prediction"
+            | "position-grid-layout-prediction"
+            | "tableau-hill-prediction"
+            | "ciphertext-only-position-prior"
+            | "ciphertext-residue-balance-position-prior"
+            | "ciphertext-hotspot-position-prior"
+            | "ciphertext-rarity-position-prior"
+            | "ciphertext-repeat-distance-position-prior"
+            | "ciphertext-adjacent-contrast-position-prior"
+            | "ciphertext-transition-position-prior"
+            | "ciphertext-skip-transition-position-prior"
+            | "ciphertext-turning-point-position-prior"
+            | "ciphertext-period-match-position-prior"
+            | "position-period-prediction"
+    )
 }
 
 fn validate_registration(registration: LanePreregistration) -> PreregistrationValidation {
@@ -524,6 +662,21 @@ fn validate_registration(registration: LanePreregistration) -> PreregistrationVa
                 .to_string(),
         );
     }
+    if registration.hypothesis_family == "position-grid-layout-prediction"
+        && registration.grid_edge_axis.is_none()
+    {
+        errors.push(
+            "position-grid-layout-prediction lanes must declare grid_edge_axis so row, column, and compass-axis targets cannot be mixed post hoc"
+                .to_string(),
+        );
+    }
+    if registration.hypothesis_family != "position-grid-layout-prediction"
+        && registration.grid_edge_axis.is_some()
+    {
+        errors.push(
+            "grid_edge_axis is only valid for position-grid-layout-prediction lanes".to_string(),
+        );
+    }
 
     PreregistrationValidation {
         id: registration.id,
@@ -582,7 +735,9 @@ fn mentions_public_anchor_fragments(input: &str) -> bool {
 
 pub fn load_and_validate_preregistration(path: &Path) -> Result<PreregistrationValidation> {
     let input = std::fs::read_to_string(path)?;
-    validate_preregistration(&input)
+    let mut validation = validate_preregistration(&input)?;
+    validate_preregistration_filename(path, &mut validation);
+    Ok(validation)
 }
 
 pub fn validate_prediction_artifact(
@@ -597,36 +752,85 @@ pub fn validate_prediction_artifact_with_repo_root(
 ) -> Result<PredictionArtifactValidation> {
     let input = std::fs::read_to_string(preregistration_path)?;
     let registration: LanePreregistration = serde_json::from_str(&input)?;
-    let preregistration_validation = validate_preregistration(&input)?;
+    let mut preregistration_validation = validate_preregistration(&input)?;
+    validate_preregistration_filename(preregistration_path, &mut preregistration_validation);
     let artifact_kind = prediction_artifact_kind(&registration);
     let artifact_kind_label = artifact_kind.unwrap_or("unsupported");
     let expected_value = match artifact_kind {
         Some("spacing") => Some(serde_json::to_value(build_all_spacing_prediction_plans()?)?),
         Some("period") => Some(serde_json::to_value(build_all_period_prediction_plans()?)?),
+        Some("mirror") => Some(serde_json::to_value(build_mirror_prediction_plan()?)?),
+        Some("grid") => {
+            let edge_axis = registration
+                .grid_edge_axis
+                .unwrap_or(GridLayoutEdgeAxis::Row);
+            Some(serde_json::to_value(
+                build_grid_layout_prediction_plan_for_axis(edge_axis)?,
+            )?)
+        }
+        Some("tableau-hill") => Some(serde_json::to_value(
+            crate::position_structure::build_tableau_hill_prediction_plan(),
+        )?),
+        Some("ciphertext-prior") => Some(serde_json::to_value(
+            build_committed_ciphertext_structure_prior(),
+        )?),
+        Some("ciphertext-hotspot") => Some(serde_json::to_value(
+            build_committed_ciphertext_hotspot_prior(),
+        )?),
+        Some("ciphertext-residue-balance") => Some(serde_json::to_value(
+            build_committed_ciphertext_residue_balance_prior(),
+        )?),
+        Some("ciphertext-rarity") => Some(serde_json::to_value(
+            build_committed_ciphertext_rarity_prior(),
+        )?),
+        Some("ciphertext-adjacent-contrast") => Some(serde_json::to_value(
+            build_committed_ciphertext_adjacent_contrast_prior(),
+        )?),
+        Some("ciphertext-repeat-distance") => Some(serde_json::to_value(
+            build_committed_ciphertext_repeat_distance_prior(),
+        )?),
+        Some("ciphertext-transition") => Some(serde_json::to_value(
+            build_committed_ciphertext_transition_prior(),
+        )?),
+        Some("ciphertext-skip-transition") => Some(serde_json::to_value(
+            build_committed_ciphertext_skip_transition_prior(),
+        )?),
+        Some("ciphertext-turning-point") => Some(serde_json::to_value(
+            build_committed_ciphertext_turning_point_prior(),
+        )?),
+        Some("ciphertext-period-match") => Some(serde_json::to_value(
+            build_committed_ciphertext_period_match_prior(),
+        )?),
+        Some("ciphertext-window-balance") => Some(serde_json::to_value(
+            build_committed_ciphertext_window_balance_prior(),
+        )?),
         _ => None,
     };
-    let expected_plan_count = expected_value
+    let mut expected_plan_count = expected_value
         .as_ref()
-        .and_then(|expected_value| expected_value.get("plans"))
-        .and_then(serde_json::Value::as_array)
-        .map_or(0, Vec::len);
-    let expected_period_count = expected_value
+        .and_then(prediction_artifact_item_count)
+        .unwrap_or(0);
+    let mut expected_period_count = expected_value
         .as_ref()
         .and_then(plan_set_count)
         .unwrap_or(0);
     let mut errors = preregistration_validation.errors;
-    let warnings = preregistration_validation.warnings;
+    let mut warnings = preregistration_validation.warnings;
 
     if artifact_kind.is_none() {
         errors.push(format!(
-            "prediction_artifact validation only supports `position-period-prediction` and `position-spacing-prediction` hypothesis families; got `{}`",
+            "prediction_artifact validation only supports `position-period-prediction`, `position-spacing-prediction`, `position-mirror-prediction`, `position-grid-layout-prediction`, `tableau-hill-prediction`, `ciphertext-only-position-prior`, `ciphertext-residue-balance-position-prior`, `ciphertext-hotspot-position-prior`, `ciphertext-rarity-position-prior`, `ciphertext-adjacent-contrast-position-prior`, `ciphertext-repeat-distance-position-prior`, `ciphertext-transition-position-prior`, `ciphertext-skip-transition-position-prior`, `ciphertext-turning-point-position-prior`, `ciphertext-period-match-position-prior`, and `ciphertext-window-balance-position-prior` hypothesis families; got `{}`",
             registration.hypothesis_family
         ));
     }
 
     let artifact_path = registration.prediction_artifact.clone().unwrap_or_default();
+    let registered_grid_edge_axis = registration
+        .grid_edge_axis
+        .map(|axis| axis.label().to_string());
     let mut artifact_plan_count = None;
     let mut artifact_period_count = None;
+    let mut duplicate_artifact_paths = Vec::new();
     if artifact_path.trim().is_empty() {
         errors.push("preregistration does not declare prediction_artifact".to_string());
     } else {
@@ -634,16 +838,42 @@ pub fn validate_prediction_artifact_with_repo_root(
         match std::fs::read_to_string(&resolved_artifact_path) {
             Ok(artifact) => match serde_json::from_str::<serde_json::Value>(&artifact) {
                 Ok(artifact_value) => {
-                    artifact_plan_count = artifact_value
-                        .get("plans")
-                        .and_then(serde_json::Value::as_array)
-                        .map(Vec::len);
+                    artifact_plan_count = prediction_artifact_item_count(&artifact_value);
                     artifact_period_count = plan_set_count(&artifact_value);
-                    if let Some(expected_value) = &expected_value
-                        && artifact_value != *expected_value
-                    {
+                    let artifact_matches_expected = match artifact_kind {
+                        Some("ciphertext-residue-balance") => {
+                            ciphertext_residue_balance_artifact_matches_deterministic(
+                                &artifact_value,
+                            )
+                        }
+                        _ => expected_value.as_ref().is_none_or(|expected_value| {
+                            prediction_artifact_matches(
+                                artifact_kind,
+                                &artifact_value,
+                                expected_value,
+                            )
+                        }),
+                    };
+                    if !artifact_matches_expected {
                         errors.push(format!(
                             "prediction artifact does not match deterministic {artifact_kind_label} prediction plan output"
+                        ));
+                    } else if artifact_kind == Some("ciphertext-residue-balance") {
+                        expected_plan_count = artifact_plan_count.unwrap_or(0);
+                        expected_period_count = artifact_period_count.unwrap_or(0);
+                    }
+                    let duplicate_artifacts = duplicate_prediction_artifact_paths(
+                        preregistration_path,
+                        repo_root,
+                        &artifact_path,
+                        &artifact_value,
+                    );
+                    if !duplicate_artifacts.is_empty() {
+                        duplicate_artifact_paths = duplicate_artifacts.clone();
+                        warnings.push(format!(
+                            "prediction artifact duplicates {} other committed artifact(s): {}; duplicate readiness lanes are inventory only, not independent evidence",
+                            duplicate_artifacts.len(),
+                            duplicate_artifacts.join(", ")
                         ));
                     }
                 }
@@ -664,19 +894,152 @@ pub fn validate_prediction_artifact_with_repo_root(
         valid: errors.is_empty(),
         errors,
         warnings,
+        duplicate_artifact_paths,
         expected_plan_count,
         artifact_plan_count,
         expected_period_count,
         artifact_period_count,
+        registered_grid_edge_axis,
         promoted_candidate: false,
         note: "Prediction artifact validation checks a committed independent target against its preregistration and deterministic generator; it is not a claimed solution.",
     })
+}
+
+fn prediction_artifact_matches(
+    artifact_kind: Option<&str>,
+    artifact_value: &serde_json::Value,
+    expected_value: &serde_json::Value,
+) -> bool {
+    if artifact_kind == Some("period") {
+        return period_prediction_artifacts_match(artifact_value, expected_value);
+    }
+    json_values_match(artifact_value, expected_value)
+}
+
+fn period_prediction_artifacts_match(
+    artifact_value: &serde_json::Value,
+    expected_value: &serde_json::Value,
+) -> bool {
+    if json_values_match(artifact_value, expected_value) {
+        return true;
+    }
+
+    let Ok(artifact) = serde_json::from_value::<PeriodPredictionPlanSet>(artifact_value.clone())
+    else {
+        return false;
+    };
+    if artifact.period_count != artifact.plans.len() {
+        return false;
+    }
+    artifact.plans.iter().all(|plan| {
+        build_period_prediction_plan(plan.period)
+            .map(|expected_plan| &expected_plan == plan)
+            .unwrap_or(false)
+    })
+}
+
+fn ciphertext_residue_balance_artifacts_match(
+    left: &CiphertextResidueBalancePrior,
+    right: &CiphertextResidueBalancePrior,
+) -> bool {
+    left.artifact_kind == right.artifact_kind
+        && left.hypothesis_family == right.hypothesis_family
+        && left.source_inputs == right.source_inputs
+        && left.discovery_inputs == right.discovery_inputs
+        && left.prediction_target == right.prediction_target
+        && left.non_anchor_position_count == right.non_anchor_position_count
+        && left.non_anchor_positions_one_based == right.non_anchor_positions_one_based
+        && left.selected_moduli_count == right.selected_moduli_count
+        && left.controls == right.controls
+        && left.public_anchor_fragments_used_for_discovery
+            == right.public_anchor_fragments_used_for_discovery
+        && left.public_anchor_fragments_used_as_primary_evidence
+            == right.public_anchor_fragments_used_as_primary_evidence
+        && left.promoted_candidate == right.promoted_candidate
+        && left.note == right.note
+        && left.selected_residue_sets.len() == right.selected_residue_sets.len()
+        && left
+            .selected_residue_sets
+            .iter()
+            .zip(&right.selected_residue_sets)
+            .all(|(left, right)| {
+                left.modulus == right.modulus
+                    && left.residue == right.residue
+                    && left.position_count == right.position_count
+                    && left.distinct_ciphertext_letters == right.distinct_ciphertext_letters
+                    && (left.distinct_letter_rate - right.distinct_letter_rate).abs() < f64::EPSILON
+                    && left.positions_one_based == right.positions_one_based
+            })
+}
+
+fn ciphertext_residue_balance_artifact_matches_deterministic(
+    artifact_value: &serde_json::Value,
+) -> bool {
+    let Ok(artifact) =
+        serde_json::from_value::<CiphertextResidueBalancePrior>(artifact_value.clone())
+    else {
+        return false;
+    };
+    let Some(first) = artifact.selected_residue_sets.first() else {
+        return false;
+    };
+    let Some(last) = artifact.selected_residue_sets.last() else {
+        return false;
+    };
+    let min_modulus = first.modulus;
+    let max_modulus = last.modulus;
+    if min_modulus > max_modulus
+        || artifact.selected_moduli_count != artifact.selected_residue_sets.len()
+        || artifact.selected_residue_sets.len() != max_modulus - min_modulus + 1
+        || artifact
+            .selected_residue_sets
+            .iter()
+            .enumerate()
+            .any(|(index, residue_set)| residue_set.modulus != min_modulus + index)
+    {
+        return false;
+    }
+    let expected = build_ciphertext_residue_balance_prior(min_modulus, max_modulus);
+    ciphertext_residue_balance_artifacts_match(&artifact, &expected)
+}
+
+fn json_values_match(left: &serde_json::Value, right: &serde_json::Value) -> bool {
+    left == right
+        || serde_json::to_string(left).ok().as_deref()
+            == serde_json::to_string(right).ok().as_deref()
+}
+
+fn validate_preregistration_filename(path: &Path, validation: &mut PreregistrationValidation) {
+    let Some(file_stem) = path.file_stem().and_then(|name| name.to_str()) else {
+        return;
+    };
+    if file_stem != validation.id {
+        validation.errors.push(format!(
+            "filename must match preregistration id `{}`",
+            validation.id
+        ));
+        validation.valid = false;
+    }
 }
 
 fn prediction_artifact_kind(registration: &LanePreregistration) -> Option<&'static str> {
     match registration.hypothesis_family.as_str() {
         "position-spacing-prediction" => Some("spacing"),
         "position-period-prediction" => Some("period"),
+        "position-mirror-prediction" => Some("mirror"),
+        "position-grid-layout-prediction" => Some("grid"),
+        "tableau-hill-prediction" => Some("tableau-hill"),
+        "ciphertext-only-position-prior" => Some("ciphertext-prior"),
+        "ciphertext-residue-balance-position-prior" => Some("ciphertext-residue-balance"),
+        "ciphertext-hotspot-position-prior" => Some("ciphertext-hotspot"),
+        "ciphertext-rarity-position-prior" => Some("ciphertext-rarity"),
+        "ciphertext-adjacent-contrast-position-prior" => Some("ciphertext-adjacent-contrast"),
+        "ciphertext-repeat-distance-position-prior" => Some("ciphertext-repeat-distance"),
+        "ciphertext-transition-position-prior" => Some("ciphertext-transition"),
+        "ciphertext-skip-transition-position-prior" => Some("ciphertext-skip-transition"),
+        "ciphertext-turning-point-position-prior" => Some("ciphertext-turning-point"),
+        "ciphertext-period-match-position-prior" => Some("ciphertext-period-match"),
+        "ciphertext-window-balance-position-prior" => Some("ciphertext-window-balance"),
         _ => None,
     }
 }
@@ -690,7 +1053,181 @@ fn plan_set_count(value: &serde_json::Value) -> Option<usize> {
                 .get("modulus_count")
                 .and_then(serde_json::Value::as_u64)
         })
+        .or_else(|| value.get("pair_count").and_then(serde_json::Value::as_u64))
+        .or_else(|| value.get("row_count").and_then(serde_json::Value::as_u64))
+        .or_else(|| {
+            value
+                .get("selected_periods")
+                .and_then(serde_json::Value::as_array)
+                .map(|periods| periods.len() as u64)
+        })
+        .or_else(|| {
+            value
+                .get("hotspot_count")
+                .and_then(serde_json::Value::as_u64)
+        })
+        .or_else(|| {
+            value
+                .get("selected_moduli_count")
+                .and_then(serde_json::Value::as_u64)
+        })
+        .or_else(|| {
+            value
+                .get("repeat_distance_position_count")
+                .and_then(serde_json::Value::as_u64)
+        })
+        .or_else(|| {
+            value
+                .get("period_match_set_count")
+                .and_then(serde_json::Value::as_u64)
+        })
+        .or_else(|| {
+            value
+                .get("window_balance_position_count")
+                .and_then(serde_json::Value::as_u64)
+        })
         .map(|value| value as usize)
+}
+
+fn prediction_artifact_item_count(value: &serde_json::Value) -> Option<usize> {
+    value
+        .get("plans")
+        .and_then(serde_json::Value::as_array)
+        .or_else(|| value.get("rows").and_then(serde_json::Value::as_array))
+        .or_else(|| {
+            value
+                .get("selected_periods")
+                .and_then(serde_json::Value::as_array)
+        })
+        .or_else(|| value.get("hotspots").and_then(serde_json::Value::as_array))
+        .or_else(|| {
+            value
+                .get("rare_positions")
+                .and_then(serde_json::Value::as_array)
+        })
+        .or_else(|| {
+            value
+                .get("transition_positions")
+                .and_then(serde_json::Value::as_array)
+        })
+        .or_else(|| {
+            value
+                .get("contrast_positions")
+                .and_then(serde_json::Value::as_array)
+        })
+        .or_else(|| {
+            value
+                .get("skip_transition_positions")
+                .and_then(serde_json::Value::as_array)
+        })
+        .or_else(|| {
+            value
+                .get("turning_point_positions")
+                .and_then(serde_json::Value::as_array)
+        })
+        .or_else(|| {
+            value
+                .get("repeat_distance_positions")
+                .and_then(serde_json::Value::as_array)
+        })
+        .or_else(|| {
+            value
+                .get("period_match_sets")
+                .and_then(serde_json::Value::as_array)
+        })
+        .or_else(|| {
+            value
+                .get("selected_residue_sets")
+                .and_then(serde_json::Value::as_array)
+        })
+        .or_else(|| {
+            value
+                .get("window_balance_positions")
+                .and_then(serde_json::Value::as_array)
+        })
+        .map(Vec::len)
+}
+
+fn duplicate_prediction_artifact_paths(
+    preregistration_path: &Path,
+    repo_root: &Path,
+    artifact_path: &str,
+    artifact_value: &serde_json::Value,
+) -> Vec<String> {
+    let preregistration_dir = preregistration_path
+        .parent()
+        .unwrap_or_else(|| Path::new("experiments/preregistrations"));
+    let current_artifact_path = resolve_repo_relative_path(repo_root, artifact_path);
+    let current_preregistration_path = if preregistration_path.is_absolute() {
+        preregistration_path.to_path_buf()
+    } else {
+        repo_root.join(preregistration_path)
+    };
+    let mut duplicates = Vec::new();
+
+    let Ok(entries) = fs::read_dir(preregistration_dir) else {
+        return duplicates;
+    };
+
+    for entry in entries.flatten() {
+        let other_preregistration_path = entry.path();
+        if other_preregistration_path
+            .extension()
+            .and_then(|value| value.to_str())
+            != Some("json")
+        {
+            continue;
+        }
+        if other_preregistration_path
+            .file_name()
+            .and_then(|value| value.to_str())
+            == Some("independent-lane-template.json")
+        {
+            continue;
+        }
+        if paths_match(&other_preregistration_path, &current_preregistration_path) {
+            continue;
+        }
+
+        let Ok(other_input) = fs::read_to_string(&other_preregistration_path) else {
+            continue;
+        };
+        let Ok(other_registration) = serde_json::from_str::<LanePreregistration>(&other_input)
+        else {
+            continue;
+        };
+        let Some(other_artifact_path) = other_registration.prediction_artifact else {
+            continue;
+        };
+        let resolved_other_artifact_path =
+            resolve_repo_relative_path(repo_root, &other_artifact_path);
+        if paths_match(&resolved_other_artifact_path, &current_artifact_path) {
+            continue;
+        }
+        let Ok(other_artifact) = fs::read_to_string(&resolved_other_artifact_path) else {
+            continue;
+        };
+        let Ok(other_value) = serde_json::from_str::<serde_json::Value>(&other_artifact) else {
+            continue;
+        };
+        if other_value == *artifact_value {
+            duplicates.push(other_artifact_path);
+        }
+    }
+
+    duplicates.sort();
+    duplicates.dedup();
+    duplicates
+}
+
+fn paths_match(left: &Path, right: &Path) -> bool {
+    if left == right {
+        return true;
+    }
+    match (left.canonicalize(), right.canonicalize()) {
+        (Ok(left), Ok(right)) => left == right,
+        _ => false,
+    }
 }
 
 fn resolve_repo_relative_path(repo_root: &Path, path: &str) -> std::path::PathBuf {
@@ -726,6 +1263,7 @@ mod tests {
             prediction_target:
                 "Predict a non-anchor position class before comparing anchor fragments.".to_string(),
             prediction_artifact: None,
+            grid_edge_axis: None,
             discovery_inputs: vec!["registered structural model".to_string()],
             evaluation_inputs: vec!["withheld non-anchor prediction target".to_string()],
             controls: vec!["seeded shuffle baseline".to_string()],
@@ -805,6 +1343,24 @@ mod tests {
     }
 
     #[test]
+    fn grid_preregistration_requires_registered_edge_axis() {
+        let mut registration = valid_registration();
+        registration.hypothesis_family = "position-grid-layout-prediction".to_string();
+        registration.prediction_artifact =
+            Some("experiments/predictions/non-anchor-position-grid-layout-v1.json".to_string());
+
+        let validation = validate_registration(registration);
+
+        assert!(!validation.valid);
+        assert!(
+            validation
+                .errors
+                .iter()
+                .any(|error| { error.contains("must declare grid_edge_axis") })
+        );
+    }
+
+    #[test]
     fn prediction_artifact_kind_prefers_hypothesis_family_over_path() {
         let temp = TempDir::new().unwrap();
         let artifact_path = "experiments/predictions/non-anchor-position-spacing-v1.json";
@@ -875,6 +1431,89 @@ mod tests {
     }
 
     #[test]
+    fn prediction_artifact_validation_warns_on_duplicate_artifact_content() {
+        let temp = TempDir::new().unwrap();
+        let preregistration_dir = temp.path().join("experiments/preregistrations");
+        let prediction_dir = temp.path().join("experiments/predictions");
+        std::fs::create_dir_all(&preregistration_dir).unwrap();
+        std::fs::create_dir_all(&prediction_dir).unwrap();
+        let artifact =
+            serde_json::to_string_pretty(&build_all_period_prediction_plans().unwrap()).unwrap();
+        std::fs::write(prediction_dir.join("period-a.json"), &artifact).unwrap();
+        std::fs::write(prediction_dir.join("period-b.json"), &artifact).unwrap();
+
+        for (id, artifact_path) in [
+            (
+                "period-duplicate-a",
+                "experiments/predictions/period-a.json",
+            ),
+            (
+                "period-duplicate-b",
+                "experiments/predictions/period-b.json",
+            ),
+        ] {
+            let mut registration = valid_registration();
+            registration.id = id.to_string();
+            registration.hypothesis_family = "position-period-prediction".to_string();
+            registration.prediction_artifact = Some(artifact_path.to_string());
+            std::fs::write(
+                preregistration_dir.join(format!("{id}.json")),
+                serde_json::to_string_pretty(&registration).unwrap(),
+            )
+            .unwrap();
+        }
+
+        let validation = validate_prediction_artifact_with_repo_root(
+            &preregistration_dir.join("period-duplicate-a.json"),
+            temp.path(),
+        )
+        .unwrap();
+
+        assert!(validation.valid);
+        assert!(validation.warnings.iter().any(|warning| {
+            warning.contains("duplicates 1 other committed artifact")
+                && warning.contains("experiments/predictions/period-b.json")
+                && warning.contains("not independent evidence")
+        }));
+    }
+
+    #[test]
+    fn prediction_artifact_validation_accepts_custom_residue_balance_modulus_range() {
+        let temp = TempDir::new().unwrap();
+        let preregistration_dir = temp.path().join("experiments/preregistrations");
+        let prediction_dir = temp.path().join("experiments/predictions");
+        std::fs::create_dir_all(&preregistration_dir).unwrap();
+        std::fs::create_dir_all(&prediction_dir).unwrap();
+
+        let artifact_path = "experiments/predictions/residue-balance-high-moduli.json";
+        std::fs::write(
+            temp.path().join(artifact_path),
+            serde_json::to_string_pretty(&build_ciphertext_residue_balance_prior(7, 13)).unwrap(),
+        )
+        .unwrap();
+
+        let mut registration = valid_registration();
+        registration.id = "residue-balance-high-moduli".to_string();
+        registration.hypothesis_family = "ciphertext-residue-balance-position-prior".to_string();
+        registration.prediction_artifact = Some(artifact_path.to_string());
+        std::fs::write(
+            preregistration_dir.join("residue-balance-high-moduli.json"),
+            serde_json::to_string_pretty(&registration).unwrap(),
+        )
+        .unwrap();
+
+        let validation = validate_prediction_artifact_with_repo_root(
+            &preregistration_dir.join("residue-balance-high-moduli.json"),
+            temp.path(),
+        )
+        .unwrap();
+
+        assert!(validation.valid, "{:?}", validation.errors);
+        assert_eq!(validation.artifact_kind, "ciphertext-residue-balance");
+        assert_eq!(validation.artifact_period_count, Some(7));
+    }
+
+    #[test]
     fn independent_lane_status_groups_json_equivalent_prediction_artifacts() {
         let temp = TempDir::new().unwrap();
         let preregistration_dir = temp.path().join("experiments/preregistrations");
@@ -932,6 +1571,43 @@ mod tests {
                 "canonical-artifact-a".to_string(),
                 "canonical-artifact-b".to_string()
             ]
+        );
+    }
+
+    #[test]
+    fn independent_lane_status_rejects_filename_id_mismatch() {
+        let temp = TempDir::new().unwrap();
+        let preregistration_dir = temp.path().join("experiments/preregistrations");
+        let prediction_dir = temp.path().join("experiments/predictions");
+        std::fs::create_dir_all(&preregistration_dir).unwrap();
+        std::fs::create_dir_all(&prediction_dir).unwrap();
+        std::fs::write(
+            prediction_dir.join("period.json"),
+            serde_json::to_string_pretty(&build_all_period_prediction_plans().unwrap()).unwrap(),
+        )
+        .unwrap();
+
+        let mut registration = valid_registration();
+        registration.id = "stable-lane-id".to_string();
+        registration.hypothesis_family = "position-period-prediction".to_string();
+        registration.prediction_artifact = Some("experiments/predictions/period.json".to_string());
+        std::fs::write(
+            preregistration_dir.join("copied-placeholder-name.json"),
+            serde_json::to_string_pretty(&registration).unwrap(),
+        )
+        .unwrap();
+
+        let report =
+            summarize_independent_lanes_with_repo_root(&preregistration_dir, temp.path()).unwrap();
+
+        assert_eq!(report.lane_count, 1);
+        assert_eq!(report.invalid_lanes, 1);
+        assert!(!report.lanes[0].preregistration_valid);
+        assert!(
+            report.lanes[0]
+                .errors
+                .iter()
+                .any(|error| error.contains("filename must match preregistration id"))
         );
     }
 }

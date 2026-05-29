@@ -1,0 +1,357 @@
+{
+  "artifact_kind": "ciphertext-hotspot-prior",
+  "hypothesis_family": "ciphertext-hotspot-position-prior",
+  "source_inputs": [
+    "Public K4 ciphertext only",
+    "Public anchor positions used only as an exclusion mask for future non-anchor targets"
+  ],
+  "discovery_inputs": [
+    "Repeated n-gram coverage over ciphertext letters for lengths 2..=4",
+    "Shifted ciphertext self-coincidence endpoints for periods 1..=20",
+    "No candidate words, routes, plaintext claims, or public-anchor additive fragments"
+  ],
+  "prediction_target": "Future source-backed non-anchor K4 position observations should be enriched in the predeclared ciphertext-only hotspot positions before any candidate-word or public-anchor-derived tuning is performed.",
+  "non_anchor_position_count": 73,
+  "non_anchor_positions_one_based": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84,
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,
+    91,
+    92,
+    93,
+    94,
+    95,
+    96,
+    97
+  ],
+  "hotspot_count": 20,
+  "hotspots": [
+    {
+      "position_one_based": 11,
+      "ciphertext": "U",
+      "repeated_ngram_hits": 1,
+      "shifted_match_hits": 1,
+      "score": 4,
+      "support_notes": [
+        "HU repeat length 2 at start 10",
+        "period 6 shifted match on U"
+      ]
+    },
+    {
+      "position_one_based": 14,
+      "ciphertext": "S",
+      "repeated_ngram_hits": 1,
+      "shifted_match_hits": 2,
+      "score": 5,
+      "support_notes": [
+        "SO repeat length 2 at start 14",
+        "period 19 shifted match on S",
+        "period 20 shifted match on S"
+      ]
+    },
+    {
+      "position_one_based": 15,
+      "ciphertext": "O",
+      "repeated_ngram_hits": 1,
+      "shifted_match_hits": 4,
+      "score": 7,
+      "support_notes": [
+        "SO repeat length 2 at start 14",
+        "period 7 shifted match on O",
+        "period 9 shifted match on O",
+        "period 14 shifted match on O",
+        "period 20 shifted match on O"
+      ]
+    },
+    {
+      "position_one_based": 18,
+      "ciphertext": "F",
+      "repeated_ngram_hits": 1,
+      "shifted_match_hits": 1,
+      "score": 4,
+      "support_notes": [
+        "FB repeat length 2 at start 18",
+        "period 4 shifted match on F"
+      ]
+    },
+    {
+      "position_one_based": 19,
+      "ciphertext": "B",
+      "repeated_ngram_hits": 1,
+      "shifted_match_hits": 3,
+      "score": 6,
+      "support_notes": [
+        "FB repeat length 2 at start 18",
+        "period 1 shifted match on B",
+        "period 6 shifted match on B",
+        "period 17 shifted match on B"
+      ]
+    },
+    {
+      "position_one_based": 35,
+      "ciphertext": "O",
+      "repeated_ngram_hits": 1,
+      "shifted_match_hits": 1,
+      "score": 4,
+      "support_notes": [
+        "SO repeat length 2 at start 34",
+        "period 20 shifted match on O"
+      ]
+    },
+    {
+      "position_one_based": 39,
+      "ciphertext": "Q",
+      "repeated_ngram_hits": 1,
+      "shifted_match_hits": 3,
+      "score": 6,
+      "support_notes": [
+        "QS repeat length 2 at start 39",
+        "period 3 shifted match on Q",
+        "period 12 shifted match on Q",
+        "period 13 shifted match on Q"
+      ]
+    },
+    {
+      "position_one_based": 40,
+      "ciphertext": "S",
+      "repeated_ngram_hits": 1,
+      "shifted_match_hits": 4,
+      "score": 7,
+      "support_notes": [
+        "QS repeat length 2 at start 39",
+        "period 3 shifted match on S",
+        "period 4 shifted match on S",
+        "period 6 shifted match on S",
+        "period 7 shifted match on S"
+      ]
+    },
+    {
+      "position_one_based": 42,
+      "ciphertext": "Q",
+      "repeated_ngram_hits": 1,
+      "shifted_match_hits": 3,
+      "score": 6,
+      "support_notes": [
+        "QS repeat length 2 at start 42",
+        "period 3 shifted match on Q",
+        "period 15 shifted match on Q",
+        "period 16 shifted match on Q"
+      ]
+    },
+    {
+      "position_one_based": 43,
+      "ciphertext": "S",
+      "repeated_ngram_hits": 2,
+      "shifted_match_hits": 4,
+      "score": 10,
+      "support_notes": [
+        "SS repeat length 2 at start 43",
+        "QS repeat length 2 at start 42",
+        "period 1 shifted match on S",
+        "period 3 shifted match on S",
+        "period 9 shifted match on S",
+        "period 10 shifted match on S"
+      ]
+    },
+    {
+      "position_one_based": 44,
+      "ciphertext": "S",
+      "repeated_ngram_hits": 1,
+      "shifted_match_hits": 4,
+      "score": 7,
+      "support_notes": [
+        "SS repeat length 2 at start 43",
+        "period 1 shifted match on S",
+        "period 4 shifted match on S",
+        "period 10 shifted match on S",
+        "period 11 shifted match on S"
+      ]
+    },
+    {
+      "position_one_based": 46,
+      "ciphertext": "K",
+      "repeated_ngram_hits": 2,
+      "shifted_match_hits": 2,
+      "score": 8,
+      "support_notes": [
+        "EK repeat length 2 at start 45",
+        "KZ repeat length 2 at start 46",
+        "period 7 shifted match on K",
+        "period 14 shifted match on K"
+      ]
+    },
+    {
+      "position_one_based": 47,
+      "ciphertext": "Z",
+      "repeated_ngram_hits": 1,
+      "shifted_match_hits": 1,
+      "score": 4,
+      "support_notes": [
+        "KZ repeat length 2 at start 46",
+        "period 1 shifted match on Z"
+      ]
+    },
+    {
+      "position_one_based": 51,
+      "ciphertext": "T",
+      "repeated_ngram_hits": 1,
+      "shifted_match_hits": 4,
+      "score": 7,
+      "support_notes": [
+        "TJ repeat length 2 at start 51",
+        "period 13 shifted match on T",
+        "period 15 shifted match on T",
+        "period 17 shifted match on T",
+        "period 18 shifted match on T"
+      ]
+    },
+    {
+      "position_one_based": 52,
+      "ciphertext": "J",
+      "repeated_ngram_hits": 1,
+      "shifted_match_hits": 1,
+      "score": 4,
+      "support_notes": [
+        "TJ repeat length 2 at start 51",
+        "period 11 shifted match on J"
+      ]
+    },
+    {
+      "position_one_based": 78,
+      "ciphertext": "K",
+      "repeated_ngram_hits": 1,
+      "shifted_match_hits": 3,
+      "score": 6,
+      "support_notes": [
+        "KZ repeat length 2 at start 78",
+        "period 4 shifted match on K",
+        "period 9 shifted match on K",
+        "period 16 shifted match on K"
+      ]
+    },
+    {
+      "position_one_based": 81,
+      "ciphertext": "T",
+      "repeated_ngram_hits": 1,
+      "shifted_match_hits": 2,
+      "score": 5,
+      "support_notes": [
+        "TJ repeat length 2 at start 81",
+        "period 12 shifted match on T",
+        "period 13 shifted match on T"
+      ]
+    },
+    {
+      "position_one_based": 87,
+      "ciphertext": "K",
+      "repeated_ngram_hits": 1,
+      "shifted_match_hits": 3,
+      "score": 6,
+      "support_notes": [
+        "GK repeat length 2 at start 86",
+        "period 7 shifted match on K",
+        "period 9 shifted match on K",
+        "period 13 shifted match on K"
+      ]
+    },
+    {
+      "position_one_based": 90,
+      "ciphertext": "U",
+      "repeated_ngram_hits": 1,
+      "shifted_match_hits": 2,
+      "score": 5,
+      "support_notes": [
+        "HU repeat length 2 at start 89",
+        "period 2 shifted match on U",
+        "period 2 shifted match on U"
+      ]
+    },
+    {
+      "position_one_based": 94,
+      "ciphertext": "K",
+      "repeated_ngram_hits": 1,
+      "shifted_match_hits": 3,
+      "score": 6,
+      "support_notes": [
+        "EK repeat length 2 at start 93",
+        "period 7 shifted match on K",
+        "period 16 shifted match on K",
+        "period 20 shifted match on K"
+      ]
+    }
+  ],
+  "controls": [
+    "source-backed observation file required before scoring",
+    "public anchor positions excluded from hotspot target positions",
+    "seeded same-size non-anchor position-shuffle baseline required",
+    "multiple-comparison context across all preregistered independent lanes required before interpretation",
+    "promotion blocked unless future independent observations beat controls without post-hoc retuning"
+  ],
+  "public_anchor_fragments_used_for_discovery": false,
+  "public_anchor_fragments_used_as_primary_evidence": false,
+  "promoted_candidate": false,
+  "note": "Ciphertext-hotspot prior is a planning artifact for future independent observations; it is not a claimed solution, key, route, plaintext, or promotion criterion."
+}

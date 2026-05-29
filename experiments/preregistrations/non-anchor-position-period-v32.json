@@ -1,0 +1,29 @@
+{
+  "id": "non-anchor-position-period-v32",
+  "title": "Non-anchor position period prediction lane",
+  "hypothesis_family": "position-period-prediction",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane is a pre-registered structural position test, not another public-anchor mining pass. It excludes candidate words, key-material offsets, routed public additive fragments, and public known-plaintext anchor fragments from discovery and primary evidence. Any future score must come from independently documented non-anchor observations selected before evaluation.",
+  "prediction_target": "Future independently documented non-anchor K4 position observations should concentrate in predeclared one-based absolute-position residue classes for the registered period family more than expected under seeded best-of-period null controls.",
+  "prediction_artifact": "experiments/predictions/non-anchor-position-period-v32.json",
+  "discovery_inputs": [
+    "Predeclared period-family structural rule over one-based K4 absolute positions",
+    "K4 ciphertext length and the predeclared non-anchor position universe",
+    "No candidate key material, no public additive-fragment scores, no route tuning, and no source observation positions"
+  ],
+  "evaluation_inputs": [
+    "Future source-documented non-anchor K4 position observations selected after source review and before scoring",
+    "Observation files with per-position source notes and validation against the registered non-anchor universe",
+    "Independent target positions that are not public known-plaintext anchor fragments and are not derived from anchor additive-key values"
+  ],
+  "controls": [
+    "seeded same-size non-anchor position shuffle baseline",
+    "best-of-period null control across the registered period family",
+    "multiple-comparison correction across evaluated residue classes and sibling lanes",
+    "source-review gate before observation scoring",
+    "promotion blocked unless future independent observations beat null controls without post-hoc retuning"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

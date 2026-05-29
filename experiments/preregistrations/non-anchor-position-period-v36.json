@@ -1,0 +1,28 @@
+{
+  "id": "non-anchor-position-period-v36",
+  "title": "Non-anchor position period prediction v36",
+  "hypothesis_family": "position-period-prediction",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane does not search candidate words, key material, routed fragments, or public anchor-derived additive spans. It pre-registers absolute-position residue classes as a structural prediction before any new scoring, and it can only become evidence if later independently documented non-anchor observations land in the declared classes under null controls.",
+  "prediction_target": "Future independently sourced non-anchor K4 position observations should be enriched in one or more predeclared one-based absolute-position residue classes from the registered period family at a rate exceeding seeded null, best-of-period, and multiple-comparison controls.",
+  "prediction_artifact": "experiments/predictions/non-anchor-position-period-v36.json",
+  "discovery_inputs": [
+    "Predeclared period family from the registered structural-model lane",
+    "One-based K4 absolute position numbers only",
+    "Residue classes emitted before observing any new source-backed position evidence"
+  ],
+  "evaluation_inputs": [
+    "Future independently sourced non-anchor K4 position observations",
+    "Source-reviewed observation files that were not used to choose the period family or residues",
+    "Position-only scoring target, not public anchor additive fragments"
+  ],
+  "controls": [
+    "seeded same-size position shuffle baseline",
+    "best-of-period null control across the registered period family",
+    "multiple-comparison correction across declared residue classes",
+    "promotion blocked unless held-out independent observations beat both match-count and adjusted pattern controls"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

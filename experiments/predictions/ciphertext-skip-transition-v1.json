@@ -1,0 +1,330 @@
+{
+  "artifact_kind": "ciphertext-skip-transition-prior",
+  "hypothesis_family": "ciphertext-skip-transition-position-prior",
+  "source_inputs": [
+    "Public K4 ciphertext only",
+    "Public anchor positions used only as an exclusion mask for future non-anchor targets"
+  ],
+  "discovery_inputs": [
+    "Map ciphertext letters onto the Kryptos alphabet order",
+    "For each non-anchor position, sum circular alphabet distances to ciphertext letters at skip distances 1, 2",
+    "Predeclare the 20 non-anchor positions with highest skip-transition pressure; tie-break by max skip distance score, then lower one-based position",
+    "No candidate words, routes, plaintext claims, or public-anchor additive fragments"
+  ],
+  "prediction_target": "Future source-backed non-anchor K4 position observations should be enriched in the predeclared high skip-transition-pressure positions before any candidate-word or public-anchor-derived tuning is performed.",
+  "alphabet": "Kryptos",
+  "skip_distances": [
+    1,
+    2
+  ],
+  "non_anchor_position_count": 73,
+  "non_anchor_positions_one_based": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84,
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,
+    91,
+    92,
+    93,
+    94,
+    95,
+    96,
+    97
+  ],
+  "skip_transition_position_count": 20,
+  "skip_transition_positions": [
+    {
+      "position_one_based": 11,
+      "ciphertext": "U",
+      "skip_transition_score": 32,
+      "max_skip_transition_distance": 13,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 11
+    },
+    {
+      "position_one_based": 16,
+      "ciphertext": "L",
+      "skip_transition_score": 30,
+      "max_skip_transition_distance": 12,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 16
+    },
+    {
+      "position_one_based": 21,
+      "ciphertext": "W",
+      "skip_transition_score": 39,
+      "max_skip_transition_distance": 11,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 4
+    },
+    {
+      "position_one_based": 39,
+      "ciphertext": "Q",
+      "skip_transition_score": 29,
+      "max_skip_transition_distance": 12,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 19
+    },
+    {
+      "position_one_based": 40,
+      "ciphertext": "S",
+      "skip_transition_score": 36,
+      "max_skip_transition_distance": 12,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 6
+    },
+    {
+      "position_one_based": 42,
+      "ciphertext": "Q",
+      "skip_transition_score": 40,
+      "max_skip_transition_distance": 12,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 2
+    },
+    {
+      "position_one_based": 45,
+      "ciphertext": "E",
+      "skip_transition_score": 33,
+      "max_skip_transition_distance": 12,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 8
+    },
+    {
+      "position_one_based": 50,
+      "ciphertext": "A",
+      "skip_transition_score": 30,
+      "max_skip_transition_distance": 10,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 17
+    },
+    {
+      "position_one_based": 52,
+      "ciphertext": "J",
+      "skip_transition_score": 32,
+      "max_skip_transition_distance": 12,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 13
+    },
+    {
+      "position_one_based": 58,
+      "ciphertext": "A",
+      "skip_transition_score": 29,
+      "max_skip_transition_distance": 10,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 20
+    },
+    {
+      "position_one_based": 59,
+      "ciphertext": "W",
+      "skip_transition_score": 30,
+      "max_skip_transition_distance": 10,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 18
+    },
+    {
+      "position_one_based": 63,
+      "ciphertext": "B",
+      "skip_transition_score": 32,
+      "max_skip_transition_distance": 11,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 14
+    },
+    {
+      "position_one_based": 75,
+      "ciphertext": "W",
+      "skip_transition_score": 32,
+      "max_skip_transition_distance": 13,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 12
+    },
+    {
+      "position_one_based": 76,
+      "ciphertext": "G",
+      "skip_transition_score": 39,
+      "max_skip_transition_distance": 13,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 3
+    },
+    {
+      "position_one_based": 77,
+      "ciphertext": "D",
+      "skip_transition_score": 37,
+      "max_skip_transition_distance": 13,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 5
+    },
+    {
+      "position_one_based": 82,
+      "ciphertext": "J",
+      "skip_transition_score": 33,
+      "max_skip_transition_distance": 12,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 9
+    },
+    {
+      "position_one_based": 87,
+      "ciphertext": "K",
+      "skip_transition_score": 41,
+      "max_skip_transition_distance": 13,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 1
+    },
+    {
+      "position_one_based": 89,
+      "ciphertext": "H",
+      "skip_transition_score": 33,
+      "max_skip_transition_distance": 12,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 10
+    },
+    {
+      "position_one_based": 91,
+      "ciphertext": "A",
+      "skip_transition_score": 35,
+      "max_skip_transition_distance": 12,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 7
+    },
+    {
+      "position_one_based": 94,
+      "ciphertext": "K",
+      "skip_transition_score": 32,
+      "max_skip_transition_distance": 11,
+      "skip_distances_used": [
+        1,
+        2
+      ],
+      "skip_transition_rank": 15
+    }
+  ],
+  "controls": [
+    "source-backed observation file required before scoring",
+    "public anchor positions excluded from skip-transition target positions",
+    "seeded same-size non-anchor position-shuffle baseline required",
+    "multiple-comparison context across all preregistered independent lanes required before interpretation",
+    "promotion blocked unless future independent observations beat controls without post-hoc retuning"
+  ],
+  "public_anchor_fragments_used_for_discovery": false,
+  "public_anchor_fragments_used_as_primary_evidence": false,
+  "promoted_candidate": false,
+  "note": "Ciphertext skip-transition prior is a planning artifact for future independent observations; it is not a claimed solution, key, route, plaintext, or promotion criterion."
+}

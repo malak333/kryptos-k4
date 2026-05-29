@@ -24,7 +24,7 @@ flowchart TD
         CandidateRegistry["Pre-registered contextual candidates"]
         RouteRegistry["Bounded deterministic route families"]
         FindingsLedger["Findings ledger with source, transform, baseline, interpretation, next test"]
-        IndependentTargets["Preregistered non-anchor period and spacing targets"]
+        IndependentTargets["Preregistered non-anchor period, spacing, mirror, grid, and Tableau/HILL targets"]
     end
 
     subgraph Outputs["User Outputs"]
