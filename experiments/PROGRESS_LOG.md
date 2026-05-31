@@ -3,6 +3,40 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: Stephen Bishop PRLog K4 Claim Quarantined
+
+Added a quote-free local source snapshot for a public PRLog PDF claim:
+
+- `prlog-bishop-k4-plaintext-2020`
+
+This is distinct from the earlier checked PRLog URL ending in `12839961`,
+which resolved to unrelated charity press-release content and remains
+unregistered. The newly registered `12845348` PDF is a usable public claim
+artifact, but it is still registered only as `unverified-solution-claim`.
+
+Validation:
+
+```bash
+cargo run --locked -- validate-source-archive \
+  --source-id prlog-bishop-k4-plaintext-2020 \
+  --input sources/archives/prlog-bishop-k4-plaintext-2020-2026-05-31.md \
+  --format json
+
+cargo run --locked -- verify-plaintext-claim \
+  --input /private/tmp/prlog-bishop-12845348-claim.txt \
+  --source-id prlog-bishop-k4-plaintext-2020 \
+  --format json
+```
+
+Observed quarantine-check result: the temporary claim normalized to 97 letters,
+matched the expected K4 length, preserved all four registered public anchors,
+reported all 26 implied shift values, 71 repeated shift values, and maximum
+shift bucket count 10. `promoted_candidate` remained `false`.
+
+Practical consequence: public claim intake is broader, but the source remains
+quarantined and does not change the scoring frontier. The repository stores no
+claimed plaintext and no plaintext-bearing artifact.
+
 ## 2026-05-31: Narrow Window-Balance Target Registered
 
 Added a distinct ciphertext-only local-window balance prediction target:

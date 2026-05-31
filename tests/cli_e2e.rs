@@ -203,6 +203,10 @@ fn facts_hypotheses_sources_and_help_are_covered() {
         source["id"] == "dearcipher-k4-claim-2026"
             && source["allowed_use"] == "unverified-solution-claim"
     }));
+    assert!(json.as_array().unwrap().iter().any(|source| {
+        source["id"] == "prlog-bishop-k4-plaintext-2020"
+            && source["allowed_use"] == "unverified-solution-claim"
+    }));
 
     Command::cargo_bin("kryptos-k4")
         .unwrap()
@@ -1743,7 +1747,7 @@ fn source_frontier_classifies_all_registered_sources() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Source Frontier"))
-        .stdout(predicate::str::contains("sources: 25"))
+        .stdout(predicate::str::contains("sources: 26"))
         .stdout(predicate::str::contains(
             "scored-observation eligible sources: 2",
         ))
@@ -1784,12 +1788,12 @@ fn source_frontier_classifies_all_registered_sources() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["source_count"], 25);
+    assert_eq!(json["source_count"], 26);
     assert_eq!(json["scored_observation_eligible_count"], 2);
     assert_eq!(json["scored_position_marker_count"], 1);
     assert_eq!(json["valid_source_backed_archive_count"], 27);
     assert_eq!(json["all_source_backed_archives_negative"], true);
-    assert_eq!(json["quarantined_claim_count"], 3);
+    assert_eq!(json["quarantined_claim_count"], 4);
     assert_eq!(json["promoted_candidate"], false);
     assert!(
         json["frontier_blocking_conditions"]
@@ -1923,6 +1927,15 @@ fn source_frontier_classifies_all_registered_sources() {
     assert_eq!(dearcipher_claim["frontier_class"], "quarantined-claim");
     assert_eq!(
         dearcipher_claim["current_archive_has_scored_positions"],
+        false
+    );
+    let prlog_bishop_claim = sources
+        .iter()
+        .find(|source| source["id"] == "prlog-bishop-k4-plaintext-2020")
+        .unwrap();
+    assert_eq!(prlog_bishop_claim["frontier_class"], "quarantined-claim");
+    assert_eq!(
+        prlog_bishop_claim["current_archive_has_scored_positions"],
         false
     );
 
@@ -2069,7 +2082,7 @@ fn source_frontier_summary_prints_compact_next_action() {
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
     assert_eq!(json["summary"], true);
-    assert_eq!(json["source_count"], 25);
+    assert_eq!(json["source_count"], 26);
     assert_eq!(json["valid_source_backed_archive_count"], 27);
     assert_eq!(json["all_source_backed_archives_negative"], true);
     assert_eq!(
@@ -7776,6 +7789,10 @@ fn export_data_writes_machine_readable_files() {
     }));
     assert!(sources.as_array().unwrap().iter().any(|source| {
         source["id"] == "dearcipher-k4-claim-2026"
+            && source["allowed_use"] == "unverified-solution-claim"
+    }));
+    assert!(sources.as_array().unwrap().iter().any(|source| {
+        source["id"] == "prlog-bishop-k4-plaintext-2020"
             && source["allowed_use"] == "unverified-solution-claim"
     }));
     assert!(sources.as_array().unwrap().iter().all(|source| {
