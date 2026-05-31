@@ -3,6 +3,30 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: W-Delimiter Source-Context Diagnostic Stopped
+
+Checked the registered KryptosBot findings page's W-delimiter context against
+the existing source-backed CIA row-boundary observation before adding a larger
+W-delimiter evaluator family. This was a source-context diagnostic only: the
+KryptosBot page supplies rationale, not scoreable positions or a plaintext/key
+claim.
+
+Fixed diagnostic inputs:
+
+- K4 non-anchor W positions: `21,37,49,59,75`
+- Existing source-backed row-boundary observation:
+  `experiments/position-observations/cia-k4-row-boundaries-v1.json`
+- Observed row-boundary positions: `1,4,5,36,37,97`
+- Hit count: `1/6` at position `37`
+- Same-size non-anchor hypergeometric null: population `73`, W targets `5`,
+  draws `6`, null mean `0.4110`, `p>=1 = 0.3570`
+
+Practical consequence: the W-delimiter source-context diagnostic is
+negative/non-significant against the only current committed source-backed
+position observation. Do not spend a full implementation pass on a dedicated
+W-delimiter evaluator unless a future eligible source supplies independent
+non-anchor observations or a stronger pre-score structural prediction target.
+
 ## 2026-05-31: KryptosBot Findings Source Registered
 
 Added `kryptosbot-findings-2026` as a quote-free local source snapshot for the

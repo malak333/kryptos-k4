@@ -8,9 +8,9 @@ It is not a solution claim.
 
 Status: stop and replan before any new scoring.
 
-Reason: the current source/evidence gates report `17` registered sources, `2`
+Reason: the current source/evidence gates report `20` registered sources, `2`
 scored-observation eligible sources, `1` committed source-backed observation
-file, `22` valid source-backed evaluation archives, and all source-backed
+file, `26` valid source-backed evaluation archives, and all source-backed
 archives negative/non-significant. `cia-sculpture` is already used by the
 row-boundary archive set, while `cia-artifact` remains reviewed but explicitly
 non-scorable from its current quote-free archive.
@@ -21,6 +21,20 @@ routed-key, held-out public-group, public-fragment structure, or
 step must start from a new eligible source, a new source-backed rationale that
 changes an eligible archive boundary before scoring, or a distinct
 preregistered prediction artifact that passes the unique-artifact gate.
+
+## W-Delimiter Source-Context Diagnostic Lane
+
+Status: stopped for the current source-backed observation set.
+
+Reason: the registered `kryptosbot-findings-2026` source gives W-delimiter
+methodology context only. A pre-implementation diagnostic against the committed
+CIA row-boundary observation found non-anchor W positions `21,37,49,59,75` and
+only `1/6` observed row-boundary hits at position `37`; the same-size
+non-anchor hypergeometric null gives mean `0.4110` and `p=0.3570`. This is
+negative/non-significant and does not justify a larger W-delimiter evaluator
+until new independent scoreable observations exist.
+
+Latest evidence is summarized in `experiments/PROGRESS_LOG.md`.
 
 ## Public Anchor-Derived Key-Material Lanes
 
