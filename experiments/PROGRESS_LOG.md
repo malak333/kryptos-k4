@@ -3,6 +3,43 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: SolveKryptos Mechanism Failure Archived
+
+Archived the latest plaintext-free mechanism verifier result:
+
+- result: `results/claim-verifications/solvekryptos-mechanism-20260531-latest/result.json`
+- summary: `results/claim-verifications/solvekryptos-mechanism-20260531-latest/summary.md`
+- source snapshot updated: `sources/archives/solvekryptos-2026-05-27.md`
+
+Command:
+
+```bash
+cargo run --locked -- verify-claim-mechanism \
+  --directory /private/tmp/k4-latest-solvekryptos/solvekryptos-canonical-bundle \
+  --source-id solvekryptos-2026-claim \
+  --format json
+```
+
+Result:
+
+- required mechanism files: `8/8`
+- f-table, helper-card, Z1/Z2 delta, control-card, and Z2 helper-path checks:
+  matched
+- Y-template rule checks: `27/31`
+- Y-template gate-map checks: `27/31`
+- structural checks passed: `false`
+- promoted: `false`
+
+The non-leaking diagnostic localizes the Y-pass disagreements to Y positions
+`23`, `27`, `28`, and `29`, corresponding to K4 positions `27`, `31`, `32`,
+and `33`. The archive stores only structural counts and position/gate
+diagnostics; it does not store claimed plaintext, key material, or
+plaintext-bearing reconciliation rows.
+
+Practical consequence: the SolveKryptos claim remains quarantined. Its
+top-level bundle consistency checks are not enough to promote it because the
+published helper machinery still fails the mechanism verifier.
+
 ## 2026-05-31: Terminal Residue-Balance Target Registered
 
 Added a distinct ciphertext-only residue-balance prediction target:

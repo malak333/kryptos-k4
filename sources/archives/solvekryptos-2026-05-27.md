@@ -84,6 +84,11 @@ artifact.
   still failed with the same 27/31 Y-pass template rule and gate-map matches,
   the same four Y-position disagreements, and the same declared-vs-rule
   zero-position disagreement.
+- The latest non-plaintext mechanism verifier result is archived at
+  `results/claim-verifications/solvekryptos-mechanism-20260531-latest/`.
+  It stores only structural counts, Y/K4 position numbers, expected/observed
+  gate values, and the non-promotion boundary; it does not store claimed
+  plaintext, key material, or plaintext-bearing reconciliation rows.
 - The temporary bundle remains outside the repository. The repository still
   does not store the claimed plaintext or any plaintext-bearing reconciliation
   table.
