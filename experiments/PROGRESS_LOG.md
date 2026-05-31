@@ -3,19 +3,18 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
-## 2026-05-31: Additional Public K4 Claims Quarantined
+## 2026-05-31: Dear Cipher Public K4 Claim Quarantined
 
-Added quote-free local source snapshots for two additional public K4 solution
-claim surfaces:
+Added a quote-free local source snapshot for an additional public K4 solution
+claim surface:
 
 - `dearcipher-k4-claim-2026`
-- `prlog-bishop-k4-claim-2020`
 
-Both sources are registered as `unverified-solution-claim`. They are not
-eligible for scored independent position observations and are not source-backed
-evidence. The repository snapshots record only metadata, high-level claim
-boundaries, and quarantine handling; no claimed plaintext, key stream, route,
-table, or plaintext-bearing artifact is stored.
+The source is registered as `unverified-solution-claim`. It is not eligible
+for scored independent position observations and is not source-backed evidence.
+The repository snapshot records only metadata, high-level claim boundaries, and
+quarantine-check results; no claimed plaintext, key stream, route, table, or
+plaintext-bearing artifact is stored.
 
 Validation:
 
@@ -25,14 +24,24 @@ cargo run --locked -- validate-source-archive \
   --input sources/archives/dearcipher-k4-claim-2026-05-31.md \
   --format json
 
-cargo run --locked -- validate-source-archive \
-  --source-id prlog-bishop-k4-claim-2020 \
-  --input sources/archives/prlog-bishop-k4-claim-2020-2026-05-31.md \
+cargo run --locked -- verify-plaintext-claim \
+  --input /private/tmp/dearcipher-k4-claim.txt \
+  --source-id dearcipher-k4-claim-2026 \
   --format json
 ```
 
+Observed quarantine-check result: the temporary claim normalized to 97 letters,
+matched the expected K4 length, preserved all four registered public anchors,
+reported all 26 implied shift values, 71 repeated shift values, and maximum
+shift bucket count 8. `promoted_candidate` remained `false`.
+
+A stale-looking PRLog PDF URL surfaced during the public-source scan, but a
+2026-05-31 temporary download resolved to unrelated charity press-release
+content rather than a usable K4 claim artifact. It was not registered as a K4
+claim source.
+
 Practical consequence: public claim intake is broader, but the evidence
-frontier is unchanged for scoring. Any future use of these sources must pass
+frontier is unchanged for scoring. Any future use of this source must pass
 temporary local verifier commands such as `verify-plaintext-claim`,
 `verify-running-key-claim`, or a claim-specific mechanism verifier without
 adding release-facing plaintext-bearing artifacts.

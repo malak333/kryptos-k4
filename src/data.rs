@@ -407,17 +407,6 @@ pub fn sources() -> Vec<Source> {
             use_note: "Public claimed K4 plaintext and explanation; quarantined for future independent verification only, not source-backed evidence, not candidate material, and not release-facing plaintext.",
         },
         Source {
-            id: "prlog-bishop-k4-claim-2020",
-            label: "Stephen Bishop PRLog Kryptos K4 claim",
-            url: "https://www.prlog.org/12839961-solving-kryptos-vigenere-cipher-final-k4-section-finally-solved.pdf",
-            archive_url: Some("sources/archives/prlog-bishop-k4-claim-2020-2026-05-31.md"),
-            accessed_at: "2026-05-31",
-            publication_date: Some("2020-09-28"),
-            source_type: "community-solution-claim",
-            allowed_use: "unverified-solution-claim",
-            use_note: "Public claimed K4 plaintext from a self-published PRLog PDF; quarantined for future independent verification only, not source-backed evidence, not candidate material, and not release-facing plaintext.",
-        },
-        Source {
             id: "ssrn-bonifacino-running-key-2025",
             label: "SSRN Bonifacino 2025 running-key K4 paper",
             url: "https://ssrn.com/abstract=5876405",

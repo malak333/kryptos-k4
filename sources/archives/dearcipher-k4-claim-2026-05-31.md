@@ -22,6 +22,18 @@ artifact.
 - The source should be treated as an input to future temporary local claim
   verifiers, not as source-backed observation evidence or candidate material.
 
+## Local Quarantine Check
+
+- On 2026-05-31, the public claim text was copied only into a temporary
+  `/private/tmp` file and screened with `verify-plaintext-claim`.
+- The temporary claim normalized to 97 letters, matched the expected K4 length,
+  and preserved all four registered public anchors at their documented
+  positions.
+- Aggregate shift diagnostics reported all 26 implied shift values, 71 repeated
+  shift values, and a maximum shift bucket count of 8.
+- The temporary claim file remains outside the repository. The repository does
+  not store the claimed plaintext.
+
 ## Boundary
 
 - This source is registered as `unverified-solution-claim`; it is not eligible
