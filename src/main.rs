@@ -1544,7 +1544,7 @@ enum Command {
     },
     /// Classify every registered source by its current evidence-use frontier.
     SourceFrontier {
-        /// Print a concise operational summary instead of the full source table. Markdown only.
+        /// Print a concise operational summary instead of the full source table.
         #[arg(long)]
         summary: bool,
         /// Output format.
@@ -1722,6 +1722,28 @@ struct SourceFrontierEntry {
     allowed_next_action: String,
     use_note: &'static str,
     url: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct SourceFrontierSummary {
+    summary: bool,
+    source_count: usize,
+    scored_observation_eligible_count: usize,
+    scored_position_marker_count: usize,
+    valid_source_backed_archive_count: usize,
+    all_source_backed_archives_negative: bool,
+    context_only_count: usize,
+    quarantined_claim_count: usize,
+    frontier_blocking_conditions: Vec<String>,
+    required_next_evidence: Vec<String>,
+    disallowed_next_actions: Vec<String>,
+    scored_observation_ready_source_ids: Vec<&'static str>,
+    eligible_but_currently_non_scorable_source_ids: Vec<&'static str>,
+    already_scored_source_backed_archives: Vec<String>,
+    recommended_next_step: String,
+    action: &'static str,
+    promoted_candidate: bool,
+    note: &'static str,
 }
 
 #[derive(Debug, Serialize)]
@@ -15641,9 +15663,13 @@ fn print_source_frontier(summary: bool, format: OutputFormat) -> Result<()> {
     match format {
         OutputFormat::Json => {
             if summary {
-                bail!("--summary is only supported with Markdown output");
+                println!(
+                    "{}",
+                    serde_json::to_string_pretty(&source_frontier_summary(&report))?
+                );
+            } else {
+                println!("{}", serde_json::to_string_pretty(&report)?);
             }
-            println!("{}", serde_json::to_string_pretty(&report)?)
         }
         OutputFormat::Markdown => {
             println!("# Source Frontier\n");
@@ -15771,6 +15797,53 @@ fn print_source_frontier(summary: bool, format: OutputFormat) -> Result<()> {
         }
     }
     Ok(())
+}
+
+fn source_frontier_summary(report: &SourceFrontierReport) -> SourceFrontierSummary {
+    let scored_observation_ready_source_ids = report
+        .frontier_sources
+        .iter()
+        .filter(|source| source.frontier_class == "scored-observation-ready")
+        .map(|source| source.id)
+        .collect::<Vec<_>>();
+    let eligible_but_currently_non_scorable_source_ids = report
+        .frontier_sources
+        .iter()
+        .filter(|source| source.frontier_class == "eligible-but-currently-non-scorable")
+        .map(|source| source.id)
+        .collect::<Vec<_>>();
+    let already_scored_source_backed_archives = report
+        .frontier_sources
+        .iter()
+        .filter(|source| source.source_backed_archive_count > 0)
+        .map(|source| {
+            format!(
+                "{} ({} archived evaluations)",
+                source.id, source.source_backed_archive_count
+            )
+        })
+        .collect::<Vec<_>>();
+
+    SourceFrontierSummary {
+        summary: true,
+        source_count: report.source_count,
+        scored_observation_eligible_count: report.scored_observation_eligible_count,
+        scored_position_marker_count: report.scored_position_marker_count,
+        valid_source_backed_archive_count: report.valid_source_backed_archive_count,
+        all_source_backed_archives_negative: report.all_source_backed_archives_negative,
+        context_only_count: report.context_only_count,
+        quarantined_claim_count: report.quarantined_claim_count,
+        frontier_blocking_conditions: report.frontier_blocking_conditions.clone(),
+        required_next_evidence: report.required_next_evidence.clone(),
+        disallowed_next_actions: report.disallowed_next_actions.clone(),
+        scored_observation_ready_source_ids,
+        eligible_but_currently_non_scorable_source_ids,
+        already_scored_source_backed_archives,
+        recommended_next_step: report.recommended_next_step.clone(),
+        action: "do not rerun negative row-boundary evidence as new evidence; add a new eligible source, update a source archive with explicit non-anchor scored positions, or validate a genuinely distinct prediction artifact before scoring.",
+        promoted_candidate: report.promoted_candidate,
+        note: report.note,
+    }
 }
 
 fn print_release_check(format: OutputFormat) -> Result<()> {

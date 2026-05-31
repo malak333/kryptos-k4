@@ -1991,6 +1991,42 @@ fn source_frontier_summary_prints_compact_next_action() {
         ))
         .stdout(predicate::str::contains("promoted: false"))
         .stdout(predicate::str::contains("## Sources").not());
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["source-frontier", "--summary", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["summary"], true);
+    assert_eq!(json["source_count"], 24);
+    assert_eq!(json["valid_source_backed_archive_count"], 27);
+    assert_eq!(json["all_source_backed_archives_negative"], true);
+    assert_eq!(
+        json["scored_observation_ready_source_ids"][0],
+        "cia-sculpture"
+    );
+    assert_eq!(
+        json["eligible_but_currently_non_scorable_source_ids"][0],
+        "cia-artifact"
+    );
+    assert!(
+        json["already_scored_source_backed_archives"][0]
+            .as_str()
+            .unwrap()
+            .contains("cia-sculpture (27 archived evaluations)")
+    );
+    assert!(
+        json["action"]
+            .as_str()
+            .unwrap()
+            .contains("do not rerun negative row-boundary evidence")
+    );
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(json.get("frontier_sources").is_none());
 }
 
 #[test]
