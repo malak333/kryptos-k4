@@ -8,7 +8,7 @@ It is not a solution claim.
 
 Status: stop and replan before any new scoring.
 
-Reason: the current source/evidence gates report `23` registered sources, `2`
+Reason: the current source/evidence gates report `24` registered sources, `2`
 scored-observation eligible sources, `1` committed source-backed observation
 file, `27` valid source-backed evaluation archives, and all source-backed
 archives negative/non-significant. `cia-sculpture` is already used by the

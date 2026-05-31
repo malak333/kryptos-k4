@@ -3,6 +3,48 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: Latest Public-Source Scan Added No Scoring Evidence
+
+A live source scan on 2026-05-31 checked current public reporting and project
+pages for new K4 evidence before adding another experiment lane. The reviewed
+surfaces included:
+
+- Popular Mechanics final-clues reporting:
+  `https://www.popularmechanics.com/science/math/a69447312/kryptos-puzzle-clues/`
+- RR Auction's public Kryptos archive lot page:
+  `https://www.rrauction.com/jim-sanborn-kryptos-k4-solution-auction`
+- Kryptos.today progress/status pages:
+  `https://kryptos.today/` and `https://kryptos.today/progress`
+- Search results for recent K4 solution claims and Sanborn/archive updates.
+
+Result: no new eligible source-backed non-anchor observation positions, public
+key stream, route, reusable coding rule, or verifier-compatible plaintext claim
+was found. The RR Auction lot is already registered as
+`rr-auction-kryptos-archive-2025` with a quote-free local snapshot and remains
+`archive-context-only`; Popular Mechanics corroborates already registered
+public-clue/archive context; Kryptos.today remains methodology/progress context
+only. None of these sources changes the current scoring frontier.
+
+Current command-backed frontier:
+
+```bash
+cargo run --locked -- source-frontier --summary --format markdown
+cargo run --locked -- next-evidence-gate --format json
+```
+
+Observed frontier: `24` registered sources, `2` scored-observation eligible
+sources, `1` committed source-backed observation file, `27` valid
+source-backed evaluation archives, all source-backed archives
+negative/non-significant, `20` context-only sources, `2` quarantined claims,
+and `promoted=false`.
+
+Practical consequence: do not add another public-anchor-derived key-material,
+routed-key, held-out public-group, W-delimiter, ciphertext-prior, or
+row-boundary scoring lane from these sources. The next scoring step still
+requires a new eligible source, a changed eligible source archive with explicit
+non-anchor scored-position markers, a verifier-compatible local claim artifact,
+or a genuinely distinct preregistered prediction artifact before evaluation.
+
 ## 2026-05-31: SSRN Running-Key Claim Quarantined
 
 Added `ssrn-bonifacino-running-key-2025`, a quote-free local source snapshot
