@@ -240,3 +240,20 @@ plaintext, key-stream, route, or plaintext-bearing table material to committed
 files. Reopen only when the claim inputs are available as temporary local files,
 then archive only non-leaking aggregate verifier diagnostics under
 `results/claim-verifications/<source-id>-...`.
+
+## Terminal-Moduli Row-Boundary Follow-Up
+
+Status: follow-up only; no promotion.
+
+Reason: the already-preregistered
+`ciphertext-residue-balance-terminal-moduli-v1` artifact scored `2/6`
+source-backed CIA row-boundary positions at modulus `48`, residue `0` with
+seeded null `p=0.0436`. This is a nominal signal after a broad inventory of
+independent lanes and must not be treated as solved evidence. It is sensitive
+to the existing row-boundary observation and should not be retuned against that
+same observation.
+
+Do not rerun, widen, narrow, or reinterpret terminal residue-balance scoring on
+`cia-k4-row-boundaries-v1` as new evidence. Reopen only with a narrow
+follow-up preregistration fixed before scoring and a genuinely new independent
+source-backed observation file.

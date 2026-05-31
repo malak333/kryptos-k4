@@ -1460,6 +1460,79 @@ claim sources under `quarantined_claim_source_ids_without_archive`. That is a
 data-availability boundary, not a negative verification result and not evidence
 for promotion.
 
+## 2026-05-31 - Remaining Unique Row-Boundary Artifacts Scored
+
+Closed the local inventory gap between unique ready prediction artifacts and
+source-backed row-boundary archives by evaluating three already-preregistered
+artifacts against `cia-k4-row-boundaries-v1`:
+
+```bash
+cargo run --locked -- validate-ciphertext-residue-balance-observations \
+  --artifact experiments/predictions/ciphertext-residue-balance-hyper-extreme-moduli-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-residue-balance-hyper-extreme-moduli-v1.json \
+  --input experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --format json
+
+cargo run --locked -- evaluate-ciphertext-residue-balance \
+  --artifact experiments/predictions/ciphertext-residue-balance-hyper-extreme-moduli-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-residue-balance-hyper-extreme-moduli-v1.json \
+  --positions-file experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/ciphertext-residue-balance-observations/cia-k4-row-boundaries-hyper-extreme-moduli-v1 \
+  --format json
+
+cargo run --locked -- validate-ciphertext-residue-balance-observations \
+  --artifact experiments/predictions/ciphertext-residue-balance-terminal-moduli-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-residue-balance-terminal-moduli-v1.json \
+  --input experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --format json
+
+cargo run --locked -- evaluate-ciphertext-residue-balance \
+  --artifact experiments/predictions/ciphertext-residue-balance-terminal-moduli-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-residue-balance-terminal-moduli-v1.json \
+  --positions-file experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/ciphertext-residue-balance-observations/cia-k4-row-boundaries-terminal-moduli-v1 \
+  --format json
+
+cargo run --locked -- validate-ciphertext-window-balance-observations \
+  --artifact experiments/predictions/ciphertext-window-balance-narrow-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-window-balance-narrow-v1.json \
+  --input experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --format json
+
+cargo run --locked -- evaluate-ciphertext-window-balance \
+  --artifact experiments/predictions/ciphertext-window-balance-narrow-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-window-balance-narrow-v1.json \
+  --positions-file experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/ciphertext-window-balance-observations/cia-k4-row-boundaries-narrow-v1 \
+  --format json
+```
+
+Results:
+
+- hyper-extreme residue-balance: modulus `41`, residue `0`, `1/6` hits,
+  `p=0.7602`, promoted `false`.
+- terminal residue-balance: modulus `48`, residue `0`, `2/6` hits,
+  `p=0.0436`, promoted `false`, status `follow-up-required` in
+  `next-evidence-gate`.
+- narrow window-balance: `0/6` hits, `p=1.0000`, promoted `false`.
+
+Interpretation: the terminal-moduli result is a narrow follow-up flag only. It
+is not a K4 solution and does not validate a key, route, plaintext, or
+candidate. Do not rescore the same row-boundary observation to tune around this
+result. Any follow-up must be preregistered narrowly and evaluated only against
+new independent source-backed observations.
+
+Implementation note: `validate-evaluation-archive` was updated to accept
+deterministic ciphertext-window-balance variants such as the narrow
+`window_widths=[3,5]` artifact, matching the existing variant-aware behavior
+for ciphertext-residue-balance artifacts.
+
 ## 2026-05-31 - Quarantined Plaintext Claim Verifier Archives
 
 Archived non-leaking `verify-plaintext-claim` outputs for two quarantined

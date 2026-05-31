@@ -5247,6 +5247,9 @@ fn archived_prediction_artifacts_match(
     if artifact_kind == "ciphertext-residue-balance" {
         return ciphertext_residue_balance_artifact_matches_deterministic(artifact_value);
     }
+    if artifact_kind == "ciphertext-window-balance" {
+        return ciphertext_window_balance_artifact_matches_deterministic(artifact_value);
+    }
     json_values_match(artifact_value, expected_value)
 }
 
@@ -5336,6 +5339,54 @@ fn ciphertext_residue_balance_artifact_matches_deterministic(
     }
     let expected = kryptos_k4::build_ciphertext_residue_balance_prior(min_modulus, max_modulus);
     ciphertext_residue_balance_artifacts_match(&artifact, &expected)
+}
+
+fn ciphertext_window_balance_artifacts_match(
+    left: &CiphertextWindowBalancePrior,
+    right: &CiphertextWindowBalancePrior,
+) -> bool {
+    left.artifact_kind == right.artifact_kind
+        && left.hypothesis_family == right.hypothesis_family
+        && left.source_inputs == right.source_inputs
+        && left.discovery_inputs == right.discovery_inputs
+        && left.prediction_target == right.prediction_target
+        && left.alphabet == right.alphabet
+        && left.window_widths == right.window_widths
+        && left.non_anchor_position_count == right.non_anchor_position_count
+        && left.non_anchor_positions_one_based == right.non_anchor_positions_one_based
+        && left.window_balance_position_count == right.window_balance_position_count
+        && left.window_balance_positions == right.window_balance_positions
+        && left.controls == right.controls
+        && left.public_anchor_fragments_used_for_discovery
+            == right.public_anchor_fragments_used_for_discovery
+        && left.public_anchor_fragments_used_as_primary_evidence
+            == right.public_anchor_fragments_used_as_primary_evidence
+        && left.promoted_candidate == right.promoted_candidate
+        && left.note == right.note
+}
+
+fn ciphertext_window_balance_artifact_matches_deterministic(
+    artifact_value: &serde_json::Value,
+) -> bool {
+    let Ok(artifact) =
+        serde_json::from_value::<CiphertextWindowBalancePrior>(artifact_value.clone())
+    else {
+        return false;
+    };
+    if artifact.window_widths.is_empty()
+        || artifact.window_balance_position_count != artifact.window_balance_positions.len()
+        || artifact
+            .window_widths
+            .iter()
+            .any(|width| *width < 3 || width % 2 == 0)
+    {
+        return false;
+    }
+    let expected = kryptos_k4::build_ciphertext_window_balance_prior(
+        artifact.window_balance_position_count,
+        artifact.window_widths.clone(),
+    );
+    ciphertext_window_balance_artifacts_match(&artifact, &expected)
 }
 
 fn json_values_match(left: &serde_json::Value, right: &serde_json::Value) -> bool {
