@@ -3,6 +3,46 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: Hyper-Extreme Residue-Balance Target Registered
+
+Added a distinct ciphertext-only residue-balance prediction target:
+
+- preregistration: `experiments/preregistrations/ciphertext-residue-balance-hyper-extreme-moduli-v1.json`
+- prediction artifact: `experiments/predictions/ciphertext-residue-balance-hyper-extreme-moduli-v1.json`
+- rule: for each modulus `41..=47`, select the non-anchor residue class with
+  highest distinct ciphertext-letter rate, tie-breaking by larger position
+  count and then lower residue number
+
+Validation:
+
+```bash
+cargo run --locked -- validate-preregistration \
+  --input experiments/preregistrations/ciphertext-residue-balance-hyper-extreme-moduli-v1.json \
+  --format json
+
+cargo run --locked -- validate-prediction-artifact \
+  --preregistration experiments/preregistrations/ciphertext-residue-balance-hyper-extreme-moduli-v1.json \
+  --require-unique-artifact \
+  --format json
+
+cargo run --locked -- independent-lane-status --format json
+```
+
+Observed inventory after registration:
+
+- independent lanes: `71`
+- ready for source-backed observations: `71`
+- invalid lanes: `0`
+- prediction artifacts: `71`
+- unique ready prediction targets: `29`
+- duplicate prediction artifact groups: `1`
+- ciphertext-residue-balance-position-prior-family lanes: `7`
+- ciphertext-residue-balance-position-prior-family unique ready targets: `7`
+
+Practical consequence: this adds one more predeclared, unique future-observation
+target. It is not evidence by itself, does not score public anchors, and does
+not promote candidate material, key stream, route, or plaintext.
+
 ## 2026-05-31: Stephen Bishop PRLog K4 Claim Quarantined
 
 Added a quote-free local source snapshot for a public PRLog PDF claim:

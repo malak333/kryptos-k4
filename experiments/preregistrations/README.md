@@ -465,6 +465,14 @@ Current independent lanes:
   34 through 40. The artifact passes `--require-unique-artifact`; its committed
   CIA row-boundary archive is negative/non-significant (`1/6`, empirical
   `p=0.6741`, promoted `false`).
+- `ciphertext-residue-balance-hyper-extreme-moduli-v1.json`, a distinct
+  ciphertext-only hyper-extreme-moduli residue balance prior with committed
+  artifact
+  `experiments/predictions/ciphertext-residue-balance-hyper-extreme-moduli-v1.json`.
+  The artifact predeclares one selected non-anchor residue set for each modulus
+  41 through 47. The artifact passes `--require-unique-artifact`; it is a
+  pre-score prediction target for future source-backed observations, not
+  evidence by itself.
 
 The mirror and grid-layout lanes are now source-observation ready: validate
 their artifacts with `validate-prediction-artifact`, then use the matching
