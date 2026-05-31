@@ -14885,7 +14885,23 @@ fn print_claim_reconciliation_verification(
         "all ciphertext matches: {}",
         verification.all_ciphertext_matches
     );
+    println!(
+        "ciphertext numeric values: {}/{}",
+        verification.ciphertext_value_match_count, verification.ciphertext_value_checked_count
+    );
+    println!(
+        "all ciphertext numeric values match: {}",
+        verification.all_ciphertext_values_match
+    );
     println!("plaintext rows present: {}", verification.plaintext_rows);
+    println!(
+        "plaintext numeric values: {}/{}",
+        verification.plaintext_value_match_count, verification.plaintext_value_checked_count
+    );
+    println!(
+        "all plaintext numeric values match: {}",
+        verification.all_plaintext_values_match
+    );
     println!(
         "tier values: {}/{}",
         verification.tier_match_count, verification.tier_checked_count

@@ -977,6 +977,10 @@ fn verify_claim_reconciliation_reports_structure_without_leaking_claim_text() {
     assert_eq!(json["row_count"], 97);
     assert_eq!(json["row_count_matches"], true);
     assert_eq!(json["all_ciphertext_matches"], true);
+    assert_eq!(json["ciphertext_value_checked_count"], 0);
+    assert_eq!(json["all_ciphertext_values_match"], true);
+    assert_eq!(json["plaintext_value_checked_count"], 0);
+    assert_eq!(json["all_plaintext_values_match"], true);
     assert_eq!(json["tier_checked_count"], 0);
     assert_eq!(json["all_tier_values_match"], true);
     assert_eq!(json["lane_checked_count"], 0);
@@ -1007,6 +1011,8 @@ fn verify_claim_reconciliation_reports_structure_without_leaking_claim_text() {
         ))
         .stdout(predicate::str::contains("rows: 97/97"))
         .stdout(predicate::str::contains("all ciphertext matches: true"))
+        .stdout(predicate::str::contains("ciphertext numeric values: 0/0"))
+        .stdout(predicate::str::contains("plaintext numeric values: 0/0"))
         .stdout(predicate::str::contains("tier values: 0/0"))
         .stdout(predicate::str::contains("lane values: 0/0"))
         .stdout(predicate::str::contains("published R/shift values: 0/0"))
