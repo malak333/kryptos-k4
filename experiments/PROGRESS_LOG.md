@@ -90,6 +90,11 @@ requires a new eligible source with explicit non-anchor scored-position
 markers, a changed source-backed archive boundary, or a genuinely distinct
 validated prediction artifact.
 
+Follow-up live-source check: the press page advertises a
+`kryptos.today/press/knowledge-pack` reference link, but a 2026-05-31 `curl -L`
+check returned a 404 page. No new source record, candidate material, or scored
+observation is added from that unavailable endpoint.
+
 ## 2026-05-31: Project K4 Progress Source Registered
 
 Added `kryptos-today-progress-2026` as a quote-free local source snapshot for

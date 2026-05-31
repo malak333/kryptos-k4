@@ -24,6 +24,9 @@ scored observation file.
   priority, but it does not provide a verified K4 method, key stream, or route.
 - The page references public anchor positions and live-grid displays as context;
   those public-anchor-derived details are not independent scored evidence.
+- The page advertises a `kryptos.today/press/knowledge-pack` reference link,
+  but a 2026-05-31 live check returned a 404 page rather than a reviewable
+  knowledge-pack source.
 - The page does not provide new source-backed non-anchor observations, a
   repository-ready solution claim, or a scoreable position-selection rule.
 
