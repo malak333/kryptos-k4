@@ -4675,6 +4675,11 @@ fn next_evidence_gate_prints_operational_checklist() {
         .stdout(predicate::str::contains("verify-claim-reconciliation"))
         .stdout(predicate::str::contains("verify-claim-bundle"))
         .stdout(predicate::str::contains("verify-claim-mechanism"))
+        .stdout(predicate::str::contains("claim verification archives"))
+        .stdout(predicate::str::contains("Claim Verification Archives"))
+        .stdout(predicate::str::contains(
+            "quarantine-structural-check-failed",
+        ))
         .stdout(predicate::str::contains("evaluate-period-prediction"))
         .stdout(predicate::str::contains("validate-spacing-observations"))
         .stdout(predicate::str::contains("evaluate-spacing-prediction"))
@@ -4789,6 +4794,35 @@ fn next_evidence_gate_prints_operational_checklist() {
             .as_str()
             .unwrap()
             .contains("verify-claim-mechanism")
+    );
+    assert_eq!(json["claim_verification_archive_count"], 3);
+    assert!(
+        json["claim_verification_archives"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|archive| {
+                archive["source_id"] == "solvekryptos-2026-claim"
+                    && archive["structural_checks_passed"] == false
+                    && archive["promoted_candidate"] == false
+                    && archive["status"] == "quarantine-structural-check-failed"
+            })
+    );
+    assert!(
+        json["claim_verification_archives"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|archive| {
+                archive["source_id"] == "dearcipher-k4-claim-2026"
+                    && archive["structural_checks_passed"] == true
+                    && archive["promoted_candidate"] == false
+                    && archive["status"] == "quarantine-structural-check-passed"
+            })
+    );
+    assert_eq!(
+        json["quarantined_claim_source_ids_without_archive"][0],
+        "ssrn-bonifacino-running-key-2025"
     );
     let valid_source_backed_archives = json["valid_source_backed_archive_count"]
         .as_u64()

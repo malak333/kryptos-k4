@@ -1760,6 +1760,9 @@ struct NextEvidenceGateReport {
     eligible_sources: Vec<ObservationSourceEligibility>,
     ineligible_source_count: usize,
     quarantined_claim_source_ids: Vec<String>,
+    claim_verification_archive_count: usize,
+    claim_verification_archives: Vec<ClaimVerificationArchiveStatus>,
+    quarantined_claim_source_ids_without_archive: Vec<String>,
     claim_verification_command: &'static str,
     valid_source_backed_archive_count: usize,
     invalid_archive_count: usize,
@@ -1797,6 +1800,15 @@ struct NextEvidencePendingLane {
     preregistration: String,
     prediction_artifact: Option<String>,
     next_step: String,
+}
+
+#[derive(Debug, Serialize)]
+struct ClaimVerificationArchiveStatus {
+    directory: String,
+    source_id: String,
+    structural_checks_passed: Option<bool>,
+    promoted_candidate: bool,
+    status: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -7631,6 +7643,16 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
         .filter(|source| source.allowed_use == "unverified-solution-claim")
         .map(|source| source.id.to_string())
         .collect::<Vec<_>>();
+    let claim_verification_archives = claim_verification_archive_statuses(Path::new("."))?;
+    let archived_claim_source_ids = claim_verification_archives
+        .iter()
+        .map(|archive| archive.source_id.clone())
+        .collect::<BTreeSet<_>>();
+    let quarantined_claim_source_ids_without_archive = quarantined_claim_source_ids
+        .iter()
+        .filter(|source_id| !archived_claim_source_ids.contains(*source_id))
+        .cloned()
+        .collect::<Vec<_>>();
     let used_eligible_source_ids = evidence_report
         .archives
         .iter()
@@ -7845,6 +7867,9 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
         eligible_sources,
         ineligible_source_count: source_report.ineligible_count,
         quarantined_claim_source_ids,
+        claim_verification_archive_count: claim_verification_archives.len(),
+        claim_verification_archives,
+        quarantined_claim_source_ids_without_archive,
         claim_verification_command: "cargo run --locked -- verify-plaintext-claim --input <local-claim.txt> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-running-key-claim --plaintext <local-claim.txt> --key <local-key-stream.txt> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-reconciliation --input <local-claim-table.csv> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-bundle --directory <local-claim-bundle-dir> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-mechanism --directory <local-claim-bundle-dir> --source-id <unverified-solution-claim-source-id> --format json",
         valid_source_backed_archive_count: evidence_report.valid_source_backed_archive_count,
         invalid_archive_count: evidence_report.invalid_archive_count,
@@ -7887,6 +7912,67 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
         promoted_candidate: false,
         note: "Next-evidence-gate output is an operational checklist for future source-backed observations; it is not a claimed solution.",
     })
+}
+
+fn claim_verification_archive_statuses(
+    repo_root: &Path,
+) -> Result<Vec<ClaimVerificationArchiveStatus>> {
+    let dir = repo_root.join("results/claim-verifications");
+    let Ok(entries) = fs::read_dir(&dir) else {
+        return Ok(Vec::new());
+    };
+    let mut archives = Vec::new();
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if !path.is_dir() {
+            continue;
+        }
+        let result_path = path.join("result.json");
+        if !result_path.exists() {
+            continue;
+        }
+        let result_contents = fs::read_to_string(&result_path)
+            .with_context(|| format!("failed to read `{}`", result_path.display()))?;
+        let result_json: serde_json::Value = serde_json::from_str(&result_contents)
+            .with_context(|| format!("failed to parse `{}`", result_path.display()))?;
+        let directory = path
+            .strip_prefix(repo_root)
+            .unwrap_or(&path)
+            .to_string_lossy()
+            .to_string();
+        let source_id = result_json
+            .get("source_id")
+            .and_then(|value| value.as_str())
+            .unwrap_or("unknown")
+            .to_string();
+        let structural_checks_passed = result_json
+            .get("structural_checks_passed")
+            .and_then(|value| value.as_bool());
+        let promoted_candidate = result_json
+            .get("promoted_candidate")
+            .and_then(|value| value.as_bool())
+            .unwrap_or(false);
+        let status = match (promoted_candidate, structural_checks_passed) {
+            (true, _) => "invalid-promoted-claim-archive",
+            (false, Some(true)) => "quarantine-structural-check-passed",
+            (false, Some(false)) => "quarantine-structural-check-failed",
+            (false, None) => "quarantine-structural-check-not-reported",
+        }
+        .to_string();
+        archives.push(ClaimVerificationArchiveStatus {
+            directory,
+            source_id,
+            structural_checks_passed,
+            promoted_candidate,
+            status,
+        });
+    }
+    archives.sort_by(|left, right| {
+        left.source_id
+            .cmp(&right.source_id)
+            .then_with(|| left.directory.cmp(&right.directory))
+    });
+    Ok(archives)
 }
 
 fn representative_ready_lane<'a>(
@@ -8526,6 +8612,39 @@ fn print_next_evidence_gate(directory: PathBuf, format: OutputFormat) -> Result<
                 "claim quarantine verifier:\n```bash\n{}\n```",
                 report.claim_verification_command
             );
+            println!(
+                "claim verification archives: {}",
+                report.claim_verification_archive_count
+            );
+            if !report
+                .quarantined_claim_source_ids_without_archive
+                .is_empty()
+            {
+                println!(
+                    "quarantined claim sources without archive: {}",
+                    report
+                        .quarantined_claim_source_ids_without_archive
+                        .join(", ")
+                );
+            }
+            if !report.claim_verification_archives.is_empty() {
+                println!("\n## Claim Verification Archives\n");
+                println!("| Directory | Source ID | Structural Checks | Promoted | Status |");
+                println!("| --- | --- | --- | --- | --- |");
+                for archive in &report.claim_verification_archives {
+                    println!(
+                        "| `{}` | `{}` | {} | {} | {} |",
+                        archive.directory,
+                        archive.source_id,
+                        archive
+                            .structural_checks_passed
+                            .map(|passed| passed.to_string())
+                            .unwrap_or_else(|| "n/a".to_string()),
+                        archive.promoted_candidate,
+                        archive.status
+                    );
+                }
+            }
             println!("\n## Eligible Source Details\n");
             println!("| Source ID | Local Archive | Accessed | Source Type | Use Boundary | URL |");
             println!("| --- | --- | --- | --- | --- | --- |");
