@@ -39,6 +39,17 @@ artifact.
   `R`/shift, `BaseR`, and `Gate` arithmetic, public-anchor compatibility, and
   aggregate shift diagnostics without printing or storing any claimed plaintext
   column.
+- On 2026-05-31, the public canonical bundle was downloaded only into
+  `/private/tmp` and screened with `verify-claim-reconciliation` against
+  `k4_reconciliation.csv`.
+- The temporary reconciliation table had 97 rows, matched all 97 K4 ciphertext
+  positions, matched all checked tier/lane values, matched all checked `R`
+  values, had binary gate values at all rows, matched all checked `r + gate`
+  values, matched all checked Z2 handoff values, and preserved all four
+  registered public anchors.
+- The temporary bundle remains outside the repository. The repository still
+  does not store the claimed plaintext or any plaintext-bearing reconciliation
+  table.
 
 ## Boundary
 
@@ -51,6 +62,9 @@ artifact.
 - A reconciliation-table compatibility check, including published coordinate,
   numeric-letter, shift, and gate arithmetic, is still a quarantine check, not
   independent confirmation of the claimed physical mechanism.
+- The 2026-05-31 canonical-bundle reconciliation check confirms internal table
+  compatibility only; it does not independently derive the table, validate
+  source provenance for the physical helper stream, or promote the claim.
 - Any future use must implement an independent mechanical verifier that checks
   the claimed mechanism without adding release-facing full plaintext or
   accepting the claim as evidence by assertion.

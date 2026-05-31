@@ -94,6 +94,35 @@ Practical consequence: this informs attack-family triage and stop rules. It
 does not reopen width-7 or Weltzeituhr evidence; future scoring still requires
 separate preregistration, artifact, eligible observation, and seeded controls.
 
+## 2026-05-31: SolveKryptos Canonical Bundle Quarantine Check
+
+Downloaded the public SolveKryptos canonical bundle only into `/private/tmp`
+and screened `k4_reconciliation.csv` with the local quarantined-claim verifier.
+No claimed plaintext or plaintext-bearing table was added to the repository.
+
+```bash
+curl -L https://solvekryptos.com/downloads/solvekryptos-canonical-bundle.zip \
+  -o /private/tmp/solvekryptos-canonical-bundle.zip
+unzip -o /private/tmp/solvekryptos-canonical-bundle.zip \
+  -d /private/tmp/solvekryptos-canonical-bundle
+cargo run --locked -- verify-claim-reconciliation \
+  --input /private/tmp/solvekryptos-canonical-bundle/solvekryptos-canonical-bundle/k4_reconciliation.csv \
+  --source-id solvekryptos-2026-claim \
+  --format json
+```
+
+Observed quarantine-check result: 97 rows, 97/97 K4 ciphertext alignment,
+97/97 tier values, 97/97 lane values, 97/97 checked `R` values, 97/97 binary
+gate values, 97/97 checked `r + gate` values, 31/31 checked Z2 handoff values,
+and 4/4 registered public anchors preserved. `promoted_candidate` remained
+false.
+
+Practical consequence: the published reconciliation table is internally
+compatible with the repo's structural verifier, but this is still not
+independent confirmation. It does not derive the table, validate the claimed
+physical helper stream, or convert the quarantined claim into source-backed
+evidence.
+
 ## 2026-05-31: Extreme-Moduli Residue-Balance Prior Registered
 
 Added `ciphertext-residue-balance-extreme-moduli-v1`, a distinct
