@@ -37,10 +37,11 @@ This packet records the public sources used by the CLI data model. It intentiona
 - Do not convert community claims into facts.
 - Do not copy unverified claimed full plaintext into release-facing files or
   artifacts; register the claim source and verify mechanics independently first.
-- A quarantined claim may be screened with `verify-plaintext-claim` or
-  `verify-claim-reconciliation` from a temporary local file, but a
-  length/anchor-compatible or table-compatible result is not evidence for
-  promotion and must not add claimed plaintext to repository artifacts.
+- A quarantined claim may be screened with `verify-plaintext-claim`,
+  `verify-claim-reconciliation`, `verify-claim-bundle`, or
+  `verify-claim-mechanism` from temporary local files, but a length,
+  anchor, table, bundle, or mechanism-compatible result is not evidence
+  for promotion and must not add claimed plaintext to repository artifacts.
 - Do not convert community archive-research interpretations into scored observations
   unless an independent preregistration and source-backed observation file define
   the exact target first.

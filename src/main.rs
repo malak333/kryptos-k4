@@ -11,13 +11,14 @@ use kryptos_k4::{
     CiphertextSkipTransitionEvaluation, CiphertextSkipTransitionPrior, CiphertextStructurePrior,
     CiphertextTransitionEvaluation, CiphertextTransitionPrior, CiphertextTurningPointEvaluation,
     CiphertextTurningPointPrior, CiphertextWindowBalanceEvaluation, CiphertextWindowBalancePrior,
-    ClaimBundleVerification, ClaimReconciliationVerification, DuplicatePredictionArtifactGroup,
-    FragmentMode, GridLayoutEdgeAxis, GridLayoutPredictionEvaluation, GridLayoutPredictionPlan,
-    HeldoutKeyControlRun, IndependentLaneStatus, IndependentLaneStatusReport, K4_CIPHERTEXT,
-    KeyMaterialExplanation, KeyMaterialOffsetSweep, KeyMaterialTest, LanePreregistration,
-    MirrorPredictionEvaluation, MirrorPredictionPlanSet, PeriodPredictionEvaluation,
-    PeriodPredictionPlan, PeriodPredictionPlanSet, PlaintextClaimVerification,
-    PositionStructureRun, PredictionArtifactValidation, PreregistrationValidation, ReportFormat,
+    ClaimBundleVerification, ClaimMechanismVerification, ClaimReconciliationVerification,
+    DuplicatePredictionArtifactGroup, FragmentMode, GridLayoutEdgeAxis,
+    GridLayoutPredictionEvaluation, GridLayoutPredictionPlan, HeldoutKeyControlRun,
+    IndependentLaneStatus, IndependentLaneStatusReport, K4_CIPHERTEXT, KeyMaterialExplanation,
+    KeyMaterialOffsetSweep, KeyMaterialTest, LanePreregistration, MirrorPredictionEvaluation,
+    MirrorPredictionPlanSet, PeriodPredictionEvaluation, PeriodPredictionPlan,
+    PeriodPredictionPlanSet, PlaintextClaimVerification, PositionStructureRun,
+    PredictionArtifactValidation, PreregistrationValidation, ReportFormat,
     RoutedBatchKeyMaterialRun, SpacingPredictionEvaluation, SpacingPredictionPlanSet,
     StructuralModelRun, TableauHillPredictionEvaluation, TableauHillPredictionPlan,
     analyze_constraints, analyze_known_plaintext_spans,
@@ -46,7 +47,8 @@ use kryptos_k4::{
     score_candidate_sequences, sources, summarize_batch_key_material_runs,
     summarize_independent_lanes, sweep_key_material_offsets_with_baseline, test_key_material,
     validate_prediction_artifact, validate_preregistration, validation_exit_result,
-    verify_claim_bundle, verify_claim_reconciliation_table, verify_plaintext_claim,
+    verify_claim_bundle, verify_claim_mechanism, verify_claim_reconciliation_table,
+    verify_plaintext_claim,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -1494,6 +1496,18 @@ enum Command {
     },
     /// Verify a local plaintext-claim bundle without printing or storing claimed plaintext.
     VerifyClaimBundle {
+        /// Local directory containing the claim bundle files.
+        #[arg(long)]
+        directory: PathBuf,
+        /// Optional registered source ID. Must have allowed_use unverified-solution-claim.
+        #[arg(long = "source-id")]
+        source_id: Option<String>,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Verify local claim helper-mechanism files without printing or storing claimed plaintext.
+    VerifyClaimMechanism {
         /// Local directory containing the claim bundle files.
         #[arg(long)]
         directory: PathBuf,
@@ -3758,6 +3772,11 @@ fn main() -> Result<()> {
             source_id,
             format,
         } => print_verify_claim_bundle(directory, source_id, format)?,
+        Command::VerifyClaimMechanism {
+            directory,
+            source_id,
+            format,
+        } => print_verify_claim_mechanism(directory, source_id, format)?,
         Command::ObservationSources { format } => print_observation_sources(format)?,
         Command::SourceFrontier { summary, format } => print_source_frontier(summary, format)?,
         Command::ReleaseCheck { format } => print_release_check(format)?,
@@ -7779,7 +7798,7 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
         eligible_sources,
         ineligible_source_count: source_report.ineligible_count,
         quarantined_claim_source_ids,
-        claim_verification_command: "cargo run --locked -- verify-plaintext-claim --input <local-claim.txt> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-reconciliation --input <local-claim-table.csv> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-bundle --directory <local-claim-bundle-dir> --source-id <unverified-solution-claim-source-id> --format json",
+        claim_verification_command: "cargo run --locked -- verify-plaintext-claim --input <local-claim.txt> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-reconciliation --input <local-claim-table.csv> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-bundle --directory <local-claim-bundle-dir> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-mechanism --directory <local-claim-bundle-dir> --source-id <unverified-solution-claim-source-id> --format json",
         valid_source_backed_archive_count: evidence_report.valid_source_backed_archive_count,
         invalid_archive_count: evidence_report.invalid_archive_count,
         all_source_backed_archives_negative,
@@ -14823,6 +14842,22 @@ fn print_verify_claim_bundle(
     Ok(())
 }
 
+fn print_verify_claim_mechanism(
+    directory: PathBuf,
+    source_id: Option<String>,
+    format: OutputFormat,
+) -> Result<()> {
+    ensure_quarantined_claim_source(source_id.as_deref(), "verify-claim-mechanism")?;
+
+    let verification = verify_claim_mechanism(&directory, source_id)?;
+
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&verification)?),
+        OutputFormat::Markdown => print_claim_mechanism_verification(&verification),
+    }
+    Ok(())
+}
+
 fn ensure_quarantined_claim_source(source_id: Option<&str>, command_name: &str) -> Result<()> {
     if let Some(source_id) = source_id {
         let source = sources()
@@ -15076,6 +15111,50 @@ fn print_claim_bundle_verification(verification: &ClaimBundleVerification) {
         "public anchors: {}/{}",
         verification.reconciliation.public_anchor_match_count,
         verification.reconciliation.public_anchor_count
+    );
+    println!(
+        "structural checks passed: {}",
+        verification.structural_checks_passed
+    );
+    println!("promoted: {}", verification.promoted_candidate);
+    println!("note: {}", verification.note);
+}
+
+fn print_claim_mechanism_verification(verification: &ClaimMechanismVerification) {
+    println!("# Claim Mechanism Verification\n");
+    println!("This is not a claimed solution.\n");
+    println!("directory: `{}`", verification.bundle_directory);
+    println!(
+        "source id: `{}`",
+        verification.source_id.as_deref().unwrap_or("none")
+    );
+    println!(
+        "required files: {}/{}",
+        verification.required_files_checked, verification.expected_required_files
+    );
+    println!(
+        "f-table values: {}/{}",
+        verification.f_table_match_count, verification.f_table_checked_count
+    );
+    println!(
+        "helper-card delta checks: {}/{}",
+        verification.z1_z2_delta_match_count, verification.z1_z2_delta_checked_count
+    );
+    println!(
+        "control-card values: {}/{}",
+        verification.control_card_match_count, verification.control_card_checked_count
+    );
+    println!(
+        "Z2 effective key matches: {}",
+        verification.z2_effective_key_matches
+    );
+    println!(
+        "Z2 base-r grid path: {}/{}",
+        verification.z2_r_grid_match_count, verification.z2_r_grid_checked_count
+    );
+    println!(
+        "Z2 final R-grid path: {}/{}",
+        verification.z2_final_grid_match_count, verification.z2_final_grid_checked_count
     );
     println!(
         "structural checks passed: {}",

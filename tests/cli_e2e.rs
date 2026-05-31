@@ -223,6 +223,8 @@ fn facts_hypotheses_sources_and_help_are_covered() {
         .stdout(predicate::str::contains("observation-sources"))
         .stdout(predicate::str::contains("verify-plaintext-claim"))
         .stdout(predicate::str::contains("verify-claim-reconciliation"))
+        .stdout(predicate::str::contains("verify-claim-bundle"))
+        .stdout(predicate::str::contains("verify-claim-mechanism"))
         .stdout(predicate::str::contains("mirror-prediction-plan"))
         .stdout(predicate::str::contains("grid-layout-prediction-plan"))
         .stdout(predicate::str::contains("evaluate-period-prediction"))
@@ -4437,6 +4439,8 @@ fn next_evidence_gate_prints_operational_checklist() {
         .stdout(predicate::str::contains("claim quarantine verifier"))
         .stdout(predicate::str::contains("verify-plaintext-claim"))
         .stdout(predicate::str::contains("verify-claim-reconciliation"))
+        .stdout(predicate::str::contains("verify-claim-bundle"))
+        .stdout(predicate::str::contains("verify-claim-mechanism"))
         .stdout(predicate::str::contains("evaluate-period-prediction"))
         .stdout(predicate::str::contains("validate-spacing-observations"))
         .stdout(predicate::str::contains("evaluate-spacing-prediction"))
@@ -4533,6 +4537,18 @@ fn next_evidence_gate_prints_operational_checklist() {
             .as_str()
             .unwrap()
             .contains("verify-claim-reconciliation")
+    );
+    assert!(
+        json["claim_verification_command"]
+            .as_str()
+            .unwrap()
+            .contains("verify-claim-bundle")
+    );
+    assert!(
+        json["claim_verification_command"]
+            .as_str()
+            .unwrap()
+            .contains("verify-claim-mechanism")
     );
     let valid_source_backed_archives = json["valid_source_backed_archive_count"]
         .as_u64()

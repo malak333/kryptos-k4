@@ -65,9 +65,10 @@ pub use ciphertext_profile::{
     evaluate_ciphertext_window_balance_positions, profile_k4_ciphertext,
 };
 pub use claim::{
-    ClaimBundleVerification, ClaimReconciliationRowCheck, ClaimReconciliationVerification,
-    PlaintextClaimAnchorCheck, PlaintextClaimVerification, verify_claim_bundle,
-    verify_claim_reconciliation_table, verify_plaintext_claim,
+    ClaimBundleVerification, ClaimMechanismVerification, ClaimReconciliationRowCheck,
+    ClaimReconciliationVerification, PlaintextClaimAnchorCheck, PlaintextClaimVerification,
+    verify_claim_bundle, verify_claim_mechanism, verify_claim_reconciliation_table,
+    verify_plaintext_claim,
 };
 pub use data::{
     Anchor, K4_CIPHERTEXT, KnownPlaintextSpan, Source, known_anchors, known_plaintext_spans,

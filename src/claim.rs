@@ -122,6 +122,30 @@ pub struct ClaimBundleVerification {
     pub note: &'static str,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ClaimMechanismVerification {
+    pub source_id: Option<String>,
+    pub bundle_directory: String,
+    pub required_files_checked: usize,
+    pub expected_required_files: usize,
+    pub f_table_checked_count: usize,
+    pub f_table_match_count: usize,
+    pub helper_card_checked_count: usize,
+    pub helper_card_match_count: usize,
+    pub z1_z2_delta_checked_count: usize,
+    pub z1_z2_delta_match_count: usize,
+    pub control_card_checked_count: usize,
+    pub control_card_match_count: usize,
+    pub z2_effective_key_matches: bool,
+    pub z2_r_grid_checked_count: usize,
+    pub z2_r_grid_match_count: usize,
+    pub z2_final_grid_checked_count: usize,
+    pub z2_final_grid_match_count: usize,
+    pub structural_checks_passed: bool,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
 pub fn verify_plaintext_claim(
     input: &str,
     source_id: Option<String>,
@@ -619,6 +643,165 @@ pub fn verify_claim_bundle(
     })
 }
 
+pub fn verify_claim_mechanism(
+    bundle_directory: &Path,
+    source_id: Option<String>,
+) -> Result<ClaimMechanismVerification> {
+    let required_files = [
+        "f_table.txt",
+        "helper_cards.txt",
+        "control_card.txt",
+        "z2_footer_basis_handoff.txt",
+        "r_grid_7x14.txt",
+        "gate_map.txt",
+        "k4_ciphertext.txt",
+    ];
+    let required_files_checked = required_files
+        .iter()
+        .filter(|file| bundle_directory.join(file).is_file())
+        .count();
+    let expected_required_files = required_files.len();
+
+    let ciphertext_file = read_bundle_file(bundle_directory, "k4_ciphertext.txt")?;
+    let normalized_ciphertext = normalize_ascii_letters(&ciphertext_file);
+    let ciphertext_file_matches_repo = normalized_ciphertext == K4_CIPHERTEXT;
+
+    let f_table_input = read_bundle_file(bundle_directory, "f_table.txt")?;
+    let f_table = parse_f_table_values(&f_table_input)?;
+    let helper_cards_input = read_bundle_file(bundle_directory, "helper_cards.txt")?;
+    let helper_cards = parse_helper_cards(&helper_cards_input)?;
+    let control_card_input = read_bundle_file(bundle_directory, "control_card.txt")?;
+    let control_card = parse_control_card(&control_card_input)?;
+    let z2_handoff_input = read_bundle_file(bundle_directory, "z2_footer_basis_handoff.txt")?;
+    let r_grid_input = read_bundle_file(bundle_directory, "r_grid_7x14.txt")?;
+    let r_grid = parse_r_grid_section(&r_grid_input, "R-grid")?;
+    let base_r_grid = parse_r_grid_section(&r_grid_input, "r-grid")?;
+    let gate_map_input = read_bundle_file(bundle_directory, "gate_map.txt")?;
+    let gate_map = parse_gate_map(&gate_map_input)?;
+
+    let expected_f_table = expected_f_table_values();
+    let mut f_table_checked_count = 0usize;
+    let mut f_table_match_count = 0usize;
+    for letter in KALPHA.chars() {
+        f_table_checked_count += 1;
+        if f_table.get(&letter) == expected_f_table.get(&letter) {
+            f_table_match_count += 1;
+        }
+    }
+
+    let mut helper_card_checked_count = 0usize;
+    let mut helper_card_match_count = 0usize;
+    for letter in KALPHA.chars() {
+        if let Some((z1, delta, z2)) = helper_cards
+            .g_z1
+            .get(&letter)
+            .zip(helper_cards.delta.get(&letter))
+            .zip(helper_cards.g_z2.get(&letter))
+            .map(|((z1, delta), z2)| (*z1, *delta, *z2))
+        {
+            helper_card_checked_count += 1;
+            if (z1 + delta) % 26 == z2 {
+                helper_card_match_count += 1;
+            }
+        }
+    }
+
+    let mut control_card_checked_count = 0usize;
+    let mut control_card_match_count = 0usize;
+    for row in &control_card {
+        if let Some((z1, delta, z2)) = helper_cards
+            .g_z1
+            .get(&row.letter)
+            .zip(helper_cards.delta.get(&row.letter))
+            .zip(helper_cards.g_z2.get(&row.letter))
+            .map(|((z1, delta), z2)| (*z1, *delta, *z2))
+        {
+            control_card_checked_count += 1;
+            if row.z1 == z1 && row.delta == delta && row.z2 == z2 {
+                control_card_match_count += 1;
+            }
+        }
+    }
+
+    let visible_z2_footer =
+        parse_labeled_value(&z2_handoff_input, "Visible footer").unwrap_or_default();
+    let effective_z2_key =
+        parse_labeled_value(&z2_handoff_input, "Effective Z2 key").unwrap_or_default();
+    let derived_effective_z2_key = derive_z2_effective_key(&visible_z2_footer)?;
+    let z2_effective_key_matches = effective_z2_key == derived_effective_z2_key;
+
+    let mut z2_r_grid_checked_count = 0usize;
+    let mut z2_r_grid_match_count = 0usize;
+    let mut z2_final_grid_checked_count = 0usize;
+    let mut z2_final_grid_match_count = 0usize;
+    for (offset, helper_letter) in derived_effective_z2_key.chars().enumerate() {
+        let position = 67 + offset;
+        let Some(ciphertext) = K4_CIPHERTEXT.chars().nth(position - 1) else {
+            continue;
+        };
+        let Some(f_value) = f_table.get(&ciphertext).copied() else {
+            continue;
+        };
+        let Some(g_value) = helper_cards.g_z2.get(&helper_letter).copied() else {
+            continue;
+        };
+        let base_r = (f_value + g_value) % 26;
+        if let Some(expected_base_r) = base_r_grid.get(position).and_then(|value| *value) {
+            z2_r_grid_checked_count += 1;
+            if base_r == expected_base_r {
+                z2_r_grid_match_count += 1;
+            }
+        }
+        if let Some(gate) = gate_map.get(position).and_then(|value| *value) {
+            if let Some(expected_r) = r_grid.get(position).and_then(|value| *value) {
+                z2_final_grid_checked_count += 1;
+                if (base_r + gate) % 26 == expected_r {
+                    z2_final_grid_match_count += 1;
+                }
+            }
+        }
+    }
+
+    let z1_z2_delta_checked_count = helper_card_checked_count;
+    let z1_z2_delta_match_count = helper_card_match_count;
+    let structural_checks_passed = required_files_checked == expected_required_files
+        && ciphertext_file_matches_repo
+        && f_table_checked_count == KALPHA.len()
+        && f_table_match_count == f_table_checked_count
+        && helper_card_checked_count == KALPHA.len()
+        && helper_card_match_count == helper_card_checked_count
+        && control_card_checked_count == 9
+        && control_card_match_count == control_card_checked_count
+        && z2_effective_key_matches
+        && z2_r_grid_checked_count == 31
+        && z2_r_grid_match_count == z2_r_grid_checked_count
+        && z2_final_grid_checked_count == 31
+        && z2_final_grid_match_count == z2_final_grid_checked_count;
+
+    Ok(ClaimMechanismVerification {
+        source_id,
+        bundle_directory: bundle_directory.display().to_string(),
+        required_files_checked,
+        expected_required_files,
+        f_table_checked_count,
+        f_table_match_count,
+        helper_card_checked_count,
+        helper_card_match_count,
+        z1_z2_delta_checked_count,
+        z1_z2_delta_match_count,
+        control_card_checked_count,
+        control_card_match_count,
+        z2_effective_key_matches,
+        z2_r_grid_checked_count,
+        z2_r_grid_match_count,
+        z2_final_grid_checked_count,
+        z2_final_grid_match_count,
+        structural_checks_passed,
+        promoted_candidate: false,
+        note: "Claim-mechanism verification checks published f/helper-card relationships, control-card consistency, Z2 footer handoff, and the Z2 helper path into the r/R grids without printing, storing, or promoting claimed plaintext.",
+    })
+}
+
 #[derive(Debug)]
 struct ReconciliationRow {
     position_one_based: usize,
@@ -632,6 +815,23 @@ struct ReconciliationRow {
     base_r_value: Option<usize>,
     gate_value: Option<usize>,
 }
+
+#[derive(Debug)]
+struct HelperCards {
+    g_z1: HashMap<char, usize>,
+    delta: HashMap<char, usize>,
+    g_z2: HashMap<char, usize>,
+}
+
+#[derive(Debug)]
+struct ControlCardRow {
+    letter: char,
+    z1: usize,
+    delta: usize,
+    z2: usize,
+}
+
+const KALPHA: &str = "KRYPTOSABCDEFGHIJLMNQUVWXZ";
 
 fn read_bundle_file(bundle_directory: &Path, file_name: &str) -> Result<String> {
     let path = bundle_directory.join(file_name);
@@ -723,6 +923,188 @@ fn parse_grid_cell(cell: &str, section_marker: &str) -> Result<usize> {
         bail!("unexpected blank grid cell in active {section_marker} position");
     }
     Ok(cell.parse::<usize>()?)
+}
+
+fn parse_f_table_values(input: &str) -> Result<HashMap<char, usize>> {
+    let mut values = HashMap::new();
+    for line in input.lines() {
+        let cells = line.split_whitespace().collect::<Vec<_>>();
+        if cells.len() < 3 {
+            continue;
+        }
+        let mut letter_chars = cells[0].chars();
+        let Some(letter) = letter_chars.next() else {
+            continue;
+        };
+        if letter_chars.next().is_some() || !KALPHA.contains(letter) {
+            continue;
+        }
+        let Ok(_kpos) = cells[1].parse::<usize>() else {
+            continue;
+        };
+        let value = cells[2]
+            .parse::<usize>()
+            .with_context(|| format!("invalid f-table value in line `{line}`"))?;
+        values.insert(letter, value);
+    }
+    if values.len() != KALPHA.len() {
+        bail!(
+            "expected {} f-table rows, found {}",
+            KALPHA.len(),
+            values.len()
+        );
+    }
+    Ok(values)
+}
+
+fn parse_helper_cards(input: &str) -> Result<HelperCards> {
+    Ok(HelperCards {
+        g_z1: parse_helper_card_line(input, "g_Z1:")?,
+        delta: parse_helper_card_line(input, "delta:")?,
+        g_z2: parse_helper_card_line(input, "g_Z2:")?,
+    })
+}
+
+fn parse_helper_card_line(input: &str, prefix: &str) -> Result<HashMap<char, usize>> {
+    let line = input
+        .lines()
+        .find(|line| line.trim_start().starts_with(prefix))
+        .with_context(|| format!("missing helper-card line `{prefix}`"))?;
+    let (_, value_text) = line
+        .split_once(':')
+        .with_context(|| format!("invalid helper-card line `{line}`"))?;
+    let values = value_text
+        .split_whitespace()
+        .map(|value| value.parse::<usize>())
+        .collect::<std::result::Result<Vec<_>, _>>()
+        .with_context(|| format!("invalid numeric value in helper-card line `{line}`"))?;
+    if values.len() != KALPHA.len() {
+        bail!(
+            "expected {} values in helper-card line `{prefix}`, found {}",
+            KALPHA.len(),
+            values.len()
+        );
+    }
+    Ok(KALPHA.chars().zip(values).collect())
+}
+
+fn parse_control_card(input: &str) -> Result<Vec<ControlCardRow>> {
+    let mut rows = Vec::new();
+    for line in input.lines() {
+        let cells = line.split_whitespace().collect::<Vec<_>>();
+        if cells.len() < 6 || !matches!(cells[0], "LOOK" | "PLACE" | "SEND") {
+            continue;
+        }
+        let Some(letter) = cells[1].chars().next() else {
+            continue;
+        };
+        if !KALPHA.contains(letter) {
+            continue;
+        }
+        let z1 = cells[3]
+            .parse::<usize>()
+            .with_context(|| format!("invalid control-card Z1 value in line `{line}`"))?;
+        let delta = parse_signed_mod26(cells[4])
+            .with_context(|| format!("invalid control-card delta in line `{line}`"))?;
+        let z2 = cells[5]
+            .parse::<usize>()
+            .with_context(|| format!("invalid control-card Z2 value in line `{line}`"))?;
+        rows.push(ControlCardRow {
+            letter,
+            z1,
+            delta,
+            z2,
+        });
+    }
+    if rows.len() != 9 {
+        bail!("expected 9 control-card rows, found {}", rows.len());
+    }
+    Ok(rows)
+}
+
+fn parse_signed_mod26(value: &str) -> Result<usize> {
+    let parsed = value.parse::<i16>()?;
+    Ok(parsed.rem_euclid(26) as usize)
+}
+
+fn parse_labeled_value(input: &str, label: &str) -> Option<String> {
+    let lines = input.lines().collect::<Vec<_>>();
+    for (index, line) in lines.iter().enumerate() {
+        let Some((line_label, value)) = line.split_once(':') else {
+            continue;
+        };
+        if !line_label.trim().eq_ignore_ascii_case(label) {
+            continue;
+        }
+        let inline_value = value
+            .chars()
+            .filter(|ch| ch.is_ascii_alphabetic() || *ch == '_')
+            .collect::<String>();
+        if !inline_value.is_empty() {
+            return Some(inline_value);
+        }
+        return lines[index + 1..].iter().find_map(|next_line| {
+            let value = next_line
+                .chars()
+                .filter(|ch| ch.is_ascii_alphabetic() || *ch == '_')
+                .collect::<String>();
+            (!value.is_empty()).then_some(value)
+        });
+    }
+    None
+}
+
+fn derive_z2_effective_key(visible_footer: &str) -> Result<String> {
+    visible_footer
+        .chars()
+        .map(|letter| {
+            if letter == '_' {
+                Ok('Z')
+            } else if letter.is_ascii_uppercase() {
+                let standard = letter as u8 - b'A';
+                let index = (standard + 25) % 26;
+                KALPHA
+                    .chars()
+                    .nth(index as usize)
+                    .with_context(|| format!("missing KALPHA index {index}"))
+            } else {
+                bail!("invalid Z2 footer letter `{letter}`")
+            }
+        })
+        .collect()
+}
+
+fn expected_f_table_values() -> HashMap<char, usize> {
+    [
+        ('K', 8),
+        ('R', 3),
+        ('Y', 16),
+        ('P', 11),
+        ('T', 13),
+        ('O', 0),
+        ('S', 12),
+        ('A', 4),
+        ('B', 15),
+        ('C', 17),
+        ('D', 3),
+        ('E', 23),
+        ('F', 3),
+        ('G', 19),
+        ('H', 15),
+        ('I', 16),
+        ('J', 23),
+        ('L', 22),
+        ('M', 19),
+        ('N', 25),
+        ('Q', 3),
+        ('U', 7),
+        ('V', 11),
+        ('W', 15),
+        ('X', 19),
+        ('Z', 23),
+    ]
+    .into_iter()
+    .collect()
 }
 
 fn parse_reconciliation_rows(input: &str) -> Result<Vec<ReconciliationRow>> {
@@ -902,7 +1284,6 @@ fn f_table_value(ciphertext: char) -> usize {
 }
 
 fn z2_g_value_for_position(position_one_based: usize) -> Option<usize> {
-    const KALPHA: &str = "KRYPTOSABCDEFGHIJLMNQUVWXZ";
     const Z2_EFFECTIVE_KEY: &str = "ZZKRYPTOSABCDEFGHIJLMNQUVWXZKRY";
     const G_Z2_BY_KALPHA: [usize; 26] = [
         19, 17, 16, 13, 1, 18, 10, 6, 18, 25, 20, 21, 13, 24, 23, 8, 24, 6, 24, 12, 25, 19, 7, 7,
@@ -1245,6 +1626,128 @@ mod tests {
         assert_eq!(verification.gate_map_match_count, K4_CIPHERTEXT.len());
         assert!(verification.structural_checks_passed, "{verification:#?}");
         assert!(!verification.promoted_candidate);
+    }
+
+    #[test]
+    fn verifies_mechanism_files_without_promoting_claim() {
+        let temp = tempfile::tempdir().unwrap();
+        let mut base_shifts = vec![0usize; K4_CIPHERTEXT.len()];
+        let mut final_shifts = vec![0usize; K4_CIPHERTEXT.len()];
+        let gates = vec![0usize; K4_CIPHERTEXT.len()];
+        let f_values = expected_f_table_values();
+        let g_z2 = test_g_z2_values();
+        let effective_key = derive_z2_effective_key("_ABCDEFGHIJKLMNOPQRSTUVWXYZABCD").unwrap();
+        for (offset, helper_letter) in effective_key.chars().enumerate() {
+            let position = 67 + offset;
+            let ciphertext = K4_CIPHERTEXT.chars().nth(position - 1).unwrap();
+            let base_r = (f_values[&ciphertext] + g_z2[&helper_letter]) % 26;
+            base_shifts[position - 1] = base_r;
+            final_shifts[position - 1] = base_r;
+        }
+
+        fs::write(temp.path().join("k4_ciphertext.txt"), K4_CIPHERTEXT).unwrap();
+        fs::write(temp.path().join("f_table.txt"), format_test_f_table()).unwrap();
+        fs::write(
+            temp.path().join("helper_cards.txt"),
+            format_test_helper_cards(),
+        )
+        .unwrap();
+        fs::write(
+            temp.path().join("control_card.txt"),
+            format_test_control_card(),
+        )
+        .unwrap();
+        fs::write(
+            temp.path().join("z2_footer_basis_handoff.txt"),
+            "Visible footer:\n  _ABCDEFGHIJKLMNOPQRSTUVWXYZABCD\nEffective Z2 key:\n  ZZKRYPTOSABCDEFGHIJLMNQUVWXZKRY\n",
+        )
+        .unwrap();
+        fs::write(
+            temp.path().join("r_grid_7x14.txt"),
+            format_test_r_grid_file(&final_shifts, &base_shifts),
+        )
+        .unwrap();
+        fs::write(
+            temp.path().join("gate_map.txt"),
+            format_test_gate_map(&gates),
+        )
+        .unwrap();
+
+        let verification =
+            verify_claim_mechanism(temp.path(), Some("synthetic-claim".to_string())).unwrap();
+
+        assert_eq!(verification.required_files_checked, 7);
+        assert_eq!(verification.f_table_match_count, 26);
+        assert_eq!(verification.z1_z2_delta_match_count, 26);
+        assert_eq!(verification.control_card_match_count, 9);
+        assert!(verification.z2_effective_key_matches);
+        assert_eq!(verification.z2_r_grid_match_count, 31);
+        assert_eq!(verification.z2_final_grid_match_count, 31);
+        assert!(verification.structural_checks_passed);
+        assert!(!verification.promoted_candidate);
+    }
+
+    fn format_test_f_table() -> String {
+        let values = expected_f_table_values();
+        let mut output = String::from("Letter kpos f\n");
+        for (kpos, letter) in KALPHA.chars().enumerate() {
+            output.push_str(&format!("{letter} {kpos} {}\n", values[&letter]));
+        }
+        output
+    }
+
+    fn format_test_helper_cards() -> String {
+        let z1 = [
+            13, 4, 13, 13, 24, 11, 14, 17, 13, 9, 19, 13, 13, 17, 24, 4, 13, 24, 13, 5, 13, 14, 25,
+            6, 13, 24,
+        ];
+        let delta = [
+            6, 13, 3, 0, 3, 7, 22, 15, 5, 16, 1, 8, 0, 7, 25, 4, 11, 8, 11, 7, 12, 5, 8, 1, 12, 0,
+        ];
+        let z2 = [
+            19, 17, 16, 13, 1, 18, 10, 6, 18, 25, 20, 21, 13, 24, 23, 8, 24, 6, 24, 12, 25, 19, 7,
+            7, 25, 24,
+        ];
+        format!(
+            "KALPHA: {}\ng_Z1: {}\ndelta: {}\ng_Z2: {}\n",
+            KALPHA
+                .chars()
+                .map(|ch| ch.to_string())
+                .collect::<Vec<_>>()
+                .join(" "),
+            z1.iter()
+                .map(|value| value.to_string())
+                .collect::<Vec<_>>()
+                .join(" "),
+            delta
+                .iter()
+                .map(|value| value.to_string())
+                .collect::<Vec<_>>()
+                .join(" "),
+            z2.iter()
+                .map(|value| value.to_string())
+                .collect::<Vec<_>>()
+                .join(" ")
+        )
+    }
+
+    fn format_test_control_card() -> String {
+        [
+            "LOOK Z EDGE 24 0 24",
+            "LOOK D MIDDLE 19 +1 20",
+            "LOOK H OUT 24 -1 23",
+            "PLACE T EDGE 24 +3 1",
+            "PLACE O MIDDLE 11 +7 18",
+            "PLACE N OUT 5 +7 12",
+            "SEND J EDGE 13 +11 24",
+            "SEND M MIDDLE 13 +11 24",
+            "SEND Q OUT 13 +12 25",
+        ]
+        .join("\n")
+    }
+
+    fn test_g_z2_values() -> HashMap<char, usize> {
+        parse_helper_card_line(&format_test_helper_cards(), "g_Z2:").unwrap()
     }
 
     fn format_test_r_grid_file(final_values: &[usize], base_values: &[usize]) -> String {

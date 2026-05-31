@@ -168,7 +168,8 @@ unused-source readiness can be checked directly before any scaffold command.
 Quarantined plaintext-claim sources are reported separately from scored
 observation sources, with `verify-plaintext-claim` and
 `verify-claim-reconciliation` commands, plus `verify-claim-bundle` for local
-canonical-bundle cross-checks, for local structure checks that do not print,
+canonical-bundle cross-checks and `verify-claim-mechanism` for published
+helper-mechanism cross-checks, for local structure checks that do not print,
 store, or promote the claimed text. When a reconciliation table includes
 published `Tier`/`Lane`, `C#`/`P#`, `R`/shift, `BaseR`, and `Gate` columns,
 the reconciliation verifier also checks the 7-by-14 coordinate rule,
@@ -532,6 +533,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `verify-plaintext-claim` | Local verifier for quarantined external plaintext claims; checks length, public-anchor compatibility, and aggregate shift diagnostics without printing or storing the claim text. |
 | `verify-claim-reconciliation` | Local verifier for quarantined external reconciliation tables; checks row count, one-based position sequence, K4 ciphertext alignment, optional published `Tier`/`Lane`, `C#`/`P#`, `R`/shift, `BaseR`, and `Gate` arithmetic, public-anchor compatibility, and aggregate shift diagnostics without printing or storing any claimed plaintext column. |
 | `verify-claim-bundle` | Local verifier for quarantined external canonical bundles; cross-checks required local files, repo ciphertext, plaintext length only, reconciliation arithmetic, `R`/`r` grids, gate map, Z2 handoff, and public anchors without printing or storing claimed plaintext. |
+| `verify-claim-mechanism` | Local verifier for quarantined external mechanism files; checks published `f`/helper-card relationships, control-card consistency, Z2 footer handoff, and the Z2 helper path into the `r`/`R` grids without printing or storing claimed plaintext. |
 | `observation-sources` | Focused source-use report showing which registered sources may support scored independent position observations and why other sources are context-only. |
 | `source-review-packet` | Pre-score source review packet for eligible observation sources, local archive status, source URLs, use boundaries, required review steps, and the observation requirement to link the validated source-review file. |
 | `source-review-status` | Pre-score source-review artifact scanner, separating valid reviews, invalid reviews, missing review roots, and no-review states. |

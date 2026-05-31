@@ -58,6 +58,16 @@ artifact.
   `R` grid values matched, 97/97 base-`r` grid values matched, 97/97 gate-map
   values matched, 31/31 Z2 handoff values matched, and 4/4 public anchors
   matched.
+- Follow-up tooling now includes `verify-claim-mechanism` for local canonical
+  mechanism files. It checks published `f`/helper-card relationships,
+  control-card consistency, Z2 footer handoff, and the Z2 helper path into
+  the `r`/`R` grids without printing or storing claimed plaintext.
+- On 2026-05-31, the same temporary canonical bundle passed
+  `verify-claim-mechanism`: 7/7 required files present, 26/26 `f` table
+  values matched, 26/26 helper-card delta checks matched, 9/9 control-card
+  entries matched, Z2 effective key derivation matched, 31/31 Z2 helper-path
+  base-`r` grid checks matched, and 31/31 Z2 helper-path final `R` grid
+  checks matched.
 - The temporary bundle remains outside the repository. The repository still
   does not store the claimed plaintext or any plaintext-bearing reconciliation
   table.
@@ -79,6 +89,10 @@ artifact.
 - The 2026-05-31 canonical-bundle file cross-check confirms local file
   consistency only; it still does not independently derive the table, validate
   source provenance for the physical helper stream, or promote the claim.
+- The 2026-05-31 mechanism-file cross-check confirms consistency of published
+  helper machinery only; it still does not verify an on-site physical reading
+  of the helper stream, validate source provenance for that stream, or promote
+  the claim.
 - Any future use must implement an independent mechanical verifier that checks
   the claimed mechanism without adding release-facing full plaintext or
   accepting the claim as evidence by assertion.
