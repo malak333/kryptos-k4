@@ -166,11 +166,12 @@ file is created.
 It also links the focused `source-observation-status --format json` command so
 unused-source readiness can be checked directly before any scaffold command.
 Quarantined plaintext-claim sources are reported separately from scored
-observation sources, with `verify-plaintext-claim` and
-`verify-claim-reconciliation` commands, plus `verify-claim-bundle` for local
-canonical-bundle cross-checks and `verify-claim-mechanism` for published
-helper-mechanism and Y-pass gate-template cross-checks, for local structure
-checks that do not print, store, or promote the claimed text. When a
+observation sources, with `verify-plaintext-claim`,
+`verify-running-key-claim`, and `verify-claim-reconciliation` commands, plus
+`verify-claim-bundle` for local canonical-bundle cross-checks and
+`verify-claim-mechanism` for published helper-mechanism and Y-pass
+gate-template cross-checks, for local structure checks that do not print,
+store, or promote the claimed text or key material. When a
 reconciliation table includes
 published `Tier`/`Lane`, `C#`/`P#`, `R`/shift, `BaseR`, and `Gate` columns,
 the reconciliation verifier also checks the 7-by-14 coordinate rule,
@@ -533,6 +534,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `hypotheses` | Ranked source-grounded hypothesis register in Markdown or JSON. |
 | `sources` | Source provenance records in Markdown or JSON for source-policy audits. |
 | `verify-plaintext-claim` | Local verifier for quarantined external plaintext claims; checks length, public-anchor compatibility, and aggregate shift diagnostics without printing or storing the claim text. |
+| `verify-running-key-claim` | Local verifier for quarantined external plaintext plus running-key-stream claims; checks length, public-anchor compatibility, and additive ciphertext reconstruction under a selectable alphabet without printing or storing plaintext or key material. |
 | `verify-claim-reconciliation` | Local verifier for quarantined external reconciliation tables; checks row count, one-based position sequence, K4 ciphertext alignment, optional published `Tier`/`Lane`, `C#`/`P#`, `R`/shift, `BaseR`, and `Gate` arithmetic, public-anchor compatibility, and aggregate shift diagnostics without printing or storing any claimed plaintext column. |
 | `verify-claim-bundle` | Local verifier for quarantined external canonical bundles; cross-checks required local files, repo ciphertext, plaintext length only, reconciliation arithmetic, `R`/`r` grids, gate map, Z2 handoff, and public anchors without printing or storing claimed plaintext. |
 | `verify-claim-mechanism` | Local verifier for quarantined external mechanism files; checks published `f`/helper-card relationships, control-card consistency, Z2 footer handoff, Y-pass gate-template consistency, and the Z2 helper path into the `r`/`R` grids without printing or storing claimed plaintext. |

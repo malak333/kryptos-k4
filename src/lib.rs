@@ -67,8 +67,8 @@ pub use ciphertext_profile::{
 pub use claim::{
     ClaimBundleVerification, ClaimMechanismVerification, ClaimReconciliationRowCheck,
     ClaimReconciliationVerification, PlaintextClaimAnchorCheck, PlaintextClaimVerification,
-    verify_claim_bundle, verify_claim_mechanism, verify_claim_reconciliation_table,
-    verify_plaintext_claim,
+    RunningKeyClaimVerification, verify_claim_bundle, verify_claim_mechanism,
+    verify_claim_reconciliation_table, verify_plaintext_claim, verify_running_key_claim,
 };
 pub use data::{
     Anchor, K4_CIPHERTEXT, KnownPlaintextSpan, Source, known_anchors, known_plaintext_spans,

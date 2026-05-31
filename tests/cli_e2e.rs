@@ -222,6 +222,7 @@ fn facts_hypotheses_sources_and_help_are_covered() {
         .stdout(predicate::str::contains("init-position-observations"))
         .stdout(predicate::str::contains("observation-sources"))
         .stdout(predicate::str::contains("verify-plaintext-claim"))
+        .stdout(predicate::str::contains("verify-running-key-claim"))
         .stdout(predicate::str::contains("verify-claim-reconciliation"))
         .stdout(predicate::str::contains("verify-claim-bundle"))
         .stdout(predicate::str::contains("verify-claim-mechanism"))
@@ -893,6 +894,17 @@ fn public_anchor_compatible_reconciliation_fixture() -> String {
     table
 }
 
+fn standard_running_key_for_claim(claim: &str) -> String {
+    K4_CIPHERTEXT
+        .bytes()
+        .zip(claim.bytes())
+        .map(|(ciphertext, plaintext)| {
+            let key = (26 + (ciphertext - b'A') as i16 - (plaintext - b'A') as i16) % 26;
+            (b'A' + key as u8) as char
+        })
+        .collect()
+}
+
 #[test]
 fn verify_plaintext_claim_reports_structure_without_leaking_claim_text() {
     let temp = tempfile::tempdir().unwrap();
@@ -941,6 +953,71 @@ fn verify_plaintext_claim_reports_structure_without_leaking_claim_text() {
         .success()
         .stdout(predicate::str::contains("# Plaintext Claim Verification"))
         .stdout(predicate::str::contains("public anchors: 4/4"))
+        .stdout(predicate::str::contains("structural checks passed: true"))
+        .stdout(predicate::str::contains("promoted: false"))
+        .stdout(predicate::str::contains("AAAA").not());
+}
+
+#[test]
+fn verify_running_key_claim_reports_structure_without_leaking_claim_or_key_text() {
+    let temp = tempfile::tempdir().unwrap();
+    let plaintext_path = temp.path().join("claim.txt");
+    let key_path = temp.path().join("key.txt");
+    let claim = public_anchor_compatible_claim_fixture();
+    let key = standard_running_key_for_claim(&claim);
+    std::fs::write(&plaintext_path, &claim).unwrap();
+    std::fs::write(&key_path, &key).unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "verify-running-key-claim",
+            "--plaintext",
+            plaintext_path.to_str().unwrap(),
+            "--key",
+            key_path.to_str().unwrap(),
+            "--source-id",
+            "ssrn-bonifacino-running-key-2025",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let stdout = String::from_utf8(output.clone()).unwrap();
+    assert!(!stdout.contains(&claim));
+    assert!(!stdout.contains(&key));
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["source_id"], "ssrn-bonifacino-running-key-2025");
+    assert_eq!(json["alphabet"], "standard");
+    assert_eq!(json["plaintext_normalized_letter_count"], 97);
+    assert_eq!(json["key_normalized_letter_count"], 97);
+    assert_eq!(json["public_anchor_match_count"], 4);
+    assert_eq!(json["ciphertext_match_count"], 97);
+    assert_eq!(json["all_ciphertext_matches"], true);
+    assert_eq!(json["structural_checks_passed"], true);
+    assert_eq!(json["promoted_candidate"], false);
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "verify-running-key-claim",
+            "--plaintext",
+            plaintext_path.to_str().unwrap(),
+            "--key",
+            key_path.to_str().unwrap(),
+            "--source-id",
+            "ssrn-bonifacino-running-key-2025",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("# Running-Key Claim Verification"))
+        .stdout(predicate::str::contains("public anchors: 4/4"))
+        .stdout(predicate::str::contains("all ciphertext matches: true"))
         .stdout(predicate::str::contains("structural checks passed: true"))
         .stdout(predicate::str::contains("promoted: false"))
         .stdout(predicate::str::contains("AAAA").not());
@@ -4457,6 +4534,7 @@ fn next_evidence_gate_prints_operational_checklist() {
         .stdout(predicate::str::contains("validate-source-review"))
         .stdout(predicate::str::contains("claim quarantine verifier"))
         .stdout(predicate::str::contains("verify-plaintext-claim"))
+        .stdout(predicate::str::contains("verify-running-key-claim"))
         .stdout(predicate::str::contains("verify-claim-reconciliation"))
         .stdout(predicate::str::contains("verify-claim-bundle"))
         .stdout(predicate::str::contains("verify-claim-mechanism"))
@@ -4550,6 +4628,12 @@ fn next_evidence_gate_prints_operational_checklist() {
             .as_str()
             .unwrap()
             .contains("verify-plaintext-claim")
+    );
+    assert!(
+        json["claim_verification_command"]
+            .as_str()
+            .unwrap()
+            .contains("verify-running-key-claim")
     );
     assert!(
         json["claim_verification_command"]

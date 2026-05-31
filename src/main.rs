@@ -19,9 +19,9 @@ use kryptos_k4::{
     MirrorPredictionPlanSet, PeriodPredictionEvaluation, PeriodPredictionPlan,
     PeriodPredictionPlanSet, PlaintextClaimVerification, PositionStructureRun,
     PredictionArtifactValidation, PreregistrationValidation, ReportFormat,
-    RoutedBatchKeyMaterialRun, SpacingPredictionEvaluation, SpacingPredictionPlanSet,
-    StructuralModelRun, TableauHillPredictionEvaluation, TableauHillPredictionPlan,
-    analyze_constraints, analyze_known_plaintext_spans,
+    RoutedBatchKeyMaterialRun, RunningKeyClaimVerification, SpacingPredictionEvaluation,
+    SpacingPredictionPlanSet, StructuralModelRun, TableauHillPredictionEvaluation,
+    TableauHillPredictionPlan, analyze_constraints, analyze_known_plaintext_spans,
     batch_test_key_material_with_batch_baseline, batch_test_routed_key_material,
     build_all_period_prediction_plans, build_all_spacing_prediction_plans,
     build_ciphertext_adjacent_contrast_prior, build_ciphertext_hotspot_prior,
@@ -48,7 +48,7 @@ use kryptos_k4::{
     summarize_independent_lanes, sweep_key_material_offsets_with_baseline, test_key_material,
     validate_prediction_artifact, validate_preregistration, validation_exit_result,
     verify_claim_bundle, verify_claim_mechanism, verify_claim_reconciliation_table,
-    verify_plaintext_claim,
+    verify_plaintext_claim, verify_running_key_claim,
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -1475,6 +1475,24 @@ enum Command {
         /// Local text file containing the claim to verify.
         #[arg(long)]
         input: PathBuf,
+        /// Optional registered source ID. Must have allowed_use unverified-solution-claim.
+        #[arg(long = "source-id")]
+        source_id: Option<String>,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Verify local plaintext and running-key claim files without printing or storing either.
+    VerifyRunningKeyClaim {
+        /// Local text file containing the claimed plaintext.
+        #[arg(long)]
+        plaintext: PathBuf,
+        /// Local text file containing the claimed running-key stream.
+        #[arg(long)]
+        key: PathBuf,
+        /// Alphabet used for additive running-key reconstruction.
+        #[arg(long, value_enum, default_value_t = CliAlphabet::Standard)]
+        alphabet: CliAlphabet,
         /// Optional registered source ID. Must have allowed_use unverified-solution-claim.
         #[arg(long = "source-id")]
         source_id: Option<String>,
@@ -3762,6 +3780,13 @@ fn main() -> Result<()> {
             source_id,
             format,
         } => print_verify_plaintext_claim(input, source_id, format)?,
+        Command::VerifyRunningKeyClaim {
+            plaintext,
+            key,
+            alphabet,
+            source_id,
+            format,
+        } => print_verify_running_key_claim(plaintext, key, alphabet, source_id, format)?,
         Command::VerifyClaimReconciliation {
             input,
             source_id,
@@ -7798,7 +7823,7 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
         eligible_sources,
         ineligible_source_count: source_report.ineligible_count,
         quarantined_claim_source_ids,
-        claim_verification_command: "cargo run --locked -- verify-plaintext-claim --input <local-claim.txt> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-reconciliation --input <local-claim-table.csv> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-bundle --directory <local-claim-bundle-dir> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-mechanism --directory <local-claim-bundle-dir> --source-id <unverified-solution-claim-source-id> --format json",
+        claim_verification_command: "cargo run --locked -- verify-plaintext-claim --input <local-claim.txt> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-running-key-claim --plaintext <local-claim.txt> --key <local-key-stream.txt> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-reconciliation --input <local-claim-table.csv> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-bundle --directory <local-claim-bundle-dir> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-mechanism --directory <local-claim-bundle-dir> --source-id <unverified-solution-claim-source-id> --format json",
         valid_source_backed_archive_count: evidence_report.valid_source_backed_archive_count,
         invalid_archive_count: evidence_report.invalid_archive_count,
         all_source_backed_archives_negative,
@@ -14804,6 +14829,35 @@ fn print_verify_plaintext_claim(
     Ok(())
 }
 
+fn print_verify_running_key_claim(
+    plaintext: PathBuf,
+    key: PathBuf,
+    alphabet: CliAlphabet,
+    source_id: Option<String>,
+    format: OutputFormat,
+) -> Result<()> {
+    ensure_quarantined_claim_source(source_id.as_deref(), "verify-running-key-claim")?;
+
+    let plaintext_claim = fs::read_to_string(&plaintext).with_context(|| {
+        format!(
+            "failed to read running-key plaintext claim `{}`",
+            plaintext.display()
+        )
+    })?;
+    let key_stream = fs::read_to_string(&key)
+        .with_context(|| format!("failed to read running-key stream `{}`", key.display()))?;
+    let verification =
+        verify_running_key_claim(&plaintext_claim, &key_stream, alphabet.into(), source_id)?;
+
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&verification)?),
+        OutputFormat::Markdown => {
+            print_running_key_claim_verification(&plaintext, &key, &verification)
+        }
+    }
+    Ok(())
+}
+
 fn print_verify_claim_reconciliation(
     input: PathBuf,
     source_id: Option<String>,
@@ -14906,6 +14960,86 @@ fn print_plaintext_claim_verification(input: &Path, verification: &PlaintextClai
         verification.implied_shift_distinct_values,
         verification.implied_shift_repeated_value_count,
         verification.implied_shift_max_bucket_count
+    );
+    println!(
+        "structural checks passed: {}",
+        verification.structural_checks_passed
+    );
+    println!("promoted: {}", verification.promoted_candidate);
+    println!("note: {}\n", verification.note);
+
+    println!("| Anchor | Positions | Matches |");
+    println!("| --- | --- | --- |");
+    for check in &verification.anchor_checks {
+        println!(
+            "| {} | {}-{} | {} |",
+            check.plaintext, check.start_one_based, check.end_one_based_inclusive, check.matches
+        );
+    }
+}
+
+fn print_running_key_claim_verification(
+    plaintext: &Path,
+    key: &Path,
+    verification: &RunningKeyClaimVerification,
+) {
+    println!("# Running-Key Claim Verification\n");
+    println!("This is not a claimed solution.\n");
+    println!("plaintext input: `{}`", plaintext.display());
+    println!("key input: `{}`", key.display());
+    println!(
+        "source id: `{}`",
+        verification.source_id.as_deref().unwrap_or("none")
+    );
+    println!("alphabet: {:?}", verification.alphabet);
+    println!(
+        "plaintext normalized letters: {}/{}",
+        verification.plaintext_normalized_letter_count, verification.expected_length
+    );
+    println!(
+        "plaintext ignored non-letters: {}",
+        verification.plaintext_ignored_non_letter_count
+    );
+    println!(
+        "key normalized letters: {}/{}",
+        verification.key_normalized_letter_count, verification.expected_length
+    );
+    println!(
+        "key ignored non-letters: {}",
+        verification.key_ignored_non_letter_count
+    );
+    println!(
+        "public anchors: {}/{}",
+        verification.public_anchor_match_count, verification.public_anchor_count
+    );
+    println!(
+        "all public anchors match: {}",
+        verification.all_public_anchors_match
+    );
+    println!(
+        "ciphertext reconstruction: {}/{}",
+        verification.ciphertext_match_count, verification.ciphertext_checked_count
+    );
+    println!(
+        "all ciphertext matches: {}",
+        verification.all_ciphertext_matches
+    );
+    if verification.mismatch_positions_one_based.is_empty() {
+        println!("mismatch positions: none");
+    } else {
+        let positions = verification
+            .mismatch_positions_one_based
+            .iter()
+            .map(|position| position.to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+        println!("mismatch positions: {positions}");
+    }
+    println!(
+        "key diagnostics: distinct_values={} repeated_values={} max_bucket={}",
+        verification.key_distinct_values,
+        verification.key_repeated_value_count,
+        verification.key_max_bucket_count
     );
     println!(
         "structural checks passed: {}",
