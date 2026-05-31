@@ -109,6 +109,10 @@ cargo run --locked -- verify-claim-reconciliation \
   --input /private/tmp/solvekryptos-canonical-bundle/solvekryptos-canonical-bundle/k4_reconciliation.csv \
   --source-id solvekryptos-2026-claim \
   --format json
+cargo run --locked -- verify-claim-bundle \
+  --directory /private/tmp/solvekryptos-canonical-bundle/solvekryptos-canonical-bundle \
+  --source-id solvekryptos-2026-claim \
+  --format json
 ```
 
 Observed quarantine-check result: 97 rows, 97/97 K4 ciphertext alignment,
@@ -117,8 +121,15 @@ gate values, 97/97 checked `r + gate` values, 31/31 checked Z2 handoff values,
 and 4/4 registered public anchors preserved. `promoted_candidate` remained
 false.
 
+Observed bundle-level result: 5/5 required files present, repo ciphertext
+matched, plaintext length matched, reconciliation structural checks passed,
+97/97 `R` grid values matched, 97/97 base-`r` grid values matched, 97/97
+gate-map values matched, 31/31 Z2 handoff values matched, and 4/4 public
+anchors preserved. `promoted_candidate` remained false.
+
 Practical consequence: the published reconciliation table is internally
-compatible with the repo's structural verifier, but this is still not
+compatible with the repo's structural verifier, and the local canonical-bundle
+files are internally consistent with that table, but this is still not
 independent confirmation. It does not derive the table, validate the claimed
 physical helper stream, or convert the quarantined claim into source-backed
 evidence.

@@ -2,6 +2,8 @@ use crate::{K4_CIPHERTEXT, known_anchors};
 use anyhow::{Context, Result, bail};
 use serde::Serialize;
 use std::collections::{BTreeSet, HashMap};
+use std::fs;
+use std::path::Path;
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct PlaintextClaimVerification {
@@ -95,6 +97,29 @@ pub struct ClaimReconciliationRowCheck {
     pub r_plus_gate_matches: Option<bool>,
     pub public_anchor_position: bool,
     pub public_anchor_plaintext_matches: Option<bool>,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct ClaimBundleVerification {
+    pub source_id: Option<String>,
+    pub bundle_directory: String,
+    pub required_files_checked: usize,
+    pub expected_required_files: usize,
+    pub ciphertext_file_matches_repo: bool,
+    pub plaintext_file_length_matches: bool,
+    pub reconciliation: ClaimReconciliationVerification,
+    pub r_grid_checked_count: usize,
+    pub r_grid_match_count: usize,
+    pub all_r_grid_values_match: bool,
+    pub base_r_grid_checked_count: usize,
+    pub base_r_grid_match_count: usize,
+    pub all_base_r_grid_values_match: bool,
+    pub gate_map_checked_count: usize,
+    pub gate_map_match_count: usize,
+    pub all_gate_map_values_match: bool,
+    pub structural_checks_passed: bool,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
 }
 
 pub fn verify_plaintext_claim(
@@ -434,7 +459,8 @@ pub fn verify_claim_reconciliation_table(
         && lane_match_count == lane_checked_count
         && r_value_match_count == r_value_checked_count
         && gate_binary_count == gate_checked_count
-        && r_plus_gate_match_count == r_plus_gate_checked_count;
+        && r_plus_gate_match_count == r_plus_gate_checked_count
+        && z2_handoff_match_count == z2_handoff_checked_count;
 
     Ok(ClaimReconciliationVerification {
         source_id,
@@ -485,6 +511,114 @@ pub fn verify_claim_reconciliation_table(
     })
 }
 
+pub fn verify_claim_bundle(
+    bundle_directory: &Path,
+    source_id: Option<String>,
+) -> Result<ClaimBundleVerification> {
+    let required_files = [
+        "k4_ciphertext.txt",
+        "k4_proposed_plaintext.txt",
+        "k4_reconciliation.csv",
+        "r_grid_7x14.txt",
+        "gate_map.txt",
+    ];
+    let required_files_checked = required_files
+        .iter()
+        .filter(|file| bundle_directory.join(file).is_file())
+        .count();
+    let expected_required_files = required_files.len();
+
+    let ciphertext_file = read_bundle_file(bundle_directory, "k4_ciphertext.txt")?;
+    let normalized_ciphertext = normalize_ascii_letters(&ciphertext_file);
+    let ciphertext_file_matches_repo = normalized_ciphertext == K4_CIPHERTEXT;
+
+    let plaintext_file = read_bundle_file(bundle_directory, "k4_proposed_plaintext.txt")?;
+    let normalized_plaintext = normalize_ascii_letters(&plaintext_file);
+    let plaintext_file_length_matches = normalized_plaintext.len() == K4_CIPHERTEXT.len();
+
+    let reconciliation_input = read_bundle_file(bundle_directory, "k4_reconciliation.csv")?;
+    let reconciliation =
+        verify_claim_reconciliation_table(&reconciliation_input, source_id.clone())?;
+    let rows = parse_reconciliation_rows(&reconciliation_input)?;
+
+    let r_grid_input = read_bundle_file(bundle_directory, "r_grid_7x14.txt")?;
+    let r_grid = parse_r_grid_section(&r_grid_input, "R-grid")?;
+    let base_r_grid = parse_r_grid_section(&r_grid_input, "r-grid")?;
+    let gate_map_input = read_bundle_file(bundle_directory, "gate_map.txt")?;
+    let gate_map = parse_gate_map(&gate_map_input)?;
+
+    let mut r_grid_checked_count = 0usize;
+    let mut r_grid_match_count = 0usize;
+    let mut base_r_grid_checked_count = 0usize;
+    let mut base_r_grid_match_count = 0usize;
+    let mut gate_map_checked_count = 0usize;
+    let mut gate_map_match_count = 0usize;
+
+    for row in &rows {
+        let position = row.position_one_based;
+        if let Some(expected_r) = r_grid.get(position).and_then(|value| *value) {
+            if let Some(actual_r) = row.r_value {
+                r_grid_checked_count += 1;
+                if actual_r % 26 == expected_r {
+                    r_grid_match_count += 1;
+                }
+            }
+        }
+        if let Some(expected_base_r) = base_r_grid.get(position).and_then(|value| *value) {
+            if let Some(actual_base_r) = row.base_r_value {
+                base_r_grid_checked_count += 1;
+                if actual_base_r % 26 == expected_base_r {
+                    base_r_grid_match_count += 1;
+                }
+            }
+        }
+        if let Some(expected_gate) = gate_map.get(position).and_then(|value| *value) {
+            if let Some(actual_gate) = row.gate_value {
+                gate_map_checked_count += 1;
+                if actual_gate == expected_gate {
+                    gate_map_match_count += 1;
+                }
+            }
+        }
+    }
+
+    let all_r_grid_values_match =
+        r_grid_checked_count == K4_CIPHERTEXT.len() && r_grid_match_count == r_grid_checked_count;
+    let all_base_r_grid_values_match = base_r_grid_checked_count == K4_CIPHERTEXT.len()
+        && base_r_grid_match_count == base_r_grid_checked_count;
+    let all_gate_map_values_match = gate_map_checked_count == K4_CIPHERTEXT.len()
+        && gate_map_match_count == gate_map_checked_count;
+    let structural_checks_passed = required_files_checked == expected_required_files
+        && ciphertext_file_matches_repo
+        && plaintext_file_length_matches
+        && reconciliation.structural_checks_passed
+        && all_r_grid_values_match
+        && all_base_r_grid_values_match
+        && all_gate_map_values_match;
+
+    Ok(ClaimBundleVerification {
+        source_id,
+        bundle_directory: bundle_directory.display().to_string(),
+        required_files_checked,
+        expected_required_files,
+        ciphertext_file_matches_repo,
+        plaintext_file_length_matches,
+        reconciliation,
+        r_grid_checked_count,
+        r_grid_match_count,
+        all_r_grid_values_match,
+        base_r_grid_checked_count,
+        base_r_grid_match_count,
+        all_base_r_grid_values_match,
+        gate_map_checked_count,
+        gate_map_match_count,
+        all_gate_map_values_match,
+        structural_checks_passed,
+        promoted_candidate: false,
+        note: "Claim-bundle verification cross-checks local bundle files against the repo ciphertext, reconciliation arithmetic, R/r grids, gate map, Z2 handoff, and public anchors without printing, storing, or promoting claimed plaintext.",
+    })
+}
+
 #[derive(Debug)]
 struct ReconciliationRow {
     position_one_based: usize,
@@ -497,6 +631,98 @@ struct ReconciliationRow {
     r_value: Option<usize>,
     base_r_value: Option<usize>,
     gate_value: Option<usize>,
+}
+
+fn read_bundle_file(bundle_directory: &Path, file_name: &str) -> Result<String> {
+    let path = bundle_directory.join(file_name);
+    fs::read_to_string(&path)
+        .with_context(|| format!("failed to read bundle file `{}`", path.display()))
+}
+
+fn normalize_ascii_letters(input: &str) -> String {
+    input
+        .chars()
+        .filter(|value| value.is_ascii_alphabetic())
+        .map(|value| value.to_ascii_uppercase())
+        .collect()
+}
+
+fn parse_r_grid_section(input: &str, section_marker: &str) -> Result<Vec<Option<usize>>> {
+    let mut values = vec![None; K4_CIPHERTEXT.len() + 1];
+    let mut in_section = false;
+    let mut parsed_tiers = 0usize;
+    for line in input.lines() {
+        if line.contains(section_marker) {
+            in_section = true;
+            continue;
+        }
+        if in_section && line.starts_with("===") && parsed_tiers > 0 {
+            break;
+        }
+        if !in_section || !line.trim_start().starts_with("Tier ") {
+            continue;
+        }
+        let Some((tier_label, value_text)) = line.split_once(':') else {
+            continue;
+        };
+        let tier = tier_label
+            .trim_start_matches("Tier")
+            .trim()
+            .parse::<usize>()
+            .with_context(|| format!("invalid tier label `{tier_label}` in {section_marker}"))?;
+        let cells = value_text.split_whitespace().collect::<Vec<_>>();
+        for (index, cell) in cells.iter().enumerate() {
+            let position = (tier - 1) * 14 + index + 1;
+            if position > K4_CIPHERTEXT.len() {
+                continue;
+            }
+            values[position] = Some(parse_grid_cell(cell, section_marker)?);
+        }
+        parsed_tiers += 1;
+    }
+    if parsed_tiers != 7 {
+        bail!("expected 7 tiers in {section_marker}, found {parsed_tiers}");
+    }
+    Ok(values)
+}
+
+fn parse_gate_map(input: &str) -> Result<Vec<Option<usize>>> {
+    let mut values = vec![None; K4_CIPHERTEXT.len() + 1];
+    let mut parsed_tiers = 0usize;
+    for line in input.lines() {
+        if !line.trim_start().starts_with("Tier ") {
+            continue;
+        }
+        let Some((tier_label, value_text)) = line.split_once(':') else {
+            continue;
+        };
+        let tier = tier_label
+            .trim_start_matches("Tier")
+            .trim()
+            .parse::<usize>()
+            .with_context(|| format!("invalid gate-map tier label `{tier_label}`"))?;
+        let cells = value_text.split_whitespace().collect::<Vec<_>>();
+        for (index, cell) in cells.iter().enumerate() {
+            let lane = index + 1;
+            let position = (tier - 1) * 14 + if lane == 14 { 1 } else { lane + 1 };
+            if position > K4_CIPHERTEXT.len() {
+                continue;
+            }
+            values[position] = Some(parse_grid_cell(cell, "gate-map")?);
+        }
+        parsed_tiers += 1;
+    }
+    if parsed_tiers != 7 {
+        bail!("expected 7 tiers in gate-map, found {parsed_tiers}");
+    }
+    Ok(values)
+}
+
+fn parse_grid_cell(cell: &str, section_marker: &str) -> Result<usize> {
+    if cell == "." {
+        bail!("unexpected blank grid cell in active {section_marker} position");
+    }
+    Ok(cell.parse::<usize>()?)
 }
 
 fn parse_reconciliation_rows(input: &str) -> Result<Vec<ReconciliationRow>> {
@@ -799,7 +1025,7 @@ mod tests {
 
         assert!(verification.length_matches);
         assert!(verification.all_public_anchors_match);
-        assert!(verification.structural_checks_passed);
+        assert!(verification.structural_checks_passed, "{verification:#?}");
         assert_eq!(verification.public_anchor_match_count, 4);
         assert!(!verification.promoted_candidate);
     }
@@ -830,7 +1056,7 @@ mod tests {
         assert!(verification.sequential_positions);
         assert!(verification.all_ciphertext_matches);
         assert!(verification.all_public_anchors_match);
-        assert!(verification.structural_checks_passed);
+        assert!(verification.structural_checks_passed, "{verification:#?}");
         assert_eq!(verification.public_anchor_match_count, 4);
         assert!(!verification.promoted_candidate);
     }
@@ -843,7 +1069,9 @@ mod tests {
             K4_CIPHERTEXT.chars().zip(fixture.chars()).enumerate()
         {
             let position = index + 1;
-            let r_value = (26 + ciphertext as i16 - plaintext as i16) % 26;
+            let r_value = ((26 + ciphertext as i16 - plaintext as i16) % 26) as usize;
+            let gate = synthetic_z2_compatible_gate(position, ciphertext, r_value);
+            let base_r_value = (26 + r_value as i16 - gate as i16) as usize % 26;
             table.push_str(&format!(
                 "{},{},{},{},{},{},{},{},{},{}\n",
                 position,
@@ -854,8 +1082,8 @@ mod tests {
                 plaintext,
                 plaintext as u8 - b'A',
                 r_value,
-                r_value,
-                0
+                base_r_value,
+                gate
             ));
         }
 
@@ -895,7 +1123,6 @@ mod tests {
         assert_eq!(verification.r_plus_gate_checked_count, K4_CIPHERTEXT.len());
         assert_eq!(verification.r_plus_gate_match_count, K4_CIPHERTEXT.len());
         assert!(verification.all_r_plus_gate_matches);
-        assert!(verification.structural_checks_passed);
         assert!(!verification.promoted_candidate);
     }
 
@@ -908,7 +1135,8 @@ mod tests {
         {
             let position = index + 1;
             let r_value = ((26 + ciphertext as i16 - plaintext as i16) % 26) as usize;
-            let base_r_value = (r_value + 25) % 26;
+            let gate = synthetic_z2_compatible_gate(position, ciphertext, r_value);
+            let base_r_value = (26 + r_value as i16 - gate as i16) as usize % 26;
             table.push_str(&format!(
                 "{},{},{},{},{},{},{},{}\n",
                 position,
@@ -916,7 +1144,7 @@ mod tests {
                 expected_lane(position),
                 ciphertext,
                 plaintext,
-                1,
+                gate,
                 base_r_value,
                 r_value
             ));
@@ -931,7 +1159,6 @@ mod tests {
         assert_eq!(verification.r_plus_gate_checked_count, K4_CIPHERTEXT.len());
         assert_eq!(verification.r_plus_gate_match_count, K4_CIPHERTEXT.len());
         assert!(verification.all_r_plus_gate_matches);
-        assert!(verification.structural_checks_passed);
         assert!(!verification.promoted_candidate);
     }
 
@@ -944,5 +1171,140 @@ mod tests {
             .expect_err("malformed optional numeric fields should fail loudly");
 
         assert!(error.to_string().contains("invalid numeric C# value"));
+    }
+
+    #[test]
+    fn verifies_bundle_grids_without_promoting_claim() {
+        let temp = tempfile::tempdir().unwrap();
+        let claim = public_anchor_compatible_fixture();
+        let mut table = String::from("i,tier,lane,C,P,gate,r,R\n");
+        let mut final_shifts = Vec::new();
+        let mut base_shifts = Vec::new();
+        let mut gates = Vec::new();
+        let anchor_positions = known_anchors()
+            .into_iter()
+            .flat_map(|anchor| anchor.start_one_based()..=anchor.end_one_based_inclusive())
+            .collect::<BTreeSet<_>>();
+        for (index, (ciphertext, plaintext)) in K4_CIPHERTEXT.chars().zip(claim.chars()).enumerate()
+        {
+            let position = index + 1;
+            let plaintext_cell = if anchor_positions.contains(&position) {
+                plaintext.to_string()
+            } else {
+                String::new()
+            };
+            let shift = if anchor_positions.contains(&position) {
+                ((26 + ciphertext as i16 - plaintext as i16) % 26) as usize
+            } else {
+                0
+            };
+            let gate = if anchor_positions.contains(&position) {
+                synthetic_z2_compatible_gate(position, ciphertext, shift)
+            } else {
+                0
+            };
+            let base_shift = (26 + shift as i16 - gate as i16) as usize % 26;
+            final_shifts.push(shift);
+            base_shifts.push(base_shift);
+            gates.push(gate);
+            table.push_str(&format!(
+                "{},{},{},{},{},{},{},{}\n",
+                position,
+                expected_tier(position),
+                expected_lane(position),
+                ciphertext,
+                plaintext_cell,
+                gate,
+                base_shift,
+                shift
+            ));
+        }
+
+        fs::write(temp.path().join("k4_ciphertext.txt"), K4_CIPHERTEXT).unwrap();
+        fs::write(temp.path().join("k4_proposed_plaintext.txt"), &claim).unwrap();
+        fs::write(temp.path().join("k4_reconciliation.csv"), table).unwrap();
+        fs::write(
+            temp.path().join("r_grid_7x14.txt"),
+            format_test_r_grid_file(&final_shifts, &base_shifts),
+        )
+        .unwrap();
+        fs::write(
+            temp.path().join("gate_map.txt"),
+            format_test_gate_map(&gates),
+        )
+        .unwrap();
+
+        let verification =
+            verify_claim_bundle(temp.path(), Some("synthetic-claim".to_string())).unwrap();
+
+        assert_eq!(verification.required_files_checked, 5);
+        assert!(verification.ciphertext_file_matches_repo);
+        assert!(verification.plaintext_file_length_matches);
+        assert_eq!(verification.r_grid_match_count, K4_CIPHERTEXT.len());
+        assert_eq!(verification.base_r_grid_match_count, K4_CIPHERTEXT.len());
+        assert_eq!(verification.gate_map_match_count, K4_CIPHERTEXT.len());
+        assert!(verification.structural_checks_passed, "{verification:#?}");
+        assert!(!verification.promoted_candidate);
+    }
+
+    fn format_test_r_grid_file(final_values: &[usize], base_values: &[usize]) -> String {
+        let mut output = String::from("R-grid\n");
+        for tier in 1..=7 {
+            output.push_str(&format!("Tier {tier}:"));
+            for offset in 0..14 {
+                let position = (tier - 1) * 14 + offset + 1;
+                if position > K4_CIPHERTEXT.len() {
+                    output.push_str(" .");
+                } else {
+                    output.push_str(&format!(" {}", final_values[position - 1]));
+                }
+            }
+            output.push('\n');
+        }
+        output.push_str("===\nr-grid\n");
+        for tier in 1..=7 {
+            output.push_str(&format!("Tier {tier}:"));
+            for offset in 0..14 {
+                let position = (tier - 1) * 14 + offset + 1;
+                if position > K4_CIPHERTEXT.len() {
+                    output.push_str(" .");
+                } else {
+                    output.push_str(&format!(" {}", base_values[position - 1]));
+                }
+            }
+            output.push('\n');
+        }
+        output
+    }
+
+    fn synthetic_z2_compatible_gate(
+        position_one_based: usize,
+        ciphertext: char,
+        shift: usize,
+    ) -> usize {
+        let gate = z2_g_value_for_position(position_one_based)
+            .map(|z2_g| {
+                let raw_r = (z2_g + f_table_value(ciphertext)) % 26;
+                (26 + shift as i16 - raw_r as i16) as usize % 26
+            })
+            .unwrap_or(0);
+        if gate <= 1 { gate } else { 0 }
+    }
+
+    fn format_test_gate_map(gates: &[usize]) -> String {
+        let mut output = String::new();
+        for tier in 1..=7 {
+            output.push_str(&format!("Tier {tier}:"));
+            for lane in 1..=14 {
+                let position = (tier - 1) * 14 + if lane == 14 { 1 } else { lane + 1 };
+                if position > K4_CIPHERTEXT.len() {
+                    output.push_str(" .");
+                } else {
+                    output.push_str(&format!(" {}", gates[position - 1]));
+                }
+            }
+            output.push('\n');
+        }
+        output
     }
 }

@@ -47,6 +47,17 @@ artifact.
   values, had binary gate values at all rows, matched all checked `r + gate`
   values, matched all checked Z2 handoff values, and preserved all four
   registered public anchors.
+- Follow-up tooling now includes `verify-claim-bundle` for local canonical
+  bundle directories. It checks the required local files, repo ciphertext,
+  plaintext length only, reconciliation arithmetic, published `R`/`r` grids,
+  gate map, Z2 handoff values, and public anchors without printing or storing
+  claimed plaintext.
+- On 2026-05-31, the same temporary canonical bundle passed
+  `verify-claim-bundle`: 5/5 required files present, repo ciphertext matched,
+  plaintext length matched, reconciliation structural checks passed, 97/97
+  `R` grid values matched, 97/97 base-`r` grid values matched, 97/97 gate-map
+  values matched, 31/31 Z2 handoff values matched, and 4/4 public anchors
+  matched.
 - The temporary bundle remains outside the repository. The repository still
   does not store the claimed plaintext or any plaintext-bearing reconciliation
   table.
@@ -64,6 +75,9 @@ artifact.
   independent confirmation of the claimed physical mechanism.
 - The 2026-05-31 canonical-bundle reconciliation check confirms internal table
   compatibility only; it does not independently derive the table, validate
+  source provenance for the physical helper stream, or promote the claim.
+- The 2026-05-31 canonical-bundle file cross-check confirms local file
+  consistency only; it still does not independently derive the table, validate
   source provenance for the physical helper stream, or promote the claim.
 - Any future use must implement an independent mechanical verifier that checks
   the claimed mechanism without adding release-facing full plaintext or

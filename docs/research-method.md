@@ -109,11 +109,13 @@ community interpretations into the data model, reports, exports, or tests.
 External plaintext claims use a separate quarantine boundary: register them with
 `allowed_use=unverified-solution-claim`, keep the local archive quote-free, and
 screen local claim files with `verify-plaintext-claim` or local reconciliation
-tables with `verify-claim-reconciliation`. These commands check only table
-shape, normalized length, K4 ciphertext alignment, public-anchor compatibility,
-optional published `Tier`/`Lane`, `C#`/`P#`, `R`/shift, `BaseR`, and `Gate`
-arithmetic, and aggregate shift diagnostics; they do not print or store claimed
-plaintext and cannot promote a candidate.
+tables with `verify-claim-reconciliation`; local canonical bundles can be
+screened with `verify-claim-bundle`. These commands check only table shape,
+normalized length, K4 ciphertext alignment, public-anchor compatibility,
+optional published `Tier`/`Lane`, `C#`/`P#`, `R`/shift, `BaseR`, `Gate`,
+published `R`/`r` grids, gate-map arithmetic, Z2 handoff compatibility, and
+aggregate shift diagnostics; they do not print or store claimed plaintext and
+cannot promote a candidate.
 
 The candidate CSV and candidate registry must also stay aligned. Candidate words
 remain stopped-lane exploratory inputs unless they are represented in
