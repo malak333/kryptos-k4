@@ -512,6 +512,11 @@ fn lane_status_next_step(
             "Run validate-ciphertext-turning-point-observations for the source-backed positions, then evaluate-ciphertext-turning-point with --positions-file."
                 .to_string(),
         ),
+        "ciphertext-window-balance-position-prior" => (
+            "ready-for-source-backed-observations".to_string(),
+            "Run validate-ciphertext-window-balance-observations for the source-backed positions, then evaluate-ciphertext-window-balance with --positions-file."
+                .to_string(),
+        ),
         "ciphertext-period-match-position-prior" => (
             "ready-for-source-backed-observations".to_string(),
             "Run validate-ciphertext-period-match-observations for the source-backed positions, then evaluate-ciphertext-period-match with --positions-file."
@@ -545,6 +550,7 @@ fn has_family_specific_evaluator(hypothesis_family: &str) -> bool {
             | "ciphertext-transition-position-prior"
             | "ciphertext-skip-transition-position-prior"
             | "ciphertext-turning-point-position-prior"
+            | "ciphertext-window-balance-position-prior"
             | "ciphertext-period-match-position-prior"
             | "position-period-prediction"
     )

@@ -151,8 +151,9 @@ That keeps duplicate ready lanes from being confused with scored evidence or
 independent target count, and currently steers away from adding more duplicate
 period lanes while the committed source-backed archives remain
 negative/non-significant. `ciphertext-window-balance-v1` is a distinct
-ciphertext-only prediction artifact, but it remains evaluator-pending until a
-family-specific observation validator/evaluator exists. The current unused
+ciphertext-only prediction artifact with a source-backed validator/evaluator;
+the committed CIA row-boundary observation scored `0/6` window-balance hits
+with empirical `p=1.0000`. The current unused
 eligible `cia-artifact` archive has
 no scored-position markers and now carries an explicit `non_scorable_reason`,
 so the gate reports it as non-scorable until a new source-backed rationale
@@ -186,7 +187,7 @@ observation source before scoring.
 `non-anchor-positions` prints the one-based K4 position universe eligible for
 future source-backed observations and the public anchor ranges that must stay
 excluded from scored evidence.
-`independent-evidence-status` scans archived period/spacing/mirror/grid/Tableau-HILL/ciphertext-prior/ciphertext-hotspot/ciphertext-rarity/ciphertext-repeat-distance/ciphertext-period-match/ciphertext-adjacent-contrast/ciphertext-transition/ciphertext-skip-transition/ciphertext-turning-point/ciphertext-residue-balance observation
+`independent-evidence-status` scans archived period/spacing/mirror/grid/Tableau-HILL/ciphertext-prior/ciphertext-hotspot/ciphertext-rarity/ciphertext-repeat-distance/ciphertext-period-match/ciphertext-adjacent-contrast/ciphertext-transition/ciphertext-skip-transition/ciphertext-turning-point/ciphertext-window-balance/ciphertext-residue-balance observation
 evaluations and reports whether any valid source-backed evidence has actually
 been scored yet, including each archive's best model, observed hits, p-value,
 and support status.
@@ -223,7 +224,8 @@ concentration `p=0.3311`, ciphertext-prior `p=0.6845`,
 ciphertext-hotspot `p=1.0000`, ciphertext-rarity `p=0.5282`,
 ciphertext-period-match `p=0.9733`,
 ciphertext-transition `p=1.0000`, ciphertext-skip-transition `p=1.0000`,
-ciphertext-turning-point `p=0.5247`, ciphertext-residue-balance `p=0.4803`,
+ciphertext-turning-point `p=0.5247`, ciphertext-window-balance `p=1.0000`,
+ciphertext-residue-balance `p=0.4803`,
 high-moduli ciphertext-residue-balance `p=0.6416`, and very-high-moduli
 ciphertext-residue-balance `p=0.3125`.
 It promotes no candidate.
@@ -464,12 +466,14 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `heldout-key-control` | Leave-one-public-group-out control that selects candidate material and offset on non-overlapping training groups, then scores the withheld anchor/span group against seeded null selection runs. |
 | `position-structure` | Candidate-independent residue/spacing structure control over public fragments, comparing fixed-position scores against seeded value shuffles. |
 | `structural-models` | Pre-registered period-model controls that score public fragments only after the model registry is fixed, with seeded nulls and Holm adjustment. |
-| `ciphertext-window-balance-prior` | Emits the evaluator-pending ciphertext-only local-window balance prediction artifact for future independent non-anchor observations. |
+| `ciphertext-window-balance-prior` | Emits the ciphertext-only local-window balance prediction artifact for future independent non-anchor observations. |
+| `validate-ciphertext-window-balance-observations` | Non-scoring gate for source-backed independent positions before ciphertext-window-balance scoring; validates the committed window-balance artifact, preregistration, source-review coverage, source-use boundary, per-position notes, duplicates, and non-anchor universe. |
+| `evaluate-ciphertext-window-balance` | Scores source-backed non-anchor position observations against the committed ciphertext-window-balance prior with a seeded same-size non-anchor position-set null; archives the source-backed inputs and result files with `--output-dir`, and never treats the prior itself as evidence. |
 | `validate-preregistration` | Gate for proposed new lanes in Markdown or JSON; rejects reuse of public anchor-derived fragments as discovery inputs or primary evidence. |
 | `validate-prediction-artifact` | Gate for committed independent prediction artifacts in Markdown or JSON; checks the preregistration and deterministic generator output still match, and `--require-unique-artifact` fails duplicate prediction targets when the next lane must be distinct. |
 | `independent-lane-status` | Operational summary of preregistered independent lanes, artifact validity, readiness for source-backed observations, family summaries, unique ready prediction artifacts, duplicate artifact groups, duplicate/extra duplicate artifact lane counts, and next required validator/evaluator command. |
 | `next-evidence-gate` | Operational checklist combining independent-lane readiness, unique/duplicate prediction-target accounting, evaluator-pending lane inventory, eligible observation sources, used/unused eligible source accounting, unused-source scored-position marker and non-scorable status, quarantined plaintext-claim source IDs with the safe verifier commands, current evidence-archive score direction, structured archive support details including null means, source-review status, machine-readable next-action/blocking-condition fields, explicit next-check commands including `--require-unique-artifact`, required observation fields including source-review coverage, recommended next evidence step, and exact scaffold/validate/evaluate/archive commands before source-backed scoring. |
-| `independent-evidence-status` | Archive status for period/spacing/mirror/grid/Tableau-HILL/ciphertext-prior/ciphertext-hotspot/ciphertext-rarity/ciphertext-repeat-distance/ciphertext-period-match/ciphertext-adjacent-contrast/ciphertext-transition/ciphertext-skip-transition/ciphertext-turning-point/ciphertext-residue-balance independent observation evaluations, separating valid source-backed evidence, diagnostic archives, invalid archives, no-evidence states, and per-archive score direction. |
+| `independent-evidence-status` | Archive status for period/spacing/mirror/grid/Tableau-HILL/ciphertext-prior/ciphertext-hotspot/ciphertext-rarity/ciphertext-repeat-distance/ciphertext-period-match/ciphertext-adjacent-contrast/ciphertext-transition/ciphertext-skip-transition/ciphertext-turning-point/ciphertext-window-balance/ciphertext-residue-balance independent observation evaluations, separating valid source-backed evidence, diagnostic archives, invalid archives, no-evidence states, and per-archive score direction. |
 | `non-anchor-positions` | Non-scoring one-based position universe for future source-backed observations, with excluded public anchor ranges and source IDs. |
 | `source-observation-status` | Pre-score source readiness table for eligible sources, showing valid source-review coverage, local archive state, scored-position marker state, prior source-backed archive use, archived evidence support status and null means for used sources, and the allowed next action before observation scoring. |
 | `source-frontier` | Classifies every registered source as scored-observation ready, currently non-scorable, context-only, or quarantined-claim, including prior source-backed archive counts, all-negative archive status, support statuses for already-used sources, machine-readable frontier blockers, required next-evidence criteria, disallowed next actions, and a concise Markdown `--summary` mode, so future work can pick evidence sources without crossing source-use boundaries or reusing negative evidence blindly. |
@@ -516,7 +520,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `candidate-sequences` | Pre-registered Berlin/compass/Egypt/Berlin Wall candidate material. |
 | `routes` | Small named route/permutation screens with fixed baselines. |
 | `findings` | Findings ledger with evidence inputs, transformations, baselines, interpretation, and next tests. |
-| `release-check` | Local release preflight in Markdown or JSON confirming no hosted automation, required docs, generated report presence, candidate CSV/registry alignment, preregistration and prediction-artifact validity, preregistration README inventory freshness, independent-lane readiness, non-scorable observation template status, committed source-backed observation-file validity, evidence-summary coverage with archived period/spacing/mirror/grid/Tableau-HILL/ciphertext-prior/ciphertext-hotspot/ciphertext-rarity/ciphertext-repeat-distance/ciphertext-period-match/ciphertext-adjacent-contrast/ciphertext-transition/ciphertext-skip-transition/ciphertext-turning-point/ciphertext-residue-balance command references and negative result metrics, committed source-review validity, source-readiness command documentation, findings source-input integrity, source-packet/source-registry field and latest-access-date alignment, local source-archive metadata/boundary structure including non-scorable/scored-position consistency, source-archive coverage for committed observation positions, stopped-lane documentation coverage, progress-log freshness, and plaintext-leakage sentinel absence across release-facing files and artifacts. |
+| `release-check` | Local release preflight in Markdown or JSON confirming no hosted automation, required docs, generated report presence, candidate CSV/registry alignment, preregistration and prediction-artifact validity, preregistration README inventory freshness, independent-lane readiness, non-scorable observation template status, committed source-backed observation-file validity, evidence-summary coverage with archived period/spacing/mirror/grid/Tableau-HILL/ciphertext-prior/ciphertext-hotspot/ciphertext-rarity/ciphertext-repeat-distance/ciphertext-period-match/ciphertext-adjacent-contrast/ciphertext-transition/ciphertext-skip-transition/ciphertext-turning-point/ciphertext-window-balance/ciphertext-residue-balance command references and negative result metrics, committed source-review validity, source-readiness command documentation, findings source-input integrity, source-packet/source-registry field and latest-access-date alignment, local source-archive metadata/boundary structure including non-scorable/scored-position consistency, source-archive coverage for committed observation positions, stopped-lane documentation coverage, progress-log freshness, and plaintext-leakage sentinel absence across release-facing files and artifacts. |
 | `hypotheses` | Ranked source-grounded hypothesis register in Markdown or JSON. |
 | `sources` | Source provenance records in Markdown or JSON for source-policy audits. |
 | `verify-plaintext-claim` | Local verifier for quarantined external plaintext claims; checks length, public-anchor compatibility, and aggregate shift diagnostics without printing or storing the claim text. |

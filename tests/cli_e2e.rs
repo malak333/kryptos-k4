@@ -1585,7 +1585,7 @@ fn source_frontier_classifies_all_registered_sources() {
         .stdout(predicate::str::contains(
             "sources with scored-position markers: 1",
         ))
-        .stdout(predicate::str::contains("valid source-backed archives: 23"))
+        .stdout(predicate::str::contains("valid source-backed archives: 24"))
         .stdout(predicate::str::contains(
             "all source-backed archives negative: true",
         ))
@@ -1600,7 +1600,7 @@ fn source_frontier_classifies_all_registered_sources() {
         .stdout(predicate::str::contains("Disallowed Next Actions"))
         .stdout(predicate::str::contains("Archived Evaluations"))
         .stdout(predicate::str::contains(
-            "Already used in 23 source-backed evaluation archives",
+            "Already used in 24 source-backed evaluation archives",
         ))
         .stdout(predicate::str::contains("context-only"))
         .stdout(predicate::str::contains("quarantined-claim"))
@@ -1622,7 +1622,7 @@ fn source_frontier_classifies_all_registered_sources() {
     assert_eq!(json["source_count"], 18);
     assert_eq!(json["scored_observation_eligible_count"], 2);
     assert_eq!(json["scored_position_marker_count"], 1);
-    assert_eq!(json["valid_source_backed_archive_count"], 23);
+    assert_eq!(json["valid_source_backed_archive_count"], 24);
     assert_eq!(json["all_source_backed_archives_negative"], true);
     assert_eq!(json["quarantined_claim_count"], 1);
     assert_eq!(json["promoted_candidate"], false);
@@ -1683,7 +1683,7 @@ fn source_frontier_classifies_all_registered_sources() {
         .unwrap();
     assert_eq!(cia_sculpture["frontier_class"], "scored-observation-ready");
     assert_eq!(cia_sculpture["current_archive_has_scored_positions"], true);
-    assert_eq!(cia_sculpture["source_backed_archive_count"], 23);
+    assert_eq!(cia_sculpture["source_backed_archive_count"], 24);
     assert!(
         cia_sculpture["allowed_next_action"]
             .as_str()
@@ -1805,7 +1805,7 @@ fn source_frontier_summary_prints_compact_next_action() {
             "eligible but currently non-scorable sources: cia-artifact",
         ))
         .stdout(predicate::str::contains(
-            "already-scored source-backed archives: cia-sculpture (23 archived evaluations)",
+            "already-scored source-backed archives: cia-sculpture (24 archived evaluations)",
         ))
         .stdout(predicate::str::contains(
             "do not rerun negative row-boundary evidence as new evidence",
@@ -3646,13 +3646,13 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout(predicate::str::contains("Independent Lane Status"))
         .stdout(predicate::str::contains("lanes: 67"))
         .stdout(predicate::str::contains(
-            "ready for source-backed observations: 66",
+            "ready for source-backed observations: 67",
         ))
         .stdout(predicate::str::contains("invalid lanes: 0"))
         .stdout(predicate::str::contains("prediction artifacts: 67"))
         .stdout(predicate::str::contains("unique prediction artifacts: 25"))
         .stdout(predicate::str::contains(
-            "unique ready prediction artifacts: 24",
+            "unique ready prediction artifacts: 25",
         ))
         .stdout(predicate::str::contains("duplicate artifact groups: 1"))
         .stdout(predicate::str::contains("duplicate artifact lanes: 43"))
@@ -3691,7 +3691,7 @@ fn independent_lane_status_summarizes_ready_lanes() {
             "| ciphertext-turning-point-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
         ))
         .stdout(predicate::str::contains(
-            "| ciphertext-window-balance-position-prior | 1 | 0 | 1 | 1 | 0 | 0 |",
+            "| ciphertext-window-balance-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
         ))
         .stdout(predicate::str::contains(
             "| position-grid-layout-prediction | 3 | 3 | 3 | 3 | 3 | 0 |",
@@ -3714,7 +3714,9 @@ fn independent_lane_status_summarizes_ready_lanes() {
         ))
         .stdout(predicate::str::contains("non-anchor-position-period-v45"))
         .stdout(predicate::str::contains("ciphertext-window-balance-v1"))
-        .stdout(predicate::str::contains("evaluator-pending"))
+        .stdout(predicate::str::contains(
+            "ready-for-source-backed-observations",
+        ))
         .stdout(predicate::str::contains("tableau-hill-v1"))
         .stdout(predicate::str::contains(
             "ready-for-source-backed-observations",
@@ -3731,11 +3733,11 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
     assert_eq!(json["lane_count"], 67);
-    assert_eq!(json["ready_for_source_backed_observations"], 66);
+    assert_eq!(json["ready_for_source_backed_observations"], 67);
     assert_eq!(json["invalid_lanes"], 0);
     assert_eq!(json["prediction_artifacts"], 67);
     assert_eq!(json["unique_prediction_artifacts"], 25);
-    assert_eq!(json["unique_ready_prediction_artifacts"], 24);
+    assert_eq!(json["unique_ready_prediction_artifacts"], 25);
     assert_eq!(json["duplicate_prediction_artifact_lane_count"], 43);
     assert_eq!(json["duplicate_prediction_artifact_extra_lane_count"], 42);
     let families = json["family_summaries"].as_array().unwrap();
@@ -3802,10 +3804,10 @@ fn independent_lane_status_summarizes_ready_lanes() {
     assert!(families.iter().any(|family| {
         family["hypothesis_family"] == "ciphertext-window-balance-position-prior"
             && family["lanes"] == 1
-            && family["ready_for_source_backed_observations"] == 0
+            && family["ready_for_source_backed_observations"] == 1
             && family["prediction_artifacts"] == 1
             && family["unique_prediction_artifacts"] == 1
-            && family["unique_ready_prediction_artifacts"] == 0
+            && family["unique_ready_prediction_artifacts"] == 1
             && family["duplicate_artifact_groups"] == 0
     }));
     assert!(families.iter().any(|family| {
@@ -3857,8 +3859,7 @@ fn independent_lane_status_summarizes_ready_lanes() {
             && lane["promoted_candidate"] == false
     }));
     assert!(json["lanes"].as_array().unwrap().iter().all(|lane| {
-        (lane["ready_for_source_backed_observations"] == true
-            || lane["status"] == "evaluator-pending")
+        lane["ready_for_source_backed_observations"] == true
             && lane["prediction_artifact_valid"] == true
             && lane["promoted_candidate"] == false
     }));
@@ -4230,7 +4231,7 @@ fn next_evidence_gate_prints_operational_checklist() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Next Evidence Gate"))
-        .stdout(predicate::str::contains("total ready lanes: 66"))
+        .stdout(predicate::str::contains("total ready lanes: 67"))
         .stdout(predicate::str::contains(
             "ciphertext-adjacent-contrast-position-prior",
         ))
@@ -4265,7 +4266,7 @@ fn next_evidence_gate_prints_operational_checklist() {
         .stdout(predicate::str::contains("family ready lanes: 47"))
         .stdout(predicate::str::contains("family unique ready artifacts: 5"))
         .stdout(predicate::str::contains(
-            "unique ready prediction artifacts: 24",
+            "unique ready prediction artifacts: 25",
         ))
         .stdout(predicate::str::contains(
             "duplicate prediction artifact groups: 1",
@@ -4279,8 +4280,7 @@ fn next_evidence_gate_prints_operational_checklist() {
         .stdout(predicate::str::contains("non-anchor-position-period-v38"))
         .stdout(predicate::str::contains("non-anchor-position-period-v39"))
         .stdout(predicate::str::contains("non-anchor-position-period-v45"))
-        .stdout(predicate::str::contains("evaluator-pending lanes: 1"))
-        .stdout(predicate::str::contains("ciphertext-window-balance-v1"))
+        .stdout(predicate::str::contains("evaluator-pending lanes: 0"))
         .stdout(predicate::str::contains("tableau-hill-prediction"))
         .stdout(predicate::str::contains("cia-artifact, cia-sculpture"))
         .stdout(predicate::str::contains(
@@ -4402,9 +4402,9 @@ fn next_evidence_gate_prints_operational_checklist() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["ready_lanes"], 66);
+    assert_eq!(json["ready_lanes"], 67);
     assert_eq!(json["invalid_lanes"], 0);
-    assert_eq!(json["unique_ready_prediction_artifacts"], 24);
+    assert_eq!(json["unique_ready_prediction_artifacts"], 25);
     assert_eq!(json["duplicate_prediction_artifact_group_count"], 1);
     assert_eq!(
         json["duplicate_prediction_artifact_groups"][0]["lane_ids"]
@@ -4448,11 +4448,12 @@ fn next_evidence_gate_prints_operational_checklist() {
             .iter()
             .any(|lane| lane == "non-anchor-position-period-v45")
     );
-    assert_eq!(json["evaluator_pending_lane_count"], 1);
-    assert_eq!(json["evaluator_pending_lanes"].as_array().unwrap().len(), 1);
-    assert_eq!(
-        json["evaluator_pending_lanes"][0]["id"],
-        "ciphertext-window-balance-v1"
+    assert_eq!(json["evaluator_pending_lane_count"], 0);
+    assert!(
+        json["evaluator_pending_lanes"]
+            .as_array()
+            .unwrap()
+            .is_empty()
     );
     assert_eq!(
         json["quarantined_claim_source_ids"][0],
@@ -4737,7 +4738,7 @@ fn next_evidence_gate_prints_operational_checklist() {
                 && source["locally_archived"] == true)
     );
     let gates = json["gates"].as_array().unwrap();
-    assert_eq!(gates.len(), 15);
+    assert_eq!(gates.len(), 16);
     assert!(gates.iter().any(|gate| {
         gate["hypothesis_family"] == "ciphertext-adjacent-contrast-position-prior"
             && gate["representative_preregistration"]
@@ -4947,6 +4948,27 @@ fn next_evidence_gate_prints_operational_checklist() {
                 .as_str()
                 .unwrap()
                 .contains("results/ciphertext-turning-point-observations")
+    }));
+    assert!(gates.iter().any(|gate| {
+        gate["hypothesis_family"] == "ciphertext-window-balance-position-prior"
+            && gate["representative_preregistration"]
+                == "experiments/preregistrations/ciphertext-window-balance-v1.json"
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("validate-ciphertext-window-balance-observations")
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("experiments/predictions/ciphertext-window-balance-v1.json")
+            && gate["evaluation_command"]
+                .as_str()
+                .unwrap()
+                .contains("evaluate-ciphertext-window-balance")
+            && gate["archive_validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("results/ciphertext-window-balance-observations")
     }));
     assert!(gates.iter().any(|gate| {
         gate["hypothesis_family"] == "position-grid-layout-prediction"
@@ -5174,6 +5196,10 @@ fn independent_evidence_status_reports_archive_scores() {
         .iter()
         .find(|archive| archive["artifact_kind"] == "ciphertext-turning-point")
         .expect("ciphertext-turning-point evidence archive should be present");
+    let ciphertext_window_balance = archives
+        .iter()
+        .find(|archive| archive["artifact_kind"] == "ciphertext-window-balance")
+        .expect("ciphertext-window-balance evidence archive should be present");
     assert_eq!(period["best_model"], "period 2 residue 0");
     assert_eq!(period["observed_hits"], "4/6 positions");
     assert_eq!(period["observation_source_ids"][0], "cia-sculpture");
@@ -5258,6 +5284,15 @@ fn independent_evidence_status_reports_archive_scores() {
     assert_eq!(ciphertext_turning_point["observed_hits"], "2/6 positions");
     assert_eq!(
         ciphertext_turning_point["support_status"],
+        "negative/non-significant"
+    );
+    assert_eq!(
+        ciphertext_window_balance["best_model"],
+        "ciphertext window-balance positions"
+    );
+    assert_eq!(ciphertext_window_balance["observed_hits"], "0/6 positions");
+    assert_eq!(
+        ciphertext_window_balance["support_status"],
         "negative/non-significant"
     );
     assert_eq!(json["promoted_candidate"], false);

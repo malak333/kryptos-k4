@@ -85,7 +85,7 @@ const PLAINTEXT_LEAKAGE_MARKERS: [&str; 4] = [
 
 const FINDINGS_COMMAND_SOURCE_INPUTS: [&str; 1] = ["release-check"];
 
-const STOPPED_LANES_REQUIRED_MARKERS: [&str; 22] = [
+const STOPPED_LANES_REQUIRED_MARKERS: [&str; 23] = [
     "# Stopped K4 Experiment Lanes",
     "It is not a solution claim.",
     "## Public Anchor-Derived Key-Material Lanes",
@@ -107,6 +107,7 @@ const STOPPED_LANES_REQUIRED_MARKERS: [&str; 22] = [
     "ciphertext-adjacent-contrast `p=0.5259`",
     "ciphertext-skip-transition `p=1.0000`",
     "ciphertext-turning-point `p=0.5247`",
+    "ciphertext-window-balance `p=1.0000`",
     "ciphertext-residue-balance",
 ];
 
@@ -672,6 +673,7 @@ fn check_evidence_summaries_present(repo_root: &Path) -> ReleaseCheck {
                     "evaluate-ciphertext-transition".to_string(),
                     "evaluate-ciphertext-skip-transition".to_string(),
                     "evaluate-ciphertext-turning-point".to_string(),
+                    "evaluate-ciphertext-window-balance".to_string(),
                     "evaluate-ciphertext-residue-balance".to_string(),
                     "validate-evaluation-archive".to_string(),
                     format!("results/period-observations/{observation_id}"),
@@ -695,6 +697,7 @@ fn check_evidence_summaries_present(repo_root: &Path) -> ReleaseCheck {
                     format!("results/ciphertext-transition-observations/{observation_id}"),
                     format!("results/ciphertext-skip-transition-observations/{observation_id}"),
                     format!("results/ciphertext-turning-point-observations/{observation_id}"),
+                    format!("results/ciphertext-window-balance-observations/{observation_id}"),
                     format!("results/ciphertext-residue-balance-observations/{observation_id}"),
                     "Period".to_string(),
                     "Spacing".to_string(),
@@ -711,6 +714,7 @@ fn check_evidence_summaries_present(repo_root: &Path) -> ReleaseCheck {
                     "Ciphertext transition".to_string(),
                     "Ciphertext skip-transition".to_string(),
                     "Ciphertext turning-point".to_string(),
+                    "Ciphertext window-balance".to_string(),
                     "Ciphertext residue-balance".to_string(),
                     "Observed Hits".to_string(),
                     "Empirical P".to_string(),
@@ -734,7 +738,7 @@ fn check_evidence_summaries_present(repo_root: &Path) -> ReleaseCheck {
         passed: mismatches.is_empty(),
         detail: if mismatches.is_empty() {
             format!(
-                "Committed source-backed observations have evidence summaries with archive command references and negative period/spacing/mirror/grid-row/grid-column/grid-compass-axis/tableau-HILL/ciphertext-prior/ciphertext-hotspot/ciphertext-rarity/ciphertext-repeat-distance/ciphertext-adjacent-contrast/ciphertext-transition/ciphertext-skip-transition/ciphertext-turning-point/ciphertext-residue-balance result metrics. path={}; checked={}",
+                "Committed source-backed observations have evidence summaries with archive command references and negative period/spacing/mirror/grid-row/grid-column/grid-compass-axis/tableau-HILL/ciphertext-prior/ciphertext-hotspot/ciphertext-rarity/ciphertext-repeat-distance/ciphertext-adjacent-contrast/ciphertext-transition/ciphertext-skip-transition/ciphertext-turning-point/ciphertext-window-balance/ciphertext-residue-balance result metrics. path={}; checked={}",
                 repo_root.join("experiments/evidence-summaries").display(),
                 observations.len()
             )
@@ -2556,7 +2560,7 @@ mod tests {
         fs::write(
             temp.path()
                 .join("experiments/evidence-summaries/valid-observation-v1.md"),
-            "This is not a claimed solution.\n\nObservation: experiments/position-observations/valid-observation-v1.json\n\nPromoted: false\n\nevaluate-period-prediction\n\nevaluate-spacing-prediction\n\nevaluate-mirror-prediction\n\nevaluate-grid-prediction\n\nevaluate-tableau-hill-prediction\n\nevaluate-ciphertext-prior\n\nevaluate-ciphertext-hotspot\n\nevaluate-ciphertext-rarity\n\nevaluate-ciphertext-repeat-distance\n\nevaluate-ciphertext-adjacent-contrast\n\nevaluate-ciphertext-transition\n\nevaluate-ciphertext-skip-transition\n\nevaluate-ciphertext-turning-point\n\nevaluate-ciphertext-residue-balance\n\nvalidate-evaluation-archive\n\nresults/period-observations/valid-observation-v1\n\nresults/spacing-observations/valid-observation-v1\n\nresults/mirror-observations/valid-observation-v1\n\nresults/grid-observations/valid-observation-v1\n\nresults/grid-observations/valid-observation-column-v1\n\nresults/grid-observations/valid-observation-compass-axis-v1\n\nresults/tableau-hill-observations/valid-observation-v1\n\nresults/ciphertext-prior-observations/valid-observation-v1\n\nresults/ciphertext-hotspot-observations/valid-observation-v1\n\nresults/ciphertext-rarity-observations/valid-observation-v1\n\nresults/ciphertext-repeat-distance-observations/valid-observation-v1\n\nresults/ciphertext-adjacent-contrast-observations/valid-observation-v1\n\nresults/ciphertext-transition-observations/valid-observation-v1\n\nresults/ciphertext-skip-transition-observations/valid-observation-v1\n\nresults/ciphertext-turning-point-observations/valid-observation-v1\n\nresults/ciphertext-residue-balance-observations/valid-observation-v1\n\n| Family | Observed Hits | Empirical P |\n| --- | --- | --- |\n| Period | 1/1 | 1.0000 |\n| Spacing | 0/0 pairs | 1.0000 |\n| Mirror | 0/0 pairs | 1.0000 |\n| Grid row | 0/0 positions | 1.0000 |\n| Grid column | 0/0 positions | 1.0000 |\n| Grid compass-axis | 0/0 positions | 1.0000 |\n| Tableau/HILL | 0/0 positions | 1.0000 |\n| Ciphertext prior | 0/0 positions | 1.0000 |\n| Ciphertext hotspot | 0/0 positions | 1.0000 |\n| Ciphertext rarity | 0/0 positions | 1.0000 |\n| Ciphertext repeat-distance | 0/0 positions | 1.0000 |\n| Ciphertext adjacent-contrast | 0/0 positions | 1.0000 |\n| Ciphertext transition | 0/0 positions | 1.0000 |\n| Ciphertext skip-transition | 0/0 positions | 1.0000 |\n| Ciphertext turning-point | 0/0 positions | 1.0000 |\n| Ciphertext residue-balance | 0/0 positions | 1.0000 |\n\nInterpretation: negative source-backed evidence for this fixture.\n",
+            "This is not a claimed solution.\n\nObservation: experiments/position-observations/valid-observation-v1.json\n\nPromoted: false\n\nevaluate-period-prediction\n\nevaluate-spacing-prediction\n\nevaluate-mirror-prediction\n\nevaluate-grid-prediction\n\nevaluate-tableau-hill-prediction\n\nevaluate-ciphertext-prior\n\nevaluate-ciphertext-hotspot\n\nevaluate-ciphertext-rarity\n\nevaluate-ciphertext-repeat-distance\n\nevaluate-ciphertext-adjacent-contrast\n\nevaluate-ciphertext-transition\n\nevaluate-ciphertext-skip-transition\n\nevaluate-ciphertext-turning-point\n\nevaluate-ciphertext-window-balance\n\nevaluate-ciphertext-residue-balance\n\nvalidate-evaluation-archive\n\nresults/period-observations/valid-observation-v1\n\nresults/spacing-observations/valid-observation-v1\n\nresults/mirror-observations/valid-observation-v1\n\nresults/grid-observations/valid-observation-v1\n\nresults/grid-observations/valid-observation-column-v1\n\nresults/grid-observations/valid-observation-compass-axis-v1\n\nresults/tableau-hill-observations/valid-observation-v1\n\nresults/ciphertext-prior-observations/valid-observation-v1\n\nresults/ciphertext-hotspot-observations/valid-observation-v1\n\nresults/ciphertext-rarity-observations/valid-observation-v1\n\nresults/ciphertext-repeat-distance-observations/valid-observation-v1\n\nresults/ciphertext-adjacent-contrast-observations/valid-observation-v1\n\nresults/ciphertext-transition-observations/valid-observation-v1\n\nresults/ciphertext-skip-transition-observations/valid-observation-v1\n\nresults/ciphertext-turning-point-observations/valid-observation-v1\n\nresults/ciphertext-window-balance-observations/valid-observation-v1\n\nresults/ciphertext-residue-balance-observations/valid-observation-v1\n\n| Family | Observed Hits | Empirical P |\n| --- | --- | --- |\n| Period | 1/1 | 1.0000 |\n| Spacing | 0/0 pairs | 1.0000 |\n| Mirror | 0/0 pairs | 1.0000 |\n| Grid row | 0/0 positions | 1.0000 |\n| Grid column | 0/0 positions | 1.0000 |\n| Grid compass-axis | 0/0 positions | 1.0000 |\n| Tableau/HILL | 0/0 positions | 1.0000 |\n| Ciphertext prior | 0/0 positions | 1.0000 |\n| Ciphertext hotspot | 0/0 positions | 1.0000 |\n| Ciphertext rarity | 0/0 positions | 1.0000 |\n| Ciphertext repeat-distance | 0/0 positions | 1.0000 |\n| Ciphertext adjacent-contrast | 0/0 positions | 1.0000 |\n| Ciphertext transition | 0/0 positions | 1.0000 |\n| Ciphertext skip-transition | 0/0 positions | 1.0000 |\n| Ciphertext turning-point | 0/0 positions | 1.0000 |\n| Ciphertext window-balance | 0/0 positions | 1.0000 |\n| Ciphertext residue-balance | 0/0 positions | 1.0000 |\n\nInterpretation: negative source-backed evidence for this fixture.\n",
         )
         .unwrap();
         fs::write(
@@ -3034,7 +3038,7 @@ ciphertext-repeat-distance, ciphertext-adjacent-contrast, ciphertext-skip-transi
 and ciphertext-residue-balance prediction targets.
 
 grid column `p=0.1303`, grid compass-axis `p=0.9166`, period-14 `p=1.0000`, ciphertext-repeat-distance `p=0.5273`, ciphertext-adjacent-contrast `p=0.5259`, ciphertext-skip-transition `p=1.0000`,
-ciphertext-turning-point `p=0.5247`, ciphertext-residue-balance `p=0.4803`, and high-moduli ciphertext-residue-balance `p=0.6416`.
+ciphertext-turning-point `p=0.5247`, ciphertext-window-balance `p=1.0000`, ciphertext-residue-balance `p=0.4803`, and high-moduli ciphertext-residue-balance `p=0.6416`.
 
 Latest evidence is summarized in
 `experiments/evidence-summaries/cia-k4-row-boundaries-v1.md`.

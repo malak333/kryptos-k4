@@ -110,7 +110,7 @@ the local archive boundary before scoring.
 Status: stopped for the committed period, period-5, period-14, spacing, mirror, grid row, grid column, grid compass-axis, Tableau/HILL,
 ciphertext-prior, ciphertext-hotspot, ciphertext-rarity,
 ciphertext-repeat-distance, ciphertext-period-match, ciphertext-adjacent-contrast, ciphertext-transition, ciphertext-skip-transition,
-ciphertext-turning-point, ciphertext-residue-balance, high-moduli
+ciphertext-turning-point, ciphertext-window-balance, ciphertext-residue-balance, high-moduli
 ciphertext-residue-balance, and very-high-moduli ciphertext-residue-balance
 prediction targets.
 
@@ -122,6 +122,7 @@ grid compass-axis `p=0.9166`,
 ciphertext-hotspot `p=1.0000`, ciphertext-rarity `p=0.5282`,
 ciphertext-repeat-distance `p=0.5273`, ciphertext-period-match `p=0.9733`, ciphertext-adjacent-contrast `p=0.5259`, ciphertext-transition `p=1.0000`,
 ciphertext-skip-transition `p=1.0000`, ciphertext-turning-point `p=0.5247`,
+ciphertext-window-balance `p=1.0000`,
 ciphertext-residue-balance `p=0.4803`, high-moduli
 ciphertext-residue-balance `p=0.6416`, and very-high-moduli
 ciphertext-residue-balance `p=0.3125`.

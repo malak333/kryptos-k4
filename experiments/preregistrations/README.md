@@ -220,9 +220,9 @@ Current independent lanes:
   `experiments/predictions/ciphertext-window-balance-v1.json`. The artifact
   fixes the 20 non-anchor positions with strongest predeclared centered-window
   balance across window widths `[3, 5, 7]`, using only K4 ciphertext and public
-  anchors as an exclusion mask. It currently remains evaluator-pending; add a
-  family-specific observation validator/evaluator before scoring source-backed
-  observations against this target.
+  anchors as an exclusion mask. Score it only through future source-backed
+  non-anchor observations and `validate-ciphertext-window-balance-observations`
+  then `evaluate-ciphertext-window-balance` with seeded controls.
 - `non-anchor-position-period-v1.json` with committed artifact
   `experiments/predictions/non-anchor-position-period-v1.json`
 - `non-anchor-position-period-followup-v1.json` for future source-backed

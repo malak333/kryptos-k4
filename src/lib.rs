@@ -42,9 +42,10 @@ pub use ciphertext_profile::{
     CiphertextSkipTransitionPosition, CiphertextSkipTransitionPrior, CiphertextStructurePrior,
     CiphertextTransitionEvaluation, CiphertextTransitionPosition, CiphertextTransitionPrior,
     CiphertextTurningPointEvaluation, CiphertextTurningPointPosition, CiphertextTurningPointPrior,
-    CiphertextWindowBalancePosition, CiphertextWindowBalancePrior, KasiskiFactorBaseline,
-    KasiskiFactorProfile, KasiskiGapSupport, LetterFrequency, PeriodProfile, RepeatedNgram,
-    ShiftedMatch, build_ciphertext_adjacent_contrast_prior, build_ciphertext_hotspot_prior,
+    CiphertextWindowBalanceEvaluation, CiphertextWindowBalancePosition,
+    CiphertextWindowBalancePrior, KasiskiFactorBaseline, KasiskiFactorProfile, KasiskiGapSupport,
+    LetterFrequency, PeriodProfile, RepeatedNgram, ShiftedMatch,
+    build_ciphertext_adjacent_contrast_prior, build_ciphertext_hotspot_prior,
     build_ciphertext_period_match_prior, build_ciphertext_rarity_prior,
     build_ciphertext_repeat_distance_prior, build_ciphertext_residue_balance_prior,
     build_ciphertext_skip_transition_prior, build_ciphertext_structure_prior,
@@ -61,7 +62,7 @@ pub use ciphertext_profile::{
     evaluate_ciphertext_repeat_distance_positions, evaluate_ciphertext_residue_balance_positions,
     evaluate_ciphertext_skip_transition_positions, evaluate_ciphertext_structure_prior_positions,
     evaluate_ciphertext_transition_positions, evaluate_ciphertext_turning_point_positions,
-    profile_k4_ciphertext,
+    evaluate_ciphertext_window_balance_positions, profile_k4_ciphertext,
 };
 pub use claim::{
     ClaimReconciliationRowCheck, ClaimReconciliationVerification, PlaintextClaimAnchorCheck,

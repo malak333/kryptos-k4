@@ -86,6 +86,10 @@ This is not a claimed solution.
   `experiments/preregistrations/ciphertext-turning-point-v1.json`
 - Ciphertext turning-point artifact:
   `experiments/predictions/ciphertext-turning-point-v1.json`
+- Ciphertext window-balance preregistration:
+  `experiments/preregistrations/ciphertext-window-balance-v1.json`
+- Ciphertext window-balance artifact:
+  `experiments/predictions/ciphertext-window-balance-v1.json`
 - Ciphertext residue-balance preregistration:
   `experiments/preregistrations/ciphertext-residue-balance-prior-v1.json`
 - Ciphertext residue-balance artifact:
@@ -225,6 +229,12 @@ cargo run --locked -- validate-ciphertext-skip-transition-observations \
 cargo run --locked -- validate-ciphertext-turning-point-observations \
   --artifact experiments/predictions/ciphertext-turning-point-v1.json \
   --preregistration experiments/preregistrations/ciphertext-turning-point-v1.json \
+  --input experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --format json
+
+cargo run --locked -- validate-ciphertext-window-balance-observations \
+  --artifact experiments/predictions/ciphertext-window-balance-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-window-balance-v1.json \
   --input experiments/position-observations/cia-k4-row-boundaries-v1.json \
   --format json
 
@@ -420,6 +430,15 @@ cargo run --locked -- evaluate-ciphertext-turning-point \
   --output-dir results/ciphertext-turning-point-observations/cia-k4-row-boundaries-v1 \
   --format json
 
+cargo run --locked -- evaluate-ciphertext-window-balance \
+  --artifact experiments/predictions/ciphertext-window-balance-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-window-balance-v1.json \
+  --positions-file experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/ciphertext-window-balance-observations/cia-k4-row-boundaries-v1 \
+  --format json
+
 cargo run --locked -- evaluate-ciphertext-residue-balance \
   --artifact experiments/predictions/ciphertext-residue-balance-prior-v1.json \
   --preregistration experiments/preregistrations/ciphertext-residue-balance-prior-v1.json \
@@ -524,6 +543,10 @@ cargo run --locked -- validate-evaluation-archive \
   --format json
 
 cargo run --locked -- validate-evaluation-archive \
+  --input results/ciphertext-window-balance-observations/cia-k4-row-boundaries-v1 \
+  --format json
+
+cargo run --locked -- validate-evaluation-archive \
   --input results/ciphertext-residue-balance-observations/cia-k4-row-boundaries-v1 \
   --format json
 
@@ -536,7 +559,7 @@ cargo run --locked -- validate-evaluation-archive \
   --format json
 ```
 
-All twenty-one observation validators accepted the observation file, and all twenty-one
+All twenty-two observation validators accepted the observation file, and all twenty-two
 archived evaluation directories passed `validate-evaluation-archive` locally.
 
 ## Results
@@ -562,6 +585,7 @@ archived evaluation directories passed `validate-evaluation-archive` locally.
 | Ciphertext transition | adjacent transition-pressure positions | 0/6 | 1.63 | 1.05 | 1.0000 | false |
 | Ciphertext skip-transition | skip-transition positions | 0/6 | 1.64 | 1.05 | 1.0000 | false |
 | Ciphertext turning-point | turning-point positions | 2/6 | 1.64 | 1.05 | 0.5247 | false |
+| Ciphertext window-balance | ciphertext window-balance positions | 0/6 | 1.65 | 1.06 | 1.0000 | false |
 | Ciphertext residue-balance | ciphertext residue-balance modulus 2 residue 0 | 4/6 | 3.55 | 0.86 | 0.4803 | false |
 | Ciphertext high-moduli residue-balance | ciphertext residue-balance modulus 8 residue 3 | 2/6 | 1.76 | 0.67 | 0.6416 | false |
 | Ciphertext very-high-moduli residue-balance | ciphertext residue-balance modulus 16 residue 0 | 2/6 | 1.28 | 0.62 | 0.3125 | false |
@@ -579,7 +603,7 @@ committed period, period-3, period-5, period-14, spacing, mirror, grid-row, grid
 ciphertext-hotspot, ciphertext-rarity, ciphertext-repeat-distance,
 ciphertext-adjacent-contrast,
 ciphertext-transition,
-ciphertext-skip-transition, ciphertext-turning-point, or
+ciphertext-skip-transition, ciphertext-turning-point, ciphertext-window-balance, or
 ciphertext-residue-balance targets, including the high-moduli and
 very-high-moduli residue-balance targets, beyond the
 seeded null controls. This is negative evidence for this observation lane, not
