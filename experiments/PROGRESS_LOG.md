@@ -3,6 +3,24 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: Scientific American Archive-Discovery Context Registered
+
+Added `scientific-american-2026-kryptos-cracked`, a quote-free
+archive-context source for Scientific American's October 2025 Kryptos archive
+discovery reporting.
+
+- source record: `scientific-american-2026-kryptos-cracked`
+- local archive:
+  `sources/archives/scientific-american-2026-kryptos-cracked-2026-05-31.md`
+- allowed use: `archive-context-only`
+- boundary: no public plaintext, key material, route, candidate stream, or
+  scoreable non-anchor K4 observation positions are copied or promoted
+
+This expands the registered source registry from 21 to 22 sources while keeping
+the evidence frontier unchanged: 27 valid source-backed archives, all
+negative/non-significant, and no promoted candidate. The source is useful for
+claim-boundary and archive-discovery context only.
+
 ## 2026-05-31: W-Delimiter Source-Context Diagnostic Stopped
 
 Checked the registered KryptosBot findings page's W-delimiter context against

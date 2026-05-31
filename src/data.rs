@@ -196,6 +196,19 @@ pub fn sources() -> Vec<Source> {
             use_note: "2025 public clue context, Berlin World Clock clarification, and K5 parallel-position context.",
         },
         Source {
+            id: "scientific-american-2026-kryptos-cracked",
+            label: "Scientific American 2026 Kryptos archive-discovery report",
+            url: "https://www.scientificamerican.com/article/how-the-cias-kryptos-sculpture-gave-up-its-final-secret/",
+            archive_url: Some(
+                "sources/archives/scientific-american-2026-kryptos-cracked-2026-05-31.md",
+            ),
+            accessed_at: "2026-05-31",
+            publication_date: Some("2025-10-22"),
+            source_type: "major-reporting",
+            allowed_use: "archive-context-only",
+            use_note: "Archive-discovery and claim-boundary reporting; no public plaintext, key material, route, or scored K4 observations.",
+        },
+        Source {
             id: "ap-2025-auction",
             label: "Associated Press 2025 auction report",
             url: "https://www.ap.org/news-highlights/spotlights/2025/kryptos-final-code-remains-unsolved-the-cia-sculptures-creator-is-auctioning-the-solution/",
