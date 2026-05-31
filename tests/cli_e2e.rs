@@ -1604,7 +1604,7 @@ fn source_frontier_classifies_all_registered_sources() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Source Frontier"))
-        .stdout(predicate::str::contains("sources: 22"))
+        .stdout(predicate::str::contains("sources: 23"))
         .stdout(predicate::str::contains(
             "scored-observation eligible sources: 2",
         ))
@@ -1645,12 +1645,12 @@ fn source_frontier_classifies_all_registered_sources() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["source_count"], 22);
+    assert_eq!(json["source_count"], 23);
     assert_eq!(json["scored_observation_eligible_count"], 2);
     assert_eq!(json["scored_position_marker_count"], 1);
     assert_eq!(json["valid_source_backed_archive_count"], 27);
     assert_eq!(json["all_source_backed_archives_negative"], true);
-    assert_eq!(json["quarantined_claim_count"], 1);
+    assert_eq!(json["quarantined_claim_count"], 2);
     assert_eq!(json["promoted_candidate"], false);
     assert!(
         json["frontier_blocking_conditions"]

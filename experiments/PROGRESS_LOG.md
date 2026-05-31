@@ -3,6 +3,34 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: SSRN Running-Key Claim Quarantined
+
+Added `ssrn-bonifacino-running-key-2025`, a quote-free local source snapshot
+for the SSRN running-key candidate paper by Ryan Bonifacino.
+
+- source record: `ssrn-bonifacino-running-key-2025`
+- local archive:
+  `sources/archives/ssrn-bonifacino-running-key-2025-2026-05-31.md`
+- allowed use: `unverified-solution-claim`
+- boundary: no claimed plaintext, published key stream, route, or
+  plaintext-bearing table is copied or promoted
+
+Validation:
+
+```bash
+cargo run --locked -- validate-source-archive \
+  --source-id ssrn-bonifacino-running-key-2025 \
+  --input sources/archives/ssrn-bonifacino-running-key-2025-2026-05-31.md \
+  --format json
+cargo run --locked -- source-frontier --format json
+```
+
+Result: the archive validates and `source-frontier` classifies the paper as a
+second quarantined claim source. The evidence frontier remains unchanged for
+scoring: `23` registered sources, `2` scored-observation eligible sources, `1`
+committed source-backed observation file, `27` valid source-backed evaluation
+archives, all negative/non-significant, and no promoted candidate.
+
 ## 2026-05-31: Scientific American Archive-Discovery Context Registered
 
 Added `scientific-american-2026-kryptos-cracked`, a quote-free

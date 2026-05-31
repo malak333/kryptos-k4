@@ -384,6 +384,17 @@ pub fn sources() -> Vec<Source> {
             allowed_use: "unverified-solution-claim",
             use_note: "Public claimed K4 plaintext and mechanism; quarantined for future independent verification only, not source-backed evidence, not candidate material, and not release-facing plaintext.",
         },
+        Source {
+            id: "ssrn-bonifacino-running-key-2025",
+            label: "SSRN Bonifacino 2025 running-key K4 paper",
+            url: "https://ssrn.com/abstract=5876405",
+            archive_url: Some("sources/archives/ssrn-bonifacino-running-key-2025-2026-05-31.md"),
+            accessed_at: "2026-05-31",
+            publication_date: Some("2025-12-08"),
+            source_type: "community-solution-claim",
+            allowed_use: "unverified-solution-claim",
+            use_note: "Public running-key candidate paper; quarantined for future independent verification only, not source-backed evidence, not candidate material, and not release-facing plaintext.",
+        },
     ]
 }
 

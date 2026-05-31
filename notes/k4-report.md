@@ -755,6 +755,7 @@ Baseline output is a false-positive control, not a claimed solution. Target: all
 - `kryptos-today-progress-2026` [Project K4 2026 progress log](https://kryptos.today/progress) - Independent progress-log context for attack-family triage, including Weltzeituhr, width-7 transposition, and Morse/Mengenlehreuhr queue updates; not plaintext, candidate evidence, or scored observations.; type: independent-cryptanalysis-progress; accessed 2026-05-31; use: methodology-context
 - `rumkin-k4-reference` [Rumkin K4 reference notes](https://rumkin.com/reference/kryptos/k4/) - K4 reference and open-question context around direct mapping, installation threads, and the HILL tableau question; not plaintext, not candidate evidence, and not scored observations.; type: community-reference; accessed 2026-05-27; use: methodology-context
 - `solvekryptos-2026-claim` [SolveKryptos 2026 K4 solution claim](https://solvekryptos.com/) - Public claimed K4 plaintext and mechanism; quarantined for future independent verification only, not source-backed evidence, not candidate material, and not release-facing plaintext.; type: community-solution-claim; accessed 2026-05-27; use: unverified-solution-claim
+- `ssrn-bonifacino-running-key-2025` [SSRN Bonifacino 2025 running-key K4 paper](https://ssrn.com/abstract=5876405) - Public running-key candidate paper; quarantined for future independent verification only, not source-backed evidence, not candidate material, and not release-facing plaintext.; type: community-solution-claim; accessed 2026-05-31; use: unverified-solution-claim
 
 ## Candidate Sequences
 
@@ -939,9 +940,9 @@ Local preflight only. This repo does not use GitHub Actions.
 - findings-source-inputs-valid: true (Findings source inputs resolve to registered sources, committed files, or known local command references. path=/Users/michaelnobile/Antigravity/Ciphers/src/findings.rs; checked=14)
 - source-packet-latest-access-date: true (Source packet includes latest registered source access date. path=/Users/michaelnobile/Antigravity/Ciphers/sources/source-packet.md; latest_access_date=2026-05-31)
 - source-packet-registry-aligned: true (Source packet matches every registered source ID, URL, type, and allowed-use boundary. path=/Users/michaelnobile/Antigravity/Ciphers/sources/source-packet.md)
-- source-archives-complete: true (Every registered source has a local quote-free archive path. path=/Users/michaelnobile/Antigravity/Ciphers/sources/archives; checked=22)
-- source-archives-present: true (Registered local source archive paths exist. path=/Users/michaelnobile/Antigravity/Ciphers; checked=22)
-- source-archives-structured: true (Registered local source archives preserve required metadata, no-promotion boundaries, and explicit non-scorable/scored-position consistency. path=/Users/michaelnobile/Antigravity/Ciphers/sources/archives; checked=22)
+- source-archives-complete: true (Every registered source has a local quote-free archive path. path=/Users/michaelnobile/Antigravity/Ciphers/sources/archives; checked=23)
+- source-archives-present: true (Registered local source archive paths exist. path=/Users/michaelnobile/Antigravity/Ciphers; checked=23)
+- source-archives-structured: true (Registered local source archives preserve required metadata, no-promotion boundaries, and explicit non-scorable/scored-position consistency. path=/Users/michaelnobile/Antigravity/Ciphers/sources/archives; checked=23)
 - observation-source-archives-cover-positions: true (Committed source-backed observations are covered by local source archives with explicit scored-position markers. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/position-observations; checked=1)
 - source-reviews-valid: true (Committed source-review files validate against current source metadata. path=/Users/michaelnobile/Antigravity/Ciphers/experiments/source-reviews; checked=1)
 - source-readiness-commands-documented: true (Source readiness command is documented in release-facing files. path=/Users/michaelnobile/Antigravity/Ciphers)
