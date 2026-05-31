@@ -15164,6 +15164,21 @@ fn print_claim_mechanism_verification(verification: &ClaimMechanismVerification)
         "Y template gate-map checks: {}/{}",
         verification.y_template_gate_match_count, verification.y_template_gate_checked_count
     );
+    if !verification.y_template_mismatches.is_empty() {
+        println!("\n## Y Template Mismatches\n");
+        println!("| Y Position | K4 Position | Expected Gate | Observed Gate |");
+        println!("| --- | --- | --- | --- |");
+        for mismatch in &verification.y_template_mismatches {
+            println!(
+                "| {} | {} | {} | {} |",
+                mismatch.y_position_one_based,
+                mismatch.k4_position_one_based,
+                mismatch.expected_gate_value,
+                mismatch.observed_gate_value
+            );
+        }
+        println!();
+    }
     println!(
         "structural checks passed: {}",
         verification.structural_checks_passed

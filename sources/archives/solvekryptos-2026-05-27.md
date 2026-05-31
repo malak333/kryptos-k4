@@ -70,6 +70,9 @@ artifact.
   helper-path base-`r` grid checks matched, and 31/31 Z2 helper-path final
   `R` grid checks matched, but only 27/31 Y-pass template rule checks and
   27/31 Y-pass gate-map checks matched.
+- The Y-pass mismatch diagnostic localizes the failed checks without printing
+  claimed plaintext: Y positions 23, 27, 28, and 29, corresponding to K4
+  positions 27, 31, 32, and 33, have expected/observed gate disagreements.
 - The temporary bundle remains outside the repository. The repository still
   does not store the claimed plaintext or any plaintext-bearing reconciliation
   table.

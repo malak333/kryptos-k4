@@ -160,6 +160,11 @@ matched, but only 27/31 Y-pass template rule checks and 27/31 Y-pass gate-map
 checks matched. `structural_checks_passed` was false and
 `promoted_candidate` remained false.
 
+The non-leaking Y-pass mismatch diagnostic localizes the four disagreements to
+Y positions 23, 27, 28, and 29, corresponding to K4 positions 27, 31, 32, and
+33. The diagnostic reports expected and observed gate values only; it does not
+print or store the claimed plaintext.
+
 Practical consequence: the published reconciliation table and top-level bundle
 remain internally compatible with the repo's structural verifier, but the
 refreshed published helper machinery is not fully consistent with the verifier.

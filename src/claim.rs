@@ -145,9 +145,18 @@ pub struct ClaimMechanismVerification {
     pub y_template_rule_match_count: usize,
     pub y_template_gate_checked_count: usize,
     pub y_template_gate_match_count: usize,
+    pub y_template_mismatches: Vec<ClaimMechanismYTemplateMismatch>,
     pub structural_checks_passed: bool,
     pub promoted_candidate: bool,
     pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct ClaimMechanismYTemplateMismatch {
+    pub y_position_one_based: usize,
+    pub k4_position_one_based: usize,
+    pub expected_gate_value: usize,
+    pub observed_gate_value: usize,
 }
 
 pub fn verify_plaintext_claim(
@@ -773,6 +782,7 @@ pub fn verify_claim_mechanism(
     let mut y_template_rule_match_count = 0usize;
     let mut y_template_gate_checked_count = 0usize;
     let mut y_template_gate_match_count = 0usize;
+    let mut y_template_mismatches = Vec::new();
     for (index, letter) in y_row.chars().take(31).enumerate() {
         let y_position = index + 1;
         let k4_position = y_position + 4;
@@ -784,6 +794,13 @@ pub fn verify_claim_mechanism(
             if gate == expected_gate {
                 y_template_rule_match_count += 1;
                 y_template_gate_match_count += 1;
+            } else {
+                y_template_mismatches.push(ClaimMechanismYTemplateMismatch {
+                    y_position_one_based: y_position,
+                    k4_position_one_based: k4_position,
+                    expected_gate_value: expected_gate,
+                    observed_gate_value: gate,
+                });
             }
         }
     }
@@ -830,6 +847,7 @@ pub fn verify_claim_mechanism(
         y_template_rule_match_count,
         y_template_gate_checked_count,
         y_template_gate_match_count,
+        y_template_mismatches,
         structural_checks_passed,
         promoted_candidate: false,
         note: "Claim-mechanism verification checks published f/helper-card relationships, control-card consistency, Z2 footer handoff, Y-pass gate-template consistency, and the Z2 helper path into the r/R grids without printing, storing, or promoting claimed plaintext.",
@@ -1755,6 +1773,91 @@ mod tests {
         assert_eq!(verification.y_template_rule_match_count, 31);
         assert_eq!(verification.y_template_gate_match_count, 31);
         assert!(verification.structural_checks_passed);
+        assert!(!verification.promoted_candidate);
+    }
+
+    #[test]
+    fn mechanism_verification_reports_y_template_mismatches_without_plaintext() {
+        let temp = tempfile::tempdir().unwrap();
+        let mut base_shifts = vec![0usize; K4_CIPHERTEXT.len()];
+        let mut final_shifts = vec![0usize; K4_CIPHERTEXT.len()];
+        let mut gates = vec![0usize; K4_CIPHERTEXT.len()];
+        let y_row = "YXZKRYPTOSABCDEFGHIJKLMNOPQRSTUVWXYZKR";
+        for (index, letter) in y_row.chars().take(31).enumerate() {
+            let y_position = index + 1;
+            let k4_index = y_position + 3;
+            gates[k4_index] = usize::from(!y_template_rule_zero(y_position, letter));
+        }
+        gates[4] = 1 - gates[4];
+        gates[9] = 1 - gates[9];
+
+        let f_values = expected_f_table_values();
+        let g_z2 = test_g_z2_values();
+        let effective_key = derive_z2_effective_key("_ABCDEFGHIJKLMNOPQRSTUVWXYZABCD").unwrap();
+        for (offset, helper_letter) in effective_key.chars().enumerate() {
+            let position = 67 + offset;
+            let ciphertext = K4_CIPHERTEXT.chars().nth(position - 1).unwrap();
+            let base_r = (f_values[&ciphertext] + g_z2[&helper_letter]) % 26;
+            base_shifts[position - 1] = base_r;
+            final_shifts[position - 1] = base_r;
+        }
+
+        fs::write(temp.path().join("k4_ciphertext.txt"), K4_CIPHERTEXT).unwrap();
+        fs::write(temp.path().join("f_table.txt"), format_test_f_table()).unwrap();
+        fs::write(
+            temp.path().join("helper_cards.txt"),
+            format_test_helper_cards(),
+        )
+        .unwrap();
+        fs::write(
+            temp.path().join("control_card.txt"),
+            format_test_control_card(),
+        )
+        .unwrap();
+        fs::write(
+            temp.path().join("z2_footer_basis_handoff.txt"),
+            "Visible footer:\n  _ABCDEFGHIJKLMNOPQRSTUVWXYZABCD\nEffective Z2 key:\n  ZZKRYPTOSABCDEFGHIJLMNQUVWXZKRY\n",
+        )
+        .unwrap();
+        fs::write(
+            temp.path().join("r_grid_7x14.txt"),
+            format_test_r_grid_file(&final_shifts, &base_shifts),
+        )
+        .unwrap();
+        fs::write(
+            temp.path().join("gate_map.txt"),
+            format_test_gate_map(&gates),
+        )
+        .unwrap();
+        fs::write(
+            temp.path().join("y_master_template.txt"),
+            format_test_y_master_template(),
+        )
+        .unwrap();
+
+        let verification =
+            verify_claim_mechanism(temp.path(), Some("synthetic-claim".to_string())).unwrap();
+
+        assert_eq!(verification.y_template_rule_match_count, 29);
+        assert_eq!(verification.y_template_gate_match_count, 29);
+        assert_eq!(
+            verification.y_template_mismatches,
+            vec![
+                ClaimMechanismYTemplateMismatch {
+                    y_position_one_based: 1,
+                    k4_position_one_based: 5,
+                    expected_gate_value: 0,
+                    observed_gate_value: 1,
+                },
+                ClaimMechanismYTemplateMismatch {
+                    y_position_one_based: 6,
+                    k4_position_one_based: 10,
+                    expected_gate_value: 1,
+                    observed_gate_value: 0,
+                },
+            ]
+        );
+        assert!(!verification.structural_checks_passed);
         assert!(!verification.promoted_candidate);
     }
 
