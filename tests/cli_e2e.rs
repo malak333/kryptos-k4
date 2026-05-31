@@ -4611,10 +4611,13 @@ fn next_evidence_gate_prints_operational_checklist() {
         .stdout(predicate::str::contains("evidence available:"))
         .stdout(predicate::str::contains("next action kind:"))
         .stdout(predicate::str::contains(
-            "inspect-non-negative-source-backed-archive",
+            "new-source-backed-rationale-or-distinct-prediction-artifact",
         ))
         .stdout(predicate::str::contains("blocking conditions:"))
         .stdout(predicate::str::contains("follow-up-required"))
+        .stdout(predicate::str::contains(
+            "source-backed-evidence-negative-or-non-significant-after-correction",
+        ))
         .stdout(predicate::str::contains(
             "unused-eligible-source-marked-non-scorable",
         ))
@@ -4844,6 +4847,21 @@ fn next_evidence_gate_prints_operational_checklist() {
         .expect("valid_source_backed_archive_count should be numeric");
     assert_eq!(json["invalid_archive_count"], 0);
     assert_eq!(json["all_source_backed_archives_negative"], false);
+    assert_eq!(
+        json["source_backed_archive_correction_count"],
+        valid_source_backed_archives
+    );
+    assert!(
+        json["min_source_backed_empirical_p_value"]
+            .as_f64()
+            .unwrap()
+            <= 0.05
+    );
+    assert!(json["min_source_backed_adjusted_p_value"].as_f64().unwrap() > 0.05);
+    assert_eq!(
+        json["all_source_backed_archives_negative_after_correction"],
+        true
+    );
     assert_eq!(json["used_eligible_source_ids"][0], "cia-sculpture");
     assert_eq!(json["unused_eligible_source_ids"][0], "cia-artifact");
     assert_eq!(
@@ -4869,11 +4887,11 @@ fn next_evidence_gate_prints_operational_checklist() {
         json["recommended_next_step"]
             .as_str()
             .unwrap()
-            .contains("Inspect any non-negative source-backed archive")
+            .contains("negative/non-significant after source-archive correction")
     );
     assert_eq!(
         json["next_action_kind"],
-        "inspect-non-negative-source-backed-archive"
+        "new-source-backed-rationale-or-distinct-prediction-artifact"
     );
     assert!(
         json["blocking_conditions"]
@@ -4884,6 +4902,16 @@ fn next_evidence_gate_prints_operational_checklist() {
                 .as_str()
                 .unwrap()
                 .contains("unused-eligible-source-marked-non-scorable"))
+    );
+    assert!(
+        json["blocking_conditions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|condition| condition
+                .as_str()
+                .unwrap()
+                .contains("source-backed-evidence-negative-or-non-significant-after-correction"))
     );
     assert!(
         json["blocking_conditions"]

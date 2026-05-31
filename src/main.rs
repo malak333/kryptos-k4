@@ -1825,6 +1825,10 @@ struct NextEvidenceGateReport {
     valid_source_backed_archive_count: usize,
     invalid_archive_count: usize,
     all_source_backed_archives_negative: bool,
+    source_backed_archive_correction_count: usize,
+    min_source_backed_empirical_p_value: Option<f64>,
+    min_source_backed_adjusted_p_value: Option<f64>,
+    all_source_backed_archives_negative_after_correction: bool,
     used_eligible_source_ids: Vec<String>,
     unused_eligible_source_ids: Vec<String>,
     unused_eligible_source_status: Vec<EligibleSourceUseStatus>,
@@ -1878,6 +1882,7 @@ struct NextEvidenceSupportDetail {
     observed_hits: Option<String>,
     null_mean_best_hits: Option<f64>,
     empirical_p_value: Option<f64>,
+    source_backed_adjusted_p_value: Option<f64>,
     support_status: String,
 }
 
@@ -8052,18 +8057,49 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
         })
         .collect::<Vec<_>>();
 
+    let source_backed_archive_correction_count = evidence_report
+        .archives
+        .iter()
+        .filter(|archive| archive.valid && archive.source_backed_observation)
+        .filter(|archive| archive.empirical_p_value.is_some())
+        .count();
+    let adjusted_source_backed_p_value = |p: Option<f64>| -> Option<f64> {
+        p.map(|value| (value * source_backed_archive_correction_count as f64).min(1.0))
+    };
+    let min_source_backed_empirical_p_value = evidence_report
+        .archives
+        .iter()
+        .filter(|archive| archive.valid && archive.source_backed_observation)
+        .filter_map(|archive| archive.empirical_p_value)
+        .min_by(|a, b| a.total_cmp(b));
+    let min_source_backed_adjusted_p_value =
+        adjusted_source_backed_p_value(min_source_backed_empirical_p_value);
+    let all_source_backed_archives_negative_after_correction =
+        source_backed_archive_correction_count > 0
+            && evidence_report
+                .archives
+                .iter()
+                .filter(|archive| archive.valid && archive.source_backed_observation)
+                .all(|archive| {
+                    adjusted_source_backed_p_value(archive.empirical_p_value)
+                        .map(|p| p > 0.05)
+                        .unwrap_or(false)
+                });
     let evidence_support_summary = evidence_report
         .archives
         .iter()
         .filter(|archive| archive.valid && archive.source_backed_observation)
         .map(|archive| {
             format!(
-                "{}: {} {}; p={}; status={}",
+                "{}: {} {}; p={}; adjusted p={}; status={}",
                 archive.artifact_kind,
                 archive.best_model.as_deref().unwrap_or("unknown model"),
                 archive.observed_hits.as_deref().unwrap_or("unknown hits"),
                 archive
                     .empirical_p_value
+                    .map(|p| format!("{p:.4}"))
+                    .unwrap_or_else(|| "n/a".to_string()),
+                adjusted_source_backed_p_value(archive.empirical_p_value)
                     .map(|p| format!("{p:.4}"))
                     .unwrap_or_else(|| "n/a".to_string()),
                 archive.support_status
@@ -8082,6 +8118,9 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
             observed_hits: archive.observed_hits.clone(),
             null_mean_best_hits: archive.null_mean_best_hits,
             empirical_p_value: archive.empirical_p_value,
+            source_backed_adjusted_p_value: adjusted_source_backed_p_value(
+                archive.empirical_p_value,
+            ),
             support_status: archive.support_status.clone(),
         })
         .collect::<Vec<_>>();
@@ -8091,6 +8130,8 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
             .iter()
             .filter(|archive| archive.valid && archive.source_backed_observation)
             .all(|archive| archive.support_status == "negative/non-significant");
+    let effective_all_source_backed_archives_negative =
+        all_source_backed_archives_negative || all_source_backed_archives_negative_after_correction;
     let unused_sources_with_scored_positions = unused_eligible_source_status
         .iter()
         .filter(|source| source.current_archive_has_scored_positions)
@@ -8109,8 +8150,10 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
     if duplicate_period_lanes_not_evidence {
         blocking_conditions.push("duplicate-period-lanes-not-evidence".to_string());
     }
-    if all_source_backed_archives_negative {
-        blocking_conditions.push("source-backed-evidence-negative-or-non-significant".to_string());
+    if effective_all_source_backed_archives_negative {
+        blocking_conditions.push(
+            "source-backed-evidence-negative-or-non-significant-after-correction".to_string(),
+        );
     }
     let unused_sources_without_scored_positions = unused_eligible_source_status
         .iter()
@@ -8136,32 +8179,34 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
                 "first-source-backed-observation".to_string(),
                 "Create and validate the first source-backed non-anchor observation file before scoring any prediction artifact.".to_string(),
             )
-    } else if all_source_backed_archives_negative
+    } else if effective_all_source_backed_archives_negative
         && !unused_sources_with_scored_positions.is_empty()
     {
         (
             "score-archived-unused-source-observation-or-distinct-prediction-artifact".to_string(),
             format!(
-                "Current source-backed evidence is negative/non-significant; do not add duplicate period lanes or rerun public-anchor-derived tests. Next useful work requires a new source-backed non-anchor observation from an unused eligible source with archived scored-position markers such as {} or a distinct preregistered prediction artifact.",
+                "Current source-backed evidence is negative/non-significant after source-archive correction; do not add duplicate period lanes or rerun public-anchor-derived tests. Next useful work requires a new source-backed non-anchor observation from an unused eligible source with archived scored-position markers such as {} or a distinct preregistered prediction artifact.",
                 unused_sources_with_scored_positions.join(", ")
             ),
         )
-    } else if all_source_backed_archives_negative
+    } else if effective_all_source_backed_archives_negative
         && all_unused_without_scored_positions_are_non_scorable
     {
         (
             "new-source-backed-rationale-or-distinct-prediction-artifact".to_string(),
-            "Current source-backed evidence is negative/non-significant; every unused eligible source without scored-position markers is explicitly marked non-scorable. Next useful work requires a new source-backed rationale that changes that archive boundary, a new source-backed observation source, or a distinct preregistered prediction artifact.".to_string(),
+            "Current source-backed evidence is negative/non-significant after source-archive correction; every unused eligible source without scored-position markers is explicitly marked non-scorable. Next useful work requires a new source-backed rationale that changes that archive boundary, a new source-backed observation source, or a distinct preregistered prediction artifact.".to_string(),
         )
-    } else if all_source_backed_archives_negative && !unused_eligible_source_status.is_empty() {
+    } else if effective_all_source_backed_archives_negative
+        && !unused_eligible_source_status.is_empty()
+    {
         (
             "new-source-backed-observation-rationale-or-distinct-prediction-artifact".to_string(),
-            "Current source-backed evidence is negative/non-significant; unused eligible sources have no current archived scored-position markers. Next useful work requires a new or updated source-backed observation rationale before scoring, or a distinct preregistered prediction artifact.".to_string(),
+            "Current source-backed evidence is negative/non-significant after source-archive correction; unused eligible sources have no current archived scored-position markers. Next useful work requires a new or updated source-backed observation rationale before scoring, or a distinct preregistered prediction artifact.".to_string(),
         )
-    } else if all_source_backed_archives_negative {
+    } else if effective_all_source_backed_archives_negative {
         (
             "new-source-backed-observation-or-distinct-prediction-artifact".to_string(),
-            "Current source-backed evidence is negative/non-significant; do not add duplicate period lanes or rerun public-anchor-derived tests. Next useful work requires a new source-backed non-anchor observation or a distinct preregistered prediction artifact.".to_string(),
+            "Current source-backed evidence is negative/non-significant after source-archive correction; do not add duplicate period lanes or rerun public-anchor-derived tests. Next useful work requires a new source-backed non-anchor observation or a distinct preregistered prediction artifact.".to_string(),
         )
     } else {
         (
@@ -8192,6 +8237,10 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
         valid_source_backed_archive_count: evidence_report.valid_source_backed_archive_count,
         invalid_archive_count: evidence_report.invalid_archive_count,
         all_source_backed_archives_negative,
+        source_backed_archive_correction_count,
+        min_source_backed_empirical_p_value,
+        min_source_backed_adjusted_p_value,
+        all_source_backed_archives_negative_after_correction,
         used_eligible_source_ids,
         unused_eligible_source_ids,
         unused_eligible_source_status,
@@ -8817,6 +8866,28 @@ fn print_next_evidence_gate(directory: PathBuf, format: OutputFormat) -> Result<
                 report.all_source_backed_archives_negative
             );
             println!(
+                "source-backed archive correction count: {}",
+                report.source_backed_archive_correction_count
+            );
+            println!(
+                "minimum source-backed p-value: {}",
+                report
+                    .min_source_backed_empirical_p_value
+                    .map(|p| format!("{p:.4}"))
+                    .unwrap_or_else(|| "n/a".to_string())
+            );
+            println!(
+                "minimum source-backed adjusted p-value: {}",
+                report
+                    .min_source_backed_adjusted_p_value
+                    .map(|p| format!("{p:.4}"))
+                    .unwrap_or_else(|| "n/a".to_string())
+            );
+            println!(
+                "all source-backed archives negative after correction: {}",
+                report.all_source_backed_archives_negative_after_correction
+            );
+            println!(
                 "used eligible sources: {}",
                 if report.used_eligible_source_ids.is_empty() {
                     "none".to_string()
@@ -8891,12 +8962,12 @@ fn print_next_evidence_gate(directory: PathBuf, format: OutputFormat) -> Result<
             if !report.evidence_support_details.is_empty() {
                 println!("evidence support details:");
                 println!(
-                    "| Directory | Source IDs | Kind | Best Model | Observed Hits | Null Mean | P | Support |"
+                    "| Directory | Source IDs | Kind | Best Model | Observed Hits | Null Mean | P | Adjusted P | Support |"
                 );
-                println!("| --- | --- | --- | --- | --- | --- | --- | --- |");
+                println!("| --- | --- | --- | --- | --- | --- | --- | --- | --- |");
                 for detail in &report.evidence_support_details {
                     println!(
-                        "| `{}` | `{}` | {} | {} | {} | {} | {} | {} |",
+                        "| `{}` | `{}` | {} | {} | {} | {} | {} | {} | {} |",
                         detail.directory,
                         detail.observation_source_ids.join("`, `"),
                         detail.artifact_kind,
@@ -8908,6 +8979,10 @@ fn print_next_evidence_gate(directory: PathBuf, format: OutputFormat) -> Result<
                             .unwrap_or_else(|| "n/a".to_string()),
                         detail
                             .empirical_p_value
+                            .map(|p| format!("{p:.4}"))
+                            .unwrap_or_else(|| "n/a".to_string()),
+                        detail
+                            .source_backed_adjusted_p_value
                             .map(|p| format!("{p:.4}"))
                             .unwrap_or_else(|| "n/a".to_string()),
                         detail.support_status
