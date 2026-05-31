@@ -991,6 +991,8 @@ fn verify_claim_reconciliation_reports_structure_without_leaking_claim_text() {
     assert_eq!(json["all_gate_values_binary"], true);
     assert_eq!(json["r_plus_gate_checked_count"], 0);
     assert_eq!(json["all_r_plus_gate_matches"], true);
+    assert_eq!(json["z2_handoff_checked_count"], 0);
+    assert_eq!(json["all_z2_handoff_matches"], true);
     assert_eq!(json["public_anchor_match_count"], 4);
     assert_eq!(json["structural_checks_passed"], true);
     assert_eq!(json["promoted_candidate"], false);
@@ -1018,6 +1020,7 @@ fn verify_claim_reconciliation_reports_structure_without_leaking_claim_text() {
         .stdout(predicate::str::contains("published R/shift values: 0/0"))
         .stdout(predicate::str::contains("gate values binary: 0/0"))
         .stdout(predicate::str::contains("base-r plus gate checks: 0/0"))
+        .stdout(predicate::str::contains("Z2 handoff checks: 0/0"))
         .stdout(predicate::str::contains("public anchors: 4/4"))
         .stdout(predicate::str::contains("promoted: false"))
         .stdout(predicate::str::contains(&claim).not());

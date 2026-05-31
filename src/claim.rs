@@ -64,6 +64,9 @@ pub struct ClaimReconciliationVerification {
     pub r_plus_gate_checked_count: usize,
     pub r_plus_gate_match_count: usize,
     pub all_r_plus_gate_matches: bool,
+    pub z2_handoff_checked_count: usize,
+    pub z2_handoff_match_count: usize,
+    pub all_z2_handoff_matches: bool,
     pub public_anchor_match_count: usize,
     pub public_anchor_count: usize,
     pub all_public_anchors_match: bool,
@@ -198,6 +201,8 @@ pub fn verify_claim_reconciliation_table(
     let mut gate_binary_count = 0usize;
     let mut r_plus_gate_checked_count = 0usize;
     let mut r_plus_gate_match_count = 0usize;
+    let mut z2_handoff_checked_count = 0usize;
+    let mut z2_handoff_match_count = 0usize;
     let mut plaintext_by_position = vec![None; expected_row_count + 1];
     let anchors = known_anchors();
     let mut row_checks = Vec::new();
@@ -331,6 +336,24 @@ pub fn verify_claim_reconciliation_table(
                     })
                 });
 
+        if (67..=97).contains(&row.position_one_based) {
+            if let (Some(ciphertext), Some(plaintext), Some(gate_value)) =
+                (expected_ciphertext, row.plaintext, row.gate_value)
+            {
+                if let Some(actual_g) = z2_g_value_for_position(row.position_one_based) {
+                    z2_handoff_checked_count += 1;
+                    let ciphertext_value = ciphertext as u8 - b'A';
+                    let plaintext_value = plaintext as u8 - b'A';
+                    let shift = (26 + ciphertext_value as i16 - plaintext_value as i16) % 26;
+                    let raw_r = (26 + shift - (gate_value % 26) as i16) % 26;
+                    let expected_g = (26 + raw_r - f_table_value(ciphertext) as i16) % 26;
+                    if expected_g as usize == actual_g {
+                        z2_handoff_match_count += 1;
+                    }
+                }
+            }
+        }
+
         row_checks.push(ClaimReconciliationRowCheck {
             position_one_based: row.position_one_based,
             ciphertext_matches,
@@ -445,6 +468,9 @@ pub fn verify_claim_reconciliation_table(
         r_plus_gate_checked_count,
         r_plus_gate_match_count,
         all_r_plus_gate_matches: r_plus_gate_match_count == r_plus_gate_checked_count,
+        z2_handoff_checked_count,
+        z2_handoff_match_count,
+        all_z2_handoff_matches: z2_handoff_match_count == z2_handoff_checked_count,
         public_anchor_match_count,
         public_anchor_count,
         all_public_anchors_match,
@@ -615,6 +641,51 @@ fn normalize_header(value: &str) -> String {
         }
     }
     normalized
+}
+
+fn f_table_value(ciphertext: char) -> usize {
+    match ciphertext {
+        'A' => 4,
+        'B' => 15,
+        'C' => 17,
+        'D' => 3,
+        'E' => 23,
+        'F' => 3,
+        'G' => 19,
+        'H' => 15,
+        'I' => 16,
+        'J' => 23,
+        'K' => 8,
+        'L' => 22,
+        'M' => 19,
+        'N' => 25,
+        'O' => 0,
+        'P' => 11,
+        'Q' => 3,
+        'R' => 3,
+        'S' => 12,
+        'T' => 13,
+        'U' => 7,
+        'V' => 11,
+        'W' => 15,
+        'X' => 19,
+        'Y' => 16,
+        'Z' => 23,
+        _ => 0,
+    }
+}
+
+fn z2_g_value_for_position(position_one_based: usize) -> Option<usize> {
+    const KALPHA: &str = "KRYPTOSABCDEFGHIJLMNQUVWXZ";
+    const Z2_EFFECTIVE_KEY: &str = "ZZKRYPTOSABCDEFGHIJLMNQUVWXZKRY";
+    const G_Z2_BY_KALPHA: [usize; 26] = [
+        19, 17, 16, 13, 1, 18, 10, 6, 18, 25, 20, 21, 13, 24, 23, 8, 24, 6, 24, 12, 25, 19, 7, 7,
+        25, 24,
+    ];
+    let offset = position_one_based.checked_sub(67)?;
+    let key_letter = Z2_EFFECTIVE_KEY.as_bytes().get(offset).copied()? as char;
+    let key_index = KALPHA.chars().position(|value| value == key_letter)?;
+    G_Z2_BY_KALPHA.get(key_index).copied()
 }
 
 fn find_header(headers: &HashMap<String, usize>, aliases: &[&str]) -> Option<usize> {

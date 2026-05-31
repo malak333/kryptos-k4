@@ -14943,6 +14943,14 @@ fn print_claim_reconciliation_verification(
         verification.all_r_plus_gate_matches
     );
     println!(
+        "Z2 handoff checks: {}/{}",
+        verification.z2_handoff_match_count, verification.z2_handoff_checked_count
+    );
+    println!(
+        "all Z2 handoff checks match: {}",
+        verification.all_z2_handoff_matches
+    );
+    println!(
         "public anchors: {}/{}",
         verification.public_anchor_match_count, verification.public_anchor_count
     );
