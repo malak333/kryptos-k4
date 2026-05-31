@@ -172,6 +172,10 @@ fn facts_hypotheses_sources_and_help_are_covered() {
             && source["allowed_use"] == "archive-context-only"
     }));
     assert!(json.as_array().unwrap().iter().any(|source| {
+        source["id"] == "rr-auction-kryptos-archive-2025"
+            && source["allowed_use"] == "archive-context-only"
+    }));
+    assert!(json.as_array().unwrap().iter().any(|source| {
         source["id"] == "nsa-kryptos-doc1-resolution-memo"
             && source["allowed_use"] == "archive-context-only"
     }));
@@ -1681,7 +1685,7 @@ fn source_frontier_classifies_all_registered_sources() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Source Frontier"))
-        .stdout(predicate::str::contains("sources: 23"))
+        .stdout(predicate::str::contains("sources: 24"))
         .stdout(predicate::str::contains(
             "scored-observation eligible sources: 2",
         ))
@@ -1722,7 +1726,7 @@ fn source_frontier_classifies_all_registered_sources() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["source_count"], 23);
+    assert_eq!(json["source_count"], 24);
     assert_eq!(json["scored_observation_eligible_count"], 2);
     assert_eq!(json["scored_position_marker_count"], 1);
     assert_eq!(json["valid_source_backed_archive_count"], 27);
@@ -1871,6 +1875,20 @@ fn source_frontier_classifies_all_registered_sources() {
             .as_str()
             .unwrap()
             .contains("preregistration rationale")
+    );
+
+    let rr_auction = sources
+        .iter()
+        .find(|source| source["id"] == "rr-auction-kryptos-archive-2025")
+        .unwrap();
+    assert_eq!(rr_auction["frontier_class"], "context-only");
+    assert_eq!(rr_auction["allowed_use"], "archive-context-only");
+    assert_eq!(rr_auction["current_archive_has_scored_positions"], false);
+    assert!(
+        rr_auction["non_scorable_reason"]
+            .as_str()
+            .unwrap()
+            .contains("Auction-lot provenance")
     );
 
     let scientific_american_archive = sources
@@ -7616,6 +7634,10 @@ fn export_data_writes_machine_readable_files() {
     }));
     assert!(sources.as_array().unwrap().iter().any(|source| {
         source["id"] == "smithsonian-2026-archive-discovery"
+            && source["allowed_use"] == "archive-context-only"
+    }));
+    assert!(sources.as_array().unwrap().iter().any(|source| {
+        source["id"] == "rr-auction-kryptos-archive-2025"
             && source["allowed_use"] == "archive-context-only"
     }));
     assert!(sources.as_array().unwrap().iter().any(|source| {

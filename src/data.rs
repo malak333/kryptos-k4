@@ -231,6 +231,17 @@ pub fn sources() -> Vec<Source> {
             use_note: "Archive sale outcome and context only; no archive-discovered plaintext content.",
         },
         Source {
+            id: "rr-auction-kryptos-archive-2025",
+            label: "RR Auction 2025 Kryptos archive lot",
+            url: "https://www.rrauction.com/auctions/lot-detail/350761607302001-the-complete-secrets-of-kryptos-jim-sanborns-private-archive/?cat=0",
+            archive_url: Some("sources/archives/rr-auction-kryptos-archive-2025-2026-05-31.md"),
+            accessed_at: "2026-05-31",
+            publication_date: Some("2025-11-20"),
+            source_type: "auction-primary",
+            allowed_use: "archive-context-only",
+            use_note: "Primary auction-lot provenance for the private K4/K5 archive and explicit no-independent-examination boundary; no public plaintext, key material, routes, or scored K4 observations.",
+        },
+        Source {
             id: "smithsonian-2026-archive-discovery",
             label: "Smithsonian 2026 archive-discovery report",
             url: "https://www.smithsonianmag.com/blogs/office-of-the-secretary-of-the-smithsonian/2026/02/17/smithsonian-archives-help-unlock-mysteries-connect-americans-history/",
