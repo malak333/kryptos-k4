@@ -8,12 +8,15 @@ It is not a solution claim.
 
 Status: stop and replan before any new scoring.
 
-Reason: the current source/evidence gates report `26` registered sources, `2`
+Reason: the current source/evidence gates report `28` registered sources, `2`
 scored-observation eligible sources, `1` committed source-backed observation
-file, `27` valid source-backed evaluation archives, and all source-backed
-archives negative/non-significant. `cia-sculpture` is already used by the
-row-boundary archive set, while `cia-artifact` remains reviewed but explicitly
-non-scorable from its current quote-free archive.
+file, `32` valid source-backed evaluation archives, and all source-backed
+archives negative/non-significant after source-archive correction. The minimum
+raw source-backed archive p-value is the terminal residue-balance archive
+(`p=0.0436`), but the corrected archive-surface p-value is `1.0000`.
+`cia-sculpture` is already used by the row-boundary archive set, while
+`cia-artifact` remains reviewed but explicitly non-scorable from its current
+quote-free archive.
 
 Do not interpret another run over the existing public-anchor key-material,
 routed-key, held-out public-group, public-fragment structure, or
@@ -142,14 +145,20 @@ the local archive boundary before scoring.
 
 ## CIA Row-Boundary Observation Lane
 
-Status: stopped for the committed period, period-5, period-14, spacing, mirror, grid row, grid column, grid compass-axis, Tableau/HILL,
+Status: stopped for the committed period, period-5, period-14, spacing,
+mirror, grid row, grid column, grid compass-axis, Tableau/HILL,
 ciphertext-prior, ciphertext-hotspot, ciphertext-rarity,
-ciphertext-repeat-distance, ciphertext-period-match, ciphertext-adjacent-contrast, ciphertext-transition, ciphertext-skip-transition,
-ciphertext-turning-point, ciphertext-window-balance, ciphertext-residue-balance, high-moduli
-ciphertext-residue-balance, very-high-moduli ciphertext-residue-balance, and
+ciphertext-repeat-distance, ciphertext-period-match,
+ciphertext-adjacent-contrast, ciphertext-transition,
+ciphertext-skip-transition, ciphertext-turning-point,
+ciphertext-window-balance, narrow ciphertext-window-balance, wide
+ciphertext-window-balance, ciphertext-residue-balance, high-moduli
+ciphertext-residue-balance, very-high-moduli ciphertext-residue-balance,
 ultra-high-moduli ciphertext-residue-balance, extreme-moduli
-ciphertext-residue-balance, and super-extreme-moduli ciphertext-residue-balance
-prediction targets.
+ciphertext-residue-balance, super-extreme-moduli ciphertext-residue-balance,
+hyper-extreme-moduli ciphertext-residue-balance, terminal-moduli
+ciphertext-residue-balance, and ciphertext-Stehle-regularity prediction
+targets.
 
 Reason: `cia-k4-row-boundaries-v1` is source-backed and auditable, but all
 committed evaluations against this observation set remain negative under seeded
@@ -159,13 +168,17 @@ grid compass-axis `p=0.9166`,
 ciphertext-hotspot `p=1.0000`, ciphertext-rarity `p=0.5282`,
 ciphertext-repeat-distance `p=0.5273`, ciphertext-period-match `p=0.9733`, ciphertext-adjacent-contrast `p=0.5259`, ciphertext-transition `p=1.0000`,
 ciphertext-skip-transition `p=1.0000`, ciphertext-turning-point `p=0.5247`,
-ciphertext-window-balance `p=1.0000`,
+ciphertext-window-balance `p=1.0000`, narrow ciphertext-window-balance
+`p=1.0000`, wide ciphertext-window-balance `p=1.0000`,
 ciphertext-residue-balance `p=0.4803`, high-moduli
 ciphertext-residue-balance `p=0.6416`, and very-high-moduli
 ciphertext-residue-balance `p=0.3125`, and ultra-high-moduli
 ciphertext-residue-balance `p=0.8289`, extreme-moduli
 ciphertext-residue-balance `p=0.7859`, and
-super-extreme-moduli ciphertext-residue-balance `p=0.6741`.
+super-extreme-moduli ciphertext-residue-balance `p=0.6741`,
+hyper-extreme-moduli ciphertext-residue-balance `p=0.7602`,
+terminal-moduli ciphertext-residue-balance raw `p=0.0436` but source-archive
+corrected `p=1.0000`, and ciphertext-Stehle-regularity `p=1.0000`.
 
 Latest evidence is summarized in
 `experiments/evidence-summaries/cia-k4-row-boundaries-v1.md`.

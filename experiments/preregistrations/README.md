@@ -232,6 +232,14 @@ Current independent lanes:
   future source-backed non-anchor observations and
   `validate-ciphertext-window-balance-observations` then
   `evaluate-ciphertext-window-balance` with seeded controls.
+- `ciphertext-window-balance-wide-v1.json`, a populated ciphertext-only wide
+  local-window balance lane with committed artifact
+  `experiments/predictions/ciphertext-window-balance-wide-v1.json`. The
+  artifact fixes the top 12 non-anchor positions with strongest predeclared
+  centered-window balance across only window widths `[9, 11, 13]`, using only
+  K4 ciphertext and public anchors as an exclusion mask. Its committed
+  CIA row-boundary archive is negative/non-significant (`0/6`, empirical
+  `p=1.0000`, promoted `false`).
 - `non-anchor-position-period-v1.json` with committed artifact
   `experiments/predictions/non-anchor-position-period-v1.json`
 - `non-anchor-position-period-followup-v1.json` for future source-backed

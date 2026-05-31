@@ -3,6 +3,75 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: Wide Window-Balance Target Registered And Rejected
+
+Added a distinct ciphertext-only local-window balance prediction target:
+
+- preregistration: `experiments/preregistrations/ciphertext-window-balance-wide-v1.json`
+- prediction artifact: `experiments/predictions/ciphertext-window-balance-wide-v1.json`
+- rule: centered local-window balance over widths `[9, 11, 13]`, top 12
+  non-anchor positions, public anchors used only as an exclusion mask
+- archive:
+  `results/ciphertext-window-balance-observations/cia-k4-row-boundaries-wide-v1`
+
+Validation and scoring:
+
+```bash
+cargo run --locked -- validate-preregistration \
+  --input experiments/preregistrations/ciphertext-window-balance-wide-v1.json \
+  --format json
+
+cargo run --locked -- validate-prediction-artifact \
+  --preregistration experiments/preregistrations/ciphertext-window-balance-wide-v1.json \
+  --require-unique-artifact \
+  --format json
+
+cargo run --locked -- validate-ciphertext-window-balance-observations \
+  --artifact experiments/predictions/ciphertext-window-balance-wide-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-window-balance-wide-v1.json \
+  --input experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --format json
+
+cargo run --locked -- evaluate-ciphertext-window-balance \
+  --artifact experiments/predictions/ciphertext-window-balance-wide-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-window-balance-wide-v1.json \
+  --positions-file experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/ciphertext-window-balance-observations/cia-k4-row-boundaries-wide-v1 \
+  --format json
+
+cargo run --locked -- validate-evaluation-archive \
+  --input results/ciphertext-window-balance-observations/cia-k4-row-boundaries-wide-v1 \
+  --format json
+```
+
+Result:
+
+- window-balance hits: `0/6`
+- null mean hits: `0.98574`
+- empirical p-value: `1.0000`
+- promoted: `false`
+- next-evidence-gate after this archive: `74` ready lanes, `32` unique ready
+  prediction targets, `32` valid source-backed archives, source-backed adjusted
+  minimum p-value `1.0000`, and action
+  `new-source-backed-rationale-or-distinct-prediction-artifact`
+
+Observed inventory after registration and archive:
+
+- independent lanes: `74`
+- ready for source-backed observations: `74`
+- invalid lanes: `0`
+- prediction artifacts: `74`
+- unique ready prediction targets: `32`
+- duplicate prediction artifact groups: `1`
+- ciphertext-window-balance-position-prior-family lanes: `3`
+- ciphertext-window-balance-position-prior-family unique ready targets: `3`
+
+Practical consequence: the wide local-window balance artifact was a valid
+distinct target, but the current CIA row-boundary observation rejects it. This
+does not produce a key, route, plaintext, or candidate promotion.
+
 ## 2026-05-31: SolveKryptos Mechanism Failure Archived
 
 Archived the latest plaintext-free mechanism verifier result:
