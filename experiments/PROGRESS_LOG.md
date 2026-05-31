@@ -115,8 +115,11 @@ separate preregistration, artifact, eligible observation, and seeded controls.
 ## 2026-05-31: SolveKryptos Canonical Bundle Quarantine Check
 
 Downloaded the public SolveKryptos canonical bundle only into `/private/tmp`
-and screened `k4_reconciliation.csv` with the local quarantined-claim verifier.
-No claimed plaintext or plaintext-bearing table was added to the repository.
+and screened it with the local quarantined-claim verifiers. A refreshed
+download later the same day changed the mechanism result: reconciliation and
+bundle-level checks still passed, but the mechanism check failed at the Y-pass
+template layer. No claimed plaintext or plaintext-bearing table was added to
+the repository.
 
 ```bash
 curl -L https://solvekryptos.com/downloads/solvekryptos-canonical-bundle.zip \
@@ -153,15 +156,14 @@ Observed mechanism-file result: 8/8 required files present, 26/26 `f` table
 values matched, 26/26 helper-card delta checks matched, 9/9 control-card
 entries matched, Z2 effective key derivation matched, 31/31 Z2 helper-path
 base-`r` grid checks matched, and 31/31 Z2 helper-path final `R` grid checks
-matched, plus 31/31 Y-pass template rule checks and 31/31 Y-pass gate-map
-checks matched. `promoted_candidate` remained false.
+matched, but only 27/31 Y-pass template rule checks and 27/31 Y-pass gate-map
+checks matched. `structural_checks_passed` was false and
+`promoted_candidate` remained false.
 
-Practical consequence: the published reconciliation table is internally
-compatible with the repo's structural verifier, and the local canonical-bundle
-files and published Z2 helper machinery are internally consistent with that
-table, but this is still not independent confirmation. It does not validate a
-sculpture-side physical reading, source provenance for the physical helper
-stream, or convert the quarantined claim into source-backed evidence.
+Practical consequence: the published reconciliation table and top-level bundle
+remain internally compatible with the repo's structural verifier, but the
+refreshed published helper machinery is not fully consistent with the verifier.
+The claim remains quarantined, not promoted, and not source-backed evidence.
 
 ## 2026-05-31: Extreme-Moduli Residue-Balance Prior Registered
 
