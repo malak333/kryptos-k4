@@ -522,11 +522,8 @@ fn parse_reconciliation_rows(input: &str) -> Result<Vec<ReconciliationRow>> {
             "plaintextvalue",
         ],
     );
-    let r_value_index = find_header(&header_lookup, &["r", "shift", "r_value", "rvalue"]);
-    let base_r_value_index = find_header(
-        &header_lookup,
-        &["baser", "base_r", "base_shift", "baseshift", "rbase"],
-    );
+    let r_value_index = find_reconciliation_r_value_header(&headers, &header_lookup);
+    let base_r_value_index = find_reconciliation_base_r_value_header(&headers, &header_lookup);
     let gate_value_index = find_header(&header_lookup, &["gate", "g"]);
 
     let mut rows = Vec::new();
@@ -624,6 +621,41 @@ fn find_header(headers: &HashMap<String, usize>, aliases: &[&str]) -> Option<usi
     aliases
         .iter()
         .find_map(|alias| headers.get(*alias).copied())
+}
+
+fn find_exact_header(headers: &[String], exact: &str) -> Option<usize> {
+    headers
+        .iter()
+        .position(|header| clean_cell(header) == exact)
+}
+
+fn find_reconciliation_r_value_header(
+    headers: &[String],
+    header_lookup: &HashMap<String, usize>,
+) -> Option<usize> {
+    match (
+        find_exact_header(headers, "R"),
+        find_exact_header(headers, "r"),
+    ) {
+        (Some(final_r_index), Some(_base_r_index)) => Some(final_r_index),
+        _ => find_header(header_lookup, &["r", "shift", "r_value", "rvalue"]),
+    }
+}
+
+fn find_reconciliation_base_r_value_header(
+    headers: &[String],
+    header_lookup: &HashMap<String, usize>,
+) -> Option<usize> {
+    if let (Some(base_r_index), Some(_final_r_index)) = (
+        find_exact_header(headers, "r"),
+        find_exact_header(headers, "R"),
+    ) {
+        return Some(base_r_index);
+    }
+    find_header(
+        header_lookup,
+        &["baser", "base_r", "base_shift", "baseshift", "rbase"],
+    )
 }
 
 fn expected_tier(position_one_based: usize) -> usize {
@@ -789,6 +821,42 @@ mod tests {
         assert_eq!(verification.gate_checked_count, K4_CIPHERTEXT.len());
         assert_eq!(verification.gate_binary_count, K4_CIPHERTEXT.len());
         assert!(verification.all_gate_values_binary);
+        assert_eq!(verification.r_plus_gate_checked_count, K4_CIPHERTEXT.len());
+        assert_eq!(verification.r_plus_gate_match_count, K4_CIPHERTEXT.len());
+        assert!(verification.all_r_plus_gate_matches);
+        assert!(verification.structural_checks_passed);
+        assert!(!verification.promoted_candidate);
+    }
+
+    #[test]
+    fn distinguishes_raw_lowercase_r_from_final_uppercase_r() {
+        let fixture = public_anchor_compatible_fixture();
+        let mut table = String::from("i,tier,lane,C,P,gate,r,R\n");
+        for (index, (ciphertext, plaintext)) in
+            K4_CIPHERTEXT.chars().zip(fixture.chars()).enumerate()
+        {
+            let position = index + 1;
+            let r_value = ((26 + ciphertext as i16 - plaintext as i16) % 26) as usize;
+            let base_r_value = (r_value + 25) % 26;
+            table.push_str(&format!(
+                "{},{},{},{},{},{},{},{}\n",
+                position,
+                expected_tier(position),
+                expected_lane(position),
+                ciphertext,
+                plaintext,
+                1,
+                base_r_value,
+                r_value
+            ));
+        }
+
+        let verification =
+            verify_claim_reconciliation_table(&table, Some("synthetic-claim".to_string())).unwrap();
+
+        assert_eq!(verification.r_value_checked_count, K4_CIPHERTEXT.len());
+        assert_eq!(verification.r_value_match_count, K4_CIPHERTEXT.len());
+        assert!(verification.all_r_values_match);
         assert_eq!(verification.r_plus_gate_checked_count, K4_CIPHERTEXT.len());
         assert_eq!(verification.r_plus_gate_match_count, K4_CIPHERTEXT.len());
         assert!(verification.all_r_plus_gate_matches);
