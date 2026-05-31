@@ -25,21 +25,21 @@ use kryptos_k4::{
     TableauHillPredictionPlan, analyze_constraints, analyze_known_plaintext_spans,
     batch_test_key_material_with_batch_baseline, batch_test_routed_key_material,
     build_all_period_prediction_plans, build_all_spacing_prediction_plans,
-    build_ciphertext_adjacent_contrast_prior, build_ciphertext_hotspot_prior,
-    build_ciphertext_period_match_prior, build_ciphertext_rarity_prior,
-    build_ciphertext_repeat_distance_prior, build_ciphertext_residue_balance_prior,
-    build_ciphertext_skip_transition_prior, build_ciphertext_stehle_regularity_prior,
-    build_ciphertext_structure_prior, build_ciphertext_transition_prior,
-    build_ciphertext_turning_point_prior, build_ciphertext_window_balance_prior,
-    build_grid_layout_prediction_plan_for_axis, build_mirror_prediction_plan,
-    build_period_prediction_plan, build_report, build_tableau_hill_prediction_plan,
-    candidate_sequences, evaluate_ciphertext_adjacent_contrast_positions,
-    evaluate_ciphertext_hotspot_positions, evaluate_ciphertext_period_match_positions,
-    evaluate_ciphertext_rarity_positions, evaluate_ciphertext_repeat_distance_positions,
-    evaluate_ciphertext_residue_balance_positions, evaluate_ciphertext_skip_transition_positions,
-    evaluate_ciphertext_stehle_regularity_positions, evaluate_ciphertext_structure_prior_positions,
-    evaluate_ciphertext_transition_positions, evaluate_ciphertext_turning_point_positions,
-    evaluate_ciphertext_window_balance_positions,
+    build_ciphertext_adjacent_contrast_prior, build_ciphertext_ct_perturbation_prior,
+    build_ciphertext_hotspot_prior, build_ciphertext_period_match_prior,
+    build_ciphertext_rarity_prior, build_ciphertext_repeat_distance_prior,
+    build_ciphertext_residue_balance_prior, build_ciphertext_skip_transition_prior,
+    build_ciphertext_stehle_regularity_prior, build_ciphertext_structure_prior,
+    build_ciphertext_transition_prior, build_ciphertext_turning_point_prior,
+    build_ciphertext_window_balance_prior, build_grid_layout_prediction_plan_for_axis,
+    build_mirror_prediction_plan, build_period_prediction_plan, build_report,
+    build_tableau_hill_prediction_plan, candidate_sequences,
+    evaluate_ciphertext_adjacent_contrast_positions, evaluate_ciphertext_hotspot_positions,
+    evaluate_ciphertext_period_match_positions, evaluate_ciphertext_rarity_positions,
+    evaluate_ciphertext_repeat_distance_positions, evaluate_ciphertext_residue_balance_positions,
+    evaluate_ciphertext_skip_transition_positions, evaluate_ciphertext_stehle_regularity_positions,
+    evaluate_ciphertext_structure_prior_positions, evaluate_ciphertext_transition_positions,
+    evaluate_ciphertext_turning_point_positions, evaluate_ciphertext_window_balance_positions,
     evaluate_grid_layout_prediction_positions_with_axis, evaluate_mirror_prediction_positions,
     evaluate_period_prediction_positions, evaluate_spacing_prediction_positions,
     evaluate_tableau_hill_prediction_positions, explain_key_material, findings,
@@ -211,6 +211,12 @@ enum Command {
     },
     /// Emit the source-grounded Stehle local-regularity target for future independent observations.
     CiphertextStehleRegularityPrior {
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Emit the source-grounded CT-perturbation target for future independent observations.
+    CiphertextCtPerturbationPrior {
         /// Output format.
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
@@ -3225,6 +3231,9 @@ fn main() -> Result<()> {
         Command::CiphertextStehleRegularityPrior { format } => {
             print_ciphertext_stehle_regularity_prior(format)?
         }
+        Command::CiphertextCtPerturbationPrior { format } => {
+            print_ciphertext_ct_perturbation_prior(format)?
+        }
         Command::CiphertextResidueBalancePrior {
             min_modulus,
             max_modulus,
@@ -5320,6 +5329,7 @@ fn validate_archived_prediction_context(
         "ciphertext-turning-point-position-prior" => Some("ciphertext-turning-point"),
         "ciphertext-window-balance-position-prior" => Some("ciphertext-window-balance"),
         "ciphertext-stehle-regularity-position-prior" => Some("ciphertext-stehle-regularity"),
+        "ciphertext-ct-perturbation-position-prior" => Some("ciphertext-ct-perturbation"),
         _ => None,
     };
     if expected_kind != Some(artifact_kind) {
@@ -5393,6 +5403,10 @@ fn validate_archived_prediction_context(
         }
         "ciphertext-stehle-regularity" => {
             serde_json::to_value(kryptos_k4::build_committed_ciphertext_stehle_regularity_prior())
+                .map_err(Into::into)
+        }
+        "ciphertext-ct-perturbation" => {
+            serde_json::to_value(kryptos_k4::build_committed_ciphertext_ct_perturbation_prior())
                 .map_err(Into::into)
         }
         _ => return,
@@ -7326,6 +7340,63 @@ fn print_ciphertext_stehle_regularity_prior(format: OutputFormat) -> Result<()> 
                     lag_source,
                     lag_delta,
                     position.matches_expected_delta
+                );
+            }
+            println!();
+
+            println!("## Controls\n");
+            for control in &prior.controls {
+                println!("- {control}");
+            }
+            println!();
+
+            println!("## Discovery Inputs\n");
+            for input in &prior.discovery_inputs {
+                println!("- {input}");
+            }
+            println!();
+            println!(
+                "public anchor fragments used for discovery: {}",
+                prior.public_anchor_fragments_used_for_discovery
+            );
+            println!(
+                "public anchor fragments used as primary evidence: {}",
+                prior.public_anchor_fragments_used_as_primary_evidence
+            );
+        }
+    }
+
+    Ok(())
+}
+
+fn print_ciphertext_ct_perturbation_prior(format: OutputFormat) -> Result<()> {
+    let prior = build_ciphertext_ct_perturbation_prior();
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&prior)?),
+        OutputFormat::Markdown => {
+            println!("# Ciphertext CT-Perturbation Prior\n");
+            println!("This is not a claimed solution.\n");
+            println!("artifact kind: {}", prior.artifact_kind);
+            println!("hypothesis family: {}", prior.hypothesis_family);
+            println!("target symbols: {:?}", prior.target_symbols);
+            println!("non-anchor positions: {}", prior.non_anchor_position_count);
+            println!("C/T positions: {}", prior.ct_position_count);
+            println!("promoted: {}", prior.promoted_candidate);
+            println!("note: {}\n", prior.note);
+
+            println!("## Prediction Target\n");
+            println!("{}\n", prior.prediction_target);
+
+            println!("## C/T Positions\n");
+            println!("| Position | Ciphertext | Target Symbol Rank | Same Target-Symbol Count |");
+            println!("| --- | --- | --- | --- |");
+            for position in &prior.ct_positions {
+                println!(
+                    "| {} | {} | {} | {} |",
+                    position.position_one_based,
+                    position.ciphertext,
+                    position.target_symbol_rank,
+                    position.same_target_symbol_count
                 );
             }
             println!();

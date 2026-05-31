@@ -324,6 +324,25 @@ pub struct CiphertextStehleRegularityPrior {
     pub note: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CiphertextCtPerturbationPrior {
+    pub artifact_kind: String,
+    pub hypothesis_family: String,
+    pub source_inputs: Vec<String>,
+    pub discovery_inputs: Vec<String>,
+    pub prediction_target: String,
+    pub target_symbols: Vec<char>,
+    pub non_anchor_position_count: usize,
+    pub non_anchor_positions_one_based: Vec<usize>,
+    pub ct_position_count: usize,
+    pub ct_positions: Vec<CiphertextCtPerturbationPosition>,
+    pub controls: Vec<String>,
+    pub public_anchor_fragments_used_for_discovery: bool,
+    pub public_anchor_fragments_used_as_primary_evidence: bool,
+    pub promoted_candidate: bool,
+    pub note: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CiphertextTransitionPosition {
     pub position_one_based: usize,
@@ -419,6 +438,14 @@ pub struct CiphertextStehleRegularityPosition {
     pub lag_source_ciphertext: Option<char>,
     pub lag_delta_mod26: Option<usize>,
     pub matches_expected_delta: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct CiphertextCtPerturbationPosition {
+    pub position_one_based: usize,
+    pub ciphertext: char,
+    pub target_symbol_rank: usize,
+    pub same_target_symbol_count: usize,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
@@ -1993,6 +2020,80 @@ pub fn build_ciphertext_window_balance_prior(
 
 pub fn build_committed_ciphertext_window_balance_prior() -> CiphertextWindowBalancePrior {
     build_ciphertext_window_balance_prior(20, vec![3, 5, 7])
+}
+
+pub fn build_ciphertext_ct_perturbation_prior() -> CiphertextCtPerturbationPrior {
+    let letters: Vec<char> = K4_CIPHERTEXT.chars().collect();
+    let non_anchor_positions = non_anchor_positions_one_based();
+    let non_anchor_set: HashSet<_> = non_anchor_positions.iter().copied().collect();
+    let target_symbols = vec!['C', 'T'];
+    let same_target_symbol_count = letters
+        .iter()
+        .filter(|letter| target_symbols.contains(letter))
+        .count();
+    let mut ct_positions = letters
+        .iter()
+        .enumerate()
+        .filter_map(|(index, ciphertext)| {
+            let position_one_based = index + 1;
+            if !non_anchor_set.contains(&position_one_based) || !target_symbols.contains(ciphertext)
+            {
+                return None;
+            }
+            let target_symbol_rank = target_symbols
+                .iter()
+                .position(|symbol| symbol == ciphertext)
+                .map(|rank| rank + 1)
+                .unwrap_or(0);
+            Some(CiphertextCtPerturbationPosition {
+                position_one_based,
+                ciphertext: *ciphertext,
+                target_symbol_rank,
+                same_target_symbol_count,
+            })
+        })
+        .collect::<Vec<_>>();
+    ct_positions.sort_by_key(|position| position.position_one_based);
+
+    CiphertextCtPerturbationPrior {
+        artifact_kind: "ciphertext-ct-perturbation-prior".to_string(),
+        hypothesis_family: "ciphertext-ct-perturbation-position-prior".to_string(),
+        source_inputs: vec![
+            "Public K4 ciphertext only".to_string(),
+            "KryptosBot findings page used as methodology-context rationale for the bounded CT-perturbation/symbol-swap surface".to_string(),
+            "Public anchor positions used only as an exclusion mask for future non-anchor targets".to_string(),
+        ],
+        discovery_inputs: vec![
+            "Predeclare the non-anchor K4 ciphertext positions carrying C or T, the source-documented perturbation symbols".to_string(),
+            "Treat the source-described CT-perturbation/symbol-swap anomaly as an unresolved structural question, not as plaintext, key material, a route, or evidence".to_string(),
+            "Do not tune by candidate words, routes, claimed plaintext, public known-plaintext additive fragments, or previous source-backed observation scores".to_string(),
+        ],
+        prediction_target: "Future independently source-backed non-anchor K4 position observations may be checked for enrichment in predeclared C/T ciphertext positions only after a family-specific evaluator and null controls are implemented; this artifact alone is not evidence."
+            .to_string(),
+        target_symbols,
+        non_anchor_position_count: non_anchor_positions.len(),
+        non_anchor_positions_one_based: non_anchor_positions,
+        ct_position_count: ct_positions.len(),
+        ct_positions,
+        controls: vec![
+            "family-specific observation validator and evaluator required before scoring".to_string(),
+            "source-backed observation file required before interpreting any C/T-position overlap".to_string(),
+            "same-size non-anchor position-shuffle null required before interpreting any source-backed hit count".to_string(),
+            "ciphertext-symbol shuffle control preserving K4 length and target-symbol count required before interpreting the C/T surface itself".to_string(),
+            "known public-anchor positions excluded from target positions and never used as scoring evidence".to_string(),
+            "multiple-comparison context across all preregistered independent lanes required before interpretation".to_string(),
+            "promotion blocked unless future independent observations beat controls without post-hoc retuning".to_string(),
+        ],
+        public_anchor_fragments_used_for_discovery: false,
+        public_anchor_fragments_used_as_primary_evidence: false,
+        promoted_candidate: false,
+        note: "Ciphertext CT-perturbation prior is a source-grounded planning artifact for future independent observations; it is not a claimed solution, key, route, plaintext, or promotion criterion."
+            .to_string(),
+    }
+}
+
+pub fn build_committed_ciphertext_ct_perturbation_prior() -> CiphertextCtPerturbationPrior {
+    build_ciphertext_ct_perturbation_prior()
 }
 
 pub fn build_ciphertext_stehle_regularity_prior() -> CiphertextStehleRegularityPrior {

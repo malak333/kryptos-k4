@@ -497,6 +497,13 @@ Current independent lanes:
   `validate-ciphertext-stehle-regularity-observations` and
   `evaluate-ciphertext-stehle-regularity`, which score the full Stehle window
   and lag-confirmed +5 subset with seeded same-size non-anchor position nulls.
+- `ciphertext-ct-perturbation-v1.json`, a source-grounded CT-perturbation
+  planning lane with committed artifact
+  `experiments/predictions/ciphertext-ct-perturbation-v1.json`. The artifact
+  fixes six non-anchor C/T ciphertext positions from the registered
+  KryptosBot findings context. It is intentionally evaluator-pending:
+  no source-backed observation may be scored against it until a family-specific
+  validator and evaluator are added.
 
 The mirror and grid-layout lanes are now source-observation ready: validate
 their artifacts with `validate-prediction-artifact`, then use the matching

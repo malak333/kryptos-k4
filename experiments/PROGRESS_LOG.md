@@ -3,6 +3,55 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: CT-Perturbation Planning Lane Registered
+
+Added a source-grounded, evaluator-pending CT-perturbation planning lane:
+
+- preregistration: `experiments/preregistrations/ciphertext-ct-perturbation-v1.json`
+- prediction artifact: `experiments/predictions/ciphertext-ct-perturbation-v1.json`
+- source rationale: `kryptosbot-findings-2026` methodology-context note about
+  the unresolved CT-perturbation/symbol-swap anomaly
+- fixed target positions: non-anchor C/T ciphertext positions `36`, `38`,
+  `51`, `81`, `83`, and `95`
+
+Validation:
+
+```bash
+cargo run --locked -- validate-preregistration \
+  --input experiments/preregistrations/ciphertext-ct-perturbation-v1.json \
+  --format json
+
+cargo run --locked -- validate-prediction-artifact \
+  --preregistration experiments/preregistrations/ciphertext-ct-perturbation-v1.json \
+  --require-unique-artifact \
+  --format json
+```
+
+Result:
+
+- preregistration valid: `true`
+- prediction artifact valid: `true`
+- artifact kind: `ciphertext-ct-perturbation`
+- artifact plan count: `6`
+- promoted: `false`
+
+Observed inventory after registration:
+
+- independent lanes: `75`
+- ready for source-backed observations: `74`
+- invalid lanes: `0`
+- evaluator-pending lanes: `1`
+- prediction artifacts: `75`
+- unique ready prediction targets: `32`
+- duplicate prediction artifact groups: `1`
+- ciphertext-ct-perturbation-position-prior-family lanes: `1`
+- ciphertext-ct-perturbation-position-prior-family unique ready targets: `0`
+
+Practical consequence: CT-perturbation is now a committed, distinct planning
+target, but it is not scoreable evidence yet. The next engineering step for this
+lane is a family-specific source-backed observation validator and evaluator with
+same-size non-anchor position nulls and ciphertext-symbol shuffle controls.
+
 ## 2026-05-31: Wide Window-Balance Target Registered And Rejected
 
 Added a distinct ciphertext-only local-window balance prediction target:

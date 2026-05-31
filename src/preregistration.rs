@@ -2,7 +2,8 @@ use crate::{
     CiphertextResidueBalancePrior, GridLayoutEdgeAxis, PeriodPredictionPlanSet,
     build_all_period_prediction_plans, build_all_spacing_prediction_plans,
     build_ciphertext_residue_balance_prior, build_ciphertext_window_balance_prior,
-    build_committed_ciphertext_adjacent_contrast_prior, build_committed_ciphertext_hotspot_prior,
+    build_committed_ciphertext_adjacent_contrast_prior,
+    build_committed_ciphertext_ct_perturbation_prior, build_committed_ciphertext_hotspot_prior,
     build_committed_ciphertext_period_match_prior, build_committed_ciphertext_rarity_prior,
     build_committed_ciphertext_repeat_distance_prior,
     build_committed_ciphertext_residue_balance_prior,
@@ -822,6 +823,9 @@ pub fn validate_prediction_artifact_with_repo_root(
         Some("ciphertext-stehle-regularity") => Some(serde_json::to_value(
             build_committed_ciphertext_stehle_regularity_prior(),
         )?),
+        Some("ciphertext-ct-perturbation") => Some(serde_json::to_value(
+            build_committed_ciphertext_ct_perturbation_prior(),
+        )?),
         Some("ciphertext-window-balance") => {
             let top = registration.ciphertext_window_balance_top.unwrap_or(20);
             let window_widths = registration
@@ -847,7 +851,7 @@ pub fn validate_prediction_artifact_with_repo_root(
 
     if artifact_kind.is_none() {
         errors.push(format!(
-            "prediction_artifact validation only supports `position-period-prediction`, `position-spacing-prediction`, `position-mirror-prediction`, `position-grid-layout-prediction`, `tableau-hill-prediction`, `ciphertext-only-position-prior`, `ciphertext-residue-balance-position-prior`, `ciphertext-hotspot-position-prior`, `ciphertext-rarity-position-prior`, `ciphertext-adjacent-contrast-position-prior`, `ciphertext-repeat-distance-position-prior`, `ciphertext-transition-position-prior`, `ciphertext-skip-transition-position-prior`, `ciphertext-turning-point-position-prior`, `ciphertext-period-match-position-prior`, `ciphertext-stehle-regularity-position-prior`, and `ciphertext-window-balance-position-prior` hypothesis families; got `{}`",
+            "prediction_artifact validation only supports `position-period-prediction`, `position-spacing-prediction`, `position-mirror-prediction`, `position-grid-layout-prediction`, `tableau-hill-prediction`, `ciphertext-only-position-prior`, `ciphertext-residue-balance-position-prior`, `ciphertext-hotspot-position-prior`, `ciphertext-rarity-position-prior`, `ciphertext-adjacent-contrast-position-prior`, `ciphertext-repeat-distance-position-prior`, `ciphertext-transition-position-prior`, `ciphertext-skip-transition-position-prior`, `ciphertext-turning-point-position-prior`, `ciphertext-period-match-position-prior`, `ciphertext-stehle-regularity-position-prior`, `ciphertext-ct-perturbation-position-prior`, and `ciphertext-window-balance-position-prior` hypothesis families; got `{}`",
             registration.hypothesis_family
         ));
     }
@@ -1068,6 +1072,7 @@ fn prediction_artifact_kind(registration: &LanePreregistration) -> Option<&'stat
         "ciphertext-turning-point-position-prior" => Some("ciphertext-turning-point"),
         "ciphertext-period-match-position-prior" => Some("ciphertext-period-match"),
         "ciphertext-stehle-regularity-position-prior" => Some("ciphertext-stehle-regularity"),
+        "ciphertext-ct-perturbation-position-prior" => Some("ciphertext-ct-perturbation"),
         "ciphertext-window-balance-position-prior" => Some("ciphertext-window-balance"),
         _ => None,
     }
@@ -1113,6 +1118,11 @@ fn plan_set_count(value: &serde_json::Value) -> Option<usize> {
         .or_else(|| {
             value
                 .get("window_balance_position_count")
+                .and_then(serde_json::Value::as_u64)
+        })
+        .or_else(|| {
+            value
+                .get("ct_position_count")
                 .and_then(serde_json::Value::as_u64)
         })
         .map(|value| value as usize)
@@ -1172,6 +1182,11 @@ fn prediction_artifact_item_count(value: &serde_json::Value) -> Option<usize> {
         .or_else(|| {
             value
                 .get("window_balance_positions")
+                .and_then(serde_json::Value::as_array)
+        })
+        .or_else(|| {
+            value
+                .get("ct_positions")
                 .and_then(serde_json::Value::as_array)
         })
         .map(Vec::len)
