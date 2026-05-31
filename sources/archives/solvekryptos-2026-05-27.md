@@ -35,8 +35,9 @@ artifact.
   does not store the claimed plaintext.
 - Follow-up tooling now includes `verify-claim-reconciliation` for local
   reconciliation tables. It checks row count, one-based position sequence, K4
-  ciphertext alignment, public-anchor compatibility, and aggregate shift
-  diagnostics without printing or storing any claimed plaintext column.
+  ciphertext alignment, optional published `R`/shift, `BaseR`, and `Gate`
+  arithmetic, public-anchor compatibility, and aggregate shift diagnostics
+  without printing or storing any claimed plaintext column.
 
 ## Boundary
 
@@ -46,8 +47,9 @@ artifact.
 - No candidate material, key stream, route, or plaintext is promoted.
 - The structural quarantine check is not independent confirmation; it only
   confirms length and public-anchor compatibility for a public claim.
-- A reconciliation-table compatibility check is still a quarantine check, not
-  independent confirmation of the claimed mechanism.
+- A reconciliation-table compatibility check, including published shift and gate
+  arithmetic, is still a quarantine check, not independent confirmation of the
+  claimed physical mechanism.
 - Any future use must implement an independent mechanical verifier that checks
   the claimed mechanism without adding release-facing full plaintext or
   accepting the claim as evidence by assertion.

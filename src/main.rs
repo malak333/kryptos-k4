@@ -14887,6 +14887,30 @@ fn print_claim_reconciliation_verification(
     );
     println!("plaintext rows present: {}", verification.plaintext_rows);
     println!(
+        "published R/shift values: {}/{}",
+        verification.r_value_match_count, verification.r_value_checked_count
+    );
+    println!(
+        "all published R/shift values match: {}",
+        verification.all_r_values_match
+    );
+    println!(
+        "gate values binary: {}/{}",
+        verification.gate_binary_count, verification.gate_checked_count
+    );
+    println!(
+        "all gate values binary: {}",
+        verification.all_gate_values_binary
+    );
+    println!(
+        "base-r plus gate checks: {}/{}",
+        verification.r_plus_gate_match_count, verification.r_plus_gate_checked_count
+    );
+    println!(
+        "all base-r plus gate checks match: {}",
+        verification.all_r_plus_gate_matches
+    );
+    println!(
         "public anchors: {}/{}",
         verification.public_anchor_match_count, verification.public_anchor_count
     );

@@ -977,6 +977,12 @@ fn verify_claim_reconciliation_reports_structure_without_leaking_claim_text() {
     assert_eq!(json["row_count"], 97);
     assert_eq!(json["row_count_matches"], true);
     assert_eq!(json["all_ciphertext_matches"], true);
+    assert_eq!(json["r_value_checked_count"], 0);
+    assert_eq!(json["all_r_values_match"], true);
+    assert_eq!(json["gate_checked_count"], 0);
+    assert_eq!(json["all_gate_values_binary"], true);
+    assert_eq!(json["r_plus_gate_checked_count"], 0);
+    assert_eq!(json["all_r_plus_gate_matches"], true);
     assert_eq!(json["public_anchor_match_count"], 4);
     assert_eq!(json["structural_checks_passed"], true);
     assert_eq!(json["promoted_candidate"], false);
@@ -997,6 +1003,9 @@ fn verify_claim_reconciliation_reports_structure_without_leaking_claim_text() {
         ))
         .stdout(predicate::str::contains("rows: 97/97"))
         .stdout(predicate::str::contains("all ciphertext matches: true"))
+        .stdout(predicate::str::contains("published R/shift values: 0/0"))
+        .stdout(predicate::str::contains("gate values binary: 0/0"))
+        .stdout(predicate::str::contains("base-r plus gate checks: 0/0"))
         .stdout(predicate::str::contains("public anchors: 4/4"))
         .stdout(predicate::str::contains("promoted: false"))
         .stdout(predicate::str::contains(&claim).not());
