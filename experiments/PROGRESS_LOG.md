@@ -413,6 +413,65 @@ source-grounded structural anomaly into an auditable future-work artifact
 without reusing the existing public-anchor-derived or CIA row-boundary evidence
 as proof.
 
+## 2026-05-31: Stehle Regularity Evaluator Added
+
+Added the family-specific validator and evaluator for
+`ciphertext-stehle-regularity-v1`.
+
+New commands:
+
+```sh
+cargo run --locked -- validate-ciphertext-stehle-regularity-observations \
+  --artifact experiments/predictions/ciphertext-stehle-regularity-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-stehle-regularity-v1.json \
+  --input <source-backed-observations.json> \
+  --format json
+
+cargo run --locked -- evaluate-ciphertext-stehle-regularity \
+  --artifact experiments/predictions/ciphertext-stehle-regularity-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-stehle-regularity-v1.json \
+  --positions-file <source-backed-observations.json> \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/ciphertext-stehle-regularity-observations/<observation-id> \
+  --format json
+
+cargo run --locked -- validate-evaluation-archive \
+  --input results/ciphertext-stehle-regularity-observations/<observation-id> \
+  --format json
+```
+
+The evaluator scores independent non-anchor observation positions against both
+the full committed Stehle window and the lag-confirmed +5 subset, with seeded
+same-size non-anchor position-shuffle null controls. Archive validation now
+uses the artifact's full non-anchor universe for allowed observations, so source
+observations are not forced to be in the Stehle target before scoring.
+
+Validation status:
+
+- `cargo check --locked` passes.
+- `validate-preregistration` passes for `ciphertext-stehle-regularity-v1`.
+- `validate-prediction-artifact --require-unique-artifact` passes for
+  `ciphertext-stehle-regularity-v1`.
+- `next-evidence-gate --format json` now reports the Stehle family as ready,
+  not evaluator-pending.
+
+Current independent-lane inventory markers:
+
+- independent lanes: `73`
+- ready for source-backed observations: `73`
+- invalid lanes: `0`
+- prediction artifacts: `73`
+- unique prediction artifacts: `31`
+- unique ready prediction targets: `31`
+- evaluator-pending lanes: `0`
+- ciphertext-stehle-regularity-position-prior-family lanes: `1`
+- ciphertext-stehle-regularity-position-prior-family unique ready targets: `1`
+
+This still is not a K4 solution, key, route, plaintext, or candidate. The
+Stehle artifact remains only a preregistered target until a genuinely
+independent source-backed observation file is validated and archived.
+
 ## 2026-05-31: Project K4 Methodology Source Registered
 
 Added `kryptos-today-project-k4-2026` as a quote-free local source snapshot

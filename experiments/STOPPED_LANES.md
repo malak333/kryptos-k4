@@ -38,20 +38,24 @@ Latest evidence is summarized in `experiments/PROGRESS_LOG.md`.
 
 ## Stehle Regularity Planning Lane
 
-Status: evaluator-pending; no scoring yet.
+Status: evaluator implemented; source-backed observation required before scoring.
 
 Reason: the registered `kryptosbot-findings-2026` source documents a bounded
 Stehle local-regularity anomaly, but not a plaintext, key, route, or solution.
 The committed `ciphertext-stehle-regularity-v1` preregistration and prediction
 artifact fix the source-reported 55 through 63 anomaly label and repo canonical
 56 through 64 coordinate mapping before any future scoring. Position 64 is a
-public known-plaintext anchor position, so future non-anchor scoring must use
-only the committed non-anchor target positions and family-specific controls.
+public known-plaintext anchor position, so future scoring must validate only
+independent non-anchor observation files before comparing them to the committed
+target positions.
 
-Do not score or interpret this lane until a family-specific observation
-validator, evaluator, same-size non-anchor position-shuffle null, and
-ciphertext-symbol shuffle control are implemented and validated. This artifact
-is future-work inventory only.
+Do not score or interpret this lane from the artifact alone. Any future run must
+use `validate-ciphertext-stehle-regularity-observations`,
+`evaluate-ciphertext-stehle-regularity`, and `validate-evaluation-archive` on a
+new source-backed observation file. The evaluator provides seeded same-size
+non-anchor position-shuffle null controls for the full Stehle window and the
+lag-confirmed +5 subset; it is still not plaintext, key, route, or solution
+evidence without independent observations.
 
 ## Public Anchor-Derived Key-Material Lanes
 

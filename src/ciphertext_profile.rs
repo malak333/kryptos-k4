@@ -618,6 +618,40 @@ pub struct CiphertextPeriodMatchEvaluationSet {
     pub matching_positions_one_based: Vec<usize>,
 }
 
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct CiphertextStehleRegularityEvaluation {
+    pub artifact_path: String,
+    pub observation_id: Option<String>,
+    pub observation_source_ids: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub observation_source_review_file: Option<String>,
+    pub observation_rationale: Option<String>,
+    pub observation_position_notes: BTreeMap<String, String>,
+    pub source_backed_observation: bool,
+    pub observation_warning: Option<&'static str>,
+    pub observed_position_count: usize,
+    pub observed_positions_one_based: Vec<usize>,
+    pub regularity_position_count: usize,
+    pub regularity_hits: usize,
+    pub regularity_hit_rate: f64,
+    pub matching_regularity_positions_one_based: Vec<usize>,
+    pub non_regularity_positions_one_based: Vec<usize>,
+    pub expected_delta_position_count: usize,
+    pub expected_delta_hits: usize,
+    pub expected_delta_hit_rate: f64,
+    pub matching_expected_delta_positions_one_based: Vec<usize>,
+    pub null_mean_regularity_hits: f64,
+    pub null_std_dev_regularity_hits: f64,
+    pub regularity_empirical_p_value: f64,
+    pub null_mean_expected_delta_hits: f64,
+    pub null_std_dev_expected_delta_hits: f64,
+    pub expected_delta_empirical_p_value: f64,
+    pub iterations: usize,
+    pub seed: u64,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CiphertextRarityPosition {
     pub position_one_based: usize,
@@ -2048,6 +2082,154 @@ pub fn build_ciphertext_stehle_regularity_prior() -> CiphertextStehleRegularityP
 
 pub fn build_committed_ciphertext_stehle_regularity_prior() -> CiphertextStehleRegularityPrior {
     build_ciphertext_stehle_regularity_prior()
+}
+
+pub fn evaluate_ciphertext_stehle_regularity_positions(
+    artifact_path: impl AsRef<std::path::Path>,
+    observed_positions_one_based: Vec<usize>,
+    iterations: usize,
+    seed: u64,
+) -> Result<CiphertextStehleRegularityEvaluation> {
+    if observed_positions_one_based.is_empty() {
+        bail!("ciphertext-stehle-regularity evaluation requires at least one observed position");
+    }
+    if iterations == 0 {
+        bail!("ciphertext-stehle-regularity evaluation iterations must be greater than zero");
+    }
+
+    let artifact_path = artifact_path.as_ref();
+    let artifact = std::fs::read_to_string(artifact_path)?;
+    let prior: CiphertextStehleRegularityPrior = serde_json::from_str(&artifact)?;
+    if prior.artifact_kind != "ciphertext-stehle-regularity-prior" {
+        bail!(
+            "ciphertext-stehle-regularity artifact `{}` has artifact_kind `{}`",
+            artifact_path.display(),
+            prior.artifact_kind
+        );
+    }
+
+    let non_anchor_set: HashSet<_> = prior
+        .non_anchor_positions_one_based
+        .iter()
+        .copied()
+        .collect();
+    let mut seen = HashSet::new();
+    for position in &observed_positions_one_based {
+        if !seen.insert(*position) {
+            bail!("observed positions must be unique");
+        }
+        if !non_anchor_set.contains(position) {
+            bail!(
+                "observed positions must be one-based non-anchor K4 positions from the ciphertext-stehle-regularity artifact"
+            );
+        }
+    }
+
+    let regularity_set: HashSet<_> = prior
+        .regularity_positions
+        .iter()
+        .map(|position| position.position_one_based)
+        .collect();
+    let expected_delta_set: HashSet<_> = prior
+        .regularity_positions
+        .iter()
+        .filter(|position| position.matches_expected_delta)
+        .map(|position| position.position_one_based)
+        .collect();
+
+    let matching_regularity_positions_one_based: Vec<_> = observed_positions_one_based
+        .iter()
+        .copied()
+        .filter(|position| regularity_set.contains(position))
+        .collect();
+    let non_regularity_positions_one_based: Vec<_> = observed_positions_one_based
+        .iter()
+        .copied()
+        .filter(|position| !regularity_set.contains(position))
+        .collect();
+    let matching_expected_delta_positions_one_based: Vec<_> = observed_positions_one_based
+        .iter()
+        .copied()
+        .filter(|position| expected_delta_set.contains(position))
+        .collect();
+
+    let regularity_hits = matching_regularity_positions_one_based.len();
+    let expected_delta_hits = matching_expected_delta_positions_one_based.len();
+    let regularity_hit_rate = regularity_hits as f64 / observed_positions_one_based.len() as f64;
+    let expected_delta_hit_rate =
+        expected_delta_hits as f64 / observed_positions_one_based.len() as f64;
+
+    let mut rng = ChaCha8Rng::seed_from_u64(seed);
+    let mut regularity_null_values = Vec::with_capacity(iterations);
+    let mut expected_delta_null_values = Vec::with_capacity(iterations);
+    for _ in 0..iterations {
+        let mut shuffled = prior.non_anchor_positions_one_based.clone();
+        shuffled.shuffle(&mut rng);
+        shuffled.truncate(observed_positions_one_based.len());
+        let regularity_null_hits = shuffled
+            .iter()
+            .filter(|position| regularity_set.contains(position))
+            .count();
+        let expected_delta_null_hits = shuffled
+            .iter()
+            .filter(|position| expected_delta_set.contains(position))
+            .count();
+        regularity_null_values.push(regularity_null_hits as f64);
+        expected_delta_null_values.push(expected_delta_null_hits as f64);
+    }
+
+    let regularity_null_mean = mean(&regularity_null_values);
+    let regularity_null_std_dev = std_dev(&regularity_null_values, regularity_null_mean);
+    let regularity_greater_or_equal = regularity_null_values
+        .iter()
+        .filter(|value| **value >= regularity_hits as f64)
+        .count();
+    let regularity_empirical_p_value =
+        (regularity_greater_or_equal as f64 + 1.0) / (iterations as f64 + 1.0);
+
+    let expected_delta_null_mean = mean(&expected_delta_null_values);
+    let expected_delta_null_std_dev =
+        std_dev(&expected_delta_null_values, expected_delta_null_mean);
+    let expected_delta_greater_or_equal = expected_delta_null_values
+        .iter()
+        .filter(|value| **value >= expected_delta_hits as f64)
+        .count();
+    let expected_delta_empirical_p_value =
+        (expected_delta_greater_or_equal as f64 + 1.0) / (iterations as f64 + 1.0);
+
+    Ok(CiphertextStehleRegularityEvaluation {
+        artifact_path: artifact_path.display().to_string(),
+        observation_id: None,
+        observation_source_ids: Vec::new(),
+        observation_source_review_file: None,
+        observation_rationale: None,
+        observation_position_notes: BTreeMap::new(),
+        source_backed_observation: false,
+        observation_warning: Some(
+            "Ad hoc --positions input is diagnostic only; use --positions-file with validated source IDs before treating observations as evidence.",
+        ),
+        observed_position_count: observed_positions_one_based.len(),
+        observed_positions_one_based,
+        regularity_position_count: prior.regularity_position_count,
+        regularity_hits,
+        regularity_hit_rate,
+        matching_regularity_positions_one_based,
+        non_regularity_positions_one_based,
+        expected_delta_position_count: expected_delta_set.len(),
+        expected_delta_hits,
+        expected_delta_hit_rate,
+        matching_expected_delta_positions_one_based,
+        null_mean_regularity_hits: regularity_null_mean,
+        null_std_dev_regularity_hits: regularity_null_std_dev,
+        regularity_empirical_p_value,
+        null_mean_expected_delta_hits: expected_delta_null_mean,
+        null_std_dev_expected_delta_hits: expected_delta_null_std_dev,
+        expected_delta_empirical_p_value,
+        iterations,
+        seed,
+        promoted_candidate: false,
+        note: "Ciphertext Stehle-regularity evaluation scores source-backed non-anchor positions against the predeclared source-described local regularity window and lag-confirmed +5 subset with seeded same-size position-set nulls; it is not a claimed solution.",
+    })
 }
 
 pub fn evaluate_ciphertext_transition_positions(
