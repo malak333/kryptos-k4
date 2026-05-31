@@ -3,6 +3,39 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: Ultra-High Residue-Balance Row-Boundary Check
+
+Scored the already-preregistered, unique
+`ciphertext-residue-balance-ultra-high-moduli-v1` artifact against the
+committed CIA row-boundary observation. This uses the existing
+ciphertext-residue-balance evaluator over the fixed moduli `21..=26`; it does
+not add candidate words, public-anchor fragments, or a new route/key-material
+search.
+
+```bash
+cargo run --locked -- validate-ciphertext-residue-balance-observations \
+  --artifact experiments/predictions/ciphertext-residue-balance-ultra-high-moduli-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-residue-balance-ultra-high-moduli-v1.json \
+  --input experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --format json
+cargo run --locked -- evaluate-ciphertext-residue-balance \
+  --artifact experiments/predictions/ciphertext-residue-balance-ultra-high-moduli-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-residue-balance-ultra-high-moduli-v1.json \
+  --positions-file experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/ciphertext-residue-balance-observations/cia-k4-row-boundaries-ultra-high-moduli-v1 \
+  --format json
+cargo run --locked -- validate-evaluation-archive \
+  --input results/ciphertext-residue-balance-observations/cia-k4-row-boundaries-ultra-high-moduli-v1 \
+  --format json
+```
+
+Result: best modulus `21` residue `12`, `1/6` source-backed row-boundary
+positions hit the committed ultra-high residue-balance target, empirical
+`p=0.8289`, promoted `false`. This is negative/non-significant evidence for
+this preregistered target and does not reopen the row-boundary lane.
+
 ## 2026-05-31: Ciphertext Window-Balance Evaluator Added
 
 Added source-backed observation validation and evaluation support for

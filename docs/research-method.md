@@ -98,7 +98,7 @@ target/release/kryptos-k4 --help
 
 Then create the tag and release manually with `git` and `gh release create`.
 
-The `release-check` command verifies the no-Actions/no-Dependabot policy, required release docs, generated Markdown report presence, candidate CSV/registry alignment, committed preregistration validity, committed prediction-artifact validity, preregistration README inventory freshness, independent-lane readiness for source-backed observations, intentionally non-scorable observation-template status, committed source-backed observation-file validity, evidence-summary coverage with archived period/spacing/mirror/grid/Tableau-HILL/ciphertext-prior/ciphertext-hotspot/ciphertext-rarity/ciphertext-repeat-distance/ciphertext-adjacent-contrast/ciphertext-transition/ciphertext-skip-transition/ciphertext-turning-point/ciphertext-residue-balance command references and negative result metrics, committed source-review validity, findings source-input integrity, source-packet/source-registry field alignment, latest source access-date metadata, local source-archive metadata/boundary structure including non-empty `non_scorable_reason` markers that cannot coexist with `scored_positions_one_based`, source-archive coverage for committed observation positions, stopped-lane documentation coverage, progress-log freshness against the live lane and observation inventory, and absence of explicit leaked/full-plaintext sentinel markers across release-facing files and artifacts before release.
+The `release-check` command verifies the no-Actions/no-Dependabot policy, required release docs, generated Markdown report presence, candidate CSV/registry alignment, committed preregistration validity, committed prediction-artifact validity, preregistration README inventory freshness, independent-lane readiness for source-backed observations, intentionally non-scorable observation-template status, committed source-backed observation-file validity, evidence-summary coverage with archived period/spacing/mirror/grid/Tableau-HILL/ciphertext-prior/ciphertext-hotspot/ciphertext-rarity/ciphertext-repeat-distance/ciphertext-period-match/ciphertext-adjacent-contrast/ciphertext-transition/ciphertext-skip-transition/ciphertext-turning-point/ciphertext-window-balance/ciphertext-residue-balance command references and negative result metrics, committed source-review validity, findings source-input integrity, source-packet/source-registry field alignment, latest source access-date metadata, local source-archive metadata/boundary structure including non-empty `non_scorable_reason` markers that cannot coexist with `scored_positions_one_based`, source-archive coverage for committed observation positions, stopped-lane documentation coverage, progress-log freshness against the live lane and observation inventory, and absence of explicit leaked/full-plaintext sentinel markers across release-facing files and artifacts before release.
 
 The source packet and `src/data.rs` source registry must stay aligned.
 Registered local source archive paths must exist, and `release-check` verifies
@@ -183,10 +183,11 @@ unused eligible source is explicitly non-scorable, `source-frontier` makes the
 same next-step boundary as `next-evidence-gate`: add a new source-backed
 rationale, add a new eligible source, or add a distinct preregistered prediction
 artifact before further scoring.
-The mirror-pair lane is the current distinct preregistered target: it preserves
-35 non-anchor mirror pairs across the 97-character K4 axis and now has a
-validator/evaluator/archive path, but it still needs source-backed observations
-and seeded null controls before any score is interpreted.
+Distinct preregistered targets now include period, spacing, mirror, grid,
+Tableau/HILL, and several ciphertext-only position priors. The committed CIA
+row-boundary observation has been scored against those available evaluators,
+including the ultra-high residue-balance target, and remains
+negative/non-significant under the seeded controls.
 Run `source-review-packet` when preparing a concrete observation pass. It
 separates the pre-score source-review checklist from the scoring commands and
 shows which eligible sources currently lack local archive URLs. Its observation
