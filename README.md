@@ -169,9 +169,10 @@ Quarantined plaintext-claim sources are reported separately from scored
 observation sources, with `verify-plaintext-claim` and
 `verify-claim-reconciliation` commands for local structure checks that do not
 print, store, or promote the claimed text. When a reconciliation table includes
-published `R`/shift, `BaseR`, and `Gate` columns, the reconciliation verifier
-also checks final shift arithmetic, binary gate values, and `BaseR + Gate`
-agreement against the K4 ciphertext and local claim text.
+published `Tier`/`Lane`, `R`/shift, `BaseR`, and `Gate` columns, the
+reconciliation verifier also checks the 7-by-14 coordinate rule, final shift
+arithmetic, binary gate values, and `BaseR + Gate` agreement against the K4
+ciphertext and local claim text.
 `source-review-packet` prints the same eligible-source review boundary as a
 standalone pre-score checklist, including missing local archives and the
 required observation fields, including the validated source-review artifact and
@@ -528,7 +529,7 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `hypotheses` | Ranked source-grounded hypothesis register in Markdown or JSON. |
 | `sources` | Source provenance records in Markdown or JSON for source-policy audits. |
 | `verify-plaintext-claim` | Local verifier for quarantined external plaintext claims; checks length, public-anchor compatibility, and aggregate shift diagnostics without printing or storing the claim text. |
-| `verify-claim-reconciliation` | Local verifier for quarantined external reconciliation tables; checks row count, one-based position sequence, K4 ciphertext alignment, optional published `R`/shift, `BaseR`, and `Gate` arithmetic, public-anchor compatibility, and aggregate shift diagnostics without printing or storing any claimed plaintext column. |
+| `verify-claim-reconciliation` | Local verifier for quarantined external reconciliation tables; checks row count, one-based position sequence, K4 ciphertext alignment, optional published `Tier`/`Lane`, `R`/shift, `BaseR`, and `Gate` arithmetic, public-anchor compatibility, and aggregate shift diagnostics without printing or storing any claimed plaintext column. |
 | `observation-sources` | Focused source-use report showing which registered sources may support scored independent position observations and why other sources are context-only. |
 | `source-review-packet` | Pre-score source review packet for eligible observation sources, local archive status, source URLs, use boundaries, required review steps, and the observation requirement to link the validated source-review file. |
 | `source-review-status` | Pre-score source-review artifact scanner, separating valid reviews, invalid reviews, missing review roots, and no-review states. |

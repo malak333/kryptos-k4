@@ -14887,6 +14887,22 @@ fn print_claim_reconciliation_verification(
     );
     println!("plaintext rows present: {}", verification.plaintext_rows);
     println!(
+        "tier values: {}/{}",
+        verification.tier_match_count, verification.tier_checked_count
+    );
+    println!(
+        "all tier values match: {}",
+        verification.all_tier_values_match
+    );
+    println!(
+        "lane values: {}/{}",
+        verification.lane_match_count, verification.lane_checked_count
+    );
+    println!(
+        "all lane values match: {}",
+        verification.all_lane_values_match
+    );
+    println!(
         "published R/shift values: {}/{}",
         verification.r_value_match_count, verification.r_value_checked_count
     );

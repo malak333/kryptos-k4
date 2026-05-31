@@ -111,9 +111,9 @@ External plaintext claims use a separate quarantine boundary: register them with
 screen local claim files with `verify-plaintext-claim` or local reconciliation
 tables with `verify-claim-reconciliation`. These commands check only table
 shape, normalized length, K4 ciphertext alignment, public-anchor compatibility,
-optional published `R`/shift, `BaseR`, and `Gate` arithmetic, and aggregate
-shift diagnostics; they do not print or store claimed plaintext and cannot
-promote a candidate.
+optional published `Tier`/`Lane`, `R`/shift, `BaseR`, and `Gate` arithmetic,
+and aggregate shift diagnostics; they do not print or store claimed plaintext
+and cannot promote a candidate.
 
 The candidate CSV and candidate registry must also stay aligned. Candidate words
 remain stopped-lane exploratory inputs unless they are represented in

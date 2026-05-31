@@ -43,6 +43,12 @@ pub struct ClaimReconciliationVerification {
     pub ciphertext_match_count: usize,
     pub all_ciphertext_matches: bool,
     pub plaintext_rows: usize,
+    pub tier_checked_count: usize,
+    pub tier_match_count: usize,
+    pub all_tier_values_match: bool,
+    pub lane_checked_count: usize,
+    pub lane_match_count: usize,
+    pub all_lane_values_match: bool,
     pub r_value_checked_count: usize,
     pub r_value_match_count: usize,
     pub all_r_values_match: bool,
@@ -70,6 +76,8 @@ pub struct ClaimReconciliationRowCheck {
     pub position_one_based: usize,
     pub ciphertext_matches: bool,
     pub plaintext_present: bool,
+    pub tier_value_matches: Option<bool>,
+    pub lane_value_matches: Option<bool>,
     pub implied_shift_value: Option<u8>,
     pub r_value_matches: Option<bool>,
     pub gate_value_binary: Option<bool>,
@@ -168,6 +176,10 @@ pub fn verify_claim_reconciliation_table(
     let mut ciphertext_checked_count = 0usize;
     let mut ciphertext_match_count = 0usize;
     let mut plaintext_rows = 0usize;
+    let mut tier_checked_count = 0usize;
+    let mut tier_match_count = 0usize;
+    let mut lane_checked_count = 0usize;
+    let mut lane_match_count = 0usize;
     let mut r_value_checked_count = 0usize;
     let mut r_value_match_count = 0usize;
     let mut gate_checked_count = 0usize;
@@ -226,6 +238,25 @@ pub fn verify_claim_reconciliation_table(
             }
         }
 
+        let expected_tier = expected_tier(row.position_one_based);
+        let expected_lane = expected_lane(row.position_one_based);
+        let tier_value_matches = row.tier_value.map(|tier_value| {
+            tier_checked_count += 1;
+            let matches = tier_value == expected_tier;
+            if matches {
+                tier_match_count += 1;
+            }
+            matches
+        });
+        let lane_value_matches = row.lane_value.map(|lane_value| {
+            lane_checked_count += 1;
+            let matches = lane_value == expected_lane;
+            if matches {
+                lane_match_count += 1;
+            }
+            matches
+        });
+
         let implied_shift_value =
             expected_ciphertext
                 .zip(row.plaintext)
@@ -270,6 +301,8 @@ pub fn verify_claim_reconciliation_table(
             position_one_based: row.position_one_based,
             ciphertext_matches,
             plaintext_present: row.plaintext.is_some(),
+            tier_value_matches,
+            lane_value_matches,
             implied_shift_value,
             r_value_matches,
             gate_value_binary,
@@ -336,6 +369,8 @@ pub fn verify_claim_reconciliation_table(
         && sequential_positions
         && all_ciphertext_matches
         && all_public_anchors_match
+        && tier_match_count == tier_checked_count
+        && lane_match_count == lane_checked_count
         && r_value_match_count == r_value_checked_count
         && gate_binary_count == gate_checked_count
         && r_plus_gate_match_count == r_plus_gate_checked_count;
@@ -351,6 +386,12 @@ pub fn verify_claim_reconciliation_table(
         ciphertext_match_count,
         all_ciphertext_matches,
         plaintext_rows,
+        tier_checked_count,
+        tier_match_count,
+        all_tier_values_match: tier_match_count == tier_checked_count,
+        lane_checked_count,
+        lane_match_count,
+        all_lane_values_match: lane_match_count == lane_checked_count,
         r_value_checked_count,
         r_value_match_count,
         all_r_values_match: r_value_match_count == r_value_checked_count,
@@ -370,13 +411,15 @@ pub fn verify_claim_reconciliation_table(
         implied_shift_max_bucket_count,
         structural_checks_passed,
         promoted_candidate: false,
-        note: "Claim-reconciliation verification checks local table shape, K4 ciphertext alignment, public anchors, and aggregate shift diagnostics only; it does not print, store, or promote claimed plaintext.",
+        note: "Claim-reconciliation verification checks local table shape, K4 ciphertext alignment, optional coordinate and shift/gate arithmetic, public anchors, and aggregate shift diagnostics only; it does not print, store, or promote claimed plaintext.",
     })
 }
 
 #[derive(Debug)]
 struct ReconciliationRow {
     position_one_based: usize,
+    tier_value: Option<usize>,
+    lane_value: Option<usize>,
     ciphertext: Option<char>,
     plaintext: Option<char>,
     r_value: Option<usize>,
@@ -394,16 +437,19 @@ fn parse_reconciliation_rows(input: &str) -> Result<Vec<ReconciliationRow>> {
     };
     let delimiter = detect_delimiter(header_line);
     let headers = split_reconciliation_line(header_line, delimiter);
-    let header_lookup = headers
-        .iter()
-        .enumerate()
-        .map(|(index, header)| (normalize_header(header), index))
-        .collect::<HashMap<_, _>>();
+    let mut header_lookup = HashMap::new();
+    for (index, header) in headers.iter().enumerate() {
+        header_lookup
+            .entry(normalize_header(header))
+            .or_insert(index);
+    }
     let position_index = find_header(
         &header_lookup,
         &["i", "pos", "position", "position_one_based"],
     )
     .ok_or_else(|| anyhow::anyhow!("claim reconciliation table needs an i/position column"))?;
+    let tier_value_index = find_header(&header_lookup, &["tier", "t", "row"]);
+    let lane_value_index = find_header(&header_lookup, &["lane", "l", "lane_phys", "lanephys"]);
     let ciphertext_index = find_header(&header_lookup, &["c", "ciphertext"]);
     let plaintext_index = find_header(&header_lookup, &["p", "plaintext"]);
     let r_value_index = find_header(&header_lookup, &["r", "shift", "r_value", "rvalue"]);
@@ -433,6 +479,12 @@ fn parse_reconciliation_rows(input: &str) -> Result<Vec<ReconciliationRow>> {
         let plaintext = plaintext_index
             .and_then(|index| cells.get(index))
             .and_then(|cell| single_ascii_uppercase_letter(cell));
+        let tier_value = tier_value_index
+            .and_then(|index| cells.get(index))
+            .and_then(|cell| parse_optional_usize(cell));
+        let lane_value = lane_value_index
+            .and_then(|index| cells.get(index))
+            .and_then(|cell| parse_optional_usize(cell));
         let r_value = r_value_index
             .and_then(|index| cells.get(index))
             .and_then(|cell| parse_optional_usize(cell));
@@ -444,6 +496,8 @@ fn parse_reconciliation_rows(input: &str) -> Result<Vec<ReconciliationRow>> {
             .and_then(|cell| parse_optional_usize(cell));
         rows.push(ReconciliationRow {
             position_one_based,
+            tier_value,
+            lane_value,
             ciphertext,
             plaintext,
             r_value,
@@ -496,6 +550,14 @@ fn find_header(headers: &HashMap<String, usize>, aliases: &[&str]) -> Option<usi
     aliases
         .iter()
         .find_map(|alias| headers.get(*alias).copied())
+}
+
+fn expected_tier(position_one_based: usize) -> usize {
+    position_one_based.saturating_sub(1) / 14 + 1
+}
+
+fn expected_lane(position_one_based: usize) -> usize {
+    (position_one_based + 12) % 14 + 1
 }
 
 fn single_ascii_uppercase_letter(value: &str) -> Option<char> {
@@ -579,14 +641,17 @@ mod tests {
     #[test]
     fn verifies_optional_r_and_gate_columns_without_promotion() {
         let fixture = public_anchor_compatible_fixture();
-        let mut table = String::from("i,C,P,R,BaseR,Gate\n");
+        let mut table = String::from("i,T,L,C,P,R,BaseR,Gate\n");
         for (index, (ciphertext, plaintext)) in
             K4_CIPHERTEXT.chars().zip(fixture.chars()).enumerate()
         {
+            let position = index + 1;
             let r_value = (26 + ciphertext as i16 - plaintext as i16) % 26;
             table.push_str(&format!(
-                "{},{},{},{},{},{}\n",
-                index + 1,
+                "{},{},{},{},{},{},{},{}\n",
+                position,
+                expected_tier(position),
+                expected_lane(position),
                 ciphertext,
                 plaintext,
                 r_value,
@@ -598,6 +663,12 @@ mod tests {
         let verification =
             verify_claim_reconciliation_table(&table, Some("synthetic-claim".to_string())).unwrap();
 
+        assert_eq!(verification.tier_checked_count, K4_CIPHERTEXT.len());
+        assert_eq!(verification.tier_match_count, K4_CIPHERTEXT.len());
+        assert!(verification.all_tier_values_match);
+        assert_eq!(verification.lane_checked_count, K4_CIPHERTEXT.len());
+        assert_eq!(verification.lane_match_count, K4_CIPHERTEXT.len());
+        assert!(verification.all_lane_values_match);
         assert_eq!(verification.r_value_checked_count, K4_CIPHERTEXT.len());
         assert_eq!(verification.r_value_match_count, K4_CIPHERTEXT.len());
         assert!(verification.all_r_values_match);
