@@ -473,6 +473,13 @@ Current independent lanes:
   41 through 47. The artifact passes `--require-unique-artifact`; it is a
   pre-score prediction target for future source-backed observations, not
   evidence by itself.
+- `ciphertext-residue-balance-terminal-moduli-v1.json`, a distinct
+  ciphertext-only terminal-moduli residue balance prior with committed artifact
+  `experiments/predictions/ciphertext-residue-balance-terminal-moduli-v1.json`.
+  The artifact predeclares one selected non-anchor residue set for each modulus
+  48 through 54. The artifact passes `--require-unique-artifact`; it is a
+  pre-score prediction target for future source-backed observations, not
+  evidence by itself.
 
 The mirror and grid-layout lanes are now source-observation ready: validate
 their artifacts with `validate-prediction-artifact`, then use the matching
