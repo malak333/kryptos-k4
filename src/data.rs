@@ -428,6 +428,32 @@ pub fn sources() -> Vec<Source> {
             allowed_use: "unverified-solution-claim",
             use_note: "Public running-key candidate paper; quarantined for future independent verification only, not source-backed evidence, not candidate material, and not release-facing plaintext.",
         },
+        Source {
+            id: "ssrn-bonifacino-weltzeituhr-error-key-2025",
+            label: "SSRN Bonifacino 2025 Weltzeituhr error-key derivation paper",
+            url: "https://ssrn.com/abstract=5779902",
+            archive_url: Some(
+                "sources/archives/ssrn-bonifacino-weltzeituhr-error-key-2025-2026-05-31.md",
+            ),
+            accessed_at: "2026-05-31",
+            publication_date: Some("2025-11-21"),
+            source_type: "community-solution-claim",
+            allowed_use: "unverified-solution-claim",
+            use_note: "Public claimed derivation for a Weltzeituhr running-key K4 method; quarantined for future independent verification only, not source-backed evidence, not candidate material, and not release-facing plaintext.",
+        },
+        Source {
+            id: "ssrn-bonifacino-generative-running-key-2025",
+            label: "SSRN Bonifacino 2025 generative running-key paper",
+            url: "https://ssrn.com/abstract=5876462",
+            archive_url: Some(
+                "sources/archives/ssrn-bonifacino-generative-running-key-2025-2026-05-31.md",
+            ),
+            accessed_at: "2026-05-31",
+            publication_date: Some("2025-12-08"),
+            source_type: "community-solution-claim",
+            allowed_use: "unverified-solution-claim",
+            use_note: "Public claimed generative ruleset for a Weltzeituhr running-key K4 method; quarantined for future independent verification only, not source-backed evidence, not candidate material, and not release-facing plaintext.",
+        },
     ]
 }
 
