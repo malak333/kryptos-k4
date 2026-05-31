@@ -317,6 +317,17 @@ pub fn sources() -> Vec<Source> {
             use_note: "Public reproducibility and elimination-scope context; not plaintext, not candidate evidence, and not scored observations.",
         },
         Source {
+            id: "kryptos-today-project-k4-2026",
+            label: "Project K4 2026 live cryptanalysis press page",
+            url: "https://kryptos.today/press/2026-05-01-launch",
+            archive_url: Some("sources/archives/kryptos-today-project-k4-2026-05-31.md"),
+            accessed_at: "2026-05-31",
+            publication_date: Some("2026-05-01"),
+            source_type: "independent-cryptanalysis-project",
+            allowed_use: "methodology-context",
+            use_note: "Independent live-search and negative-result context; not plaintext, not candidate evidence, and not scored observations.",
+        },
+        Source {
             id: "rumkin-k4-reference",
             label: "Rumkin K4 reference notes",
             url: "https://rumkin.com/reference/kryptos/k4/",
@@ -421,6 +432,7 @@ mod tests {
             "smithsonian-2026-archive-discovery",
             "kryptosbot-sanborn-papers-2026",
             "kryptosbot-methodology-2026",
+            "kryptos-today-project-k4-2026",
             "rumkin-k4-reference",
             "solvekryptos-2026-claim",
         ] {

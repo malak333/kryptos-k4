@@ -3,6 +3,29 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: Project K4 Methodology Source Registered
+
+Added `kryptos-today-project-k4-2026` as a quote-free local source snapshot
+for the public Project K4 live-cryptanalysis press page. This is methodology
+context only: it documents an independent live-search effort, claimed reject
+telemetry, attack-queue framing, and negative-result discipline, but it does
+not add candidate material, a key stream, a route, plaintext, or scoreable
+non-anchor observations.
+
+Source archive:
+
+```bash
+cargo run --locked -- validate-source-archive \
+  --source-id kryptos-today-project-k4-2026 \
+  --input sources/archives/kryptos-today-project-k4-2026-05-31.md
+```
+
+Practical consequence: this can inform future attack-family triage and stop
+rules, but it does not change the evidence frontier. Future scored work still
+requires a new eligible source with explicit non-anchor scored-position
+markers, a changed source-backed archive boundary, or a genuinely distinct
+validated prediction artifact.
+
 ## 2026-05-31: Ultra-High Residue-Balance Row-Boundary Check
 
 Scored the already-preregistered, unique
