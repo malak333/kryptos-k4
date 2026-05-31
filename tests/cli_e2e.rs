@@ -7583,6 +7583,7 @@ fn release_check_json_exposes_all_local_preflight_gates() {
         "next-evidence-structured-support-documented",
         "stopped-lanes-documented",
         "progress-log-current",
+        "claim-verification-archives-structured",
         "no-plaintext-leakage-markers",
     ] {
         assert!(names.contains(expected_name));
