@@ -3,6 +3,40 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: Additional Public K4 Claims Quarantined
+
+Added quote-free local source snapshots for two additional public K4 solution
+claim surfaces:
+
+- `dearcipher-k4-claim-2026`
+- `prlog-bishop-k4-claim-2020`
+
+Both sources are registered as `unverified-solution-claim`. They are not
+eligible for scored independent position observations and are not source-backed
+evidence. The repository snapshots record only metadata, high-level claim
+boundaries, and quarantine handling; no claimed plaintext, key stream, route,
+table, or plaintext-bearing artifact is stored.
+
+Validation:
+
+```bash
+cargo run --locked -- validate-source-archive \
+  --source-id dearcipher-k4-claim-2026 \
+  --input sources/archives/dearcipher-k4-claim-2026-05-31.md \
+  --format json
+
+cargo run --locked -- validate-source-archive \
+  --source-id prlog-bishop-k4-claim-2020 \
+  --input sources/archives/prlog-bishop-k4-claim-2020-2026-05-31.md \
+  --format json
+```
+
+Practical consequence: public claim intake is broader, but the evidence
+frontier is unchanged for scoring. Any future use of these sources must pass
+temporary local verifier commands such as `verify-plaintext-claim`,
+`verify-running-key-claim`, or a claim-specific mechanism verifier without
+adding release-facing plaintext-bearing artifacts.
+
 ## 2026-05-31: Latest Public-Source Scan Added No Scoring Evidence
 
 A live source scan on 2026-05-31 checked current public reporting and project
