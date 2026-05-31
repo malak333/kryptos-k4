@@ -1431,6 +1431,35 @@ condition: `duplicate-period-lanes-not-evidence`, blocking condition:
 This is negative/non-significant source-backed evidence. It does not promote a
 K4 solution, key, route, plaintext, or candidate.
 
+## 2026-05-31 - SSRN Claim-Family Quarantine Boundary
+
+Registered the Bonifacino SSRN Weltzeituhr running-key claim family as
+quarantined `unverified-solution-claim` sources only:
+
+- `ssrn-bonifacino-running-key-2025`
+- `ssrn-bonifacino-weltzeituhr-error-key-2025`
+- `ssrn-bonifacino-generative-running-key-2025`
+
+Quote-free local source snapshots record only SSRN metadata, high-level claim
+boundaries, and the no-promotion/no-plaintext storage rule. These sources are
+not source-backed observation evidence, not candidate material, and not a K4
+solution.
+
+Temporary verifier status: direct non-browser PDF fetch for the running-key
+paper returned an SSRN/Cloudflare challenge page rather than a PDF, and the
+web-accessible SSRN page exposed only metadata and abstract text. No claimed
+plaintext, key stream, route, table, or plaintext-bearing artifact was added to
+the repository or release-facing files. The SSRN claim-family sources therefore
+remain unscreened by `verify-plaintext-claim`, `verify-running-key-claim`,
+`verify-claim-reconciliation`, `verify-claim-bundle`, or
+`verify-claim-mechanism` until temporary local claim files are available
+outside the repository.
+
+Current gate meaning: `next-evidence-gate` should continue listing these SSRN
+claim sources under `quarantined_claim_source_ids_without_archive`. That is a
+data-availability boundary, not a negative verification result and not evidence
+for promotion.
+
 ## 2026-05-31 - Quarantined Plaintext Claim Verifier Archives
 
 Archived non-leaking `verify-plaintext-claim` outputs for two quarantined

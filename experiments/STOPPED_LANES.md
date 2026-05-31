@@ -221,3 +221,22 @@ cargo run --locked -- validate-preregistration --input <path>
 A valid preregistration must use either genuinely new source-documented evidence
 or an independent prediction target. Public anchor-derived fragments may be used
 as controls, but not as discovery inputs or primary evidence.
+
+## SSRN Bonifacino Claim-Family Screening
+
+Status: stopped until temporary local claim files are available outside the
+repository.
+
+Reason: the registered SSRN Bonifacino sources are quarantined
+`unverified-solution-claim` records. They may be screened only through the
+non-leaking local claim-verifier commands, and only from temporary local files
+containing the claimed plaintext, key stream, reconciliation table, or mechanism
+bundle. A direct non-browser fetch of the public SSRN PDF endpoint returned a
+challenge page rather than a PDF, while the web-accessible SSRN record exposed
+only metadata and abstract text. That is insufficient for a structural verifier.
+
+Do not infer either support or rejection from this lane. Do not add claimed
+plaintext, key-stream, route, or plaintext-bearing table material to committed
+files. Reopen only when the claim inputs are available as temporary local files,
+then archive only non-leaking aggregate verifier diagnostics under
+`results/claim-verifications/<source-id>-...`.
