@@ -3681,15 +3681,15 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Independent Lane Status"))
-        .stdout(predicate::str::contains("lanes: 67"))
+        .stdout(predicate::str::contains("lanes: 68"))
         .stdout(predicate::str::contains(
-            "ready for source-backed observations: 67",
+            "ready for source-backed observations: 68",
         ))
         .stdout(predicate::str::contains("invalid lanes: 0"))
-        .stdout(predicate::str::contains("prediction artifacts: 67"))
-        .stdout(predicate::str::contains("unique prediction artifacts: 25"))
+        .stdout(predicate::str::contains("prediction artifacts: 68"))
+        .stdout(predicate::str::contains("unique prediction artifacts: 26"))
         .stdout(predicate::str::contains(
-            "unique ready prediction artifacts: 25",
+            "unique ready prediction artifacts: 26",
         ))
         .stdout(predicate::str::contains("duplicate artifact groups: 1"))
         .stdout(predicate::str::contains("duplicate artifact lanes: 43"))
@@ -3716,7 +3716,7 @@ fn independent_lane_status_summarizes_ready_lanes() {
             "| ciphertext-period-match-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
         ))
         .stdout(predicate::str::contains(
-            "| ciphertext-residue-balance-position-prior | 4 | 4 | 4 | 4 | 4 | 0 |",
+            "| ciphertext-residue-balance-position-prior | 5 | 5 | 5 | 5 | 5 | 0 |",
         ))
         .stdout(predicate::str::contains(
             "| ciphertext-skip-transition-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
@@ -3769,12 +3769,12 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["lane_count"], 67);
-    assert_eq!(json["ready_for_source_backed_observations"], 67);
+    assert_eq!(json["lane_count"], 68);
+    assert_eq!(json["ready_for_source_backed_observations"], 68);
     assert_eq!(json["invalid_lanes"], 0);
-    assert_eq!(json["prediction_artifacts"], 67);
-    assert_eq!(json["unique_prediction_artifacts"], 25);
-    assert_eq!(json["unique_ready_prediction_artifacts"], 25);
+    assert_eq!(json["prediction_artifacts"], 68);
+    assert_eq!(json["unique_prediction_artifacts"], 26);
+    assert_eq!(json["unique_ready_prediction_artifacts"], 26);
     assert_eq!(json["duplicate_prediction_artifact_lane_count"], 43);
     assert_eq!(json["duplicate_prediction_artifact_extra_lane_count"], 42);
     let families = json["family_summaries"].as_array().unwrap();
@@ -3816,8 +3816,8 @@ fn independent_lane_status_summarizes_ready_lanes() {
     }));
     assert!(families.iter().any(|family| {
         family["hypothesis_family"] == "ciphertext-residue-balance-position-prior"
-            && family["lanes"] == 4
-            && family["unique_ready_prediction_artifacts"] == 4
+            && family["lanes"] == 5
+            && family["unique_ready_prediction_artifacts"] == 5
             && family["duplicate_artifact_groups"] == 0
     }));
     assert!(families.iter().any(|family| {
@@ -4268,7 +4268,7 @@ fn next_evidence_gate_prints_operational_checklist() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Next Evidence Gate"))
-        .stdout(predicate::str::contains("total ready lanes: 67"))
+        .stdout(predicate::str::contains("total ready lanes: 68"))
         .stdout(predicate::str::contains(
             "ciphertext-adjacent-contrast-position-prior",
         ))
@@ -4303,7 +4303,7 @@ fn next_evidence_gate_prints_operational_checklist() {
         .stdout(predicate::str::contains("family ready lanes: 47"))
         .stdout(predicate::str::contains("family unique ready artifacts: 5"))
         .stdout(predicate::str::contains(
-            "unique ready prediction artifacts: 25",
+            "unique ready prediction artifacts: 26",
         ))
         .stdout(predicate::str::contains(
             "duplicate prediction artifact groups: 1",
@@ -4439,9 +4439,9 @@ fn next_evidence_gate_prints_operational_checklist() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["ready_lanes"], 67);
+    assert_eq!(json["ready_lanes"], 68);
     assert_eq!(json["invalid_lanes"], 0);
-    assert_eq!(json["unique_ready_prediction_artifacts"], 25);
+    assert_eq!(json["unique_ready_prediction_artifacts"], 26);
     assert_eq!(json["duplicate_prediction_artifact_group_count"], 1);
     assert_eq!(
         json["duplicate_prediction_artifact_groups"][0]["lane_ids"]
@@ -4905,15 +4905,14 @@ fn next_evidence_gate_prints_operational_checklist() {
     assert!(gates.iter().any(|gate| {
         gate["hypothesis_family"] == "ciphertext-residue-balance-position-prior"
             && gate["representative_preregistration"]
-                == "experiments/preregistrations/ciphertext-residue-balance-high-moduli-v1.json"
+                == "experiments/preregistrations/ciphertext-residue-balance-extreme-moduli-v1.json"
             && gate["validation_command"]
                 .as_str()
                 .unwrap()
                 .contains("validate-ciphertext-residue-balance-observations")
-            && gate["validation_command"]
-                .as_str()
-                .unwrap()
-                .contains("experiments/predictions/ciphertext-residue-balance-high-moduli-v1.json")
+            && gate["validation_command"].as_str().unwrap().contains(
+                "experiments/predictions/ciphertext-residue-balance-extreme-moduli-v1.json",
+            )
             && gate["evaluation_command"]
                 .as_str()
                 .unwrap()

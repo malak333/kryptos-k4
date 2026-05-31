@@ -26,6 +26,51 @@ requires a new eligible source with explicit non-anchor scored-position
 markers, a changed source-backed archive boundary, or a genuinely distinct
 validated prediction artifact.
 
+## 2026-05-31: Extreme-Moduli Residue-Balance Prior Registered
+
+Added `ciphertext-residue-balance-extreme-moduli-v1`, a distinct
+ciphertext-only residue-balance preregistration and committed prediction
+artifact for moduli `27..=33`. This is a pre-score planning target only: it
+uses public K4 ciphertext positions plus the fixed non-anchor exclusion mask,
+and it does not use candidate words, key material, routes, claimed plaintext,
+public-anchor additive fragments, or source-backed observation positions as
+discovery evidence.
+
+```bash
+cargo run --locked -- ciphertext-residue-balance-prior \
+  --min-modulus 27 \
+  --max-modulus 33 \
+  --format json \
+  > experiments/predictions/ciphertext-residue-balance-extreme-moduli-v1.json
+cargo run --locked -- validate-preregistration \
+  --input experiments/preregistrations/ciphertext-residue-balance-extreme-moduli-v1.json \
+  --format json
+cargo run --locked -- validate-prediction-artifact \
+  --preregistration experiments/preregistrations/ciphertext-residue-balance-extreme-moduli-v1.json \
+  --require-unique-artifact \
+  --format json
+```
+
+Validation status: preregistration valid; prediction artifact valid and unique.
+The artifact fixes one selected non-anchor residue class for each modulus
+`27..=33`; promotion remains `false`. This does not reopen any negative
+source-backed row-boundary archive. It gives future independent source-backed
+observations one additional distinct predeclared target to test.
+
+Current independent-lane inventory after this addition:
+
+- independent lanes: `68`
+- ready for source-backed observations: `68`
+- evaluator-pending lanes: `0`
+- invalid lanes: `0`
+- prediction artifacts: `68`
+- unique prediction artifacts: `26`
+- unique ready prediction targets: `26`
+- duplicate artifact lanes: `43`
+- extra duplicate artifact lanes: `42`
+- ciphertext-residue-balance-position-prior-family lanes: `5`
+- ciphertext-residue-balance-position-prior-family unique ready targets: `5`
+
 ## 2026-05-31: Ultra-High Residue-Balance Row-Boundary Check
 
 Scored the already-preregistered, unique
