@@ -1,0 +1,189 @@
+{
+  "artifact_kind": "ciphertext-residue-balance-prior",
+  "hypothesis_family": "ciphertext-residue-balance-position-prior",
+  "source_inputs": [
+    "Public K4 ciphertext only",
+    "Public anchor positions used only as an exclusion mask for future non-anchor targets"
+  ],
+  "discovery_inputs": [
+    "For each modulus 34..=40, select the non-anchor residue class with the highest distinct ciphertext-letter rate",
+    "Tie-break by larger position count, then lower residue number",
+    "No candidate words, routes, plaintext claims, or public-anchor additive fragments"
+  ],
+  "prediction_target": "Future source-backed non-anchor K4 position observations should be enriched in these predeclared ciphertext-only residue-balance sets before any candidate-word or public-anchor-derived tuning is performed.",
+  "non_anchor_position_count": 73,
+  "non_anchor_positions_one_based": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84,
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,
+    91,
+    92,
+    93,
+    94,
+    95,
+    96,
+    97
+  ],
+  "selected_moduli_count": 7,
+  "selected_residue_sets": [
+    {
+      "modulus": 34,
+      "residue": 6,
+      "position_count": 3,
+      "distinct_ciphertext_letters": 3,
+      "distinct_letter_rate": 1.0,
+      "positions_one_based": [
+        7,
+        41,
+        75
+      ]
+    },
+    {
+      "modulus": 35,
+      "residue": 4,
+      "position_count": 3,
+      "distinct_ciphertext_letters": 3,
+      "distinct_letter_rate": 1.0,
+      "positions_one_based": [
+        5,
+        40,
+        75
+      ]
+    },
+    {
+      "modulus": 36,
+      "residue": 2,
+      "position_count": 3,
+      "distinct_ciphertext_letters": 3,
+      "distinct_letter_rate": 1.0,
+      "positions_one_based": [
+        3,
+        39,
+        75
+      ]
+    },
+    {
+      "modulus": 37,
+      "residue": 0,
+      "position_count": 3,
+      "distinct_ciphertext_letters": 3,
+      "distinct_letter_rate": 1.0,
+      "positions_one_based": [
+        1,
+        38,
+        75
+      ]
+    },
+    {
+      "modulus": 38,
+      "residue": 0,
+      "position_count": 3,
+      "distinct_ciphertext_letters": 3,
+      "distinct_letter_rate": 1.0,
+      "positions_one_based": [
+        1,
+        39,
+        77
+      ]
+    },
+    {
+      "modulus": 39,
+      "residue": 0,
+      "position_count": 3,
+      "distinct_ciphertext_letters": 3,
+      "distinct_letter_rate": 1.0,
+      "positions_one_based": [
+        1,
+        40,
+        79
+      ]
+    },
+    {
+      "modulus": 40,
+      "residue": 0,
+      "position_count": 3,
+      "distinct_ciphertext_letters": 3,
+      "distinct_letter_rate": 1.0,
+      "positions_one_based": [
+        1,
+        41,
+        81
+      ]
+    }
+  ],
+  "controls": [
+    "source-backed observation file required before scoring",
+    "public anchor positions excluded from residue-balance target positions",
+    "seeded same-size non-anchor position-shuffle baseline required",
+    "best-of-modulus null control required",
+    "multiple-comparison context across all preregistered independent lanes required before interpretation",
+    "promotion blocked unless future independent observations beat controls without post-hoc retuning"
+  ],
+  "public_anchor_fragments_used_for_discovery": false,
+  "public_anchor_fragments_used_as_primary_evidence": false,
+  "promoted_candidate": false,
+  "note": "Ciphertext residue-balance prior is a planning artifact for future independent observations; it is not a claimed solution, key, route, plaintext, or promotion criterion."
+}

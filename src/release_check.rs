@@ -85,7 +85,7 @@ const PLAINTEXT_LEAKAGE_MARKERS: [&str; 4] = [
 
 const FINDINGS_COMMAND_SOURCE_INPUTS: [&str; 1] = ["release-check"];
 
-const STOPPED_LANES_REQUIRED_MARKERS: [&str; 23] = [
+const STOPPED_LANES_REQUIRED_MARKERS: [&str; 24] = [
     "# Stopped K4 Experiment Lanes",
     "It is not a solution claim.",
     "## Public Anchor-Derived Key-Material Lanes",
@@ -109,6 +109,7 @@ const STOPPED_LANES_REQUIRED_MARKERS: [&str; 23] = [
     "ciphertext-turning-point `p=0.5247`",
     "ciphertext-window-balance `p=1.0000`",
     "ciphertext-residue-balance",
+    "super-extreme-moduli ciphertext-residue-balance `p=0.6741`",
 ];
 
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]

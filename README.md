@@ -235,7 +235,8 @@ ciphertext-turning-point `p=0.5247`, ciphertext-window-balance `p=1.0000`,
 ciphertext-residue-balance `p=0.4803`,
 high-moduli ciphertext-residue-balance `p=0.6416`, very-high-moduli
 ciphertext-residue-balance `p=0.3125`, and ultra-high-moduli
-ciphertext-residue-balance `p=0.8289`.
+ciphertext-residue-balance `p=0.8289`, and super-extreme-moduli
+ciphertext-residue-balance `p=0.6741`.
 It promotes no candidate.
 `release-check` requires registered local source archive paths to exist, so the
 source registry cannot silently point at missing snapshots.

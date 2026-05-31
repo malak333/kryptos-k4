@@ -110,6 +110,10 @@ This is not a claimed solution.
   `experiments/preregistrations/ciphertext-residue-balance-extreme-moduli-v1.json`
 - Ciphertext extreme-moduli residue-balance artifact:
   `experiments/predictions/ciphertext-residue-balance-extreme-moduli-v1.json`
+- Ciphertext super-extreme-moduli residue-balance preregistration:
+  `experiments/preregistrations/ciphertext-residue-balance-super-extreme-moduli-v1.json`
+- Ciphertext super-extreme-moduli residue-balance artifact:
+  `experiments/predictions/ciphertext-residue-balance-super-extreme-moduli-v1.json`
 
 ## Observation
 
@@ -273,6 +277,12 @@ cargo run --locked -- validate-ciphertext-residue-balance-observations \
 cargo run --locked -- validate-ciphertext-residue-balance-observations \
   --artifact experiments/predictions/ciphertext-residue-balance-extreme-moduli-v1.json \
   --preregistration experiments/preregistrations/ciphertext-residue-balance-extreme-moduli-v1.json \
+  --input experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --format json
+
+cargo run --locked -- validate-ciphertext-residue-balance-observations \
+  --artifact experiments/predictions/ciphertext-residue-balance-super-extreme-moduli-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-residue-balance-super-extreme-moduli-v1.json \
   --input experiments/position-observations/cia-k4-row-boundaries-v1.json \
   --format json
 
@@ -504,6 +514,15 @@ cargo run --locked -- evaluate-ciphertext-residue-balance \
   --output-dir results/ciphertext-residue-balance-observations/cia-k4-row-boundaries-extreme-moduli-v1 \
   --format json
 
+cargo run --locked -- evaluate-ciphertext-residue-balance \
+  --artifact experiments/predictions/ciphertext-residue-balance-super-extreme-moduli-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-residue-balance-super-extreme-moduli-v1.json \
+  --positions-file experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/ciphertext-residue-balance-observations/cia-k4-row-boundaries-super-extreme-moduli-v1 \
+  --format json
+
 cargo run --locked -- validate-evaluation-archive \
   --input results/period-observations/cia-k4-row-boundaries-v1 \
   --format json
@@ -603,9 +622,13 @@ cargo run --locked -- validate-evaluation-archive \
 cargo run --locked -- validate-evaluation-archive \
   --input results/ciphertext-residue-balance-observations/cia-k4-row-boundaries-extreme-moduli-v1 \
   --format json
+
+cargo run --locked -- validate-evaluation-archive \
+  --input results/ciphertext-residue-balance-observations/cia-k4-row-boundaries-super-extreme-moduli-v1 \
+  --format json
 ```
 
-All twenty-four observation validators accepted the observation file, and all twenty-four
+All twenty-five observation validators accepted the observation file, and all twenty-five
 archived evaluation directories passed `validate-evaluation-archive` locally.
 
 ## Results
@@ -637,6 +660,7 @@ archived evaluation directories passed `validate-evaluation-archive` locally.
 | Ciphertext very-high-moduli residue-balance | ciphertext residue-balance modulus 16 residue 0 | 2/6 | 1.28 | 0.62 | 0.3125 | false |
 | Ciphertext ultra-high-moduli residue-balance | ciphertext residue-balance modulus 21 residue 12 | 1/6 | 1.01 | 0.60 | 0.8289 | false |
 | Ciphertext extreme-moduli residue-balance | ciphertext residue-balance modulus 27 residue 8 | 1/6 | 0.92 | 0.59 | 0.7859 | false |
+| Ciphertext super-extreme-moduli residue-balance | ciphertext residue-balance modulus 35 residue 4 | 1/6 | 0.78 | 0.62 | 0.6741 | false |
 
 The grid row, grid column, and grid compass-axis artifacts are separately preregistered with
 matching `grid_edge_axis` values, so each archive interprets only its fixed
@@ -653,6 +677,6 @@ ciphertext-adjacent-contrast,
 ciphertext-transition,
 ciphertext-skip-transition, ciphertext-turning-point, ciphertext-window-balance, or
 ciphertext-residue-balance targets, including the high-moduli,
-very-high-moduli, ultra-high-moduli, and extreme-moduli residue-balance targets, beyond the
+very-high-moduli, ultra-high-moduli, extreme-moduli, and super-extreme-moduli residue-balance targets, beyond the
 seeded null controls. This is negative evidence for this observation lane, not
 a K4 solution.

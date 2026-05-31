@@ -222,6 +222,77 @@ positions hit the committed extreme-moduli residue-balance target, empirical
 `p=0.7859`, promoted `false`. This is negative/non-significant evidence for
 this preregistered target and does not reopen the row-boundary lane.
 
+## 2026-05-31: Super-Extreme-Moduli Residue-Balance Prior Registered And Checked
+
+Added `ciphertext-residue-balance-super-extreme-moduli-v1`, a distinct
+ciphertext-only residue-balance preregistration and committed prediction
+artifact for moduli `34..=40`. This is a pre-score planning target only: it
+uses public K4 ciphertext positions plus the fixed non-anchor exclusion mask,
+and it does not use candidate words, key material, routes, claimed plaintext,
+public-anchor additive fragments, or source-backed observation positions as
+discovery evidence.
+
+```bash
+cargo run --locked -- ciphertext-residue-balance-prior \
+  --min-modulus 34 \
+  --max-modulus 40 \
+  --format json \
+  > experiments/predictions/ciphertext-residue-balance-super-extreme-moduli-v1.json
+cargo run --locked -- validate-preregistration \
+  --input experiments/preregistrations/ciphertext-residue-balance-super-extreme-moduli-v1.json \
+  --format json
+cargo run --locked -- validate-prediction-artifact \
+  --preregistration experiments/preregistrations/ciphertext-residue-balance-super-extreme-moduli-v1.json \
+  --require-unique-artifact \
+  --format json
+```
+
+Validation status: preregistration valid; prediction artifact valid and unique.
+The artifact fixes one selected non-anchor residue class for each modulus
+`34..=40`; promotion remains `false`.
+
+The new super-extreme-moduli target was then scored against the committed CIA
+row-boundary observation and archived.
+
+```bash
+cargo run --locked -- validate-ciphertext-residue-balance-observations \
+  --artifact experiments/predictions/ciphertext-residue-balance-super-extreme-moduli-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-residue-balance-super-extreme-moduli-v1.json \
+  --input experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --format json
+cargo run --locked -- evaluate-ciphertext-residue-balance \
+  --artifact experiments/predictions/ciphertext-residue-balance-super-extreme-moduli-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-residue-balance-super-extreme-moduli-v1.json \
+  --positions-file experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/ciphertext-residue-balance-observations/cia-k4-row-boundaries-super-extreme-moduli-v1 \
+  --format json
+cargo run --locked -- validate-evaluation-archive \
+  --input results/ciphertext-residue-balance-observations/cia-k4-row-boundaries-super-extreme-moduli-v1 \
+  --format json
+```
+
+Result: best modulus `35` residue `4`, `1/6` source-backed row-boundary
+positions hit the committed super-extreme-moduli residue-balance target,
+empirical `p=0.6741`, promoted `false`. This is negative/non-significant
+evidence for this preregistered target and does not reopen the row-boundary
+lane.
+
+Current independent-lane inventory after this addition:
+
+- independent lanes: `69`
+- ready for source-backed observations: `69`
+- evaluator-pending lanes: `0`
+- invalid lanes: `0`
+- prediction artifacts: `69`
+- unique prediction artifacts: `27`
+- unique ready prediction targets: `27`
+- duplicate artifact lanes: `43`
+- extra duplicate artifact lanes: `42`
+- ciphertext-residue-balance-position-prior-family lanes: `6`
+- ciphertext-residue-balance-position-prior-family unique ready targets: `6`
+
 ## 2026-05-31: Ultra-High Residue-Balance Row-Boundary Check
 
 Scored the already-preregistered, unique

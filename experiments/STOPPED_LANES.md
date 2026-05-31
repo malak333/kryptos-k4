@@ -126,7 +126,8 @@ ciphertext-prior, ciphertext-hotspot, ciphertext-rarity,
 ciphertext-repeat-distance, ciphertext-period-match, ciphertext-adjacent-contrast, ciphertext-transition, ciphertext-skip-transition,
 ciphertext-turning-point, ciphertext-window-balance, ciphertext-residue-balance, high-moduli
 ciphertext-residue-balance, very-high-moduli ciphertext-residue-balance, and
-ultra-high-moduli ciphertext-residue-balance
+ultra-high-moduli ciphertext-residue-balance, extreme-moduli
+ciphertext-residue-balance, and super-extreme-moduli ciphertext-residue-balance
 prediction targets.
 
 Reason: `cia-k4-row-boundaries-v1` is source-backed and auditable, but all
@@ -141,7 +142,9 @@ ciphertext-window-balance `p=1.0000`,
 ciphertext-residue-balance `p=0.4803`, high-moduli
 ciphertext-residue-balance `p=0.6416`, and very-high-moduli
 ciphertext-residue-balance `p=0.3125`, and ultra-high-moduli
-ciphertext-residue-balance `p=0.8289`.
+ciphertext-residue-balance `p=0.8289`, extreme-moduli
+ciphertext-residue-balance `p=0.7859`, and
+super-extreme-moduli ciphertext-residue-balance `p=0.6741`.
 
 Latest evidence is summarized in
 `experiments/evidence-summaries/cia-k4-row-boundaries-v1.md`.
