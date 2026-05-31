@@ -1,0 +1,43 @@
+{
+  "source_id": "prlog-bishop-k4-plaintext-2020",
+  "raw_character_count": 98,
+  "normalized_letter_count": 97,
+  "ignored_non_letter_count": 1,
+  "expected_length": 97,
+  "length_matches": true,
+  "public_anchor_match_count": 4,
+  "public_anchor_count": 4,
+  "all_public_anchors_match": true,
+  "anchor_checks": [
+    {
+      "plaintext": "EAST",
+      "start_one_based": 22,
+      "end_one_based_inclusive": 25,
+      "matches": true
+    },
+    {
+      "plaintext": "NORTHEAST",
+      "start_one_based": 26,
+      "end_one_based_inclusive": 34,
+      "matches": true
+    },
+    {
+      "plaintext": "BERLIN",
+      "start_one_based": 64,
+      "end_one_based_inclusive": 69,
+      "matches": true
+    },
+    {
+      "plaintext": "CLOCK",
+      "start_one_based": 70,
+      "end_one_based_inclusive": 74,
+      "matches": true
+    }
+  ],
+  "implied_shift_distinct_values": 26,
+  "implied_shift_repeated_value_count": 71,
+  "implied_shift_max_bucket_count": 10,
+  "structural_checks_passed": true,
+  "promoted_candidate": false,
+  "note": "Plaintext-claim verification checks length, public anchors, and aggregate shift diagnostics only; it does not print, store, or promote claimed plaintext."
+}

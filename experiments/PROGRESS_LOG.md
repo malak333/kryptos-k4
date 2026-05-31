@@ -1431,6 +1431,46 @@ condition: `duplicate-period-lanes-not-evidence`, blocking condition:
 This is negative/non-significant source-backed evidence. It does not promote a
 K4 solution, key, route, plaintext, or candidate.
 
+## 2026-05-31 - Quarantined Plaintext Claim Verifier Archives
+
+Archived non-leaking `verify-plaintext-claim` outputs for two quarantined
+community plaintext claims that already existed as temporary local files. These
+checks preserve only structural diagnostics and do not store claimed plaintext,
+key material, routes, or plaintext-bearing tables in the repository.
+
+Committed archives:
+
+- `results/claim-verifications/dearcipher-plaintext-20260531/result.json`
+- `results/claim-verifications/dearcipher-plaintext-20260531/summary.md`
+- `results/claim-verifications/prlog-bishop-plaintext-20260531/result.json`
+- `results/claim-verifications/prlog-bishop-plaintext-20260531/summary.md`
+
+Commands run:
+
+```bash
+cargo run --locked -- verify-plaintext-claim \
+  --input /private/tmp/dearcipher-k4-claim.txt \
+  --source-id dearcipher-k4-claim-2026 \
+  --format json
+
+cargo run --locked -- verify-plaintext-claim \
+  --input /private/tmp/prlog-bishop-12845348-claim.txt \
+  --source-id prlog-bishop-k4-plaintext-2020 \
+  --format json
+```
+
+Results:
+
+- Dear Cipher: normalized length `97`, public anchors `4/4`, distinct implied
+  shifts `26`, repeated shift values `71`, max shift bucket `8`, structural
+  checks passed, promoted `false`.
+- PRLog Bishop: normalized length `97`, public anchors `4/4`, distinct implied
+  shifts `26`, repeated shift values `71`, max shift bucket `10`, structural
+  checks passed, promoted `false`.
+
+These are quarantine screen results only. They do not validate a mechanism or
+promote a K4 solution.
+
 ## 2026-05-28: Grid Compass-Axis Archive Added
 
 Added a third 7-by-14 grid-layout lane, `non-anchor-position-grid-compass-axis-v1`,
