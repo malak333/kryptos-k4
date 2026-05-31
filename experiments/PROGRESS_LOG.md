@@ -171,6 +171,32 @@ inside `y_master_template.txt`: the declared zero-position list is
 rule and `Y_ROW` are `1,2,8,11,16,17,24,27,30`. Declared-only positions are
 23, 28, and 29; rule-only position is 27.
 
+A later same-day upstream recheck downloaded the current public ZIP to
+`/private/tmp/k4-latest-solvekryptos`:
+
+```bash
+curl -L https://solvekryptos.com/downloads/solvekryptos-canonical-bundle.zip \
+  -o /private/tmp/k4-latest-solvekryptos/solvekryptos-canonical-bundle.zip
+shasum -a 256 /private/tmp/k4-latest-solvekryptos/solvekryptos-canonical-bundle.zip
+cargo run --locked -- verify-claim-bundle \
+  --directory /private/tmp/k4-latest-solvekryptos/solvekryptos-canonical-bundle \
+  --source-id solvekryptos-2026-claim \
+  --format json
+cargo run --locked -- verify-claim-mechanism \
+  --directory /private/tmp/k4-latest-solvekryptos/solvekryptos-canonical-bundle \
+  --source-id solvekryptos-2026-claim \
+  --format json
+```
+
+The ZIP SHA-256 was
+`bc9dbf5c20798f711a5f3f4b0f6fb2f14fe6f4d2faa237b161ab67419b156a7f`.
+The bundle-level verifier still passed, while the mechanism verifier still
+failed with the same 27/31 Y-pass template rule and gate-map matches, the same
+four Y-position disagreements, and the same declared-vs-rule zero-position
+disagreement. The unzip command emitted a path-separator warning and returned
+non-zero, but the expected bundle directory and files were extracted and
+verified by the repo commands.
+
 Practical consequence: the published reconciliation table and top-level bundle
 remain internally compatible with the repo's structural verifier, but the
 refreshed published helper machinery is not fully consistent with the verifier

@@ -77,6 +77,13 @@ artifact.
   zero-position list also disagrees with the zero positions implied by its
   printed rule and `Y_ROW`: declared-only positions are 23, 28, and 29;
   rule-only position is 27.
+- A later same-day recheck downloaded the current public ZIP to
+  `/private/tmp/k4-latest-solvekryptos` and recorded SHA-256
+  `bc9dbf5c20798f711a5f3f4b0f6fb2f14fe6f4d2faa237b161ab67419b156a7f`.
+  The bundle-level verifier still passed, while `verify-claim-mechanism`
+  still failed with the same 27/31 Y-pass template rule and gate-map matches,
+  the same four Y-position disagreements, and the same declared-vs-rule
+  zero-position disagreement.
 - The temporary bundle remains outside the repository. The repository still
   does not store the claimed plaintext or any plaintext-bearing reconciliation
   table.
