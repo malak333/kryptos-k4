@@ -488,6 +488,14 @@ Current independent lanes:
   48 through 54. The artifact passes `--require-unique-artifact`; it is a
   pre-score prediction target for future source-backed observations, not
   evidence by itself.
+- `ciphertext-residue-balance-post-terminal-moduli-v1.json`, a distinct
+  ciphertext-only post-terminal-moduli residue balance prior with committed
+  artifact
+  `experiments/predictions/ciphertext-residue-balance-post-terminal-moduli-v1.json`.
+  The artifact predeclares one selected non-anchor residue set for each modulus
+  55 through 61. The artifact passes `--require-unique-artifact`; it is a
+  pre-score prediction target for future source-backed observations, not
+  evidence by itself.
 - `ciphertext-stehle-regularity-v1.json`, a source-grounded Stehle
   local-regularity planning lane with committed artifact
   `experiments/predictions/ciphertext-stehle-regularity-v1.json`. The artifact

@@ -1677,6 +1677,43 @@ condition: `duplicate-period-lanes-not-evidence`, blocking condition:
 This is negative/non-significant source-backed evidence. It does not promote a
 K4 solution, key, route, plaintext, or candidate.
 
+## 2026-05-31 - Post-Terminal Residue-Balance Lane Added
+
+Added `ciphertext-residue-balance-post-terminal-moduli-v1` as a distinct
+ciphertext-only independent prediction lane. The lane covers moduli `55`
+through `61` and fixes, for each modulus, the non-anchor residue class with the
+highest distinct ciphertext-letter rate before any future source-backed
+observation scoring.
+
+Committed files:
+
+- `experiments/preregistrations/ciphertext-residue-balance-post-terminal-moduli-v1.json`
+- `experiments/predictions/ciphertext-residue-balance-post-terminal-moduli-v1.json`
+
+Validation status:
+
+- `validate-preregistration` passes with only the expected pure-independent
+  warning about no source IDs.
+- `validate-prediction-artifact --require-unique-artifact` passes with artifact
+  kind `ciphertext-residue-balance`, `7` committed plan rows, and no duplicate
+  artifact warning.
+- `independent-lane-status --format json` reports `76` ready lanes, `34`
+  unique ready prediction artifacts, and `9` unique
+  `ciphertext-residue-balance-position-prior` artifacts.
+
+Current independent-lane inventory markers:
+
+- independent lanes: `76`
+- ready for source-backed observations: `76`
+- prediction artifacts: `76`
+- unique ready prediction targets: `34`
+- ciphertext-residue-balance-position-prior-family lanes: `9`
+- ciphertext-residue-balance-position-prior-family unique ready targets: `9`
+
+This is not scored evidence and not a K4 solution. Future use still requires a
+validated independent source-backed observation file with one note per
+non-anchor position before any interpretation.
+
 ## 2026-05-31 - SSRN Claim-Family Quarantine Boundary
 
 Registered the Bonifacino SSRN Weltzeituhr running-key claim family as
