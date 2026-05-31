@@ -317,6 +317,17 @@ pub fn sources() -> Vec<Source> {
             use_note: "Public reproducibility and elimination-scope context; not plaintext, not candidate evidence, and not scored observations.",
         },
         Source {
+            id: "kryptosbot-findings-2026",
+            label: "KryptosBot 2026 findings and open questions",
+            url: "https://kryptosbot.com/findings/",
+            archive_url: Some("sources/archives/kryptosbot-findings-2026-05-31.md"),
+            accessed_at: "2026-05-31",
+            publication_date: Some("2026-05"),
+            source_type: "community-research-findings",
+            allowed_use: "methodology-context",
+            use_note: "Public findings and open-question context around W-delimiter, CT-perturbation, HILL-tableau, and negative-search boundaries; not plaintext, candidate evidence, or scored observations.",
+        },
+        Source {
             id: "kryptos-today-project-k4-2026",
             label: "Project K4 2026 live cryptanalysis press page",
             url: "https://kryptos.today/press/2026-05-01-launch",

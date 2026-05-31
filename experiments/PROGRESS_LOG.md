@@ -3,6 +3,28 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: KryptosBot Findings Source Registered
+
+Added `kryptosbot-findings-2026` as a quote-free local source snapshot for the
+public KryptosBot findings/open-questions page. This is methodology context
+only: it records W-delimiter, CT-perturbation, HILL-tableau, open-question, and
+negative-search boundary context, but it does not add candidate material, a key
+stream, a route, plaintext, or scoreable non-anchor observations.
+
+Source archive:
+
+```bash
+cargo run --locked -- validate-source-archive \
+  --source-id kryptosbot-findings-2026 \
+  --input sources/archives/kryptosbot-findings-2026-05-31.md
+```
+
+Practical consequence: this gives future work a source-grounded rationale for a
+bounded W-delimiter or CT-perturbation preregistration, but it does not itself
+change the evidence frontier. Future scored use still requires a separate
+prediction artifact, source-backed observation file when applicable, and seeded
+controls before interpreting any result.
+
 ## 2026-05-31: Project K4 Methodology Source Registered
 
 Added `kryptos-today-project-k4-2026` as a quote-free local source snapshot
