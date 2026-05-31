@@ -60,14 +60,16 @@ artifact.
   matched.
 - Follow-up tooling now includes `verify-claim-mechanism` for local canonical
   mechanism files. It checks published `f`/helper-card relationships,
-  control-card consistency, Z2 footer handoff, and the Z2 helper path into
-  the `r`/`R` grids without printing or storing claimed plaintext.
+  control-card consistency, Z2 footer handoff, Y-pass gate-template
+  consistency, and the Z2 helper path into the `r`/`R` grids without printing
+  or storing claimed plaintext.
 - On 2026-05-31, the same temporary canonical bundle passed
-  `verify-claim-mechanism`: 7/7 required files present, 26/26 `f` table
+  `verify-claim-mechanism`: 8/8 required files present, 26/26 `f` table
   values matched, 26/26 helper-card delta checks matched, 9/9 control-card
   entries matched, Z2 effective key derivation matched, 31/31 Z2 helper-path
   base-`r` grid checks matched, and 31/31 Z2 helper-path final `R` grid
-  checks matched.
+  checks matched, plus 31/31 Y-pass template rule checks and 31/31 Y-pass
+  gate-map checks matched.
 - The temporary bundle remains outside the repository. The repository still
   does not store the claimed plaintext or any plaintext-bearing reconciliation
   table.

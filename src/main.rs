@@ -15157,6 +15157,14 @@ fn print_claim_mechanism_verification(verification: &ClaimMechanismVerification)
         verification.z2_final_grid_match_count, verification.z2_final_grid_checked_count
     );
     println!(
+        "Y template rule checks: {}/{}",
+        verification.y_template_rule_match_count, verification.y_template_rule_checked_count
+    );
+    println!(
+        "Y template gate-map checks: {}/{}",
+        verification.y_template_gate_match_count, verification.y_template_gate_checked_count
+    );
+    println!(
         "structural checks passed: {}",
         verification.structural_checks_passed
     );

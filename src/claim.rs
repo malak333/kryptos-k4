@@ -141,6 +141,10 @@ pub struct ClaimMechanismVerification {
     pub z2_r_grid_match_count: usize,
     pub z2_final_grid_checked_count: usize,
     pub z2_final_grid_match_count: usize,
+    pub y_template_rule_checked_count: usize,
+    pub y_template_rule_match_count: usize,
+    pub y_template_gate_checked_count: usize,
+    pub y_template_gate_match_count: usize,
     pub structural_checks_passed: bool,
     pub promoted_candidate: bool,
     pub note: &'static str,
@@ -655,6 +659,7 @@ pub fn verify_claim_mechanism(
         "r_grid_7x14.txt",
         "gate_map.txt",
         "k4_ciphertext.txt",
+        "y_master_template.txt",
     ];
     let required_files_checked = required_files
         .iter()
@@ -678,6 +683,8 @@ pub fn verify_claim_mechanism(
     let base_r_grid = parse_r_grid_section(&r_grid_input, "r-grid")?;
     let gate_map_input = read_bundle_file(bundle_directory, "gate_map.txt")?;
     let gate_map = parse_gate_map(&gate_map_input)?;
+    let y_template_input = read_bundle_file(bundle_directory, "y_master_template.txt")?;
+    let y_row = parse_y_master_row(&y_template_input)?;
 
     let expected_f_table = expected_f_table_values();
     let mut f_table_checked_count = 0usize;
@@ -762,6 +769,25 @@ pub fn verify_claim_mechanism(
         }
     }
 
+    let mut y_template_rule_checked_count = 0usize;
+    let mut y_template_rule_match_count = 0usize;
+    let mut y_template_gate_checked_count = 0usize;
+    let mut y_template_gate_match_count = 0usize;
+    for (index, letter) in y_row.chars().take(31).enumerate() {
+        let y_position = index + 1;
+        let k4_position = y_position + 4;
+        let rule_zero = y_template_rule_zero(y_position, letter);
+        y_template_rule_checked_count += 1;
+        let expected_gate = usize::from(!rule_zero);
+        if let Some(gate) = gate_map.get(k4_position).and_then(|value| *value) {
+            y_template_gate_checked_count += 1;
+            if gate == expected_gate {
+                y_template_rule_match_count += 1;
+                y_template_gate_match_count += 1;
+            }
+        }
+    }
+
     let z1_z2_delta_checked_count = helper_card_checked_count;
     let z1_z2_delta_match_count = helper_card_match_count;
     let structural_checks_passed = required_files_checked == expected_required_files
@@ -776,7 +802,11 @@ pub fn verify_claim_mechanism(
         && z2_r_grid_checked_count == 31
         && z2_r_grid_match_count == z2_r_grid_checked_count
         && z2_final_grid_checked_count == 31
-        && z2_final_grid_match_count == z2_final_grid_checked_count;
+        && z2_final_grid_match_count == z2_final_grid_checked_count
+        && y_template_rule_checked_count == 31
+        && y_template_rule_match_count == y_template_rule_checked_count
+        && y_template_gate_checked_count == 31
+        && y_template_gate_match_count == y_template_gate_checked_count;
 
     Ok(ClaimMechanismVerification {
         source_id,
@@ -796,9 +826,13 @@ pub fn verify_claim_mechanism(
         z2_r_grid_match_count,
         z2_final_grid_checked_count,
         z2_final_grid_match_count,
+        y_template_rule_checked_count,
+        y_template_rule_match_count,
+        y_template_gate_checked_count,
+        y_template_gate_match_count,
         structural_checks_passed,
         promoted_candidate: false,
-        note: "Claim-mechanism verification checks published f/helper-card relationships, control-card consistency, Z2 footer handoff, and the Z2 helper path into the r/R grids without printing, storing, or promoting claimed plaintext.",
+        note: "Claim-mechanism verification checks published f/helper-card relationships, control-card consistency, Z2 footer handoff, Y-pass gate-template consistency, and the Z2 helper path into the r/R grids without printing, storing, or promoting claimed plaintext.",
     })
 }
 
@@ -916,6 +950,30 @@ fn parse_gate_map(input: &str) -> Result<Vec<Option<usize>>> {
         bail!("expected 7 tiers in gate-map, found {parsed_tiers}");
     }
     Ok(values)
+}
+
+fn parse_y_master_row(input: &str) -> Result<String> {
+    let lines = input.lines().collect::<Vec<_>>();
+    for (index, line) in lines.iter().enumerate() {
+        if !line.trim().eq_ignore_ascii_case("Y_ROW:") {
+            continue;
+        }
+        let row = lines[index + 1..]
+            .iter()
+            .map(|line| normalize_ascii_letters(line))
+            .find(|line| !line.is_empty())
+            .context("missing Y_ROW value after Y_ROW label")?;
+        if row.len() < 31 {
+            bail!("Y_ROW has {} letters; expected at least 31", row.len());
+        }
+        return Ok(row);
+    }
+    bail!("missing Y_ROW label in y_master_template.txt")
+}
+
+fn y_template_rule_zero(position: usize, letter: char) -> bool {
+    matches!(letter, 'A' | 'F' | 'G' | 'N' | 'Q' | 'T' | 'X')
+        || matches!(position, 1 | 2 | 28 | 29 | 30) && matches!(letter, 'Y' | 'X' | 'Z' | 'K')
 }
 
 fn parse_grid_cell(cell: &str, section_marker: &str) -> Result<usize> {
@@ -1633,7 +1691,13 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let mut base_shifts = vec![0usize; K4_CIPHERTEXT.len()];
         let mut final_shifts = vec![0usize; K4_CIPHERTEXT.len()];
-        let gates = vec![0usize; K4_CIPHERTEXT.len()];
+        let mut gates = vec![0usize; K4_CIPHERTEXT.len()];
+        let y_row = "YXZKRYPTOSABCDEFGHIJKLMNOPQRSTUVWXYZKR";
+        for (index, letter) in y_row.chars().take(31).enumerate() {
+            let y_position = index + 1;
+            let k4_index = y_position + 3;
+            gates[k4_index] = usize::from(!y_template_rule_zero(y_position, letter));
+        }
         let f_values = expected_f_table_values();
         let g_z2 = test_g_z2_values();
         let effective_key = derive_z2_effective_key("_ABCDEFGHIJKLMNOPQRSTUVWXYZABCD").unwrap();
@@ -1672,17 +1736,24 @@ mod tests {
             format_test_gate_map(&gates),
         )
         .unwrap();
+        fs::write(
+            temp.path().join("y_master_template.txt"),
+            format_test_y_master_template(),
+        )
+        .unwrap();
 
         let verification =
             verify_claim_mechanism(temp.path(), Some("synthetic-claim".to_string())).unwrap();
 
-        assert_eq!(verification.required_files_checked, 7);
+        assert_eq!(verification.required_files_checked, 8);
         assert_eq!(verification.f_table_match_count, 26);
         assert_eq!(verification.z1_z2_delta_match_count, 26);
         assert_eq!(verification.control_card_match_count, 9);
         assert!(verification.z2_effective_key_matches);
         assert_eq!(verification.z2_r_grid_match_count, 31);
         assert_eq!(verification.z2_final_grid_match_count, 31);
+        assert_eq!(verification.y_template_rule_match_count, 31);
+        assert_eq!(verification.y_template_gate_match_count, 31);
         assert!(verification.structural_checks_passed);
         assert!(!verification.promoted_candidate);
     }
@@ -1742,6 +1813,27 @@ mod tests {
             "SEND J EDGE 13 +11 24",
             "SEND M MIDDLE 13 +11 24",
             "SEND Q OUT 13 +12 25",
+        ]
+        .join("\n")
+    }
+
+    fn format_test_y_master_template() -> String {
+        [
+            "Kryptos K4 rev16 Y master template",
+            "",
+            "Rule:",
+            "Let L = Y_ROW[p-1] for p in {1..31}",
+            "",
+            "gate(p) = 0 iff",
+            "  L in {A, F, G, N, Q, T, X}",
+            "  OR",
+            "  (p in {1, 2, 28, 29, 30} AND L in {Y, X, Z, K})",
+            "",
+            "Y_ROW:",
+            "YXZKRYPTOSABCDEFGHIJKLMNOPQRSTUVWXYZKR",
+            "",
+            "Zero positions (Y pass):",
+            "1,2 | 8 | 11 | 16,17 | 23,24 | 28,29,30",
         ]
         .join("\n")
     }
