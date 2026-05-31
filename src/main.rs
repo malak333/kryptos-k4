@@ -15179,12 +15179,53 @@ fn print_claim_mechanism_verification(verification: &ClaimMechanismVerification)
         }
         println!();
     }
+    if !verification
+        .y_template_declared_not_in_rule_zero_positions_one_based
+        .is_empty()
+        || !verification
+            .y_template_rule_not_in_declared_zero_positions_one_based
+            .is_empty()
+    {
+        println!("\n## Y Template Zero-Position Disagreement\n");
+        println!(
+            "declared zero positions: {}",
+            format_usize_list(&verification.y_template_declared_zero_positions_one_based)
+        );
+        println!(
+            "rule-derived zero positions: {}",
+            format_usize_list(&verification.y_template_rule_zero_positions_one_based)
+        );
+        println!(
+            "declared only: {}",
+            format_usize_list(
+                &verification.y_template_declared_not_in_rule_zero_positions_one_based
+            )
+        );
+        println!(
+            "rule only: {}",
+            format_usize_list(
+                &verification.y_template_rule_not_in_declared_zero_positions_one_based
+            )
+        );
+        println!();
+    }
     println!(
         "structural checks passed: {}",
         verification.structural_checks_passed
     );
     println!("promoted: {}", verification.promoted_candidate);
     println!("note: {}", verification.note);
+}
+
+fn format_usize_list(values: &[usize]) -> String {
+    if values.is_empty() {
+        return "none".to_string();
+    }
+    values
+        .iter()
+        .map(|value| value.to_string())
+        .collect::<Vec<_>>()
+        .join(",")
 }
 
 fn print_sources(format: OutputFormat) -> Result<()> {

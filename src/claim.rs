@@ -146,6 +146,10 @@ pub struct ClaimMechanismVerification {
     pub y_template_gate_checked_count: usize,
     pub y_template_gate_match_count: usize,
     pub y_template_mismatches: Vec<ClaimMechanismYTemplateMismatch>,
+    pub y_template_declared_zero_positions_one_based: Vec<usize>,
+    pub y_template_rule_zero_positions_one_based: Vec<usize>,
+    pub y_template_declared_not_in_rule_zero_positions_one_based: Vec<usize>,
+    pub y_template_rule_not_in_declared_zero_positions_one_based: Vec<usize>,
     pub structural_checks_passed: bool,
     pub promoted_candidate: bool,
     pub note: &'static str,
@@ -694,6 +698,8 @@ pub fn verify_claim_mechanism(
     let gate_map = parse_gate_map(&gate_map_input)?;
     let y_template_input = read_bundle_file(bundle_directory, "y_master_template.txt")?;
     let y_row = parse_y_master_row(&y_template_input)?;
+    let y_template_declared_zero_positions_one_based =
+        parse_y_declared_zero_positions(&y_template_input)?;
 
     let expected_f_table = expected_f_table_values();
     let mut f_table_checked_count = 0usize;
@@ -783,10 +789,14 @@ pub fn verify_claim_mechanism(
     let mut y_template_gate_checked_count = 0usize;
     let mut y_template_gate_match_count = 0usize;
     let mut y_template_mismatches = Vec::new();
+    let mut y_template_rule_zero_positions_one_based = Vec::new();
     for (index, letter) in y_row.chars().take(31).enumerate() {
         let y_position = index + 1;
         let k4_position = y_position + 4;
         let rule_zero = y_template_rule_zero(y_position, letter);
+        if rule_zero {
+            y_template_rule_zero_positions_one_based.push(y_position);
+        }
         y_template_rule_checked_count += 1;
         let expected_gate = usize::from(!rule_zero);
         if let Some(gate) = gate_map.get(k4_position).and_then(|value| *value) {
@@ -804,6 +814,22 @@ pub fn verify_claim_mechanism(
             }
         }
     }
+    let declared_zero_positions = y_template_declared_zero_positions_one_based
+        .iter()
+        .copied()
+        .collect::<BTreeSet<_>>();
+    let rule_zero_positions = y_template_rule_zero_positions_one_based
+        .iter()
+        .copied()
+        .collect::<BTreeSet<_>>();
+    let y_template_declared_not_in_rule_zero_positions_one_based = declared_zero_positions
+        .difference(&rule_zero_positions)
+        .copied()
+        .collect::<Vec<_>>();
+    let y_template_rule_not_in_declared_zero_positions_one_based = rule_zero_positions
+        .difference(&declared_zero_positions)
+        .copied()
+        .collect::<Vec<_>>();
 
     let z1_z2_delta_checked_count = helper_card_checked_count;
     let z1_z2_delta_match_count = helper_card_match_count;
@@ -823,7 +849,9 @@ pub fn verify_claim_mechanism(
         && y_template_rule_checked_count == 31
         && y_template_rule_match_count == y_template_rule_checked_count
         && y_template_gate_checked_count == 31
-        && y_template_gate_match_count == y_template_gate_checked_count;
+        && y_template_gate_match_count == y_template_gate_checked_count
+        && y_template_declared_not_in_rule_zero_positions_one_based.is_empty()
+        && y_template_rule_not_in_declared_zero_positions_one_based.is_empty();
 
     Ok(ClaimMechanismVerification {
         source_id,
@@ -848,6 +876,10 @@ pub fn verify_claim_mechanism(
         y_template_gate_checked_count,
         y_template_gate_match_count,
         y_template_mismatches,
+        y_template_declared_zero_positions_one_based,
+        y_template_rule_zero_positions_one_based,
+        y_template_declared_not_in_rule_zero_positions_one_based,
+        y_template_rule_not_in_declared_zero_positions_one_based,
         structural_checks_passed,
         promoted_candidate: false,
         note: "Claim-mechanism verification checks published f/helper-card relationships, control-card consistency, Z2 footer handoff, Y-pass gate-template consistency, and the Z2 helper path into the r/R grids without printing, storing, or promoting claimed plaintext.",
@@ -987,6 +1019,38 @@ fn parse_y_master_row(input: &str) -> Result<String> {
         return Ok(row);
     }
     bail!("missing Y_ROW label in y_master_template.txt")
+}
+
+fn parse_y_declared_zero_positions(input: &str) -> Result<Vec<usize>> {
+    let lines = input.lines().collect::<Vec<_>>();
+    for (index, line) in lines.iter().enumerate() {
+        if !line.trim().eq_ignore_ascii_case("Zero positions (Y pass):") {
+            continue;
+        }
+        let value_line = lines[index + 1..]
+            .iter()
+            .map(|line| line.trim())
+            .find(|line| !line.is_empty())
+            .context("missing zero-position values after Zero positions (Y pass) label")?;
+        let positions = value_line
+            .split(|ch: char| !ch.is_ascii_digit())
+            .filter(|part| !part.is_empty())
+            .map(|part| part.parse::<usize>())
+            .collect::<std::result::Result<BTreeSet<_>, _>>()?
+            .into_iter()
+            .collect::<Vec<_>>();
+        if positions.is_empty() {
+            bail!("Zero positions (Y pass) did not contain any positions");
+        }
+        if positions
+            .iter()
+            .any(|position| !(1..=31).contains(position))
+        {
+            bail!("Zero positions (Y pass) contains a position outside 1..=31");
+        }
+        return Ok(positions);
+    }
+    bail!("missing Zero positions (Y pass) label in y_master_template.txt")
 }
 
 fn y_template_rule_zero(position: usize, letter: char) -> bool {
@@ -1772,6 +1836,24 @@ mod tests {
         assert_eq!(verification.z2_final_grid_match_count, 31);
         assert_eq!(verification.y_template_rule_match_count, 31);
         assert_eq!(verification.y_template_gate_match_count, 31);
+        assert_eq!(
+            verification.y_template_declared_zero_positions_one_based,
+            vec![1, 2, 8, 11, 16, 17, 24, 27, 30]
+        );
+        assert_eq!(
+            verification.y_template_rule_zero_positions_one_based,
+            verification.y_template_declared_zero_positions_one_based
+        );
+        assert!(
+            verification
+                .y_template_declared_not_in_rule_zero_positions_one_based
+                .is_empty()
+        );
+        assert!(
+            verification
+                .y_template_rule_not_in_declared_zero_positions_one_based
+                .is_empty()
+        );
         assert!(verification.structural_checks_passed);
         assert!(!verification.promoted_candidate);
     }
@@ -1840,6 +1922,16 @@ mod tests {
 
         assert_eq!(verification.y_template_rule_match_count, 29);
         assert_eq!(verification.y_template_gate_match_count, 29);
+        assert!(
+            verification
+                .y_template_declared_not_in_rule_zero_positions_one_based
+                .is_empty()
+        );
+        assert!(
+            verification
+                .y_template_rule_not_in_declared_zero_positions_one_based
+                .is_empty()
+        );
         assert_eq!(
             verification.y_template_mismatches,
             vec![
@@ -1859,6 +1951,13 @@ mod tests {
         );
         assert!(!verification.structural_checks_passed);
         assert!(!verification.promoted_candidate);
+    }
+
+    #[test]
+    fn parses_declared_y_template_zero_positions() {
+        let positions = parse_y_declared_zero_positions(&format_test_y_master_template()).unwrap();
+
+        assert_eq!(positions, vec![1, 2, 8, 11, 16, 17, 24, 27, 30]);
     }
 
     fn format_test_f_table() -> String {
@@ -1936,7 +2035,7 @@ mod tests {
             "YXZKRYPTOSABCDEFGHIJKLMNOPQRSTUVWXYZKR",
             "",
             "Zero positions (Y pass):",
-            "1,2 | 8 | 11 | 16,17 | 23,24 | 28,29,30",
+            "1,2 | 8 | 11 | 16,17 | 24 | 27 | 30",
         ]
         .join("\n")
     }

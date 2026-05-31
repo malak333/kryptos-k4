@@ -73,6 +73,10 @@ artifact.
 - The Y-pass mismatch diagnostic localizes the failed checks without printing
   claimed plaintext: Y positions 23, 27, 28, and 29, corresponding to K4
   positions 27, 31, 32, and 33, have expected/observed gate disagreements.
+- A follow-up Y-template diagnostic found that the template's declared
+  zero-position list also disagrees with the zero positions implied by its
+  printed rule and `Y_ROW`: declared-only positions are 23, 28, and 29;
+  rule-only position is 27.
 - The temporary bundle remains outside the repository. The repository still
   does not store the claimed plaintext or any plaintext-bearing reconciliation
   table.
@@ -96,9 +100,11 @@ artifact.
   source provenance for the physical helper stream, or promote the claim.
 - The refreshed 2026-05-31 mechanism-file cross-check rejects full consistency
   of the published helper machinery because the Y-pass template rule and
-  gate-map checks no longer match all 31 checked rows. It still does not verify
-  an on-site physical reading of the helper stream, validate source provenance
-  for that stream, or promote the claim.
+  gate-map checks no longer match all 31 checked rows, and because the
+  Y-template's declared zero positions disagree with the positions derived
+  from its printed rule. It still does not verify an on-site physical reading
+  of the helper stream, validate source provenance for that stream, or promote
+  the claim.
 - Any future use must implement an independent mechanical verifier that checks
   the claimed mechanism without adding release-facing full plaintext or
   accepting the claim as evidence by assertion.

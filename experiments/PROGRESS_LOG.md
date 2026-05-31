@@ -165,10 +165,17 @@ Y positions 23, 27, 28, and 29, corresponding to K4 positions 27, 31, 32, and
 33. The diagnostic reports expected and observed gate values only; it does not
 print or store the claimed plaintext.
 
+A follow-up Y-template consistency diagnostic found an internal contradiction
+inside `y_master_template.txt`: the declared zero-position list is
+`1,2,8,11,16,17,23,24,28,29,30`, while the positions implied by the printed
+rule and `Y_ROW` are `1,2,8,11,16,17,24,27,30`. Declared-only positions are
+23, 28, and 29; rule-only position is 27.
+
 Practical consequence: the published reconciliation table and top-level bundle
 remain internally compatible with the repo's structural verifier, but the
-refreshed published helper machinery is not fully consistent with the verifier.
-The claim remains quarantined, not promoted, and not source-backed evidence.
+refreshed published helper machinery is not fully consistent with the verifier
+or with its own printed Y-template rule. The claim remains quarantined, not
+promoted, and not source-backed evidence.
 
 ## 2026-05-31: Extreme-Moduli Residue-Balance Prior Registered
 
