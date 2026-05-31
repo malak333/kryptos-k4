@@ -1,0 +1,26 @@
+{
+  "id": "non-anchor-position-period-diagnostic-v1",
+  "title": "Non-anchor position period diagnostic",
+  "hypothesis_family": "position-period-prediction",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane predeclares a structural position rule before any key-material scoring, and it does not use public anchor-derived additive fragments as discovery evidence or primary evaluation evidence.",
+  "prediction_target": "Independently obtained non-anchor K4 position observations should concentrate in predeclared residue classes for the registered period set before any candidate-word tuning is performed.",
+  "prediction_artifact": "experiments/predictions/non-anchor-position-period-diagnostic-v1.json",
+  "discovery_inputs": [
+    "Predeclared period-residue rule over non-anchor K4 positions only.",
+    "Registered period set {2,3,4,5,7,8,13,14} emitted before any observation scoring."
+  ],
+  "evaluation_inputs": [
+    "Source-backed non-anchor position observations that are not public EAST, NORTHEAST, BERLIN, or CLOCK anchor fragments.",
+    "Observation files that declare source IDs, one-based positions, per-position notes, and rationale before evaluation."
+  ],
+  "controls": [
+    "seeded shuffle baseline over non-anchor positions",
+    "best-of-period null control across registered periods",
+    "multiple-comparison correction for the registered period set",
+    "template-placeholder and public-anchor-position rejection before scoring"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

@@ -1,0 +1,121 @@
+{
+  "period_count": 1,
+  "plans": [
+    {
+      "period": 5,
+      "non_anchor_position_count": 73,
+      "anchor_position_count": 24,
+      "residues": [
+        {
+          "residue": 0,
+          "position_count": 16,
+          "positions_one_based": [
+            1,
+            6,
+            11,
+            16,
+            21,
+            36,
+            41,
+            46,
+            51,
+            56,
+            61,
+            76,
+            81,
+            86,
+            91,
+            96
+          ]
+        },
+        {
+          "residue": 1,
+          "position_count": 15,
+          "positions_one_based": [
+            2,
+            7,
+            12,
+            17,
+            37,
+            42,
+            47,
+            52,
+            57,
+            62,
+            77,
+            82,
+            87,
+            92,
+            97
+          ]
+        },
+        {
+          "residue": 2,
+          "position_count": 14,
+          "positions_one_based": [
+            3,
+            8,
+            13,
+            18,
+            38,
+            43,
+            48,
+            53,
+            58,
+            63,
+            78,
+            83,
+            88,
+            93
+          ]
+        },
+        {
+          "residue": 3,
+          "position_count": 13,
+          "positions_one_based": [
+            4,
+            9,
+            14,
+            19,
+            39,
+            44,
+            49,
+            54,
+            59,
+            79,
+            84,
+            89,
+            94
+          ]
+        },
+        {
+          "residue": 4,
+          "position_count": 15,
+          "positions_one_based": [
+            5,
+            10,
+            15,
+            20,
+            35,
+            40,
+            45,
+            50,
+            55,
+            60,
+            75,
+            80,
+            85,
+            90,
+            95
+          ]
+        }
+      ],
+      "promoted_candidate": false,
+      "source_inputs": "K4 ciphertext length and public anchor positions only; no fragment values, candidate words, or public anchor-derived key fragments are scored.",
+      "prediction_rule": "Group every non-anchor K4 position by zero-based position modulo the registered period; future independent evidence must be evaluated against these residue classes without retuning.",
+      "note": "Period prediction plan only; this emits a predeclared target for future independent evidence and is not a decryption claim."
+    }
+  ],
+  "promoted_candidate": false,
+  "note": "Single-period prediction plan set only; future independent evidence must control the declared residue classes before any interpretation."
+}

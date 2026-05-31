@@ -1,0 +1,27 @@
+{
+  "id": "non-anchor-position-period-v27",
+  "title": "Non-anchor position period prediction",
+  "hypothesis_family": "position-period-prediction",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane predeclares an absolute-position period rule before any new evidence is scored. It is not another public-anchor mining pass because discovery does not use known-plaintext anchors, additive fragment values, candidate words, routed key-material results, held-out anchor controls, or prior public-fragment structure screens.",
+  "prediction_target": "Future independently sourced non-anchor K4 position observations should fall into one or more registered period residue classes at a rate exceeding seeded null, best-of-period, and multiple-comparison controls before any candidate-word, route, or fragment scoring is performed.",
+  "prediction_artifact": "experiments/predictions/non-anchor-position-period-v27.json",
+  "discovery_inputs": [
+    "Predeclared absolute-position period registry",
+    "K4 absolute position numbers only",
+    "Residue classes emitted before observing any new score output"
+  ],
+  "evaluation_inputs": [
+    "Future independently sourced non-anchor K4 position observations",
+    "Source-documented observations selected before running period, key-material, route, or fragment scoring"
+  ],
+  "controls": [
+    "seeded shuffle baseline over non-anchor position sets",
+    "best-of-period null control across the registered period set",
+    "multiple-comparison correction across evaluated period plans",
+    "promotion remains blocked unless source-backed evidence is positive after all predeclared controls"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

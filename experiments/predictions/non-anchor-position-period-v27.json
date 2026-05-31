@@ -1,0 +1,1015 @@
+{
+  "period_count": 8,
+  "plans": [
+    {
+      "period": 2,
+      "non_anchor_position_count": 73,
+      "anchor_position_count": 24,
+      "residues": [
+        {
+          "residue": 0,
+          "position_count": 38,
+          "positions_one_based": [
+            1,
+            3,
+            5,
+            7,
+            9,
+            11,
+            13,
+            15,
+            17,
+            19,
+            21,
+            35,
+            37,
+            39,
+            41,
+            43,
+            45,
+            47,
+            49,
+            51,
+            53,
+            55,
+            57,
+            59,
+            61,
+            63,
+            75,
+            77,
+            79,
+            81,
+            83,
+            85,
+            87,
+            89,
+            91,
+            93,
+            95,
+            97
+          ]
+        },
+        {
+          "residue": 1,
+          "position_count": 35,
+          "positions_one_based": [
+            2,
+            4,
+            6,
+            8,
+            10,
+            12,
+            14,
+            16,
+            18,
+            20,
+            36,
+            38,
+            40,
+            42,
+            44,
+            46,
+            48,
+            50,
+            52,
+            54,
+            56,
+            58,
+            60,
+            62,
+            76,
+            78,
+            80,
+            82,
+            84,
+            86,
+            88,
+            90,
+            92,
+            94,
+            96
+          ]
+        }
+      ],
+      "promoted_candidate": false,
+      "source_inputs": "K4 ciphertext length and public anchor positions only; no fragment values, candidate words, or public anchor-derived key fragments are scored.",
+      "prediction_rule": "Group every non-anchor K4 position by zero-based position modulo the registered period; future independent evidence must be evaluated against these residue classes without retuning.",
+      "note": "Period prediction plan only; this emits a predeclared target for future independent evidence and is not a decryption claim."
+    },
+    {
+      "period": 3,
+      "non_anchor_position_count": 73,
+      "anchor_position_count": 24,
+      "residues": [
+        {
+          "residue": 0,
+          "position_count": 24,
+          "positions_one_based": [
+            1,
+            4,
+            7,
+            10,
+            13,
+            16,
+            19,
+            37,
+            40,
+            43,
+            46,
+            49,
+            52,
+            55,
+            58,
+            61,
+            76,
+            79,
+            82,
+            85,
+            88,
+            91,
+            94,
+            97
+          ]
+        },
+        {
+          "residue": 1,
+          "position_count": 24,
+          "positions_one_based": [
+            2,
+            5,
+            8,
+            11,
+            14,
+            17,
+            20,
+            35,
+            38,
+            41,
+            44,
+            47,
+            50,
+            53,
+            56,
+            59,
+            62,
+            77,
+            80,
+            83,
+            86,
+            89,
+            92,
+            95
+          ]
+        },
+        {
+          "residue": 2,
+          "position_count": 25,
+          "positions_one_based": [
+            3,
+            6,
+            9,
+            12,
+            15,
+            18,
+            21,
+            36,
+            39,
+            42,
+            45,
+            48,
+            51,
+            54,
+            57,
+            60,
+            63,
+            75,
+            78,
+            81,
+            84,
+            87,
+            90,
+            93,
+            96
+          ]
+        }
+      ],
+      "promoted_candidate": false,
+      "source_inputs": "K4 ciphertext length and public anchor positions only; no fragment values, candidate words, or public anchor-derived key fragments are scored.",
+      "prediction_rule": "Group every non-anchor K4 position by zero-based position modulo the registered period; future independent evidence must be evaluated against these residue classes without retuning.",
+      "note": "Period prediction plan only; this emits a predeclared target for future independent evidence and is not a decryption claim."
+    },
+    {
+      "period": 4,
+      "non_anchor_position_count": 73,
+      "anchor_position_count": 24,
+      "residues": [
+        {
+          "residue": 0,
+          "position_count": 19,
+          "positions_one_based": [
+            1,
+            5,
+            9,
+            13,
+            17,
+            21,
+            37,
+            41,
+            45,
+            49,
+            53,
+            57,
+            61,
+            77,
+            81,
+            85,
+            89,
+            93,
+            97
+          ]
+        },
+        {
+          "residue": 1,
+          "position_count": 17,
+          "positions_one_based": [
+            2,
+            6,
+            10,
+            14,
+            18,
+            38,
+            42,
+            46,
+            50,
+            54,
+            58,
+            62,
+            78,
+            82,
+            86,
+            90,
+            94
+          ]
+        },
+        {
+          "residue": 2,
+          "position_count": 19,
+          "positions_one_based": [
+            3,
+            7,
+            11,
+            15,
+            19,
+            35,
+            39,
+            43,
+            47,
+            51,
+            55,
+            59,
+            63,
+            75,
+            79,
+            83,
+            87,
+            91,
+            95
+          ]
+        },
+        {
+          "residue": 3,
+          "position_count": 18,
+          "positions_one_based": [
+            4,
+            8,
+            12,
+            16,
+            20,
+            36,
+            40,
+            44,
+            48,
+            52,
+            56,
+            60,
+            76,
+            80,
+            84,
+            88,
+            92,
+            96
+          ]
+        }
+      ],
+      "promoted_candidate": false,
+      "source_inputs": "K4 ciphertext length and public anchor positions only; no fragment values, candidate words, or public anchor-derived key fragments are scored.",
+      "prediction_rule": "Group every non-anchor K4 position by zero-based position modulo the registered period; future independent evidence must be evaluated against these residue classes without retuning.",
+      "note": "Period prediction plan only; this emits a predeclared target for future independent evidence and is not a decryption claim."
+    },
+    {
+      "period": 5,
+      "non_anchor_position_count": 73,
+      "anchor_position_count": 24,
+      "residues": [
+        {
+          "residue": 0,
+          "position_count": 16,
+          "positions_one_based": [
+            1,
+            6,
+            11,
+            16,
+            21,
+            36,
+            41,
+            46,
+            51,
+            56,
+            61,
+            76,
+            81,
+            86,
+            91,
+            96
+          ]
+        },
+        {
+          "residue": 1,
+          "position_count": 15,
+          "positions_one_based": [
+            2,
+            7,
+            12,
+            17,
+            37,
+            42,
+            47,
+            52,
+            57,
+            62,
+            77,
+            82,
+            87,
+            92,
+            97
+          ]
+        },
+        {
+          "residue": 2,
+          "position_count": 14,
+          "positions_one_based": [
+            3,
+            8,
+            13,
+            18,
+            38,
+            43,
+            48,
+            53,
+            58,
+            63,
+            78,
+            83,
+            88,
+            93
+          ]
+        },
+        {
+          "residue": 3,
+          "position_count": 13,
+          "positions_one_based": [
+            4,
+            9,
+            14,
+            19,
+            39,
+            44,
+            49,
+            54,
+            59,
+            79,
+            84,
+            89,
+            94
+          ]
+        },
+        {
+          "residue": 4,
+          "position_count": 15,
+          "positions_one_based": [
+            5,
+            10,
+            15,
+            20,
+            35,
+            40,
+            45,
+            50,
+            55,
+            60,
+            75,
+            80,
+            85,
+            90,
+            95
+          ]
+        }
+      ],
+      "promoted_candidate": false,
+      "source_inputs": "K4 ciphertext length and public anchor positions only; no fragment values, candidate words, or public anchor-derived key fragments are scored.",
+      "prediction_rule": "Group every non-anchor K4 position by zero-based position modulo the registered period; future independent evidence must be evaluated against these residue classes without retuning.",
+      "note": "Period prediction plan only; this emits a predeclared target for future independent evidence and is not a decryption claim."
+    },
+    {
+      "period": 7,
+      "non_anchor_position_count": 73,
+      "anchor_position_count": 24,
+      "residues": [
+        {
+          "residue": 0,
+          "position_count": 10,
+          "positions_one_based": [
+            1,
+            8,
+            15,
+            36,
+            43,
+            50,
+            57,
+            78,
+            85,
+            92
+          ]
+        },
+        {
+          "residue": 1,
+          "position_count": 10,
+          "positions_one_based": [
+            2,
+            9,
+            16,
+            37,
+            44,
+            51,
+            58,
+            79,
+            86,
+            93
+          ]
+        },
+        {
+          "residue": 2,
+          "position_count": 10,
+          "positions_one_based": [
+            3,
+            10,
+            17,
+            38,
+            45,
+            52,
+            59,
+            80,
+            87,
+            94
+          ]
+        },
+        {
+          "residue": 3,
+          "position_count": 10,
+          "positions_one_based": [
+            4,
+            11,
+            18,
+            39,
+            46,
+            53,
+            60,
+            81,
+            88,
+            95
+          ]
+        },
+        {
+          "residue": 4,
+          "position_count": 11,
+          "positions_one_based": [
+            5,
+            12,
+            19,
+            40,
+            47,
+            54,
+            61,
+            75,
+            82,
+            89,
+            96
+          ]
+        },
+        {
+          "residue": 5,
+          "position_count": 11,
+          "positions_one_based": [
+            6,
+            13,
+            20,
+            41,
+            48,
+            55,
+            62,
+            76,
+            83,
+            90,
+            97
+          ]
+        },
+        {
+          "residue": 6,
+          "position_count": 11,
+          "positions_one_based": [
+            7,
+            14,
+            21,
+            35,
+            42,
+            49,
+            56,
+            63,
+            77,
+            84,
+            91
+          ]
+        }
+      ],
+      "promoted_candidate": false,
+      "source_inputs": "K4 ciphertext length and public anchor positions only; no fragment values, candidate words, or public anchor-derived key fragments are scored.",
+      "prediction_rule": "Group every non-anchor K4 position by zero-based position modulo the registered period; future independent evidence must be evaluated against these residue classes without retuning.",
+      "note": "Period prediction plan only; this emits a predeclared target for future independent evidence and is not a decryption claim."
+    },
+    {
+      "period": 8,
+      "non_anchor_position_count": 73,
+      "anchor_position_count": 24,
+      "residues": [
+        {
+          "residue": 0,
+          "position_count": 9,
+          "positions_one_based": [
+            1,
+            9,
+            17,
+            41,
+            49,
+            57,
+            81,
+            89,
+            97
+          ]
+        },
+        {
+          "residue": 1,
+          "position_count": 8,
+          "positions_one_based": [
+            2,
+            10,
+            18,
+            42,
+            50,
+            58,
+            82,
+            90
+          ]
+        },
+        {
+          "residue": 2,
+          "position_count": 10,
+          "positions_one_based": [
+            3,
+            11,
+            19,
+            35,
+            43,
+            51,
+            59,
+            75,
+            83,
+            91
+          ]
+        },
+        {
+          "residue": 3,
+          "position_count": 10,
+          "positions_one_based": [
+            4,
+            12,
+            20,
+            36,
+            44,
+            52,
+            60,
+            76,
+            84,
+            92
+          ]
+        },
+        {
+          "residue": 4,
+          "position_count": 10,
+          "positions_one_based": [
+            5,
+            13,
+            21,
+            37,
+            45,
+            53,
+            61,
+            77,
+            85,
+            93
+          ]
+        },
+        {
+          "residue": 5,
+          "position_count": 9,
+          "positions_one_based": [
+            6,
+            14,
+            38,
+            46,
+            54,
+            62,
+            78,
+            86,
+            94
+          ]
+        },
+        {
+          "residue": 6,
+          "position_count": 9,
+          "positions_one_based": [
+            7,
+            15,
+            39,
+            47,
+            55,
+            63,
+            79,
+            87,
+            95
+          ]
+        },
+        {
+          "residue": 7,
+          "position_count": 8,
+          "positions_one_based": [
+            8,
+            16,
+            40,
+            48,
+            56,
+            80,
+            88,
+            96
+          ]
+        }
+      ],
+      "promoted_candidate": false,
+      "source_inputs": "K4 ciphertext length and public anchor positions only; no fragment values, candidate words, or public anchor-derived key fragments are scored.",
+      "prediction_rule": "Group every non-anchor K4 position by zero-based position modulo the registered period; future independent evidence must be evaluated against these residue classes without retuning.",
+      "note": "Period prediction plan only; this emits a predeclared target for future independent evidence and is not a decryption claim."
+    },
+    {
+      "period": 13,
+      "non_anchor_position_count": 73,
+      "anchor_position_count": 24,
+      "residues": [
+        {
+          "residue": 0,
+          "position_count": 6,
+          "positions_one_based": [
+            1,
+            14,
+            40,
+            53,
+            79,
+            92
+          ]
+        },
+        {
+          "residue": 1,
+          "position_count": 6,
+          "positions_one_based": [
+            2,
+            15,
+            41,
+            54,
+            80,
+            93
+          ]
+        },
+        {
+          "residue": 2,
+          "position_count": 6,
+          "positions_one_based": [
+            3,
+            16,
+            42,
+            55,
+            81,
+            94
+          ]
+        },
+        {
+          "residue": 3,
+          "position_count": 6,
+          "positions_one_based": [
+            4,
+            17,
+            43,
+            56,
+            82,
+            95
+          ]
+        },
+        {
+          "residue": 4,
+          "position_count": 6,
+          "positions_one_based": [
+            5,
+            18,
+            44,
+            57,
+            83,
+            96
+          ]
+        },
+        {
+          "residue": 5,
+          "position_count": 6,
+          "positions_one_based": [
+            6,
+            19,
+            45,
+            58,
+            84,
+            97
+          ]
+        },
+        {
+          "residue": 6,
+          "position_count": 5,
+          "positions_one_based": [
+            7,
+            20,
+            46,
+            59,
+            85
+          ]
+        },
+        {
+          "residue": 7,
+          "position_count": 5,
+          "positions_one_based": [
+            8,
+            21,
+            47,
+            60,
+            86
+          ]
+        },
+        {
+          "residue": 8,
+          "position_count": 5,
+          "positions_one_based": [
+            9,
+            35,
+            48,
+            61,
+            87
+          ]
+        },
+        {
+          "residue": 9,
+          "position_count": 6,
+          "positions_one_based": [
+            10,
+            36,
+            49,
+            62,
+            75,
+            88
+          ]
+        },
+        {
+          "residue": 10,
+          "position_count": 6,
+          "positions_one_based": [
+            11,
+            37,
+            50,
+            63,
+            76,
+            89
+          ]
+        },
+        {
+          "residue": 11,
+          "position_count": 5,
+          "positions_one_based": [
+            12,
+            38,
+            51,
+            77,
+            90
+          ]
+        },
+        {
+          "residue": 12,
+          "position_count": 5,
+          "positions_one_based": [
+            13,
+            39,
+            52,
+            78,
+            91
+          ]
+        }
+      ],
+      "promoted_candidate": false,
+      "source_inputs": "K4 ciphertext length and public anchor positions only; no fragment values, candidate words, or public anchor-derived key fragments are scored.",
+      "prediction_rule": "Group every non-anchor K4 position by zero-based position modulo the registered period; future independent evidence must be evaluated against these residue classes without retuning.",
+      "note": "Period prediction plan only; this emits a predeclared target for future independent evidence and is not a decryption claim."
+    },
+    {
+      "period": 14,
+      "non_anchor_position_count": 73,
+      "anchor_position_count": 24,
+      "residues": [
+        {
+          "residue": 0,
+          "position_count": 5,
+          "positions_one_based": [
+            1,
+            15,
+            43,
+            57,
+            85
+          ]
+        },
+        {
+          "residue": 1,
+          "position_count": 5,
+          "positions_one_based": [
+            2,
+            16,
+            44,
+            58,
+            86
+          ]
+        },
+        {
+          "residue": 2,
+          "position_count": 5,
+          "positions_one_based": [
+            3,
+            17,
+            45,
+            59,
+            87
+          ]
+        },
+        {
+          "residue": 3,
+          "position_count": 5,
+          "positions_one_based": [
+            4,
+            18,
+            46,
+            60,
+            88
+          ]
+        },
+        {
+          "residue": 4,
+          "position_count": 6,
+          "positions_one_based": [
+            5,
+            19,
+            47,
+            61,
+            75,
+            89
+          ]
+        },
+        {
+          "residue": 5,
+          "position_count": 6,
+          "positions_one_based": [
+            6,
+            20,
+            48,
+            62,
+            76,
+            90
+          ]
+        },
+        {
+          "residue": 6,
+          "position_count": 7,
+          "positions_one_based": [
+            7,
+            21,
+            35,
+            49,
+            63,
+            77,
+            91
+          ]
+        },
+        {
+          "residue": 7,
+          "position_count": 5,
+          "positions_one_based": [
+            8,
+            36,
+            50,
+            78,
+            92
+          ]
+        },
+        {
+          "residue": 8,
+          "position_count": 5,
+          "positions_one_based": [
+            9,
+            37,
+            51,
+            79,
+            93
+          ]
+        },
+        {
+          "residue": 9,
+          "position_count": 5,
+          "positions_one_based": [
+            10,
+            38,
+            52,
+            80,
+            94
+          ]
+        },
+        {
+          "residue": 10,
+          "position_count": 5,
+          "positions_one_based": [
+            11,
+            39,
+            53,
+            81,
+            95
+          ]
+        },
+        {
+          "residue": 11,
+          "position_count": 5,
+          "positions_one_based": [
+            12,
+            40,
+            54,
+            82,
+            96
+          ]
+        },
+        {
+          "residue": 12,
+          "position_count": 5,
+          "positions_one_based": [
+            13,
+            41,
+            55,
+            83,
+            97
+          ]
+        },
+        {
+          "residue": 13,
+          "position_count": 4,
+          "positions_one_based": [
+            14,
+            42,
+            56,
+            84
+          ]
+        }
+      ],
+      "promoted_candidate": false,
+      "source_inputs": "K4 ciphertext length, public anchor positions, and context-only 7-by-14 layout rationale from `kryptosbot-sanborn-papers-2026`; no fragment values, candidate words, or public anchor-derived key fragments are scored.",
+      "prediction_rule": "Group every non-anchor K4 position by zero-based position modulo the registered period; future independent evidence must be evaluated against these residue classes without retuning.",
+      "note": "Period prediction plan only; this emits a predeclared target for future independent evidence and is not a decryption claim."
+    }
+  ],
+  "promoted_candidate": false,
+  "note": "All-period prediction plan set only; future independent evidence must control the best-of-period search surface before any interpretation."
+}

@@ -1,0 +1,36 @@
+{
+  "id": "tableau-hill-v1",
+  "title": "Tableau/HILL source-map evaluation boundary plan",
+  "hypothesis_family": "tableau-hill-prediction",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [
+    "rumkin-k4-reference",
+    "cia-sculpture",
+    "kryptosbot-sanborn-papers-2026"
+  ],
+  "rationale": "This lane records the Rumkin HILL/tableau open question and fixes a source-backed 7-by-14 padded K4 coordinate mapping before any future HILL/tableau scoring. It is not another public-anchor mining pass because it does not use known-plaintext anchors, additive fragment values, candidate words, routed key-material results, held-out anchor controls, or public-fragment structure scores as discovery evidence.",
+  "prediction_target": "Fix the row-major 7-by-14 mapping of K4 positions 1 through 97 plus padding cell 98, the public-anchor exclusion metadata, and the independent-observation boundary used before any source-backed non-anchor observations are scored.",
+  "prediction_artifact": "experiments/predictions/tableau-hill-v1.json",
+  "discovery_inputs": [
+    "Context-only Rumkin K4 reference noting the HILL/tableau open question",
+    "CIA sculpture context that K4 has 97 characters",
+    "Context-only Sanborn-papers rationale for one-padding 7-by-14 compatibility",
+    "Pre-score deterministic coordinate mapping emitted by tableau-hill-prediction-plan",
+    "No additive fragment scores, candidate key material, routes, or plaintext claims"
+  ],
+  "evaluation_inputs": [
+    "Validated source-backed non-anchor observations accepted by validate-tableau-hill-observations",
+    "Scoreable evaluation output only from evaluate-tableau-hill-prediction with source-backed positions-file input",
+    "Future source-backed non-anchor observations selected before any HILL/tableau score output",
+    "Future observations must be non-anchor K4 positions, not padding cells or public-anchor positions"
+  ],
+  "controls": [
+    "family-specific seeded same-size non-anchor position-set null control required before interpreting scores",
+    "multiple-comparison correction required before interpreting any HILL/tableau score",
+    "next-evidence-gate must advertise only validator/evaluator commands that use source-backed positions-file input",
+    "the committed source-mapping artifact must remain deterministic before any validator/evaluator can score observations",
+    "promotion remains blocked unless future source-backed evidence is positive after the predeclared controls"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

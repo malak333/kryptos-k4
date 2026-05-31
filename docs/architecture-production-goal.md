@@ -1,6 +1,6 @@
 # Production Goal Architecture
 
-Last updated: 2026-05-22
+Last updated: 2026-05-25
 
 The production goal is a public, source-grounded Rust research CLI and release package with reproducible local verification. Production readiness does not mean Kryptos K4 is solved, and it does not mean speculative plaintext, keys, routes, or methods are promoted.
 
@@ -24,6 +24,7 @@ flowchart TD
         CandidateRegistry["Pre-registered contextual candidates"]
         RouteRegistry["Bounded deterministic route families"]
         FindingsLedger["Findings ledger with source, transform, baseline, interpretation, next test"]
+        IndependentTargets["Preregistered non-anchor period, spacing, mirror, grid, and Tableau/HILL targets"]
     end
 
     subgraph Outputs["User Outputs"]
@@ -66,6 +67,8 @@ flowchart TD
     BaselineEngine --> FindingsLedger
     CandidateRegistry --> FindingsLedger
     RouteRegistry --> FindingsLedger
+    DataModel --> IndependentTargets
+    IndependentTargets --> FindingsLedger
 
     FindingsLedger --> MarkdownReport
     FindingsLedger --> JsonReport
@@ -95,6 +98,8 @@ flowchart TD
 - Proposed key material and cyclic phase offsets are evaluated only against public known-plaintext spans, explained with exact matching positions, descriptive pattern metrics, and composite pattern scores when requested, compared to seeded shuffled-value and best-of-candidate-file controls when requested, and remain non-promotional unless future independently justified evidence changes the release boundary.
 - Background experiment loops are local, stoppable, and artifact-producing; they automate repeatable scoring but do not autonomously claim or promote a K4 solution.
 - Historical result summaries compare completed batch runs and candidate stability before any candidate family is expanded.
+- Independent prediction lanes require preregistration, committed prediction-artifact validation, source-backed observation validation, and period or spacing evaluation controls before any result is interpreted.
+- Observation templates remain non-scorable, and source `allowed_use` boundaries prevent context-only sources from becoming scored evidence.
 - `cargo fmt --check`, `cargo clippy --locked --all-targets --all-features -- -D warnings`, `cargo test --locked --all-targets --all-features`, `cargo build --locked --release`, and `cargo run --locked -- release-check` pass locally.
 - Releases remain manual and local-gated; no GitHub Actions or Dependabot policy drift.
 

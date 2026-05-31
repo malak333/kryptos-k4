@@ -1,6 +1,8 @@
 use crate::{
-    AlphabetKind, CandidateTransform, FragmentMode, analyze_known_plaintext_spans,
+    AlphabetKind, AnalysisTargetKind, CandidateTransform, FragmentMode, analyze_constraints,
+    analyze_known_plaintext_spans,
     candidates::{expand_to_k4, transform_values},
+    routes::{RouteFamily, permutation, registered_route_families},
 };
 use anyhow::{Result, bail};
 use rand::seq::SliceRandom;
@@ -110,6 +112,68 @@ pub struct BatchKeyMaterialRun {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct RoutedBatchKeyMaterialRun {
+    pub alphabet: AlphabetKind,
+    pub baseline_iterations: usize,
+    pub seed: u64,
+    pub candidate_count: usize,
+    pub result_count: usize,
+    pub results: Vec<RoutedBatchKeyMaterialResult>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub batch_baseline: Option<BatchKeyMaterialBaseline>,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct HeldoutKeyControlRun {
+    pub alphabet: AlphabetKind,
+    pub iterations: usize,
+    pub seed: u64,
+    pub candidate_count: usize,
+    pub fold_count: usize,
+    pub folds: Vec<HeldoutKeyControlFold>,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct HeldoutKeyControlFold {
+    pub heldout_label: String,
+    pub heldout_kind: AnalysisTargetKind,
+    pub train_group_count: usize,
+    pub selected_material: String,
+    pub selected_transform: CandidateTransform,
+    pub selected_offset: usize,
+    pub train_matches: usize,
+    pub train_fragment_count: usize,
+    pub train_match_rate: f64,
+    pub train_pattern_metrics: KeyMaterialPatternMetrics,
+    pub heldout_matches: usize,
+    pub heldout_fragment_count: usize,
+    pub heldout_match_rate: f64,
+    pub heldout_pattern_metrics: KeyMaterialPatternMetrics,
+    pub baseline: HeldoutKeyControlBaseline,
+    pub promoted_candidate: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct HeldoutKeyControlBaseline {
+    pub observed_heldout_matches: usize,
+    pub null_mean_heldout_matches: f64,
+    pub null_std_dev_heldout_matches: f64,
+    pub empirical_p_value: f64,
+    pub observed_heldout_pattern_score: i64,
+    pub null_mean_heldout_pattern_score: f64,
+    pub null_std_dev_heldout_pattern_score: f64,
+    pub pattern_score_empirical_p_value: f64,
+    pub iterations: usize,
+    pub seed: u64,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct BatchKeyMaterialBaseline {
     pub observed_best_matches: usize,
     pub null_mean_best_matches: f64,
@@ -142,7 +206,43 @@ pub struct BatchKeyMaterialResult {
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct RoutedBatchKeyMaterialResult {
+    pub target_label: String,
+    pub route: RouteFamily,
+    pub permutation: Vec<usize>,
+    pub material: String,
+    pub transform: CandidateTransform,
+    pub best_offset: usize,
+    pub best_matches: usize,
+    pub compared_fragment_count: usize,
+    pub best_match_rate: f64,
+    pub best_pattern_metrics: KeyMaterialPatternMetrics,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub empirical_p_value: Option<f64>,
+    pub promoted_candidate: bool,
+    pub sweep: RoutedKeyMaterialOffsetSweep,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct KeyMaterialOffsetSweep {
+    pub material: String,
+    pub transform: CandidateTransform,
+    pub alphabet: AlphabetKind,
+    pub fragment_mode: FragmentMode,
+    pub values: Vec<u8>,
+    pub offsets_tested: usize,
+    pub results: Vec<KeyMaterialOffsetResult>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub baseline: Option<KeyMaterialSweepBaseline>,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct RoutedKeyMaterialOffsetSweep {
+    pub target_label: String,
+    pub route: RouteFamily,
+    pub permutation: Vec<usize>,
     pub material: String,
     pub transform: CandidateTransform,
     pub alphabet: AlphabetKind,
@@ -428,6 +528,202 @@ pub fn batch_test_key_material_with_batch_baseline(
     })
 }
 
+pub fn batch_test_routed_key_material(
+    candidates: &[BatchKeyMaterialCandidate],
+    alphabet: AlphabetKind,
+    baseline_iterations: usize,
+    seed: u64,
+    batch_baseline_iterations: usize,
+) -> Result<RoutedBatchKeyMaterialRun> {
+    if candidates.is_empty() {
+        bail!("batch routed key-material input did not contain any candidates");
+    }
+
+    let mut results = Vec::new();
+    for target in routed_targets(alphabet)? {
+        for candidate in candidates {
+            let values = transform_values(&candidate.material, candidate.transform);
+            if values.is_empty() {
+                bail!("key material did not produce any numeric values");
+            }
+            for route in registered_route_families() {
+                let Ok(route_permutation) = permutation(route, target.fragments.len()) else {
+                    continue;
+                };
+                let sweep = sweep_routed_key_material_offsets(RoutedSweepSpec {
+                    material: &candidate.material,
+                    transform: candidate.transform,
+                    alphabet,
+                    values: &values,
+                    target: &target,
+                    route,
+                    route_permutation,
+                    baseline_iterations,
+                    seed,
+                })?;
+                let best = sweep
+                    .results
+                    .first()
+                    .expect("routed sweep results are non-empty for non-empty material");
+                results.push(RoutedBatchKeyMaterialResult {
+                    target_label: target.label.clone(),
+                    route,
+                    permutation: sweep.permutation.clone(),
+                    material: candidate.material.clone(),
+                    transform: candidate.transform,
+                    best_offset: best.offset,
+                    best_matches: best.exact_mod26_matches,
+                    compared_fragment_count: best.compared_fragment_count,
+                    best_match_rate: best.match_rate,
+                    best_pattern_metrics: best.pattern_metrics.clone(),
+                    empirical_p_value: sweep
+                        .baseline
+                        .as_ref()
+                        .map(|baseline| baseline.empirical_p_value),
+                    promoted_candidate: false,
+                    sweep,
+                });
+            }
+        }
+    }
+
+    results.sort_by(compare_routed_batch_results);
+    let observed_best_matches = results
+        .iter()
+        .map(|result| result.best_matches)
+        .max()
+        .unwrap_or(0);
+    let observed_best_pattern_score = results
+        .iter()
+        .map(|result| result.best_pattern_metrics.pattern_score)
+        .max()
+        .unwrap_or(0);
+    let batch_baseline = if batch_baseline_iterations == 0 {
+        None
+    } else {
+        Some(run_routed_batch_baseline(
+            candidates,
+            alphabet,
+            observed_best_matches,
+            observed_best_pattern_score,
+            batch_baseline_iterations,
+            seed,
+        )?)
+    };
+
+    Ok(RoutedBatchKeyMaterialRun {
+        alphabet,
+        baseline_iterations,
+        seed,
+        candidate_count: candidates.len(),
+        result_count: results.len(),
+        results,
+        batch_baseline,
+        promoted_candidate: false,
+        note: "Routed batch key-material run over public known-plaintext span fragments only; ranked results are exploratory and not decryption claims.",
+    })
+}
+
+pub fn heldout_key_control(
+    candidates: &[BatchKeyMaterialCandidate],
+    alphabet: AlphabetKind,
+    iterations: usize,
+    seed: u64,
+) -> Result<HeldoutKeyControlRun> {
+    if candidates.is_empty() {
+        bail!("held-out key-control input did not contain any candidates");
+    }
+    if iterations == 0 {
+        bail!("held-out key-control iterations must be greater than zero");
+    }
+
+    let candidate_values: Vec<HeldoutCandidateValues> = candidates
+        .iter()
+        .map(|candidate| HeldoutCandidateValues {
+            material: candidate.material.clone(),
+            transform: candidate.transform,
+            values: transform_values(&candidate.material, candidate.transform),
+        })
+        .collect();
+    if candidate_values
+        .iter()
+        .any(|candidate| candidate.values.is_empty())
+    {
+        bail!("held-out key-control input contained a candidate without numeric values");
+    }
+
+    let groups = heldout_groups(alphabet)?;
+    if groups.len() < 2 {
+        bail!("held-out key-control requires at least two public fragment groups");
+    }
+
+    let mut folds = Vec::new();
+    for heldout in &groups {
+        let training_groups: Vec<&HeldoutGroup> = groups
+            .iter()
+            .filter(|group| group.label != heldout.label || group.kind != heldout.kind)
+            .filter(|group| !groups_overlap(group, heldout))
+            .collect();
+        if training_groups.is_empty() {
+            continue;
+        }
+
+        let selected = select_best_heldout_candidate(&candidate_values, &training_groups)?;
+        let heldout_score = score_values_on_heldout_groups(
+            &selected.values,
+            std::slice::from_ref(&heldout),
+            selected.offset,
+        )?;
+        let baseline = run_heldout_control_baseline(
+            &candidate_values,
+            &training_groups,
+            heldout,
+            &heldout_score,
+            iterations,
+            seed,
+        )?;
+
+        folds.push(HeldoutKeyControlFold {
+            heldout_label: heldout.label.clone(),
+            heldout_kind: heldout.kind,
+            train_group_count: training_groups.len(),
+            selected_material: selected.material,
+            selected_transform: selected.transform,
+            selected_offset: selected.offset,
+            train_matches: selected.train_score.exact_mod26_matches,
+            train_fragment_count: selected.train_score.compared_fragment_count,
+            train_match_rate: selected.train_score.match_rate,
+            train_pattern_metrics: selected.train_score.pattern_metrics,
+            heldout_matches: heldout_score.exact_mod26_matches,
+            heldout_fragment_count: heldout_score.compared_fragment_count,
+            heldout_match_rate: heldout_score.match_rate,
+            heldout_pattern_metrics: heldout_score.pattern_metrics,
+            baseline,
+            promoted_candidate: false,
+        });
+    }
+
+    folds.sort_by(|left, right| {
+        left.baseline
+            .empirical_p_value
+            .total_cmp(&right.baseline.empirical_p_value)
+            .then_with(|| right.heldout_matches.cmp(&left.heldout_matches))
+            .then_with(|| left.heldout_label.cmp(&right.heldout_label))
+            .then_with(|| kind_label(left.heldout_kind).cmp(kind_label(right.heldout_kind)))
+    });
+
+    Ok(HeldoutKeyControlRun {
+        alphabet,
+        iterations,
+        seed,
+        candidate_count: candidates.len(),
+        fold_count: folds.len(),
+        folds,
+        promoted_candidate: false,
+        note: "Held-out key-material control over public fragment groups only; selected leads must predict withheld public groups better than seeded null controls before follow-up.",
+    })
+}
+
 fn run_batch_baseline(
     candidates: &[BatchKeyMaterialCandidate],
     alphabet: AlphabetKind,
@@ -494,6 +790,84 @@ fn run_batch_baseline(
         candidate_count: candidates.len(),
         promoted_candidate: false,
         note: "Seeded batch-level null over the best shuffled match count and composite pattern score across all candidate rows; this controls the candidate-file search surface, not the full hypothesis space.",
+    })
+}
+
+fn run_routed_batch_baseline(
+    candidates: &[BatchKeyMaterialCandidate],
+    alphabet: AlphabetKind,
+    observed_best_matches: usize,
+    observed_best_pattern_score: i64,
+    iterations: usize,
+    seed: u64,
+) -> Result<BatchKeyMaterialBaseline> {
+    let candidate_values: Vec<Vec<u8>> = candidates
+        .iter()
+        .map(|candidate| transform_values(&candidate.material, candidate.transform))
+        .collect();
+    if candidate_values.iter().any(Vec::is_empty) {
+        bail!("batch routed key-material input contained a candidate without numeric values");
+    }
+    let targets = routed_targets(alphabet)?;
+
+    let mut rng = ChaCha8Rng::seed_from_u64(seed);
+    let mut null_best_matches = Vec::with_capacity(iterations);
+    let mut null_best_pattern_scores = Vec::with_capacity(iterations);
+    for _ in 0..iterations {
+        let mut iteration_best_matches = 0usize;
+        let mut iteration_best_pattern_score = i64::MIN;
+        for values in &candidate_values {
+            let mut shuffled = values.clone();
+            shuffled.shuffle(&mut rng);
+            for target in &targets {
+                for route in registered_route_families() {
+                    let Ok(route_permutation) = permutation(route, target.fragments.len()) else {
+                        continue;
+                    };
+                    for result in score_all_routed_offsets(&shuffled, target, &route_permutation)? {
+                        iteration_best_matches =
+                            iteration_best_matches.max(result.exact_mod26_matches);
+                        iteration_best_pattern_score =
+                            iteration_best_pattern_score.max(result.pattern_metrics.pattern_score);
+                    }
+                }
+            }
+        }
+        null_best_matches.push(iteration_best_matches);
+        null_best_pattern_scores.push(iteration_best_pattern_score);
+    }
+
+    let null_mean_best_matches = mean(&null_best_matches);
+    let null_std_dev_best_matches = std_dev(&null_best_matches, null_mean_best_matches);
+    let null_mean_best_pattern_score = mean_i64(&null_best_pattern_scores);
+    let null_std_dev_best_pattern_score =
+        std_dev_i64(&null_best_pattern_scores, null_mean_best_pattern_score);
+    let at_least_observed = null_best_matches
+        .iter()
+        .filter(|count| **count >= observed_best_matches)
+        .count();
+    let empirical_p_value = (at_least_observed as f64 + 1.0) / (iterations as f64 + 1.0);
+    let pattern_at_least_observed = null_best_pattern_scores
+        .iter()
+        .filter(|score| **score >= observed_best_pattern_score)
+        .count();
+    let pattern_score_empirical_p_value =
+        (pattern_at_least_observed as f64 + 1.0) / (iterations as f64 + 1.0);
+
+    Ok(BatchKeyMaterialBaseline {
+        observed_best_matches,
+        null_mean_best_matches,
+        null_std_dev_best_matches,
+        empirical_p_value,
+        observed_best_pattern_score,
+        null_mean_best_pattern_score,
+        null_std_dev_best_pattern_score,
+        pattern_score_empirical_p_value,
+        iterations,
+        seed,
+        candidate_count: candidates.len(),
+        promoted_candidate: false,
+        note: "Seeded routed batch-level null over the best shuffled match count and composite pattern score across all candidate rows, compatible route families, and public spans; this controls the routed candidate-file search surface, not the full hypothesis space.",
     })
 }
 
@@ -575,6 +949,49 @@ struct BatchKeyMaterialResultForHistory {
     promoted_candidate: bool,
 }
 
+#[derive(Debug, Clone)]
+struct RoutedTarget {
+    label: String,
+    fragments: Vec<crate::analysis::KeyFragment>,
+}
+
+struct RoutedSweepSpec<'a> {
+    material: &'a str,
+    transform: CandidateTransform,
+    alphabet: AlphabetKind,
+    values: &'a [u8],
+    target: &'a RoutedTarget,
+    route: RouteFamily,
+    route_permutation: Vec<usize>,
+    baseline_iterations: usize,
+    seed: u64,
+}
+
+#[derive(Debug, Clone)]
+struct HeldoutGroup {
+    label: String,
+    kind: AnalysisTargetKind,
+    start_zero_based: usize,
+    end_zero_based_inclusive: usize,
+    fragments: Vec<crate::analysis::KeyFragment>,
+}
+
+#[derive(Debug, Clone)]
+struct HeldoutCandidateValues {
+    material: String,
+    transform: CandidateTransform,
+    values: Vec<u8>,
+}
+
+#[derive(Debug, Clone)]
+struct HeldoutSelection {
+    material: String,
+    transform: CandidateTransform,
+    values: Vec<u8>,
+    offset: usize,
+    train_score: KeyMaterialOffsetResult,
+}
+
 fn collect_results_json_paths(input_dir: &Path, paths: &mut Vec<PathBuf>) -> Result<()> {
     if !input_dir.exists() {
         bail!("input directory does not exist: {}", input_dir.display());
@@ -610,6 +1027,30 @@ fn compare_history_entries(
         .then_with(|| left.material.cmp(&right.material))
         .then_with(|| left.transform_label().cmp(right.transform_label()))
         .then_with(|| left.seed.cmp(&right.seed))
+}
+
+fn compare_routed_batch_results(
+    left: &RoutedBatchKeyMaterialResult,
+    right: &RoutedBatchKeyMaterialResult,
+) -> std::cmp::Ordering {
+    right
+        .best_matches
+        .cmp(&left.best_matches)
+        .then_with(|| {
+            right
+                .best_pattern_metrics
+                .pattern_score
+                .cmp(&left.best_pattern_metrics.pattern_score)
+        })
+        .then_with(|| {
+            let left_p = left.empirical_p_value.unwrap_or(f64::INFINITY);
+            let right_p = right.empirical_p_value.unwrap_or(f64::INFINITY);
+            left_p.total_cmp(&right_p)
+        })
+        .then_with(|| left.target_label.cmp(&right.target_label))
+        .then_with(|| route_label(left.route).cmp(route_label(right.route)))
+        .then_with(|| left.material.cmp(&right.material))
+        .then_with(|| left.transform_label().cmp(right.transform_label()))
 }
 
 fn summarize_history_candidates(
@@ -682,6 +1123,28 @@ impl BatchKeyRunCandidateSummary {
     }
 }
 
+impl RoutedBatchKeyMaterialResult {
+    fn transform_label(&self) -> &'static str {
+        self.transform.label()
+    }
+}
+
+fn route_label(route: RouteFamily) -> &'static str {
+    match route {
+        RouteFamily::Identity => "identity",
+        RouteFamily::Reverse => "reverse",
+        RouteFamily::RowToColumnWidth7 => "row-to-column-width7",
+        RouteFamily::RowToColumnWidth13 => "row-to-column-width13",
+    }
+}
+
+fn kind_label(kind: AnalysisTargetKind) -> &'static str {
+    match kind {
+        AnalysisTargetKind::Anchor => "anchor",
+        AnalysisTargetKind::Span => "span",
+    }
+}
+
 impl CandidateTransform {
     fn label(self) -> &'static str {
         match self {
@@ -716,6 +1179,348 @@ fn score_all_offsets(
     });
 
     Ok(results)
+}
+
+fn routed_targets(alphabet: AlphabetKind) -> Result<Vec<RoutedTarget>> {
+    let targets = analyze_known_plaintext_spans()?
+        .into_iter()
+        .filter(|analysis| analysis.alphabet.kind == alphabet)
+        .map(|analysis| RoutedTarget {
+            label: analysis.target.label,
+            fragments: analysis
+                .fragments
+                .into_iter()
+                .filter(|fragment| fragment.mode == FragmentMode::AdditiveKey)
+                .collect(),
+        })
+        .collect();
+    Ok(targets)
+}
+
+fn heldout_groups(alphabet: AlphabetKind) -> Result<Vec<HeldoutGroup>> {
+    let mut analyses = analyze_constraints()?;
+    analyses.extend(analyze_known_plaintext_spans()?);
+    let mut groups: Vec<HeldoutGroup> = analyses
+        .into_iter()
+        .filter(|analysis| analysis.alphabet.kind == alphabet)
+        .map(|analysis| HeldoutGroup {
+            label: analysis.target.label,
+            kind: analysis.target.kind,
+            start_zero_based: analysis.target.start_zero_based,
+            end_zero_based_inclusive: analysis.target.end_zero_based_inclusive,
+            fragments: analysis
+                .fragments
+                .into_iter()
+                .filter(|fragment| fragment.mode == FragmentMode::AdditiveKey)
+                .collect(),
+        })
+        .filter(|group| !group.fragments.is_empty())
+        .collect();
+    groups.sort_by(|left, right| {
+        left.start_zero_based
+            .cmp(&right.start_zero_based)
+            .then_with(|| {
+                left.end_zero_based_inclusive
+                    .cmp(&right.end_zero_based_inclusive)
+            })
+            .then_with(|| kind_label(left.kind).cmp(kind_label(right.kind)))
+            .then_with(|| left.label.cmp(&right.label))
+    });
+    Ok(groups)
+}
+
+fn groups_overlap(left: &HeldoutGroup, right: &HeldoutGroup) -> bool {
+    left.start_zero_based <= right.end_zero_based_inclusive
+        && right.start_zero_based <= left.end_zero_based_inclusive
+}
+
+fn select_best_heldout_candidate(
+    candidates: &[HeldoutCandidateValues],
+    groups: &[&HeldoutGroup],
+) -> Result<HeldoutSelection> {
+    let mut best: Option<HeldoutSelection> = None;
+    for candidate in candidates {
+        for offset in 0..candidate.values.len() {
+            let score = score_values_on_heldout_groups(&candidate.values, groups, offset)?;
+            let selection = HeldoutSelection {
+                material: candidate.material.clone(),
+                transform: candidate.transform,
+                values: candidate.values.clone(),
+                offset,
+                train_score: score,
+            };
+            if best
+                .as_ref()
+                .is_none_or(|current| compare_heldout_selection(&selection, current).is_lt())
+            {
+                best = Some(selection);
+            }
+        }
+    }
+    best.ok_or_else(|| anyhow::anyhow!("no held-out candidate selection could be scored"))
+}
+
+fn compare_heldout_selection(
+    left: &HeldoutSelection,
+    right: &HeldoutSelection,
+) -> std::cmp::Ordering {
+    right
+        .train_score
+        .exact_mod26_matches
+        .cmp(&left.train_score.exact_mod26_matches)
+        .then_with(|| {
+            right
+                .train_score
+                .pattern_metrics
+                .pattern_score
+                .cmp(&left.train_score.pattern_metrics.pattern_score)
+        })
+        .then_with(|| left.material.cmp(&right.material))
+        .then_with(|| left.transform.label().cmp(right.transform.label()))
+        .then_with(|| left.offset.cmp(&right.offset))
+}
+
+fn run_heldout_control_baseline(
+    candidates: &[HeldoutCandidateValues],
+    training_groups: &[&HeldoutGroup],
+    heldout: &HeldoutGroup,
+    observed_heldout_score: &KeyMaterialOffsetResult,
+    iterations: usize,
+    seed: u64,
+) -> Result<HeldoutKeyControlBaseline> {
+    let mut rng = ChaCha8Rng::seed_from_u64(seed);
+    let mut null_heldout_matches = Vec::with_capacity(iterations);
+    let mut null_heldout_pattern_scores = Vec::with_capacity(iterations);
+
+    for _ in 0..iterations {
+        let shuffled_candidates: Vec<HeldoutCandidateValues> = candidates
+            .iter()
+            .map(|candidate| {
+                let mut values = candidate.values.clone();
+                values.shuffle(&mut rng);
+                HeldoutCandidateValues {
+                    material: candidate.material.clone(),
+                    transform: candidate.transform,
+                    values,
+                }
+            })
+            .collect();
+        let selected = select_best_heldout_candidate(&shuffled_candidates, training_groups)?;
+        let heldout_score = score_values_on_heldout_groups(
+            &selected.values,
+            std::slice::from_ref(&heldout),
+            selected.offset,
+        )?;
+        null_heldout_matches.push(heldout_score.exact_mod26_matches);
+        null_heldout_pattern_scores.push(heldout_score.pattern_metrics.pattern_score);
+    }
+
+    let null_mean_heldout_matches = mean(&null_heldout_matches);
+    let null_std_dev_heldout_matches = std_dev(&null_heldout_matches, null_mean_heldout_matches);
+    let null_mean_heldout_pattern_score = mean_i64(&null_heldout_pattern_scores);
+    let null_std_dev_heldout_pattern_score = std_dev_i64(
+        &null_heldout_pattern_scores,
+        null_mean_heldout_pattern_score,
+    );
+    let at_least_observed = null_heldout_matches
+        .iter()
+        .filter(|count| **count >= observed_heldout_score.exact_mod26_matches)
+        .count();
+    let empirical_p_value = (at_least_observed as f64 + 1.0) / (iterations as f64 + 1.0);
+    let pattern_at_least_observed = null_heldout_pattern_scores
+        .iter()
+        .filter(|score| **score >= observed_heldout_score.pattern_metrics.pattern_score)
+        .count();
+    let pattern_score_empirical_p_value =
+        (pattern_at_least_observed as f64 + 1.0) / (iterations as f64 + 1.0);
+
+    Ok(HeldoutKeyControlBaseline {
+        observed_heldout_matches: observed_heldout_score.exact_mod26_matches,
+        null_mean_heldout_matches,
+        null_std_dev_heldout_matches,
+        empirical_p_value,
+        observed_heldout_pattern_score: observed_heldout_score.pattern_metrics.pattern_score,
+        null_mean_heldout_pattern_score,
+        null_std_dev_heldout_pattern_score,
+        pattern_score_empirical_p_value,
+        iterations,
+        seed,
+        promoted_candidate: false,
+        note: "Seeded held-out null re-runs candidate and offset selection on training groups, then scores the withheld public group; still not a decryption claim.",
+    })
+}
+
+fn score_values_on_heldout_groups(
+    values: &[u8],
+    groups: &[&HeldoutGroup],
+    offset: usize,
+) -> Result<KeyMaterialOffsetResult> {
+    let mut span_results = Vec::new();
+
+    for group in groups {
+        let mut exact_mod26_matches = 0usize;
+        let mut matches = Vec::new();
+        let mut mismatches = Vec::new();
+        for fragment in &group.fragments {
+            let material_index = (fragment.position_zero_based + offset) % values.len();
+            let material_value = values[material_index] % 26;
+            if fragment.value == material_value {
+                exact_mod26_matches += 1;
+                matches.push(KeyMaterialMatch {
+                    position_one_based: fragment.position_one_based,
+                    plaintext: fragment.plaintext,
+                    ciphertext: fragment.ciphertext,
+                    observed_key_value: fragment.value,
+                    observed_key_symbol: fragment.symbol,
+                    material_value,
+                });
+            } else {
+                mismatches.push(KeyMaterialMismatch {
+                    position_one_based: fragment.position_one_based,
+                    plaintext: fragment.plaintext,
+                    ciphertext: fragment.ciphertext,
+                    observed_key_value: fragment.value,
+                    observed_key_symbol: fragment.symbol,
+                    material_value,
+                });
+            }
+        }
+        span_results.push(KeyMaterialSpanResult {
+            target_label: group.label.clone(),
+            compared_fragment_count: group.fragments.len(),
+            exact_mod26_matches,
+            matches,
+            mismatches,
+        });
+    }
+
+    let compared_fragment_count = span_results
+        .iter()
+        .map(|result| result.compared_fragment_count)
+        .sum();
+    let exact_mod26_matches = span_results
+        .iter()
+        .map(|result| result.exact_mod26_matches)
+        .sum();
+    let match_rate = if compared_fragment_count == 0 {
+        0.0
+    } else {
+        exact_mod26_matches as f64 / compared_fragment_count as f64
+    };
+    let pattern_metrics = calculate_pattern_metrics(&span_results);
+
+    Ok(KeyMaterialOffsetResult {
+        offset,
+        compared_fragment_count,
+        exact_mod26_matches,
+        match_rate,
+        pattern_metrics,
+        span_results,
+    })
+}
+
+fn sweep_routed_key_material_offsets(
+    spec: RoutedSweepSpec<'_>,
+) -> Result<RoutedKeyMaterialOffsetSweep> {
+    let results = score_all_routed_offsets(spec.values, spec.target, &spec.route_permutation)?;
+    let baseline = if spec.baseline_iterations == 0 {
+        None
+    } else {
+        Some(run_routed_sweep_baseline(
+            spec.values,
+            spec.target,
+            &spec.route_permutation,
+            results[0].exact_mod26_matches,
+            spec.baseline_iterations,
+            spec.seed,
+        )?)
+    };
+
+    Ok(RoutedKeyMaterialOffsetSweep {
+        target_label: spec.target.label.clone(),
+        route: spec.route,
+        permutation: spec.route_permutation,
+        material: spec.material.to_string(),
+        transform: spec.transform,
+        alphabet: spec.alphabet,
+        fragment_mode: FragmentMode::AdditiveKey,
+        values: spec.values.to_vec(),
+        offsets_tested: results.len(),
+        results,
+        baseline,
+        promoted_candidate: false,
+        note: "Exploratory routed offset sweep over one public known-plaintext span only; best offsets are not evidence of plaintext or decryption.",
+    })
+}
+
+fn score_all_routed_offsets(
+    values: &[u8],
+    target: &RoutedTarget,
+    route_permutation: &[usize],
+) -> Result<Vec<KeyMaterialOffsetResult>> {
+    let mut results = Vec::with_capacity(values.len());
+    for offset in 0..values.len() {
+        results.push(score_routed_key_material_with_offset(
+            values,
+            target,
+            route_permutation,
+            offset,
+        )?);
+    }
+    results.sort_by(|left, right| {
+        right
+            .exact_mod26_matches
+            .cmp(&left.exact_mod26_matches)
+            .then_with(|| {
+                right
+                    .pattern_metrics
+                    .pattern_score
+                    .cmp(&left.pattern_metrics.pattern_score)
+            })
+            .then_with(|| left.offset.cmp(&right.offset))
+    });
+    Ok(results)
+}
+
+fn run_routed_sweep_baseline(
+    values: &[u8],
+    target: &RoutedTarget,
+    route_permutation: &[usize],
+    observed_best_matches: usize,
+    iterations: usize,
+    seed: u64,
+) -> Result<KeyMaterialSweepBaseline> {
+    let mut rng = ChaCha8Rng::seed_from_u64(seed);
+    let mut null_best_matches = Vec::with_capacity(iterations);
+
+    for _ in 0..iterations {
+        let mut shuffled = values.to_vec();
+        shuffled.shuffle(&mut rng);
+        let best = score_all_routed_offsets(&shuffled, target, route_permutation)?
+            .first()
+            .map(|result| result.exact_mod26_matches)
+            .unwrap_or(0);
+        null_best_matches.push(best);
+    }
+
+    let null_mean_best_matches = mean(&null_best_matches);
+    let null_std_dev_best_matches = std_dev(&null_best_matches, null_mean_best_matches);
+    let at_least_observed = null_best_matches
+        .iter()
+        .filter(|count| **count >= observed_best_matches)
+        .count();
+    let empirical_p_value = (at_least_observed as f64 + 1.0) / (iterations as f64 + 1.0);
+
+    Ok(KeyMaterialSweepBaseline {
+        observed_best_matches,
+        null_mean_best_matches,
+        null_std_dev_best_matches,
+        empirical_p_value,
+        iterations,
+        seed,
+        promoted_candidate: false,
+        note: "Seeded null baseline over shuffled routed key-material values; still not a decryption claim.",
+    })
 }
 
 fn run_sweep_baseline(
@@ -858,6 +1663,67 @@ fn score_key_material_with_offset(
     } else {
         exact_mod26_matches as f64 / compared_fragment_count as f64
     };
+    let pattern_metrics = calculate_pattern_metrics(&span_results);
+
+    Ok(KeyMaterialOffsetResult {
+        offset,
+        compared_fragment_count,
+        exact_mod26_matches,
+        match_rate,
+        pattern_metrics,
+        span_results,
+    })
+}
+
+fn score_routed_key_material_with_offset(
+    values: &[u8],
+    target: &RoutedTarget,
+    route_permutation: &[usize],
+    offset: usize,
+) -> Result<KeyMaterialOffsetResult> {
+    let mut exact_mod26_matches = 0usize;
+    let mut matches = Vec::new();
+    let mut mismatches = Vec::new();
+
+    for (routed_index, fragment_index) in route_permutation.iter().copied().enumerate() {
+        let fragment = &target.fragments[fragment_index];
+        let material_index = (routed_index + offset) % values.len();
+        let material_value = values[material_index] % 26;
+        if fragment.value == material_value {
+            exact_mod26_matches += 1;
+            matches.push(KeyMaterialMatch {
+                position_one_based: fragment.position_one_based,
+                plaintext: fragment.plaintext,
+                ciphertext: fragment.ciphertext,
+                observed_key_value: fragment.value,
+                observed_key_symbol: fragment.symbol,
+                material_value,
+            });
+        } else {
+            mismatches.push(KeyMaterialMismatch {
+                position_one_based: fragment.position_one_based,
+                plaintext: fragment.plaintext,
+                ciphertext: fragment.ciphertext,
+                observed_key_value: fragment.value,
+                observed_key_symbol: fragment.symbol,
+                material_value,
+            });
+        }
+    }
+
+    let compared_fragment_count = route_permutation.len();
+    let match_rate = if compared_fragment_count == 0 {
+        0.0
+    } else {
+        exact_mod26_matches as f64 / compared_fragment_count as f64
+    };
+    let span_results = vec![KeyMaterialSpanResult {
+        target_label: target.label.clone(),
+        compared_fragment_count,
+        exact_mod26_matches,
+        matches,
+        mismatches,
+    }];
     let pattern_metrics = calculate_pattern_metrics(&span_results);
 
     Ok(KeyMaterialOffsetResult {
@@ -1049,5 +1915,79 @@ mod tests {
                 .iter()
                 .all(|result| result.empirical_p_value.is_some())
         );
+    }
+
+    #[test]
+    fn routed_batch_run_scores_compatible_routes_without_promotion() {
+        let run = batch_test_routed_key_material(
+            &[
+                BatchKeyMaterialCandidate {
+                    material: "WELTZEITUHR".to_string(),
+                    transform: CandidateTransform::A1Z26OneBased,
+                },
+                BatchKeyMaterialCandidate {
+                    material: "CLOCK".to_string(),
+                    transform: CandidateTransform::A1Z26ZeroBased,
+                },
+            ],
+            AlphabetKind::Kryptos,
+            5,
+            42,
+            5,
+        )
+        .unwrap();
+
+        assert_eq!(run.candidate_count, 2);
+        assert!(run.result_count >= 8);
+        assert!(!run.promoted_candidate);
+        assert!(run.results.iter().all(|result| !result.promoted_candidate));
+        assert!(
+            run.results
+                .iter()
+                .any(|result| result.route == RouteFamily::Identity)
+        );
+        assert!(
+            run.results
+                .iter()
+                .any(|result| result.route == RouteFamily::Reverse)
+        );
+        assert!(run.batch_baseline.is_some());
+        assert!(run.results.windows(2).all(|pair| {
+            pair[0].best_matches > pair[1].best_matches
+                || (pair[0].best_matches == pair[1].best_matches
+                    && pair[0].best_pattern_metrics.pattern_score
+                        >= pair[1].best_pattern_metrics.pattern_score)
+        }));
+    }
+
+    #[test]
+    fn heldout_key_control_selects_on_training_and_scores_withheld_groups() {
+        let run = heldout_key_control(
+            &[
+                BatchKeyMaterialCandidate {
+                    material: "WELTZEITUHR".to_string(),
+                    transform: CandidateTransform::A1Z26OneBased,
+                },
+                BatchKeyMaterialCandidate {
+                    material: "CLOCK".to_string(),
+                    transform: CandidateTransform::A1Z26ZeroBased,
+                },
+            ],
+            AlphabetKind::Kryptos,
+            5,
+            42,
+        )
+        .unwrap();
+
+        assert_eq!(run.candidate_count, 2);
+        assert!(run.fold_count >= 4);
+        assert!(!run.promoted_candidate);
+        assert!(run.folds.iter().all(|fold| !fold.promoted_candidate));
+        assert!(run.folds.iter().all(|fold| fold.train_group_count > 0));
+        assert!(run.folds.iter().all(|fold| {
+            fold.baseline.iterations == 5
+                && !fold.baseline.promoted_candidate
+                && fold.baseline.empirical_p_value > 0.0
+        }));
     }
 }

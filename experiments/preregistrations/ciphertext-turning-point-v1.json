@@ -1,0 +1,25 @@
+{
+  "id": "ciphertext-turning-point-v1",
+  "title": "Ciphertext local turning-point position prior",
+  "hypothesis_family": "ciphertext-turning-point-position-prior",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane is preregistered before scoring any new source-backed observations and does not search public known-plaintext anchors, candidate key material, or anchor-derived additive fragments. The discovery rule uses only K4 ciphertext positions encoded in the Kryptos alphabet and asks whether future independently sourced non-anchor position observations concentrate at local index turning points more than seeded null controls.",
+  "prediction_target": "Future independently sourced non-anchor K4 position observations should be enriched at positions selected by a predeclared local turning-point or high-curvature rule over the ciphertext index sequence.",
+  "prediction_artifact": "experiments/predictions/ciphertext-turning-point-v1.json",
+  "discovery_inputs": [
+    "K4 ciphertext letters only, mapped to Kryptos alphabet indexes.",
+    "Predeclared local-turning-point rule using neighboring ciphertext index differences; no known plaintext, additive fragment values, candidate words, or previously scored observation positions."
+  ],
+  "evaluation_inputs": [
+    "A future source-backed observation file containing independently justified one-based non-anchor K4 positions or a documented position-selection rule.",
+    "The existing public anchor fragments are excluded as primary evidence and may only appear in negative-control or provenance summaries."
+  ],
+  "controls": [
+    "seeded position-shuffle null baseline over the same number of observed non-anchor positions",
+    "best-of-rule multiple-comparison control if more than one turning-point threshold or curvature variant is emitted",
+    "archive validation requiring the preregistration, prediction artifact, source-backed observation file, command metadata, and non-promotion caveat"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

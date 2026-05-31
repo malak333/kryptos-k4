@@ -1,0 +1,27 @@
+{
+  "id": "non-anchor-position-period-v8",
+  "title": "Non-anchor position period prediction v8",
+  "hypothesis_family": "position-period-prediction",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane predeclares a position-period structure before scoring any new evidence. It does not use public anchor-derived additive fragments, candidate words, routes, or prior key-material scores as discovery inputs or primary evidence.",
+  "prediction_target": "Future independently sourced non-anchor K4 position observations should be enriched in one or more predeclared residue classes from the registered period set before any public-anchor-derived fragment scoring is performed.",
+  "prediction_artifact": "experiments/predictions/non-anchor-position-period-v8.json",
+  "discovery_inputs": [
+    "Predeclared structural period rule selected before observation scoring",
+    "K4 absolute position numbers only",
+    "No candidate words, key material, or routes"
+  ],
+  "evaluation_inputs": [
+    "Future source-documented non-anchor K4 position observations",
+    "Observation records validated against registered source provenance before scoring"
+  ],
+  "controls": [
+    "seeded shuffle baseline over observed non-anchor positions",
+    "multiple-comparison correction across registered period hypotheses",
+    "best-of-period null control",
+    "archive validation requiring preregistration, artifact, observations, command, and result consistency"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

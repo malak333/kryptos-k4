@@ -1,0 +1,9 @@
+{
+  "id": "replace-with-observation-id",
+  "source_ids": [
+    "replace-with-registered-source-id"
+  ],
+  "positions_one_based": [],
+  "position_notes": {},
+  "rationale": "Explain why these are independent non-anchor K4 positions before evaluating them."
+}

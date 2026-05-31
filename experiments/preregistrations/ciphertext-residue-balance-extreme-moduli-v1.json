@@ -1,0 +1,33 @@
+{
+  "id": "ciphertext-residue-balance-extreme-moduli-v1",
+  "title": "Ciphertext-only extreme-moduli residue balance prior",
+  "hypothesis_family": "ciphertext-residue-balance-position-prior",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane predeclares a ciphertext-only residue-balance rule for moduli 27 through 33 before scoring any future source-backed observations. It is not another public-anchor mining pass because discovery uses only K4 ciphertext positions, a fixed non-anchor exclusion mask, and a deterministic extreme-modulus residue-selection rule; it does not use known-plaintext anchors, additive fragment values, candidate key material, routed-key results, held-out anchor controls, source-expanded candidate screens, or prior public-fragment match counts.",
+  "prediction_target": "Future independently sourced non-anchor K4 position observations should be enriched in the predeclared extreme-modulus residue-balance classes before any candidate-word, route, key-material, or public-anchor-derived fragment scoring is performed.",
+  "prediction_artifact": "experiments/predictions/ciphertext-residue-balance-extreme-moduli-v1.json",
+  "discovery_inputs": [
+    "Public K4 ciphertext only, interpreted as one-based absolute ciphertext positions",
+    "Fixed non-anchor position universe emitted by the repo before any observation scoring",
+    "For each modulus 27 through 33, select the non-anchor residue class with the highest distinct ciphertext-letter rate",
+    "Tie-break by larger position count and then lower residue number",
+    "No candidate words, key material, routes, plaintext guesses, additive fragment values, or source-backed observation positions used to construct the target"
+  ],
+  "evaluation_inputs": [
+    "Future independently source-backed non-anchor K4 position observations with source IDs, one-based positions, notes, and rationale declared before scoring",
+    "A committed prediction artifact generated from the extreme-moduli residue-balance rule before evaluating independent observations",
+    "Observation files whose scored positions were not used to construct or tune the residue-balance prediction artifact"
+  ],
+  "controls": [
+    "seeded same-size non-anchor position shuffle baseline",
+    "best-of-modulus null over every predeclared modulus 27 through 33 and its selected residue class",
+    "ciphertext-symbol shuffle baseline preserving K4 length and alphabet membership",
+    "known public-anchor positions used only as an exclusion mask, not as scoring evidence or tuning input",
+    "multiple-comparison context across all preregistered independent lanes required before interpretation",
+    "archive validation requiring preregistration, prediction artifact, source-backed observation file, command metadata, and non-promotion caveat",
+    "promotion blocked unless future independent observations beat all predeclared controls without post-hoc retuning"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

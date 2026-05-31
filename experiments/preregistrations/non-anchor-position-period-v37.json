@@ -1,0 +1,29 @@
+{
+  "id": "non-anchor-position-period-v37",
+  "title": "Non-anchor position period prediction v37",
+  "hypothesis_family": "position-period-prediction",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane is a preregistered absolute-position period target, not another public-anchor mining pass. It does not add candidate words, key material, routed fragments, public anchor-derived additive spans, or held-out anchor scores as discovery evidence; it can only become useful if future independently documented non-anchor observations are scored against the declared residue classes under null controls.",
+  "prediction_target": "Future independently sourced non-anchor K4 position observations should be enriched in one or more predeclared one-based absolute-position residue classes from the registered period family at a rate exceeding seeded null, best-of-period, and multiple-comparison controls.",
+  "prediction_artifact": "experiments/predictions/non-anchor-position-period-v37.json",
+  "discovery_inputs": [
+    "Predeclared structural period family over absolute one-based K4 positions",
+    "K4 ciphertext length and already-known clue positions only to mark the non-anchor complement for future targets",
+    "Residue classes emitted before observing or scoring any new source-backed position evidence"
+  ],
+  "evaluation_inputs": [
+    "Future independently sourced non-anchor K4 position observations",
+    "Source-reviewed observation files with source IDs, one-based positions, per-position notes, and rationale declared before evaluation",
+    "Position-only scoring target that excludes public anchor additive fragments as primary evidence"
+  ],
+  "controls": [
+    "seeded same-size non-anchor position shuffle baseline",
+    "best-of-period null control across the registered period family",
+    "multiple-comparison correction across declared residue classes",
+    "require-unique-artifact gate for any lane intended to add a new prediction target",
+    "promotion blocked unless future independent observations beat all predeclared controls without post-hoc retuning"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}
