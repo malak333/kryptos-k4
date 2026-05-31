@@ -1609,7 +1609,7 @@ fn source_frontier_classifies_all_registered_sources() {
         .stdout(predicate::str::contains(
             "sources with scored-position markers: 1",
         ))
-        .stdout(predicate::str::contains("valid source-backed archives: 25"))
+        .stdout(predicate::str::contains("valid source-backed archives: 26"))
         .stdout(predicate::str::contains(
             "all source-backed archives negative: true",
         ))
@@ -1624,7 +1624,7 @@ fn source_frontier_classifies_all_registered_sources() {
         .stdout(predicate::str::contains("Disallowed Next Actions"))
         .stdout(predicate::str::contains("Archived Evaluations"))
         .stdout(predicate::str::contains(
-            "Already used in 25 source-backed evaluation archives",
+            "Already used in 26 source-backed evaluation archives",
         ))
         .stdout(predicate::str::contains("context-only"))
         .stdout(predicate::str::contains("quarantined-claim"))
@@ -1646,7 +1646,7 @@ fn source_frontier_classifies_all_registered_sources() {
     assert_eq!(json["source_count"], 19);
     assert_eq!(json["scored_observation_eligible_count"], 2);
     assert_eq!(json["scored_position_marker_count"], 1);
-    assert_eq!(json["valid_source_backed_archive_count"], 25);
+    assert_eq!(json["valid_source_backed_archive_count"], 26);
     assert_eq!(json["all_source_backed_archives_negative"], true);
     assert_eq!(json["quarantined_claim_count"], 1);
     assert_eq!(json["promoted_candidate"], false);
@@ -1707,7 +1707,7 @@ fn source_frontier_classifies_all_registered_sources() {
         .unwrap();
     assert_eq!(cia_sculpture["frontier_class"], "scored-observation-ready");
     assert_eq!(cia_sculpture["current_archive_has_scored_positions"], true);
-    assert_eq!(cia_sculpture["source_backed_archive_count"], 25);
+    assert_eq!(cia_sculpture["source_backed_archive_count"], 26);
     assert!(
         cia_sculpture["allowed_next_action"]
             .as_str()
@@ -1842,7 +1842,7 @@ fn source_frontier_summary_prints_compact_next_action() {
             "eligible but currently non-scorable sources: cia-artifact",
         ))
         .stdout(predicate::str::contains(
-            "already-scored source-backed archives: cia-sculpture (25 archived evaluations)",
+            "already-scored source-backed archives: cia-sculpture (26 archived evaluations)",
         ))
         .stdout(predicate::str::contains(
             "do not rerun negative row-boundary evidence as new evidence",

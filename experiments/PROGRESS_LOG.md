@@ -71,6 +71,38 @@ Current independent-lane inventory after this addition:
 - ciphertext-residue-balance-position-prior-family lanes: `5`
 - ciphertext-residue-balance-position-prior-family unique ready targets: `5`
 
+## 2026-05-31: Extreme-Moduli Residue-Balance Row-Boundary Check
+
+Scored the already-preregistered, unique
+`ciphertext-residue-balance-extreme-moduli-v1` artifact against the committed
+CIA row-boundary observation. This uses the existing ciphertext-residue-balance
+evaluator over the fixed moduli `27..=33`; it does not add candidate words,
+public-anchor fragments, or a new route/key-material search.
+
+```bash
+cargo run --locked -- validate-ciphertext-residue-balance-observations \
+  --artifact experiments/predictions/ciphertext-residue-balance-extreme-moduli-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-residue-balance-extreme-moduli-v1.json \
+  --input experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --format json
+cargo run --locked -- evaluate-ciphertext-residue-balance \
+  --artifact experiments/predictions/ciphertext-residue-balance-extreme-moduli-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-residue-balance-extreme-moduli-v1.json \
+  --positions-file experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/ciphertext-residue-balance-observations/cia-k4-row-boundaries-extreme-moduli-v1 \
+  --format json
+cargo run --locked -- validate-evaluation-archive \
+  --input results/ciphertext-residue-balance-observations/cia-k4-row-boundaries-extreme-moduli-v1 \
+  --format json
+```
+
+Result: best modulus `27` residue `8`, `1/6` source-backed row-boundary
+positions hit the committed extreme-moduli residue-balance target, empirical
+`p=0.7859`, promoted `false`. This is negative/non-significant evidence for
+this preregistered target and does not reopen the row-boundary lane.
+
 ## 2026-05-31: Ultra-High Residue-Balance Row-Boundary Check
 
 Scored the already-preregistered, unique
