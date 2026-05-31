@@ -546,30 +546,22 @@ fn parse_reconciliation_rows(input: &str) -> Result<Vec<ReconciliationRow>> {
         let ciphertext = ciphertext_index
             .and_then(|index| cells.get(index))
             .and_then(|cell| single_ascii_uppercase_letter(cell));
-        let ciphertext_value = ciphertext_value_index
-            .and_then(|index| cells.get(index))
-            .and_then(|cell| parse_optional_usize(cell));
+        let ciphertext_value =
+            parse_optional_numeric_cell(&cells, ciphertext_value_index, "C#", line_number + 2)?;
         let plaintext = plaintext_index
             .and_then(|index| cells.get(index))
             .and_then(|cell| single_ascii_uppercase_letter(cell));
-        let plaintext_value = plaintext_value_index
-            .and_then(|index| cells.get(index))
-            .and_then(|cell| parse_optional_usize(cell));
-        let tier_value = tier_value_index
-            .and_then(|index| cells.get(index))
-            .and_then(|cell| parse_optional_usize(cell));
-        let lane_value = lane_value_index
-            .and_then(|index| cells.get(index))
-            .and_then(|cell| parse_optional_usize(cell));
-        let r_value = r_value_index
-            .and_then(|index| cells.get(index))
-            .and_then(|cell| parse_optional_usize(cell));
-        let base_r_value = base_r_value_index
-            .and_then(|index| cells.get(index))
-            .and_then(|cell| parse_optional_usize(cell));
-        let gate_value = gate_value_index
-            .and_then(|index| cells.get(index))
-            .and_then(|cell| parse_optional_usize(cell));
+        let plaintext_value =
+            parse_optional_numeric_cell(&cells, plaintext_value_index, "P#", line_number + 2)?;
+        let tier_value =
+            parse_optional_numeric_cell(&cells, tier_value_index, "tier", line_number + 2)?;
+        let lane_value =
+            parse_optional_numeric_cell(&cells, lane_value_index, "lane", line_number + 2)?;
+        let r_value = parse_optional_numeric_cell(&cells, r_value_index, "R", line_number + 2)?;
+        let base_r_value =
+            parse_optional_numeric_cell(&cells, base_r_value_index, "BaseR", line_number + 2)?;
+        let gate_value =
+            parse_optional_numeric_cell(&cells, gate_value_index, "Gate", line_number + 2)?;
         rows.push(ReconciliationRow {
             position_one_based,
             tier_value,
@@ -652,12 +644,32 @@ fn single_ascii_uppercase_letter(value: &str) -> Option<char> {
     Some(first)
 }
 
-fn parse_optional_usize(value: &str) -> Option<usize> {
+fn parse_optional_numeric_cell(
+    cells: &[String],
+    index: Option<usize>,
+    field_name: &str,
+    line_number: usize,
+) -> Result<Option<usize>> {
+    let Some(index) = index else {
+        return Ok(None);
+    };
+    let Some(cell) = cells.get(index) else {
+        return Ok(None);
+    };
+    parse_optional_usize(cell).with_context(|| {
+        format!(
+            "invalid numeric {field_name} value `{}` at data line {line_number}",
+            clean_cell(cell)
+        )
+    })
+}
+
+fn parse_optional_usize(value: &str) -> Result<Option<usize>> {
     let cleaned = clean_cell(value);
     if cleaned.is_empty() {
-        return None;
+        return Ok(None);
     }
-    cleaned.parse::<usize>().ok()
+    Ok(Some(cleaned.parse::<usize>()?))
 }
 
 #[cfg(test)]
@@ -782,5 +794,16 @@ mod tests {
         assert!(verification.all_r_plus_gate_matches);
         assert!(verification.structural_checks_passed);
         assert!(!verification.promoted_candidate);
+    }
+
+    #[test]
+    fn rejects_malformed_optional_numeric_reconciliation_fields() {
+        let ciphertext = K4_CIPHERTEXT.chars().next().unwrap();
+        let table = format!("i,C,C#,P\n1,{ciphertext},not-a-number,A\n");
+
+        let error = verify_claim_reconciliation_table(&table, Some("synthetic-claim".to_string()))
+            .expect_err("malformed optional numeric fields should fail loudly");
+
+        assert!(error.to_string().contains("invalid numeric C# value"));
     }
 }
