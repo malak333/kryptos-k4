@@ -72,6 +72,28 @@ requires a new eligible source with explicit non-anchor scored-position
 markers, a changed source-backed archive boundary, or a genuinely distinct
 validated prediction artifact.
 
+## 2026-05-31: Project K4 Progress Source Registered
+
+Added `kryptos-today-progress-2026` as a quote-free local source snapshot for
+the public Project K4 progress page. This is methodology context only: it
+records attack-family triage, the Weltzeituhr phase closeout and expansion,
+period-7 attribution demotion for width-7 transposition, and the revised queue
+including Weltzeituhr, Mengenlehreuhr lamp-state, Morse-panel, K3-style, and
+width-7/Vigenere families. It does not add candidate material, a key stream,
+a route, plaintext, or scoreable non-anchor observations.
+
+Source archive:
+
+```bash
+cargo run --locked -- validate-source-archive \
+  --source-id kryptos-today-progress-2026 \
+  --input sources/archives/kryptos-today-progress-2026-05-31.md
+```
+
+Practical consequence: this informs attack-family triage and stop rules. It
+does not reopen width-7 or Weltzeituhr evidence; future scoring still requires
+separate preregistration, artifact, eligible observation, and seeded controls.
+
 ## 2026-05-31: Extreme-Moduli Residue-Balance Prior Registered
 
 Added `ciphertext-residue-balance-extreme-moduli-v1`, a distinct

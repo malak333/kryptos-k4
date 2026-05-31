@@ -1602,7 +1602,7 @@ fn source_frontier_classifies_all_registered_sources() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Source Frontier"))
-        .stdout(predicate::str::contains("sources: 20"))
+        .stdout(predicate::str::contains("sources: 21"))
         .stdout(predicate::str::contains(
             "scored-observation eligible sources: 2",
         ))
@@ -1643,7 +1643,7 @@ fn source_frontier_classifies_all_registered_sources() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["source_count"], 20);
+    assert_eq!(json["source_count"], 21);
     assert_eq!(json["scored_observation_eligible_count"], 2);
     assert_eq!(json["scored_position_marker_count"], 1);
     assert_eq!(json["valid_source_backed_archive_count"], 26);
@@ -1733,6 +1733,19 @@ fn source_frontier_classifies_all_registered_sources() {
     assert_eq!(kryptos_today["allowed_use"], "methodology-context");
     assert!(
         kryptos_today["non_scorable_reason"]
+            .as_str()
+            .unwrap()
+            .contains("no scoreable non-anchor K4 observations")
+    );
+
+    let kryptos_today_progress = sources
+        .iter()
+        .find(|source| source["id"] == "kryptos-today-progress-2026")
+        .unwrap();
+    assert_eq!(kryptos_today_progress["frontier_class"], "context-only");
+    assert_eq!(kryptos_today_progress["allowed_use"], "methodology-context");
+    assert!(
+        kryptos_today_progress["non_scorable_reason"]
             .as_str()
             .unwrap()
             .contains("no scoreable non-anchor K4 observations")

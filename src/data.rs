@@ -339,6 +339,17 @@ pub fn sources() -> Vec<Source> {
             use_note: "Independent live-search and negative-result context; not plaintext, not candidate evidence, and not scored observations.",
         },
         Source {
+            id: "kryptos-today-progress-2026",
+            label: "Project K4 2026 progress log",
+            url: "https://kryptos.today/progress",
+            archive_url: Some("sources/archives/kryptos-today-progress-2026-05-31.md"),
+            accessed_at: "2026-05-31",
+            publication_date: Some("2026-05-16"),
+            source_type: "independent-cryptanalysis-progress",
+            allowed_use: "methodology-context",
+            use_note: "Independent progress-log context for attack-family triage, including Weltzeituhr, width-7 transposition, and Morse/Mengenlehreuhr queue updates; not plaintext, candidate evidence, or scored observations.",
+        },
+        Source {
             id: "rumkin-k4-reference",
             label: "Rumkin K4 reference notes",
             url: "https://rumkin.com/reference/kryptos/k4/",
@@ -444,6 +455,7 @@ mod tests {
             "kryptosbot-sanborn-papers-2026",
             "kryptosbot-methodology-2026",
             "kryptos-today-project-k4-2026",
+            "kryptos-today-progress-2026",
             "rumkin-k4-reference",
             "solvekryptos-2026-claim",
         ] {
