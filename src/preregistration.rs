@@ -6,7 +6,8 @@ use crate::{
     build_committed_ciphertext_period_match_prior, build_committed_ciphertext_rarity_prior,
     build_committed_ciphertext_repeat_distance_prior,
     build_committed_ciphertext_residue_balance_prior,
-    build_committed_ciphertext_skip_transition_prior, build_committed_ciphertext_structure_prior,
+    build_committed_ciphertext_skip_transition_prior,
+    build_committed_ciphertext_stehle_regularity_prior, build_committed_ciphertext_structure_prior,
     build_committed_ciphertext_transition_prior, build_committed_ciphertext_turning_point_prior,
     build_grid_layout_prediction_plan_for_axis, build_mirror_prediction_plan,
     build_period_prediction_plan, sources,
@@ -812,6 +813,9 @@ pub fn validate_prediction_artifact_with_repo_root(
         Some("ciphertext-period-match") => Some(serde_json::to_value(
             build_committed_ciphertext_period_match_prior(),
         )?),
+        Some("ciphertext-stehle-regularity") => Some(serde_json::to_value(
+            build_committed_ciphertext_stehle_regularity_prior(),
+        )?),
         Some("ciphertext-window-balance") => {
             let top = registration.ciphertext_window_balance_top.unwrap_or(20);
             let window_widths = registration
@@ -837,7 +841,7 @@ pub fn validate_prediction_artifact_with_repo_root(
 
     if artifact_kind.is_none() {
         errors.push(format!(
-            "prediction_artifact validation only supports `position-period-prediction`, `position-spacing-prediction`, `position-mirror-prediction`, `position-grid-layout-prediction`, `tableau-hill-prediction`, `ciphertext-only-position-prior`, `ciphertext-residue-balance-position-prior`, `ciphertext-hotspot-position-prior`, `ciphertext-rarity-position-prior`, `ciphertext-adjacent-contrast-position-prior`, `ciphertext-repeat-distance-position-prior`, `ciphertext-transition-position-prior`, `ciphertext-skip-transition-position-prior`, `ciphertext-turning-point-position-prior`, `ciphertext-period-match-position-prior`, and `ciphertext-window-balance-position-prior` hypothesis families; got `{}`",
+            "prediction_artifact validation only supports `position-period-prediction`, `position-spacing-prediction`, `position-mirror-prediction`, `position-grid-layout-prediction`, `tableau-hill-prediction`, `ciphertext-only-position-prior`, `ciphertext-residue-balance-position-prior`, `ciphertext-hotspot-position-prior`, `ciphertext-rarity-position-prior`, `ciphertext-adjacent-contrast-position-prior`, `ciphertext-repeat-distance-position-prior`, `ciphertext-transition-position-prior`, `ciphertext-skip-transition-position-prior`, `ciphertext-turning-point-position-prior`, `ciphertext-period-match-position-prior`, `ciphertext-stehle-regularity-position-prior`, and `ciphertext-window-balance-position-prior` hypothesis families; got `{}`",
             registration.hypothesis_family
         ));
     }
@@ -1057,6 +1061,7 @@ fn prediction_artifact_kind(registration: &LanePreregistration) -> Option<&'stat
         "ciphertext-skip-transition-position-prior" => Some("ciphertext-skip-transition"),
         "ciphertext-turning-point-position-prior" => Some("ciphertext-turning-point"),
         "ciphertext-period-match-position-prior" => Some("ciphertext-period-match"),
+        "ciphertext-stehle-regularity-position-prior" => Some("ciphertext-stehle-regularity"),
         "ciphertext-window-balance-position-prior" => Some("ciphertext-window-balance"),
         _ => None,
     }

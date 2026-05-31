@@ -36,6 +36,23 @@ until new independent scoreable observations exist.
 
 Latest evidence is summarized in `experiments/PROGRESS_LOG.md`.
 
+## Stehle Regularity Planning Lane
+
+Status: evaluator-pending; no scoring yet.
+
+Reason: the registered `kryptosbot-findings-2026` source documents a bounded
+Stehle local-regularity anomaly, but not a plaintext, key, route, or solution.
+The committed `ciphertext-stehle-regularity-v1` preregistration and prediction
+artifact fix the source-reported 55 through 63 anomaly label and repo canonical
+56 through 64 coordinate mapping before any future scoring. Position 64 is a
+public known-plaintext anchor position, so future non-anchor scoring must use
+only the committed non-anchor target positions and family-specific controls.
+
+Do not score or interpret this lane until a family-specific observation
+validator, evaluator, same-size non-anchor position-shuffle null, and
+ciphertext-symbol shuffle control are implemented and validated. This artifact
+is future-work inventory only.
+
 ## Public Anchor-Derived Key-Material Lanes
 
 Status: stopped.

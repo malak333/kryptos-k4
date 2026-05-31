@@ -480,6 +480,14 @@ Current independent lanes:
   48 through 54. The artifact passes `--require-unique-artifact`; it is a
   pre-score prediction target for future source-backed observations, not
   evidence by itself.
+- `ciphertext-stehle-regularity-v1.json`, a source-grounded Stehle
+  local-regularity planning lane with committed artifact
+  `experiments/predictions/ciphertext-stehle-regularity-v1.json`. The artifact
+  records the source-reported 55 through 63 anomaly window and the repo
+  canonical 56 through 64 coordinate mapping for the displayed `DIAWINFBN`
+  sequence. It has deterministic artifact validation but is
+  evaluator-pending; do not score it until a family-specific evaluator and null
+  controls are implemented.
 
 The mirror and grid-layout lanes are now source-observation ready: validate
 their artifacts with `validate-prediction-artifact`, then use the matching

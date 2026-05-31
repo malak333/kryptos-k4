@@ -300,6 +300,30 @@ pub struct CiphertextWindowBalancePrior {
     pub note: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct CiphertextStehleRegularityPrior {
+    pub artifact_kind: String,
+    pub hypothesis_family: String,
+    pub source_inputs: Vec<String>,
+    pub discovery_inputs: Vec<String>,
+    pub prediction_target: String,
+    pub alphabet: String,
+    pub source_reported_window: String,
+    pub start_position_one_based: usize,
+    pub window_length: usize,
+    pub lag: usize,
+    pub expected_delta_mod26: usize,
+    pub non_anchor_position_count: usize,
+    pub non_anchor_positions_one_based: Vec<usize>,
+    pub regularity_position_count: usize,
+    pub regularity_positions: Vec<CiphertextStehleRegularityPosition>,
+    pub controls: Vec<String>,
+    pub public_anchor_fragments_used_for_discovery: bool,
+    pub public_anchor_fragments_used_as_primary_evidence: bool,
+    pub promoted_candidate: bool,
+    pub note: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct CiphertextTransitionPosition {
     pub position_one_based: usize,
@@ -384,6 +408,17 @@ pub struct CiphertextWindowBalancePosition {
     pub repeated_ciphertext_letters: usize,
     pub balance_score: usize,
     pub balance_rank: usize,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct CiphertextStehleRegularityPosition {
+    pub position_one_based: usize,
+    pub ciphertext: char,
+    pub alphabet_index: usize,
+    pub lag_source_position_one_based: Option<usize>,
+    pub lag_source_ciphertext: Option<char>,
+    pub lag_delta_mod26: Option<usize>,
+    pub matches_expected_delta: bool,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
@@ -1924,6 +1959,95 @@ pub fn build_ciphertext_window_balance_prior(
 
 pub fn build_committed_ciphertext_window_balance_prior() -> CiphertextWindowBalancePrior {
     build_ciphertext_window_balance_prior(20, vec![3, 5, 7])
+}
+
+pub fn build_ciphertext_stehle_regularity_prior() -> CiphertextStehleRegularityPrior {
+    let letters: Vec<char> = K4_CIPHERTEXT.chars().collect();
+    let alphabet = Alphabet::standard();
+    let non_anchor_positions = non_anchor_positions_one_based();
+    let non_anchor_set: HashSet<_> = non_anchor_positions.iter().copied().collect();
+    let source_reported_window = "55..=63".to_string();
+    let start_position_one_based = 56;
+    let window_length = 9;
+    let lag = 4;
+    let expected_delta_mod26 = 5;
+    let end_position_one_based = start_position_one_based + window_length - 1;
+    let mut regularity_positions = Vec::new();
+
+    for position_one_based in start_position_one_based..=end_position_one_based {
+        if !non_anchor_set.contains(&position_one_based) {
+            continue;
+        }
+        let ciphertext = letters[position_one_based - 1];
+        let alphabet_index = alphabet.index_of(ciphertext).unwrap() as usize;
+        let lag_source_position_one_based = position_one_based
+            .checked_sub(lag)
+            .filter(|source| *source >= start_position_one_based);
+        let (lag_source_ciphertext, lag_delta_mod26) =
+            if let Some(source_position) = lag_source_position_one_based {
+                let source_ciphertext = letters[source_position - 1];
+                let source_index = alphabet.index_of(source_ciphertext).unwrap() as usize;
+                (
+                    Some(source_ciphertext),
+                    Some((alphabet_index + 26 - source_index) % 26),
+                )
+            } else {
+                (None, None)
+            };
+        regularity_positions.push(CiphertextStehleRegularityPosition {
+            position_one_based,
+            ciphertext,
+            alphabet_index,
+            lag_source_position_one_based,
+            lag_source_ciphertext,
+            lag_delta_mod26,
+            matches_expected_delta: lag_delta_mod26 == Some(expected_delta_mod26),
+        });
+    }
+
+    CiphertextStehleRegularityPrior {
+        artifact_kind: "ciphertext-stehle-regularity-prior".to_string(),
+        hypothesis_family: "ciphertext-stehle-regularity-position-prior".to_string(),
+        source_inputs: vec![
+            "Public K4 ciphertext only".to_string(),
+            "KryptosBot findings page used as methodology-context rationale for the predeclared local anomaly surface".to_string(),
+            "Public anchor positions used only as an exclusion mask for future non-anchor targets".to_string(),
+        ],
+        discovery_inputs: vec![
+            "Predeclare the source-described local Stehle anomaly window; the source labels it 55 through 63, which maps to repo canonical one-based K4 positions 56 through 64 for the displayed DIAWINFBN sequence".to_string(),
+            "Use standard A=0 alphabet indexes, lag 4, and expected delta +5 modulo 26".to_string(),
+            "Retain only positions in the fixed non-anchor universe; no candidate words, routes, claimed plaintext, or additive fragment scoring".to_string(),
+        ],
+        prediction_target: "Future independently source-backed non-anchor K4 position observations should be checked against the predeclared Stehle local-regularity window only after a family-specific evaluator and null controls are implemented; this artifact alone is not evidence."
+            .to_string(),
+        alphabet: "Standard A=0".to_string(),
+        source_reported_window,
+        start_position_one_based,
+        window_length,
+        lag,
+        expected_delta_mod26,
+        non_anchor_position_count: non_anchor_positions.len(),
+        non_anchor_positions_one_based: non_anchor_positions,
+        regularity_position_count: regularity_positions.len(),
+        regularity_positions,
+        controls: vec![
+            "family-specific observation validator and evaluator required before scoring".to_string(),
+            "same-size non-anchor position-shuffle null required before interpreting any source-backed hit count".to_string(),
+            "ciphertext-symbol shuffle control preserving K4 length and alphabet membership required before interpreting the local regularity itself".to_string(),
+            "known public-anchor positions excluded from target positions and never used as scoring evidence".to_string(),
+            "multiple-comparison context across all preregistered independent lanes required before interpretation".to_string(),
+            "promotion blocked unless future independent observations beat controls without post-hoc retuning".to_string(),
+        ],
+        public_anchor_fragments_used_for_discovery: false,
+        public_anchor_fragments_used_as_primary_evidence: false,
+        promoted_candidate: false,
+        note: "Ciphertext Stehle-regularity prior is a source-grounded planning artifact for future independent observations; it is not a claimed solution, key, route, plaintext, or promotion criterion."
+            .to_string(),
+    }
+}
+
+pub fn build_committed_ciphertext_stehle_regularity_prior() -> CiphertextStehleRegularityPrior {
+    build_ciphertext_stehle_regularity_prior()
 }
 
 pub fn evaluate_ciphertext_transition_positions(

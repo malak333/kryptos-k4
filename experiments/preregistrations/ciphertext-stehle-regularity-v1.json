@@ -1,0 +1,35 @@
+{
+  "id": "ciphertext-stehle-regularity-v1",
+  "title": "Ciphertext Stehle local-regularity prior",
+  "hypothesis_family": "ciphertext-stehle-regularity-position-prior",
+  "evidence_kind": "source-documented-evidence",
+  "source_ids": [
+    "kryptosbot-findings-2026"
+  ],
+  "rationale": "The registered KryptosBot findings source documents the Stehle local regularity as an unresolved structural anomaly, not as plaintext, key material, a route, or a solution claim. This lane fixes the anomaly surface as a deterministic planning artifact before any future source-backed observation scoring, while preserving the coordinate caveat that the source labels the window 55 through 63 and the repo's canonical one-based K4 text maps the displayed DIAWINFBN sequence to positions 56 through 64. It is not another public-anchor mining pass because it uses a source-documented ciphertext-local rule and excludes public known-plaintext positions from future target scoring.",
+  "prediction_target": "Future independently source-backed non-anchor K4 position observations may be checked against the predeclared Stehle local-regularity window only after a family-specific evaluator and null controls are implemented; this artifact alone is not evidence.",
+  "prediction_artifact": "experiments/predictions/ciphertext-stehle-regularity-v1.json",
+  "discovery_inputs": [
+    "Registered methodology-context source kryptosbot-findings-2026 for the bounded Stehle local-regularity surface",
+    "Public K4 ciphertext interpreted through the repo's canonical one-based position convention",
+    "Standard A=0 alphabet indexes, lag 4, expected delta +5 modulo 26, and the displayed DIAWINFBN sequence mapped to canonical positions 56 through 64",
+    "Fixed non-anchor exclusion mask before any observation scoring",
+    "No candidate words, key material, routes, claimed plaintext, additive fragment values, or previous source-backed observation hits"
+  ],
+  "evaluation_inputs": [
+    "A future family-specific observation validator and evaluator for the committed Stehle regularity artifact",
+    "Future independently source-backed non-anchor K4 position observations with source IDs, one-based positions, notes, and rationale declared before scoring",
+    "Observation files whose scored positions were not used to construct or tune the Stehle regularity artifact"
+  ],
+  "controls": [
+    "validate-prediction-artifact gate before any evaluator is implemented or used",
+    "family-specific observation validator and evaluator required before scoring",
+    "seeded same-size non-anchor position-shuffle null required before interpreting source-backed hit counts",
+    "ciphertext-symbol shuffle baseline preserving K4 length and alphabet membership required before interpreting the local regularity itself",
+    "known public-anchor positions used only as an exclusion mask, not as scoring evidence or tuning input",
+    "multiple-comparison context across all preregistered independent lanes required before interpretation",
+    "promotion blocked unless future independent observations beat controls without post-hoc retuning"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

@@ -23,6 +23,10 @@ a scored observation file.
   evidence.
 - The page treats Stehle/HILL-tableau directionality and K4 "open questions" as
   unresolved structural context rather than proof of a decryption method.
+- The page describes the Stehle local regularity as a short K4 window with a
+  lag-4, +5 modulo-26 relationship under standard A=0 letter values. Its
+  displayed `DIAWINFBN` sequence maps to repo canonical one-based positions
+  56 through 64, while the source page labels the window as 55 through 63.
 - The page records negative-result boundaries around broad single-layer
   classical cipher families, direct route sweeps, and public-anchor crib
   scoring.
@@ -32,8 +36,8 @@ a scored observation file.
 ## Boundary
 
 - This source is registered as `methodology-context`; it can inform future
-  preregistration rationale for W-delimiter, CT-perturbation, HILL-tableau, or
-  stopped-lane documentation only.
+  preregistration rationale for W-delimiter, CT-perturbation,
+  Stehle-regularity, HILL-tableau, or stopped-lane documentation only.
 - The page's open findings must not be scored directly as independent
   observations unless a separate preregistration fixes the target and controls
   before scoring.

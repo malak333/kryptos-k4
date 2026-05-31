@@ -365,10 +365,53 @@ cargo run --locked -- validate-source-archive \
 ```
 
 Practical consequence: this gives future work a source-grounded rationale for a
-bounded W-delimiter or CT-perturbation preregistration, but it does not itself
-change the evidence frontier. Future scored use still requires a separate
-prediction artifact, source-backed observation file when applicable, and seeded
-controls before interpreting any result.
+bounded W-delimiter, CT-perturbation, or Stehle-regularity preregistration, but
+it does not itself change the evidence frontier. Future scored use still
+requires a separate prediction artifact, source-backed observation file when
+applicable, and seeded controls before interpreting any result.
+
+## 2026-05-31: Stehle Regularity Planning Lane Registered
+
+Added `ciphertext-stehle-regularity-v1` as a source-grounded planning lane for
+the Stehle local regularity described by the registered
+`kryptosbot-findings-2026` methodology-context source.
+
+Committed files:
+
+- `experiments/preregistrations/ciphertext-stehle-regularity-v1.json`
+- `experiments/predictions/ciphertext-stehle-regularity-v1.json`
+
+The artifact records the source-reported 55 through 63 anomaly label and the
+repo canonical one-based coordinate mapping: the displayed `DIAWINFBN` sequence
+is K4 positions 56 through 64 in this repository. Position 64 is a public
+known-plaintext anchor position, so the committed non-anchor regularity target
+contains positions 56 through 63 only.
+
+Validation status:
+
+- `validate-preregistration` passes.
+- `validate-prediction-artifact --require-unique-artifact` passes.
+- The lane is intentionally evaluator-pending. It must not be scored or
+  interpreted until a family-specific observation validator, evaluator,
+  same-size non-anchor position-shuffle null, and ciphertext-symbol shuffle
+  control are implemented.
+
+Current independent-lane inventory markers:
+
+- independent lanes: `73`
+- ready for source-backed observations: `72`
+- invalid lanes: `0`
+- prediction artifacts: `73`
+- unique prediction artifacts: `31`
+- unique ready prediction targets: `30`
+- evaluator-pending lanes: `1`
+- ciphertext-stehle-regularity-position-prior-family lanes: `1`
+- ciphertext-stehle-regularity-position-prior-family unique ready targets: `0`
+
+This is not a K4 solution, key, route, plaintext, or candidate. It only turns a
+source-grounded structural anomaly into an auditable future-work artifact
+without reusing the existing public-anchor-derived or CIA row-boundary evidence
+as proof.
 
 ## 2026-05-31: Project K4 Methodology Source Registered
 

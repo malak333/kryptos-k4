@@ -349,7 +349,7 @@ pub fn sources() -> Vec<Source> {
             publication_date: Some("2026-05"),
             source_type: "community-research-findings",
             allowed_use: "methodology-context",
-            use_note: "Public findings and open-question context around W-delimiter, CT-perturbation, HILL-tableau, and negative-search boundaries; not plaintext, candidate evidence, or scored observations.",
+            use_note: "Public findings and open-question context around W-delimiter, CT-perturbation, Stehle local regularity, HILL-tableau, and negative-search boundaries; not plaintext, candidate evidence, or scored observations.",
         },
         Source {
             id: "kryptos-today-project-k4-2026",

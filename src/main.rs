@@ -8,17 +8,17 @@ use kryptos_k4::{
     CiphertextPeriodMatchPrior, CiphertextPriorEvaluation, CiphertextRarityEvaluation,
     CiphertextRarityPrior, CiphertextRepeatDistanceEvaluation, CiphertextRepeatDistancePrior,
     CiphertextResidueBalanceEvaluation, CiphertextResidueBalancePrior,
-    CiphertextSkipTransitionEvaluation, CiphertextSkipTransitionPrior, CiphertextStructurePrior,
-    CiphertextTransitionEvaluation, CiphertextTransitionPrior, CiphertextTurningPointEvaluation,
-    CiphertextTurningPointPrior, CiphertextWindowBalanceEvaluation, CiphertextWindowBalancePrior,
-    ClaimBundleVerification, ClaimMechanismVerification, ClaimReconciliationVerification,
-    DuplicatePredictionArtifactGroup, FragmentMode, GridLayoutEdgeAxis,
-    GridLayoutPredictionEvaluation, GridLayoutPredictionPlan, HeldoutKeyControlRun,
-    IndependentLaneStatus, IndependentLaneStatusReport, K4_CIPHERTEXT, KeyMaterialExplanation,
-    KeyMaterialOffsetSweep, KeyMaterialTest, LanePreregistration, MirrorPredictionEvaluation,
-    MirrorPredictionPlanSet, PeriodPredictionEvaluation, PeriodPredictionPlan,
-    PeriodPredictionPlanSet, PlaintextClaimVerification, PositionStructureRun,
-    PredictionArtifactValidation, PreregistrationValidation, ReportFormat,
+    CiphertextSkipTransitionEvaluation, CiphertextSkipTransitionPrior,
+    CiphertextStehleRegularityPrior, CiphertextStructurePrior, CiphertextTransitionEvaluation,
+    CiphertextTransitionPrior, CiphertextTurningPointEvaluation, CiphertextTurningPointPrior,
+    CiphertextWindowBalanceEvaluation, CiphertextWindowBalancePrior, ClaimBundleVerification,
+    ClaimMechanismVerification, ClaimReconciliationVerification, DuplicatePredictionArtifactGroup,
+    FragmentMode, GridLayoutEdgeAxis, GridLayoutPredictionEvaluation, GridLayoutPredictionPlan,
+    HeldoutKeyControlRun, IndependentLaneStatus, IndependentLaneStatusReport, K4_CIPHERTEXT,
+    KeyMaterialExplanation, KeyMaterialOffsetSweep, KeyMaterialTest, LanePreregistration,
+    MirrorPredictionEvaluation, MirrorPredictionPlanSet, PeriodPredictionEvaluation,
+    PeriodPredictionPlan, PeriodPredictionPlanSet, PlaintextClaimVerification,
+    PositionStructureRun, PredictionArtifactValidation, PreregistrationValidation, ReportFormat,
     RoutedBatchKeyMaterialRun, RunningKeyClaimVerification, SpacingPredictionEvaluation,
     SpacingPredictionPlanSet, StructuralModelRun, TableauHillPredictionEvaluation,
     TableauHillPredictionPlan, analyze_constraints, analyze_known_plaintext_spans,
@@ -27,17 +27,17 @@ use kryptos_k4::{
     build_ciphertext_adjacent_contrast_prior, build_ciphertext_hotspot_prior,
     build_ciphertext_period_match_prior, build_ciphertext_rarity_prior,
     build_ciphertext_repeat_distance_prior, build_ciphertext_residue_balance_prior,
-    build_ciphertext_skip_transition_prior, build_ciphertext_structure_prior,
-    build_ciphertext_transition_prior, build_ciphertext_turning_point_prior,
-    build_ciphertext_window_balance_prior, build_grid_layout_prediction_plan_for_axis,
-    build_mirror_prediction_plan, build_period_prediction_plan, build_report,
-    build_tableau_hill_prediction_plan, candidate_sequences,
-    evaluate_ciphertext_adjacent_contrast_positions, evaluate_ciphertext_hotspot_positions,
-    evaluate_ciphertext_period_match_positions, evaluate_ciphertext_rarity_positions,
-    evaluate_ciphertext_repeat_distance_positions, evaluate_ciphertext_residue_balance_positions,
-    evaluate_ciphertext_skip_transition_positions, evaluate_ciphertext_structure_prior_positions,
-    evaluate_ciphertext_transition_positions, evaluate_ciphertext_turning_point_positions,
-    evaluate_ciphertext_window_balance_positions,
+    build_ciphertext_skip_transition_prior, build_ciphertext_stehle_regularity_prior,
+    build_ciphertext_structure_prior, build_ciphertext_transition_prior,
+    build_ciphertext_turning_point_prior, build_ciphertext_window_balance_prior,
+    build_grid_layout_prediction_plan_for_axis, build_mirror_prediction_plan,
+    build_period_prediction_plan, build_report, build_tableau_hill_prediction_plan,
+    candidate_sequences, evaluate_ciphertext_adjacent_contrast_positions,
+    evaluate_ciphertext_hotspot_positions, evaluate_ciphertext_period_match_positions,
+    evaluate_ciphertext_rarity_positions, evaluate_ciphertext_repeat_distance_positions,
+    evaluate_ciphertext_residue_balance_positions, evaluate_ciphertext_skip_transition_positions,
+    evaluate_ciphertext_structure_prior_positions, evaluate_ciphertext_transition_positions,
+    evaluate_ciphertext_turning_point_positions, evaluate_ciphertext_window_balance_positions,
     evaluate_grid_layout_prediction_positions_with_axis, evaluate_mirror_prediction_positions,
     evaluate_period_prediction_positions, evaluate_spacing_prediction_positions,
     evaluate_tableau_hill_prediction_positions, explain_key_material, findings,
@@ -203,6 +203,12 @@ enum Command {
         /// Comma-separated odd centered window widths to score.
         #[arg(long, default_value = "3,5,7")]
         window_widths: String,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Emit the source-grounded Stehle local-regularity target for future independent observations.
+    CiphertextStehleRegularityPrior {
         /// Output format.
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
@@ -3143,6 +3149,9 @@ fn main() -> Result<()> {
             window_widths,
             format,
         } => print_ciphertext_window_balance_prior(top, window_widths, format)?,
+        Command::CiphertextStehleRegularityPrior { format } => {
+            print_ciphertext_stehle_regularity_prior(format)?
+        }
         Command::CiphertextResidueBalancePrior {
             min_modulus,
             max_modulus,
@@ -5149,6 +5158,7 @@ fn validate_archived_prediction_context(
         "ciphertext-skip-transition-position-prior" => Some("ciphertext-skip-transition"),
         "ciphertext-turning-point-position-prior" => Some("ciphertext-turning-point"),
         "ciphertext-window-balance-position-prior" => Some("ciphertext-window-balance"),
+        "ciphertext-stehle-regularity-position-prior" => Some("ciphertext-stehle-regularity"),
         _ => None,
     };
     if expected_kind != Some(artifact_kind) {
@@ -5218,6 +5228,10 @@ fn validate_archived_prediction_context(
         }
         "ciphertext-window-balance" => {
             serde_json::to_value(kryptos_k4::build_committed_ciphertext_window_balance_prior())
+                .map_err(Into::into)
+        }
+        "ciphertext-stehle-regularity" => {
+            serde_json::to_value(kryptos_k4::build_committed_ciphertext_stehle_regularity_prior())
                 .map_err(Into::into)
         }
         _ => return,
@@ -5602,6 +5616,14 @@ fn archived_artifact_positions(
             let plan: CiphertextWindowBalancePrior = serde_json::from_value(artifact.clone())?;
             Ok(plan.non_anchor_positions_one_based.into_iter().collect())
         }
+        "ciphertext-stehle-regularity" => {
+            let plan: CiphertextStehleRegularityPrior = serde_json::from_value(artifact.clone())?;
+            Ok(plan
+                .regularity_positions
+                .into_iter()
+                .map(|position| position.position_one_based)
+                .collect())
+        }
         _ => Ok(HashSet::new()),
     }
 }
@@ -5781,6 +5803,13 @@ fn infer_prediction_artifact_kind(value: &serde_json::Value) -> Option<&'static 
         == Some("ciphertext-window-balance-prior")
     {
         return Some("ciphertext-window-balance");
+    }
+    if value
+        .get("artifact_kind")
+        .and_then(serde_json::Value::as_str)
+        == Some("ciphertext-stehle-regularity-prior")
+    {
+        return Some("ciphertext-stehle-regularity");
     }
     None
 }
@@ -7054,6 +7083,87 @@ fn print_ciphertext_repeat_distance_prior(top: usize, format: OutputFormat) -> R
                     position.nearest_repeat_distance,
                     position.repeat_distance_score,
                     position.repeat_distance_rank
+                );
+            }
+            println!();
+
+            println!("## Controls\n");
+            for control in &prior.controls {
+                println!("- {control}");
+            }
+            println!();
+
+            println!("## Discovery Inputs\n");
+            for input in &prior.discovery_inputs {
+                println!("- {input}");
+            }
+            println!();
+            println!(
+                "public anchor fragments used for discovery: {}",
+                prior.public_anchor_fragments_used_for_discovery
+            );
+            println!(
+                "public anchor fragments used as primary evidence: {}",
+                prior.public_anchor_fragments_used_as_primary_evidence
+            );
+        }
+    }
+
+    Ok(())
+}
+
+fn print_ciphertext_stehle_regularity_prior(format: OutputFormat) -> Result<()> {
+    let prior = build_ciphertext_stehle_regularity_prior();
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&prior)?),
+        OutputFormat::Markdown => {
+            println!("# Ciphertext Stehle-Regularity Prior\n");
+            println!("This is not a claimed solution.\n");
+            println!("artifact kind: {}", prior.artifact_kind);
+            println!("hypothesis family: {}", prior.hypothesis_family);
+            println!("alphabet: {}", prior.alphabet);
+            println!("source-reported window: {}", prior.source_reported_window);
+            println!(
+                "window: positions {}..={} lag {} delta +{} mod 26",
+                prior.start_position_one_based,
+                prior.start_position_one_based + prior.window_length - 1,
+                prior.lag,
+                prior.expected_delta_mod26
+            );
+            println!("non-anchor positions: {}", prior.non_anchor_position_count);
+            println!("regularity positions: {}", prior.regularity_position_count);
+            println!("promoted: {}", prior.promoted_candidate);
+            println!("note: {}\n", prior.note);
+
+            println!("## Prediction Target\n");
+            println!("{}\n", prior.prediction_target);
+
+            println!("## Regularity Positions\n");
+            println!("| Position | Ciphertext | A=0 Index | Lag Source | Lag Delta | Matches +5 |");
+            println!("| --- | --- | --- | --- | --- | --- |");
+            for position in &prior.regularity_positions {
+                let lag_source = position
+                    .lag_source_position_one_based
+                    .map(|source| {
+                        format!(
+                            "{} ({})",
+                            source,
+                            position.lag_source_ciphertext.unwrap_or('?')
+                        )
+                    })
+                    .unwrap_or_else(|| "n/a".to_string());
+                let lag_delta = position
+                    .lag_delta_mod26
+                    .map(|delta| delta.to_string())
+                    .unwrap_or_else(|| "n/a".to_string());
+                println!(
+                    "| {} | {} | {} | {} | {} | {} |",
+                    position.position_one_based,
+                    position.ciphertext,
+                    position.alphabet_index,
+                    lag_source,
+                    lag_delta,
+                    position.matches_expected_delta
                 );
             }
             println!();
