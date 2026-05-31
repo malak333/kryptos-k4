@@ -1,14 +1,15 @@
 use crate::{
     CiphertextResidueBalancePrior, GridLayoutEdgeAxis, PeriodPredictionPlanSet,
     build_all_period_prediction_plans, build_all_spacing_prediction_plans,
-    build_ciphertext_residue_balance_prior, build_committed_ciphertext_adjacent_contrast_prior,
-    build_committed_ciphertext_hotspot_prior, build_committed_ciphertext_period_match_prior,
-    build_committed_ciphertext_rarity_prior, build_committed_ciphertext_repeat_distance_prior,
+    build_ciphertext_residue_balance_prior, build_ciphertext_window_balance_prior,
+    build_committed_ciphertext_adjacent_contrast_prior, build_committed_ciphertext_hotspot_prior,
+    build_committed_ciphertext_period_match_prior, build_committed_ciphertext_rarity_prior,
+    build_committed_ciphertext_repeat_distance_prior,
     build_committed_ciphertext_residue_balance_prior,
     build_committed_ciphertext_skip_transition_prior, build_committed_ciphertext_structure_prior,
     build_committed_ciphertext_transition_prior, build_committed_ciphertext_turning_point_prior,
-    build_committed_ciphertext_window_balance_prior, build_grid_layout_prediction_plan_for_axis,
-    build_mirror_prediction_plan, build_period_prediction_plan, sources,
+    build_grid_layout_prediction_plan_for_axis, build_mirror_prediction_plan,
+    build_period_prediction_plan, sources,
 };
 use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
@@ -36,6 +37,10 @@ pub struct LanePreregistration {
     pub prediction_artifact: Option<String>,
     #[serde(default)]
     pub grid_edge_axis: Option<GridLayoutEdgeAxis>,
+    #[serde(default)]
+    pub ciphertext_window_balance_top: Option<usize>,
+    #[serde(default)]
+    pub ciphertext_window_balance_widths: Option<Vec<usize>>,
     pub discovery_inputs: Vec<String>,
     pub evaluation_inputs: Vec<String>,
     pub controls: Vec<String>,
@@ -807,9 +812,16 @@ pub fn validate_prediction_artifact_with_repo_root(
         Some("ciphertext-period-match") => Some(serde_json::to_value(
             build_committed_ciphertext_period_match_prior(),
         )?),
-        Some("ciphertext-window-balance") => Some(serde_json::to_value(
-            build_committed_ciphertext_window_balance_prior(),
-        )?),
+        Some("ciphertext-window-balance") => {
+            let top = registration.ciphertext_window_balance_top.unwrap_or(20);
+            let window_widths = registration
+                .ciphertext_window_balance_widths
+                .clone()
+                .unwrap_or_else(|| vec![3, 5, 7]);
+            Some(serde_json::to_value(
+                build_ciphertext_window_balance_prior(top, window_widths),
+            )?)
+        }
         _ => None,
     };
     let mut expected_plan_count = expected_value
@@ -1270,6 +1282,8 @@ mod tests {
                 "Predict a non-anchor position class before comparing anchor fragments.".to_string(),
             prediction_artifact: None,
             grid_edge_axis: None,
+            ciphertext_window_balance_top: None,
+            ciphertext_window_balance_widths: None,
             discovery_inputs: vec!["registered structural model".to_string()],
             evaluation_inputs: vec!["withheld non-anchor prediction target".to_string()],
             controls: vec!["seeded shuffle baseline".to_string()],

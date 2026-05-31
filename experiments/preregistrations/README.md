@@ -223,6 +223,15 @@ Current independent lanes:
   anchors as an exclusion mask. Score it only through future source-backed
   non-anchor observations and `validate-ciphertext-window-balance-observations`
   then `evaluate-ciphertext-window-balance` with seeded controls.
+- `ciphertext-window-balance-narrow-v1.json`, a populated ciphertext-only
+  narrow local-window balance lane with committed artifact
+  `experiments/predictions/ciphertext-window-balance-narrow-v1.json`. The
+  artifact fixes the top 12 non-anchor positions with strongest predeclared
+  centered-window balance across only window widths `[3, 5]`, using only K4
+  ciphertext and public anchors as an exclusion mask. Score it only through
+  future source-backed non-anchor observations and
+  `validate-ciphertext-window-balance-observations` then
+  `evaluate-ciphertext-window-balance` with seeded controls.
 - `non-anchor-position-period-v1.json` with committed artifact
   `experiments/predictions/non-anchor-position-period-v1.json`
 - `non-anchor-position-period-followup-v1.json` for future source-backed

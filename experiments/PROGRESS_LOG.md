@@ -3,6 +3,45 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: Narrow Window-Balance Target Registered
+
+Added a distinct ciphertext-only local-window balance prediction target:
+
+- preregistration: `experiments/preregistrations/ciphertext-window-balance-narrow-v1.json`
+- prediction artifact: `experiments/predictions/ciphertext-window-balance-narrow-v1.json`
+- rule: centered local-window balance over widths `[3, 5]`, top 12 non-anchor
+  positions, public anchors used only as an exclusion mask
+
+Validation:
+
+```bash
+cargo run --locked -- validate-preregistration \
+  --input experiments/preregistrations/ciphertext-window-balance-narrow-v1.json \
+  --format json
+
+cargo run --locked -- validate-prediction-artifact \
+  --preregistration experiments/preregistrations/ciphertext-window-balance-narrow-v1.json \
+  --require-unique-artifact \
+  --format json
+
+cargo run --locked -- next-evidence-gate --format json
+```
+
+Observed inventory after registration:
+
+- independent lanes: `70`
+- ready for source-backed observations: `70`
+- invalid lanes: `0`
+- prediction artifacts: `70`
+- unique ready prediction targets: `28`
+- duplicate prediction artifact groups: `1`
+- ciphertext-window-balance-position-prior-family lanes: `2`
+- ciphertext-window-balance-position-prior-family unique ready targets: `2`
+
+Practical consequence: this creates a sharper predeclared target for future
+source-backed non-anchor observations, but it is still not evidence by itself.
+No candidate material, key stream, route, plaintext, or promotion is claimed.
+
 ## 2026-05-31: Dear Cipher Public K4 Claim Quarantined
 
 Added a quote-free local source snapshot for an additional public K4 solution
