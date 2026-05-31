@@ -501,9 +501,11 @@ Current independent lanes:
   planning lane with committed artifact
   `experiments/predictions/ciphertext-ct-perturbation-v1.json`. The artifact
   fixes six non-anchor C/T ciphertext positions from the registered
-  KryptosBot findings context. It is intentionally evaluator-pending:
-  no source-backed observation may be scored against it until a family-specific
-  validator and evaluator are added.
+  KryptosBot findings context. It is ready for future source-backed non-anchor
+  observations through
+  `validate-ciphertext-ct-perturbation-observations` and
+  `evaluate-ciphertext-ct-perturbation`, which score C/T-position enrichment
+  with seeded same-size non-anchor position nulls.
 
 The mirror and grid-layout lanes are now source-observation ready: validate
 their artifacts with `validate-prediction-artifact`, then use the matching

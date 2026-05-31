@@ -534,6 +534,11 @@ fn lane_status_next_step(
             "Run validate-ciphertext-stehle-regularity-observations for the source-backed positions, then evaluate-ciphertext-stehle-regularity with --positions-file."
                 .to_string(),
         ),
+        "ciphertext-ct-perturbation-position-prior" => (
+            "ready-for-source-backed-observations".to_string(),
+            "Run validate-ciphertext-ct-perturbation-observations for the source-backed positions, then evaluate-ciphertext-ct-perturbation with --positions-file."
+                .to_string(),
+        ),
         "position-period-prediction" => (
             "ready-for-source-backed-observations".to_string(),
             "Run validate-period-observations, then evaluate-period-prediction with --positions-file."
@@ -565,6 +570,7 @@ fn has_family_specific_evaluator(hypothesis_family: &str) -> bool {
             | "ciphertext-window-balance-position-prior"
             | "ciphertext-period-match-position-prior"
             | "ciphertext-stehle-regularity-position-prior"
+            | "ciphertext-ct-perturbation-position-prior"
             | "position-period-prediction"
     )
 }

@@ -10,7 +10,7 @@ Status: stop and replan before any new scoring.
 
 Reason: the current source/evidence gates report `28` registered sources, `2`
 scored-observation eligible sources, `1` committed source-backed observation
-file, `32` valid source-backed evaluation archives, and all source-backed
+file, `33` valid source-backed evaluation archives, and all source-backed
 archives negative/non-significant after source-archive correction. The minimum
 raw source-backed archive p-value is the terminal residue-balance archive
 (`p=0.0436`), but the corrected archive-surface p-value is `1.0000`.
@@ -157,7 +157,8 @@ ciphertext-residue-balance, very-high-moduli ciphertext-residue-balance,
 ultra-high-moduli ciphertext-residue-balance, extreme-moduli
 ciphertext-residue-balance, super-extreme-moduli ciphertext-residue-balance,
 hyper-extreme-moduli ciphertext-residue-balance, terminal-moduli
-ciphertext-residue-balance, and ciphertext-Stehle-regularity prediction
+ciphertext-residue-balance, ciphertext-CT-perturbation, and
+ciphertext-Stehle-regularity prediction
 targets.
 
 Reason: `cia-k4-row-boundaries-v1` is source-backed and auditable, but all
@@ -178,7 +179,8 @@ ciphertext-residue-balance `p=0.7859`, and
 super-extreme-moduli ciphertext-residue-balance `p=0.6741`,
 hyper-extreme-moduli ciphertext-residue-balance `p=0.7602`,
 terminal-moduli ciphertext-residue-balance raw `p=0.0436` but source-archive
-corrected `p=1.0000`, and ciphertext-Stehle-regularity `p=1.0000`.
+corrected `p=1.0000`, ciphertext-CT-perturbation `p=0.4139`, and
+ciphertext-Stehle-regularity `p=1.0000`.
 
 Latest evidence is summarized in
 `experiments/evidence-summaries/cia-k4-row-boundaries-v1.md`.

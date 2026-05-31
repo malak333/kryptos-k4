@@ -94,6 +94,10 @@ This is not a claimed solution.
   `experiments/preregistrations/ciphertext-window-balance-wide-v1.json`
 - Ciphertext wide window-balance artifact:
   `experiments/predictions/ciphertext-window-balance-wide-v1.json`
+- Ciphertext CT-perturbation preregistration:
+  `experiments/preregistrations/ciphertext-ct-perturbation-v1.json`
+- Ciphertext CT-perturbation artifact:
+  `experiments/predictions/ciphertext-ct-perturbation-v1.json`
 - Ciphertext Stehle-regularity preregistration:
   `experiments/preregistrations/ciphertext-stehle-regularity-v1.json`
 - Ciphertext Stehle-regularity artifact:
@@ -261,6 +265,12 @@ cargo run --locked -- validate-ciphertext-window-balance-observations \
 cargo run --locked -- validate-ciphertext-window-balance-observations \
   --artifact experiments/predictions/ciphertext-window-balance-wide-v1.json \
   --preregistration experiments/preregistrations/ciphertext-window-balance-wide-v1.json \
+  --input experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --format json
+
+cargo run --locked -- validate-ciphertext-ct-perturbation-observations \
+  --artifact experiments/predictions/ciphertext-ct-perturbation-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-ct-perturbation-v1.json \
   --input experiments/position-observations/cia-k4-row-boundaries-v1.json \
   --format json
 
@@ -498,6 +508,15 @@ cargo run --locked -- evaluate-ciphertext-window-balance \
   --output-dir results/ciphertext-window-balance-observations/cia-k4-row-boundaries-wide-v1 \
   --format json
 
+cargo run --locked -- evaluate-ciphertext-ct-perturbation \
+  --artifact experiments/predictions/ciphertext-ct-perturbation-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-ct-perturbation-v1.json \
+  --positions-file experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/ciphertext-ct-perturbation-observations/cia-k4-row-boundaries-v1 \
+  --format json
+
 cargo run --locked -- evaluate-ciphertext-stehle-regularity \
   --artifact experiments/predictions/ciphertext-stehle-regularity-v1.json \
   --preregistration experiments/preregistrations/ciphertext-stehle-regularity-v1.json \
@@ -703,6 +722,7 @@ locally.
 | Ciphertext turning-point | turning-point positions | 2/6 | 1.64 | 1.05 | 0.5247 | false |
 | Ciphertext window-balance | ciphertext window-balance positions | 0/6 | 1.65 | 1.06 | 1.0000 | false |
 | Ciphertext wide window-balance | ciphertext window-balance positions | 0/6 | 0.99 | 0.87 | 1.0000 | false |
+| Ciphertext CT-perturbation | ciphertext C/T positions | 1/6 | 0.49 | 0.65 | 0.4139 | false |
 | Ciphertext Stehle-regularity | Stehle window positions; lag-confirmed +5 subset also 0/6, p=1.0000 | 0/6 | 0.66 | 0.74 | 1.0000 | false |
 | Ciphertext residue-balance | ciphertext residue-balance modulus 2 residue 0 | 4/6 | 3.55 | 0.86 | 0.4803 | false |
 | Ciphertext high-moduli residue-balance | ciphertext residue-balance modulus 8 residue 3 | 2/6 | 1.76 | 0.67 | 0.6416 | false |
@@ -726,7 +746,7 @@ ciphertext-adjacent-contrast,
 ciphertext-transition,
 ciphertext-skip-transition, ciphertext-turning-point,
 ciphertext-window-balance, wide ciphertext-window-balance,
-ciphertext-Stehle-regularity, or
+ciphertext-CT-perturbation, ciphertext-Stehle-regularity, or
 ciphertext-residue-balance targets, including the high-moduli,
 very-high-moduli, ultra-high-moduli, extreme-moduli, and super-extreme-moduli residue-balance targets, beyond the
 seeded null controls. This is negative evidence for this observation lane, not

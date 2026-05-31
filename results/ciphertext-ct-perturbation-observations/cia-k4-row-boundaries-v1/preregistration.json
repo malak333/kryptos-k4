@@ -1,0 +1,32 @@
+{
+  "id": "ciphertext-ct-perturbation-v1",
+  "title": "Ciphertext CT-perturbation planning lane",
+  "hypothesis_family": "ciphertext-ct-perturbation-position-prior",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [
+    "kryptosbot-findings-2026"
+  ],
+  "rationale": "The registered KryptosBot findings source documents a CT-perturbation or symbol-swap anomaly as an unresolved structural question, not as plaintext, key material, a route, or a solution claim. This lane fixes the C/T ciphertext-position surface before any future source-backed observation scoring. It is not another public-anchor mining pass because it uses a source-documented ciphertext-local symbol set, excludes public known-plaintext positions from the target positions, and does not use additive fragment values, candidate words, routes, or prior source-backed observation scores for discovery.",
+  "prediction_target": "Future independently source-backed non-anchor K4 position observations may be checked for enrichment in predeclared C/T ciphertext positions only after a family-specific evaluator and null controls are implemented; this artifact alone is not evidence.",
+  "prediction_artifact": "experiments/predictions/ciphertext-ct-perturbation-v1.json",
+  "discovery_inputs": [
+    "Registered methodology-context source kryptosbot-findings-2026 for the bounded CT-perturbation or symbol-swap surface",
+    "Public K4 ciphertext symbols only",
+    "Deterministic target emitted by ciphertext-ct-perturbation-prior"
+  ],
+  "evaluation_inputs": [
+    "A future family-specific observation validator and evaluator for the committed CT-perturbation artifact",
+    "Future source-backed non-anchor position observations selected before any CT-perturbation score output",
+    "Observation files whose scored positions were not used to construct or tune the CT-perturbation artifact"
+  ],
+  "controls": [
+    "family-specific validator and evaluator required before scoring",
+    "known solved-position intervals are excluded from target positions and never used as scoring evidence",
+    "same-size non-anchor position-shuffle null required before interpreting any source-backed hit count",
+    "ciphertext-symbol shuffle preserving K4 length and C/T target-symbol count required before interpreting the C/T surface itself",
+    "multiple-comparison correction required before interpreting any CT-perturbation score",
+    "no promotion from this planning artifact alone"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

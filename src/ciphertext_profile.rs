@@ -584,6 +584,33 @@ pub struct CiphertextWindowBalanceEvaluation {
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct CiphertextCtPerturbationEvaluation {
+    pub artifact_path: String,
+    pub observation_id: Option<String>,
+    pub observation_source_ids: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub observation_source_review_file: Option<String>,
+    pub observation_rationale: Option<String>,
+    pub observation_position_notes: BTreeMap<String, String>,
+    pub source_backed_observation: bool,
+    pub observation_warning: Option<&'static str>,
+    pub observed_position_count: usize,
+    pub observed_positions_one_based: Vec<usize>,
+    pub ct_position_count: usize,
+    pub ct_hits: usize,
+    pub ct_hit_rate: f64,
+    pub matching_ct_positions_one_based: Vec<usize>,
+    pub non_ct_positions_one_based: Vec<usize>,
+    pub null_mean_ct_hits: f64,
+    pub null_std_dev_ct_hits: f64,
+    pub empirical_p_value: f64,
+    pub iterations: usize,
+    pub seed: u64,
+    pub promoted_candidate: bool,
+    pub note: &'static str,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct CiphertextRepeatDistanceEvaluation {
     pub artifact_path: String,
     pub observation_id: Option<String>,
@@ -2094,6 +2121,113 @@ pub fn build_ciphertext_ct_perturbation_prior() -> CiphertextCtPerturbationPrior
 
 pub fn build_committed_ciphertext_ct_perturbation_prior() -> CiphertextCtPerturbationPrior {
     build_ciphertext_ct_perturbation_prior()
+}
+
+pub fn evaluate_ciphertext_ct_perturbation_positions(
+    artifact_path: impl AsRef<std::path::Path>,
+    observed_positions_one_based: Vec<usize>,
+    iterations: usize,
+    seed: u64,
+) -> Result<CiphertextCtPerturbationEvaluation> {
+    if observed_positions_one_based.is_empty() {
+        bail!("ciphertext-ct-perturbation evaluation requires at least one observed position");
+    }
+    if iterations == 0 {
+        bail!("ciphertext-ct-perturbation evaluation iterations must be greater than zero");
+    }
+
+    let artifact_path = artifact_path.as_ref();
+    let artifact = std::fs::read_to_string(artifact_path)?;
+    let prior: CiphertextCtPerturbationPrior = serde_json::from_str(&artifact)?;
+    if prior.artifact_kind != "ciphertext-ct-perturbation-prior" {
+        bail!(
+            "ciphertext-ct-perturbation artifact `{}` has artifact_kind `{}`",
+            artifact_path.display(),
+            prior.artifact_kind
+        );
+    }
+
+    let non_anchor_set: HashSet<_> = prior
+        .non_anchor_positions_one_based
+        .iter()
+        .copied()
+        .collect();
+    let mut seen = HashSet::new();
+    for position in &observed_positions_one_based {
+        if !seen.insert(*position) {
+            bail!("observed positions must be unique");
+        }
+        if !non_anchor_set.contains(position) {
+            bail!(
+                "observed positions must be one-based non-anchor K4 positions from the ciphertext-ct-perturbation artifact"
+            );
+        }
+    }
+
+    let ct_set: HashSet<_> = prior
+        .ct_positions
+        .iter()
+        .map(|position| position.position_one_based)
+        .collect();
+    let matching_ct_positions_one_based: Vec<_> = observed_positions_one_based
+        .iter()
+        .copied()
+        .filter(|position| ct_set.contains(position))
+        .collect();
+    let non_ct_positions_one_based: Vec<_> = observed_positions_one_based
+        .iter()
+        .copied()
+        .filter(|position| !ct_set.contains(position))
+        .collect();
+    let ct_hits = matching_ct_positions_one_based.len();
+    let ct_hit_rate = ct_hits as f64 / observed_positions_one_based.len() as f64;
+
+    let mut rng = ChaCha8Rng::seed_from_u64(seed);
+    let mut null_values = Vec::with_capacity(iterations);
+    for _ in 0..iterations {
+        let mut shuffled = prior.non_anchor_positions_one_based.clone();
+        shuffled.shuffle(&mut rng);
+        shuffled.truncate(observed_positions_one_based.len());
+        let hits = shuffled
+            .iter()
+            .filter(|position| ct_set.contains(position))
+            .count();
+        null_values.push(hits as f64);
+    }
+    let null_mean = mean(&null_values);
+    let null_std_dev = std_dev(&null_values, null_mean);
+    let greater_or_equal = null_values
+        .iter()
+        .filter(|value| **value >= ct_hits as f64)
+        .count();
+    let empirical_p_value = (greater_or_equal as f64 + 1.0) / (iterations as f64 + 1.0);
+
+    Ok(CiphertextCtPerturbationEvaluation {
+        artifact_path: artifact_path.display().to_string(),
+        observation_id: None,
+        observation_source_ids: Vec::new(),
+        observation_source_review_file: None,
+        observation_rationale: None,
+        observation_position_notes: BTreeMap::new(),
+        source_backed_observation: false,
+        observation_warning: Some(
+            "Ad hoc --positions input is diagnostic only; use --positions-file with validated source IDs before treating observations as evidence.",
+        ),
+        observed_position_count: observed_positions_one_based.len(),
+        observed_positions_one_based,
+        ct_position_count: prior.ct_position_count,
+        ct_hits,
+        ct_hit_rate,
+        matching_ct_positions_one_based,
+        non_ct_positions_one_based,
+        null_mean_ct_hits: null_mean,
+        null_std_dev_ct_hits: null_std_dev,
+        empirical_p_value,
+        iterations,
+        seed,
+        promoted_candidate: false,
+        note: "Ciphertext CT-perturbation evaluation scores source-backed non-anchor positions against predeclared C/T ciphertext positions with a seeded same-size position-set null; it is not a claimed solution.",
+    })
 }
 
 pub fn build_ciphertext_stehle_regularity_prior() -> CiphertextStehleRegularityPrior {

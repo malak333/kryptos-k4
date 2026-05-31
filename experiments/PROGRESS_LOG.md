@@ -3,12 +3,14 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
-## 2026-05-31: CT-Perturbation Planning Lane Registered
+## 2026-05-31: CT-Perturbation Lane Scored And Rejected
 
-Added a source-grounded, evaluator-pending CT-perturbation planning lane:
+Added and scored a source-grounded CT-perturbation lane:
 
 - preregistration: `experiments/preregistrations/ciphertext-ct-perturbation-v1.json`
 - prediction artifact: `experiments/predictions/ciphertext-ct-perturbation-v1.json`
+- archive:
+  `results/ciphertext-ct-perturbation-observations/cia-k4-row-boundaries-v1`
 - source rationale: `kryptosbot-findings-2026` methodology-context note about
   the unresolved CT-perturbation/symbol-swap anomaly
 - fixed target positions: non-anchor C/T ciphertext positions `36`, `38`,
@@ -25,32 +27,56 @@ cargo run --locked -- validate-prediction-artifact \
   --preregistration experiments/preregistrations/ciphertext-ct-perturbation-v1.json \
   --require-unique-artifact \
   --format json
+
+cargo run --locked -- validate-ciphertext-ct-perturbation-observations \
+  --artifact experiments/predictions/ciphertext-ct-perturbation-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-ct-perturbation-v1.json \
+  --input experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --format json
+
+cargo run --locked -- evaluate-ciphertext-ct-perturbation \
+  --artifact experiments/predictions/ciphertext-ct-perturbation-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-ct-perturbation-v1.json \
+  --positions-file experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/ciphertext-ct-perturbation-observations/cia-k4-row-boundaries-v1 \
+  --format json
+
+cargo run --locked -- validate-evaluation-archive \
+  --input results/ciphertext-ct-perturbation-observations/cia-k4-row-boundaries-v1 \
+  --format json
 ```
 
 Result:
 
 - preregistration valid: `true`
 - prediction artifact valid: `true`
+- observation validation valid: `true`
+- evaluation archive valid: `true`
 - artifact kind: `ciphertext-ct-perturbation`
 - artifact plan count: `6`
+- observed CT hits: `1/6`
+- empirical p-value: `0.4139`
+- source-backed adjusted p-value: `1.0000`
 - promoted: `false`
 
-Observed inventory after registration:
+Observed inventory after scoring:
 
 - independent lanes: `75`
-- ready for source-backed observations: `74`
+- ready for source-backed observations: `75`
 - invalid lanes: `0`
-- evaluator-pending lanes: `1`
+- evaluator-pending lanes: `0`
 - prediction artifacts: `75`
-- unique ready prediction targets: `32`
+- unique ready prediction targets: `33`
 - duplicate prediction artifact groups: `1`
 - ciphertext-ct-perturbation-position-prior-family lanes: `1`
-- ciphertext-ct-perturbation-position-prior-family unique ready targets: `0`
+- ciphertext-ct-perturbation-position-prior-family unique ready targets: `1`
 
-Practical consequence: CT-perturbation is now a committed, distinct planning
-target, but it is not scoreable evidence yet. The next engineering step for this
-lane is a family-specific source-backed observation validator and evaluator with
-same-size non-anchor position nulls and ciphertext-symbol shuffle controls.
+Practical consequence: CT-perturbation is now a committed, distinct target with
+a family-specific source-backed observation validator and evaluator. The
+committed CIA row-boundary observation does not support it after seeded same-size
+non-anchor position null controls and source-archive correction.
 
 ## 2026-05-31: Wide Window-Balance Target Registered And Rejected
 

@@ -4,9 +4,10 @@ use kryptos_k4::{
     AlphabetKind, BaselineAlphabetScope, BaselineTargetScope, BatchKeyMaterialCandidate,
     BatchKeyMaterialRun, BatchKeyRunHistory, CandidateTransform,
     CiphertextAdjacentContrastEvaluation, CiphertextAdjacentContrastPrior,
-    CiphertextHotspotEvaluation, CiphertextHotspotPrior, CiphertextPeriodMatchEvaluation,
-    CiphertextPeriodMatchPrior, CiphertextPriorEvaluation, CiphertextRarityEvaluation,
-    CiphertextRarityPrior, CiphertextRepeatDistanceEvaluation, CiphertextRepeatDistancePrior,
+    CiphertextCtPerturbationEvaluation, CiphertextCtPerturbationPrior, CiphertextHotspotEvaluation,
+    CiphertextHotspotPrior, CiphertextPeriodMatchEvaluation, CiphertextPeriodMatchPrior,
+    CiphertextPriorEvaluation, CiphertextRarityEvaluation, CiphertextRarityPrior,
+    CiphertextRepeatDistanceEvaluation, CiphertextRepeatDistancePrior,
     CiphertextResidueBalanceEvaluation, CiphertextResidueBalancePrior,
     CiphertextSkipTransitionEvaluation, CiphertextSkipTransitionPrior,
     CiphertextStehleRegularityEvaluation, CiphertextStehleRegularityPrior,
@@ -34,12 +35,13 @@ use kryptos_k4::{
     build_ciphertext_window_balance_prior, build_grid_layout_prediction_plan_for_axis,
     build_mirror_prediction_plan, build_period_prediction_plan, build_report,
     build_tableau_hill_prediction_plan, candidate_sequences,
-    evaluate_ciphertext_adjacent_contrast_positions, evaluate_ciphertext_hotspot_positions,
-    evaluate_ciphertext_period_match_positions, evaluate_ciphertext_rarity_positions,
-    evaluate_ciphertext_repeat_distance_positions, evaluate_ciphertext_residue_balance_positions,
-    evaluate_ciphertext_skip_transition_positions, evaluate_ciphertext_stehle_regularity_positions,
-    evaluate_ciphertext_structure_prior_positions, evaluate_ciphertext_transition_positions,
-    evaluate_ciphertext_turning_point_positions, evaluate_ciphertext_window_balance_positions,
+    evaluate_ciphertext_adjacent_contrast_positions, evaluate_ciphertext_ct_perturbation_positions,
+    evaluate_ciphertext_hotspot_positions, evaluate_ciphertext_period_match_positions,
+    evaluate_ciphertext_rarity_positions, evaluate_ciphertext_repeat_distance_positions,
+    evaluate_ciphertext_residue_balance_positions, evaluate_ciphertext_skip_transition_positions,
+    evaluate_ciphertext_stehle_regularity_positions, evaluate_ciphertext_structure_prior_positions,
+    evaluate_ciphertext_transition_positions, evaluate_ciphertext_turning_point_positions,
+    evaluate_ciphertext_window_balance_positions,
     evaluate_grid_layout_prediction_positions_with_axis, evaluate_mirror_prediction_positions,
     evaluate_period_prediction_positions, evaluate_spacing_prediction_positions,
     evaluate_tableau_hill_prediction_positions, explain_key_material, findings,
@@ -803,6 +805,21 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
     },
+    /// Validate source-backed independent observations before ciphertext-CT-perturbation scoring.
+    ValidateCiphertextCtPerturbationObservations {
+        /// JSON artifact emitted by ciphertext-ct-perturbation-prior --format json.
+        #[arg(long)]
+        artifact: PathBuf,
+        /// Optional preregistration file used to validate the ciphertext-CT-perturbation artifact before scoring.
+        #[arg(long)]
+        preregistration: Option<PathBuf>,
+        /// JSON file with source IDs and one-based non-anchor K4 positions.
+        #[arg(long)]
+        input: PathBuf,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Validate source-backed independent observations before ciphertext-repeat-distance scoring.
     ValidateCiphertextRepeatDistanceObservations {
         /// JSON artifact emitted by ciphertext-repeat-distance-prior --format json.
@@ -1343,6 +1360,41 @@ enum Command {
         )]
         positions_file: Option<PathBuf>,
         /// Seeded same-size position-shuffle null iterations for window-balance-position enrichment.
+        #[arg(long, default_value_t = 10_000)]
+        iterations: usize,
+        /// Seed for deterministic null controls.
+        #[arg(long, default_value_t = 42)]
+        seed: u64,
+        /// Optional directory for artifact.json, preregistration.json, input, result.json, summary.md, and command.txt.
+        #[arg(long)]
+        output_dir: Option<PathBuf>,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Evaluate independent non-anchor positions against a committed ciphertext-CT-perturbation artifact.
+    EvaluateCiphertextCtPerturbation {
+        /// JSON artifact emitted by ciphertext-ct-perturbation-prior --format json.
+        #[arg(long)]
+        artifact: PathBuf,
+        /// Optional preregistration file used to validate the prediction artifact before scoring.
+        #[arg(long)]
+        preregistration: Option<PathBuf>,
+        /// Comma-separated one-based K4 positions to evaluate. Positions must be non-anchor positions.
+        #[arg(
+            long,
+            conflicts_with = "positions_file",
+            required_unless_present = "positions_file"
+        )]
+        positions: Option<String>,
+        /// JSON file with source IDs and one-based non-anchor K4 positions.
+        #[arg(
+            long,
+            conflicts_with = "positions",
+            required_unless_present = "positions"
+        )]
+        positions_file: Option<PathBuf>,
+        /// Seeded same-size position-shuffle null iterations for CT-position enrichment.
         #[arg(long, default_value_t = 10_000)]
         iterations: usize,
         /// Seed for deterministic null controls.
@@ -3080,6 +3132,22 @@ fn load_ciphertext_window_balance_artifact_positions(path: &Path) -> Result<Hash
         .collect())
 }
 
+fn load_ciphertext_ct_perturbation_artifact_positions(path: &Path) -> Result<HashSet<usize>> {
+    let input = fs::read_to_string(path)?;
+    let artifact: CiphertextCtPerturbationPrior = serde_json::from_str(&input)?;
+    if artifact.artifact_kind != "ciphertext-ct-perturbation-prior" {
+        bail!(
+            "ciphertext-ct-perturbation artifact `{}` has artifact_kind `{}`",
+            path.display(),
+            artifact.artifact_kind
+        );
+    }
+    Ok(artifact
+        .non_anchor_positions_one_based
+        .into_iter()
+        .collect())
+}
+
 fn load_ciphertext_repeat_distance_artifact_positions(path: &Path) -> Result<HashSet<usize>> {
     let input = fs::read_to_string(path)?;
     let artifact: CiphertextRepeatDistancePrior = serde_json::from_str(&input)?;
@@ -3530,6 +3598,17 @@ fn main() -> Result<()> {
             input,
             format,
         )?,
+        Command::ValidateCiphertextCtPerturbationObservations {
+            artifact,
+            preregistration,
+            input,
+            format,
+        } => print_validate_ciphertext_ct_perturbation_observations(
+            artifact,
+            preregistration,
+            input,
+            format,
+        )?,
         Command::ValidateCiphertextRepeatDistanceObservations {
             artifact,
             preregistration,
@@ -3842,6 +3921,27 @@ fn main() -> Result<()> {
             output_dir,
             format,
         })?,
+        Command::EvaluateCiphertextCtPerturbation {
+            artifact,
+            preregistration,
+            positions,
+            positions_file,
+            iterations,
+            seed,
+            output_dir,
+            format,
+        } => {
+            print_evaluate_ciphertext_ct_perturbation(CiphertextCtPerturbationEvaluationOptions {
+                artifact,
+                preregistration,
+                positions,
+                positions_file,
+                iterations,
+                seed,
+                output_dir,
+                format,
+            })?
+        }
         Command::EvaluateCiphertextRepeatDistance {
             artifact,
             preregistration,
@@ -4654,6 +4754,34 @@ fn write_ciphertext_window_balance_evaluation_outputs(
     Ok(())
 }
 
+fn write_ciphertext_ct_perturbation_evaluation_outputs(
+    output_dir: &Path,
+    evaluation: &CiphertextCtPerturbationEvaluation,
+    archive: &EvaluationArchiveContext,
+) -> Result<()> {
+    fs::create_dir_all(output_dir)?;
+    write_evaluation_archive_context(output_dir, archive)?;
+    fs::write(
+        output_dir.join("result.json"),
+        serde_json::to_string_pretty(evaluation)?,
+    )?;
+    fs::write(
+        output_dir.join("summary.md"),
+        render_ciphertext_ct_perturbation_evaluation(evaluation),
+    )?;
+    fs::write(
+        output_dir.join("command.txt"),
+        render_archived_evaluation_command(
+            "evaluate-ciphertext-ct-perturbation",
+            archive,
+            evaluation.iterations,
+            evaluation.seed,
+            &[],
+        ),
+    )?;
+    Ok(())
+}
+
 fn write_ciphertext_repeat_distance_evaluation_outputs(
     output_dir: &Path,
     evaluation: &CiphertextRepeatDistanceEvaluation,
@@ -4858,7 +4986,7 @@ fn validate_evaluation_archive(directory: &Path) -> Result<EvaluationArchiveVali
         .to_string();
     if artifact_kind == "unknown" && artifact.is_some() {
         errors.push(
-            "artifact.json is not a recognized period, spacing, mirror, grid, Tableau/HILL, ciphertext-prior, ciphertext-hotspot, ciphertext-rarity, ciphertext-repeat-distance, ciphertext-period-match, ciphertext-stehle-regularity, ciphertext-adjacent-contrast, ciphertext-transition, ciphertext-skip-transition, ciphertext-turning-point, ciphertext-window-balance, or ciphertext-residue-balance prediction artifact"
+            "artifact.json is not a recognized period, spacing, mirror, grid, Tableau/HILL, ciphertext-prior, ciphertext-hotspot, ciphertext-rarity, ciphertext-repeat-distance, ciphertext-period-match, ciphertext-stehle-regularity, ciphertext-ct-perturbation, ciphertext-adjacent-contrast, ciphertext-transition, ciphertext-skip-transition, ciphertext-turning-point, ciphertext-window-balance, or ciphertext-residue-balance prediction artifact"
                 .to_string(),
         );
     }
@@ -4917,6 +5045,9 @@ fn validate_evaluation_archive(directory: &Path) -> Result<EvaluationArchiveVali
             }
             "ciphertext-window-balance" => {
                 require_command_name(command, "evaluate-ciphertext-window-balance", &mut errors)
+            }
+            "ciphertext-ct-perturbation" => {
+                require_command_name(command, "evaluate-ciphertext-ct-perturbation", &mut errors)
             }
             "ciphertext-residue-balance" => {
                 require_command_name(command, "evaluate-ciphertext-residue-balance", &mut errors)
@@ -5119,6 +5250,19 @@ fn validate_evaluation_archive(directory: &Path) -> Result<EvaluationArchiveVali
             {
                 errors.push(
                     "ciphertext-window-balance archive result.json is missing matching_window_balance_positions_one_based"
+                        .to_string(),
+                );
+            }
+        }
+        if artifact_kind == "ciphertext-ct-perturbation" {
+            if result.get("ct_hits").is_none() {
+                errors.push(
+                    "ciphertext-ct-perturbation archive result.json is missing ct_hits".to_string(),
+                );
+            }
+            if result.get("matching_ct_positions_one_based").is_none() {
+                errors.push(
+                    "ciphertext-ct-perturbation archive result.json is missing matching_ct_positions_one_based"
                         .to_string(),
                 );
             }
@@ -5783,6 +5927,10 @@ fn archived_artifact_positions(
             let plan: CiphertextTurningPointPrior = serde_json::from_value(artifact.clone())?;
             Ok(plan.non_anchor_positions_one_based.into_iter().collect())
         }
+        "ciphertext-ct-perturbation" => {
+            let plan: CiphertextCtPerturbationPrior = serde_json::from_value(artifact.clone())?;
+            Ok(plan.non_anchor_positions_one_based.into_iter().collect())
+        }
         "ciphertext-residue-balance" => {
             let plan: CiphertextResidueBalancePrior = serde_json::from_value(artifact.clone())?;
             Ok(plan.non_anchor_positions_one_based.into_iter().collect())
@@ -5978,6 +6126,13 @@ fn infer_prediction_artifact_kind(value: &serde_json::Value) -> Option<&'static 
     if value
         .get("artifact_kind")
         .and_then(serde_json::Value::as_str)
+        == Some("ciphertext-ct-perturbation-prior")
+    {
+        return Some("ciphertext-ct-perturbation");
+    }
+    if value
+        .get("artifact_kind")
+        .and_then(serde_json::Value::as_str)
         == Some("ciphertext-stehle-regularity-prior")
     {
         return Some("ciphertext-stehle-regularity");
@@ -6047,6 +6202,11 @@ fn infer_evaluation_archive_kind(
         command.split_whitespace().next() == Some("evaluate-ciphertext-window-balance")
     }) {
         return Some("ciphertext-window-balance");
+    }
+    if command.as_ref().is_some_and(|command| {
+        command.split_whitespace().next() == Some("evaluate-ciphertext-ct-perturbation")
+    }) {
+        return Some("ciphertext-ct-perturbation");
     }
     if result.is_some_and(|result| {
         result.get("selected_period_count").is_some()
@@ -8804,6 +8964,15 @@ fn evidence_gate_commands(
             ),
             "cargo run --locked -- validate-evaluation-archive --input results/ciphertext-stehle-regularity-observations/<observation-id> --format json".to_string(),
         )),
+        "ciphertext-ct-perturbation-position-prior" => Some((
+            format!(
+                "cargo run --locked -- validate-ciphertext-ct-perturbation-observations --artifact {artifact} --preregistration {preregistration} --input <source-backed-observations.json> --format json"
+            ),
+            format!(
+                "cargo run --locked -- evaluate-ciphertext-ct-perturbation --artifact {artifact} --preregistration {preregistration} --positions-file <source-backed-observations.json> --iterations 100000 --seed 67 --output-dir results/ciphertext-ct-perturbation-observations/<observation-id> --format json"
+            ),
+            "cargo run --locked -- validate-evaluation-archive --input results/ciphertext-ct-perturbation-observations/<observation-id> --format json".to_string(),
+        )),
         "ciphertext-adjacent-contrast-position-prior" => Some((
             format!(
                 "cargo run --locked -- validate-ciphertext-adjacent-contrast-observations --artifact {artifact} --preregistration {preregistration} --input <source-backed-observations.json> --format json"
@@ -9912,6 +10081,7 @@ fn independent_evidence_status_report(
             PathBuf::from("results/ciphertext-skip-transition-observations"),
             PathBuf::from("results/ciphertext-turning-point-observations"),
             PathBuf::from("results/ciphertext-window-balance-observations"),
+            PathBuf::from("results/ciphertext-ct-perturbation-observations"),
             PathBuf::from("results/ciphertext-stehle-regularity-observations"),
             PathBuf::from("results/ciphertext-residue-balance-observations"),
         ];
@@ -10080,6 +10250,7 @@ fn read_evaluation_archive_score_summary(
         .or_else(|| result.get("skip_transition_hits"))
         .or_else(|| result.get("turning_point_hits"))
         .or_else(|| result.get("window_balance_hits"))
+        .or_else(|| result.get("ct_hits"))
         .or_else(|| result.get("regularity_hits"))
         .or_else(|| result.get("mirror_pair_hits"))
         .or_else(|| result.get("edge_hits"))
@@ -10095,6 +10266,7 @@ fn read_evaluation_archive_score_summary(
         .or_else(|| result.get("null_mean_skip_transition_hits"))
         .or_else(|| result.get("null_mean_turning_point_hits"))
         .or_else(|| result.get("null_mean_window_balance_hits"))
+        .or_else(|| result.get("null_mean_ct_hits"))
         .or_else(|| result.get("null_mean_regularity_hits"))
         .or_else(|| result.get("null_mean_mirror_pair_hits"))
         .or_else(|| result.get("null_mean_edge_hits"))
@@ -10339,6 +10511,17 @@ fn read_evaluation_archive_score_summary(
                 .and_then(serde_json::Value::as_u64);
             (
                 Some("ciphertext window-balance positions".to_string()),
+                best_hits
+                    .zip(observed_position_count)
+                    .map(|(hits, total)| format!("{hits}/{total} positions")),
+            )
+        }
+        "ciphertext-ct-perturbation" => {
+            let observed_position_count = result
+                .get("observed_position_count")
+                .and_then(serde_json::Value::as_u64);
+            (
+                Some("ciphertext C/T positions".to_string()),
                 best_hits
                     .zip(observed_position_count)
                     .map(|(hits, total)| format!("{hits}/{total} positions")),
@@ -10955,6 +11138,31 @@ fn print_validate_ciphertext_window_balance_observations(
         Ok(())
     } else {
         anyhow::bail!("ciphertext-window-balance observations failed validation")
+    }
+}
+
+fn print_validate_ciphertext_ct_perturbation_observations(
+    artifact: PathBuf,
+    preregistration: Option<PathBuf>,
+    input: PathBuf,
+    format: OutputFormat,
+) -> Result<()> {
+    let validation = validate_ciphertext_ct_perturbation_observations(
+        &artifact,
+        preregistration.as_deref(),
+        &input,
+    )?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&validation)?),
+        OutputFormat::Markdown => print_position_observation_validation(
+            "Ciphertext CT-Perturbation Observation Validation",
+            &validation,
+        ),
+    }
+    if validation.valid {
+        Ok(())
+    } else {
+        anyhow::bail!("ciphertext-ct-perturbation observations failed validation")
     }
 }
 
@@ -11730,6 +11938,76 @@ fn validate_ciphertext_window_balance_observations(
         errors,
         promoted_candidate: false,
         note: "Ciphertext-window-balance observation validation checks source-backed non-anchor positions against the ciphertext-only window-balance artifact before scoring; it is not a claimed solution.",
+    })
+}
+
+fn validate_ciphertext_ct_perturbation_observations(
+    artifact_path: &Path,
+    preregistration_path: Option<&Path>,
+    input_path: &Path,
+) -> Result<PeriodPredictionObservationValidation> {
+    let observations = read_period_prediction_observation_file(input_path)?;
+    let observation_id = observations.id.clone();
+    let mut errors = validate_period_prediction_observation_fields(&observations);
+    let mut preregistration_id = None;
+    let mut artifact_valid = None;
+
+    if let Some(preregistration_path) = preregistration_path {
+        let artifact_validation = validate_prediction_artifact(preregistration_path)?;
+        preregistration_id = Some(artifact_validation.preregistration_id.clone());
+        artifact_valid = Some(artifact_validation.valid);
+        if artifact_validation.artifact_kind != "ciphertext-ct-perturbation" {
+            errors.push(format!(
+                "preregistration `{}` does not declare a ciphertext-ct-perturbation artifact",
+                artifact_validation.preregistration_id
+            ));
+        }
+        if artifact_validation.artifact_path != artifact_path.display().to_string() {
+            errors.push(format!(
+                "artifact `{}` does not match preregistration artifact `{}`",
+                artifact_path.display(),
+                artifact_validation.artifact_path
+            ));
+        }
+        errors.extend(
+            artifact_validation
+                .errors
+                .into_iter()
+                .map(|error| format!("prediction artifact: {error}")),
+        );
+    }
+
+    let non_anchor_positions = load_ciphertext_ct_perturbation_artifact_positions(artifact_path)?;
+
+    let mut seen = HashSet::new();
+    for position in &observations.positions_one_based {
+        if !seen.insert(*position) {
+            errors.push(format!(
+                "positions_one_based contains duplicate position `{position}`"
+            ));
+        }
+        if !non_anchor_positions.contains(position) {
+            errors.push(format!(
+                "position `{position}` is not in the ciphertext-ct-perturbation artifact non-anchor universe"
+            ));
+        }
+    }
+
+    Ok(PeriodPredictionObservationValidation {
+        artifact_path: artifact_path.display().to_string(),
+        preregistration_id,
+        artifact_valid,
+        observation_id,
+        observation_source_ids: observations.source_ids,
+        observation_source_review_file: observations.source_review_file,
+        observation_rationale: observations.rationale,
+        observed_position_count: observations.positions_one_based.len(),
+        observed_positions_one_based: observations.positions_one_based,
+        observation_position_notes: observations.position_notes,
+        valid: errors.is_empty(),
+        errors,
+        promoted_candidate: false,
+        note: "Ciphertext-CT-perturbation observation validation checks source-backed non-anchor positions against the predeclared C/T ciphertext-position artifact before scoring; it is not a claimed solution.",
     })
 }
 
@@ -12735,6 +13013,17 @@ struct CiphertextTurningPointEvaluationOptions {
 }
 
 struct CiphertextWindowBalanceEvaluationOptions {
+    artifact: PathBuf,
+    preregistration: Option<PathBuf>,
+    positions: Option<String>,
+    positions_file: Option<PathBuf>,
+    output_dir: Option<PathBuf>,
+    iterations: usize,
+    seed: u64,
+    format: OutputFormat,
+}
+
+struct CiphertextCtPerturbationEvaluationOptions {
     artifact: PathBuf,
     preregistration: Option<PathBuf>,
     positions: Option<String>,
@@ -13864,6 +14153,84 @@ fn print_evaluate_ciphertext_window_balance(
     Ok(())
 }
 
+fn print_evaluate_ciphertext_ct_perturbation(
+    options: CiphertextCtPerturbationEvaluationOptions,
+) -> Result<()> {
+    let CiphertextCtPerturbationEvaluationOptions {
+        artifact,
+        preregistration,
+        positions,
+        positions_file,
+        output_dir,
+        iterations,
+        seed,
+        format,
+    } = options;
+    let has_preregistration = preregistration.is_some();
+    if let Some(preregistration) = &preregistration {
+        let artifact_validation = validate_prediction_artifact(preregistration)?;
+        if artifact_validation.artifact_kind != "ciphertext-ct-perturbation" {
+            anyhow::bail!(
+                "preregistration `{}` does not declare a ciphertext-ct-perturbation artifact",
+                artifact_validation.preregistration_id
+            );
+        }
+        if artifact_validation.artifact_path != artifact.display().to_string() {
+            anyhow::bail!(
+                "artifact `{}` does not match preregistration artifact `{}`",
+                artifact.display(),
+                artifact_validation.artifact_path
+            );
+        }
+        if !artifact_validation.valid {
+            anyhow::bail!("prediction artifact failed validation");
+        }
+    }
+    if positions_file.is_some() && !has_preregistration {
+        anyhow::bail!(
+            "--positions-file requires --preregistration so the committed ciphertext-ct-perturbation artifact is validated before scoring source-backed observations"
+        );
+    }
+
+    let archive =
+        evaluation_archive_context(&artifact, &preregistration, &positions, &positions_file);
+    let observation_input = match (positions, positions_file) {
+        (Some(positions), None) => PeriodPredictionObservationInput {
+            id: None,
+            source_ids: Vec::new(),
+            source_review_file: None,
+            rationale: None,
+            positions_one_based: parse_position_list(&positions).map_err(anyhow::Error::msg)?,
+            position_notes: BTreeMap::new(),
+        },
+        (None, Some(path)) => load_period_prediction_observations(&path)?,
+        _ => anyhow::bail!("provide exactly one of --positions or --positions-file"),
+    };
+    let mut evaluation = evaluate_ciphertext_ct_perturbation_positions(
+        artifact.clone(),
+        observation_input.positions_one_based,
+        iterations,
+        seed,
+    )?;
+    evaluation.observation_id = observation_input.id;
+    evaluation.observation_source_ids = observation_input.source_ids;
+    evaluation.observation_source_review_file = observation_input.source_review_file;
+    evaluation.observation_rationale = observation_input.rationale;
+    evaluation.observation_position_notes = observation_input.position_notes;
+    if !evaluation.observation_source_ids.is_empty() {
+        evaluation.source_backed_observation = true;
+        evaluation.observation_warning = None;
+    }
+    if let Some(output_dir) = output_dir {
+        write_ciphertext_ct_perturbation_evaluation_outputs(&output_dir, &evaluation, &archive)?;
+    }
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&evaluation)?),
+        OutputFormat::Markdown => print_ciphertext_ct_perturbation_evaluation(&evaluation),
+    }
+    Ok(())
+}
+
 fn print_evaluate_ciphertext_repeat_distance(
     options: CiphertextRepeatDistanceEvaluationOptions,
 ) -> Result<()> {
@@ -14169,6 +14536,13 @@ fn print_ciphertext_window_balance_evaluation(evaluation: &CiphertextWindowBalan
     print!(
         "{}",
         render_ciphertext_window_balance_evaluation(evaluation)
+    );
+}
+
+fn print_ciphertext_ct_perturbation_evaluation(evaluation: &CiphertextCtPerturbationEvaluation) {
+    print!(
+        "{}",
+        render_ciphertext_ct_perturbation_evaluation(evaluation)
     );
 }
 
@@ -14717,6 +15091,75 @@ fn render_ciphertext_window_balance_evaluation(
         "null: mean {:.2}; sd {:.2}; empirical p-value {:.4}; iterations {}; seed {}\n",
         evaluation.null_mean_window_balance_hits,
         evaluation.null_std_dev_window_balance_hits,
+        evaluation.empirical_p_value,
+        evaluation.iterations,
+        evaluation.seed
+    ));
+    output.push_str(&format!("promoted: {}\n", evaluation.promoted_candidate));
+    output.push_str(&format!("note: {}\n", evaluation.note));
+    output
+}
+
+fn render_ciphertext_ct_perturbation_evaluation(
+    evaluation: &CiphertextCtPerturbationEvaluation,
+) -> String {
+    let mut output = String::new();
+    output.push_str("# Ciphertext CT-Perturbation Evaluation\n\n");
+    output.push_str("This is not a claimed solution.\n\n");
+    if let Some(observation_id) = &evaluation.observation_id {
+        output.push_str(&format!("observation id: `{observation_id}`\n"));
+    }
+    if !evaluation.observation_source_ids.is_empty() {
+        output.push_str(&format!(
+            "observation sources: {}\n",
+            evaluation.observation_source_ids.join(", ")
+        ));
+    }
+    if let Some(observation_rationale) = &evaluation.observation_rationale {
+        output.push_str(&format!("observation rationale: {observation_rationale}\n"));
+    }
+    output.push_str(&format!(
+        "source-backed observation: {}\n",
+        evaluation.source_backed_observation
+    ));
+    if let Some(warning) = evaluation.observation_warning {
+        output.push_str(&format!("warning: {warning}\n"));
+    }
+    output.push_str(&format!(
+        "observed positions: {}\n",
+        evaluation
+            .observed_positions_one_based
+            .iter()
+            .map(usize::to_string)
+            .collect::<Vec<_>>()
+            .join(", ")
+    ));
+    output.push_str(&format!(
+        "CT-position hits: {}/{} ({:.4})\n",
+        evaluation.ct_hits, evaluation.observed_position_count, evaluation.ct_hit_rate
+    ));
+    output.push_str(&format!(
+        "matching CT positions: {}\n",
+        evaluation
+            .matching_ct_positions_one_based
+            .iter()
+            .map(usize::to_string)
+            .collect::<Vec<_>>()
+            .join(", ")
+    ));
+    output.push_str(&format!(
+        "non-CT positions: {}\n",
+        evaluation
+            .non_ct_positions_one_based
+            .iter()
+            .map(usize::to_string)
+            .collect::<Vec<_>>()
+            .join(", ")
+    ));
+    output.push_str(&format!(
+        "null: mean {:.2}; sd {:.2}; empirical p-value {:.4}; iterations {}; seed {}\n",
+        evaluation.null_mean_ct_hits,
+        evaluation.null_std_dev_ct_hits,
         evaluation.empirical_p_value,
         evaluation.iterations,
         evaluation.seed
