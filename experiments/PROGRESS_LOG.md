@@ -3,6 +3,40 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-06-01: Quarantined Claim Input Plans Added
+
+Added `claim-input-plan`, a local-only intake checklist for quarantined external
+K4 claim sources. The command maps one registered `unverified-solution-claim`
+source ID to temporary `/private/tmp` plaintext/key/table/bundle/mechanism
+paths and prints the matching safe verifier commands without creating,
+printing, storing, or committing any claim material.
+
+This improves the next claim-screening step for the three unarchived SSRN
+Bonifacino claim sources while preserving the quarantine boundary: claim inputs
+stay outside the repository, and only non-leaking verifier summaries/results are
+eligible for committed archives.
+
+Validation:
+
+```bash
+cargo run --locked -- claim-input-plan \
+  --source-id ssrn-bonifacino-running-key-2025 \
+  --format json
+
+cargo test --locked --test cli_e2e claim_input_plan_reports_local_only_intake_paths
+
+cargo run --locked -- release-check --format json
+
+cargo test --locked
+```
+
+Current boundary:
+
+- source IDs must have `allowed_use` = `unverified-solution-claim`
+- non-claim sources are rejected by `claim-input-plan`
+- generated plans are quarantine checklists only, not source-backed evidence
+- promoted: `false`
+
 ## 2026-06-01: Narrow Adjacent-Contrast Prediction Target Added
 
 Added `ciphertext-adjacent-contrast-narrow-v1`, a ciphertext-only adjacent

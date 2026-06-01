@@ -1658,6 +1658,18 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
     },
+    /// Print a local-only input plan for screening a quarantined external claim.
+    ClaimInputPlan {
+        /// Registered claim source ID. Must have allowed_use unverified-solution-claim.
+        #[arg(long = "source-id")]
+        source_id: String,
+        /// Local root where temporary claim files should be staged outside the repo.
+        #[arg(long, default_value = "/private/tmp/k4-claim-inputs")]
+        local_root: PathBuf,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Print sources eligible for scored independent position observations.
     ObservationSources {
         /// Output format.
@@ -1970,6 +1982,31 @@ struct ClaimVerificationStatusReport {
     claim_verification_command: &'static str,
     promoted_candidate: bool,
     note: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct ClaimInputPlanReport {
+    source_id: String,
+    label: String,
+    url: String,
+    archive_url: Option<String>,
+    has_verification_archive: bool,
+    local_root: String,
+    required_local_inputs: Vec<ClaimInputPath>,
+    recommended_verifiers: Vec<&'static str>,
+    verifier_commands: Vec<String>,
+    local_only_boundary: &'static str,
+    archive_boundary: &'static str,
+    promoted_candidate: bool,
+    note: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct ClaimInputPath {
+    name: &'static str,
+    path: String,
+    required: bool,
+    description: &'static str,
 }
 
 #[derive(Debug, Serialize)]
@@ -4101,6 +4138,11 @@ fn main() -> Result<()> {
             format,
         } => print_verify_claim_mechanism(directory, source_id, format)?,
         Command::ClaimVerificationStatus { format } => print_claim_verification_status(format)?,
+        Command::ClaimInputPlan {
+            source_id,
+            local_root,
+            format,
+        } => print_claim_input_plan(source_id, local_root, format)?,
         Command::ObservationSources { format } => print_observation_sources(format)?,
         Command::SourceFrontier { summary, format } => print_source_frontier(summary, format)?,
         Command::ReleaseCheck { format } => print_release_check(format)?,
@@ -8746,6 +8788,122 @@ fn claim_verification_guidance(source_id: &str) -> (Vec<&'static str>, Vec<&'sta
         ),
         _ => (vec!["verify-plaintext-claim"], vec!["local plaintext file"]),
     }
+}
+
+fn build_claim_input_plan(source_id: &str, local_root: &Path) -> Result<ClaimInputPlanReport> {
+    ensure_quarantined_claim_source(Some(source_id), "claim-input-plan")?;
+    let source = sources()
+        .into_iter()
+        .find(|source| source.id == source_id)
+        .with_context(|| format!("unknown source id `{source_id}`"))?;
+    let repo_root = std::env::current_dir()?;
+    let claim_verification_archives = claim_verification_archive_statuses(&repo_root)?;
+    let archived_source_ids: std::collections::BTreeSet<_> = claim_verification_archives
+        .iter()
+        .map(|archive| archive.source_id.as_str())
+        .collect();
+    let (recommended_verifiers, _) = claim_verification_guidance(source_id);
+    let source_root = local_root.join(source_id);
+    let plaintext = source_root.join("plaintext.txt");
+    let key_stream = source_root.join("key-stream.txt");
+    let reconciliation = source_root.join("reconciliation.csv");
+    let bundle = source_root.join("bundle");
+    let mechanism = source_root.join("mechanism");
+
+    let mut required_local_inputs = Vec::new();
+    if recommended_verifiers.contains(&"verify-plaintext-claim")
+        || recommended_verifiers.contains(&"verify-running-key-claim")
+        || recommended_verifiers.contains(&"verify-claim-bundle")
+    {
+        required_local_inputs.push(ClaimInputPath {
+            name: "plaintext",
+            path: plaintext.display().to_string(),
+            required: true,
+            description: "Local claimed K4 plaintext file; never commit this file.",
+        });
+    }
+    if recommended_verifiers.contains(&"verify-running-key-claim") {
+        required_local_inputs.push(ClaimInputPath {
+            name: "key_stream",
+            path: key_stream.display().to_string(),
+            required: true,
+            description: "Local running-key stream file aligned to K4; never commit this file.",
+        });
+    }
+    if recommended_verifiers.contains(&"verify-claim-reconciliation") {
+        required_local_inputs.push(ClaimInputPath {
+            name: "reconciliation",
+            path: reconciliation.display().to_string(),
+            required: false,
+            description: "Local reconciliation table if the claim publishes one; omit if unavailable.",
+        });
+    }
+    if recommended_verifiers.contains(&"verify-claim-bundle") {
+        required_local_inputs.push(ClaimInputPath {
+            name: "bundle",
+            path: bundle.display().to_string(),
+            required: true,
+            description: "Local canonical claim bundle directory; never commit bundle contents.",
+        });
+    }
+    if recommended_verifiers.contains(&"verify-claim-mechanism") {
+        required_local_inputs.push(ClaimInputPath {
+            name: "mechanism",
+            path: mechanism.display().to_string(),
+            required: false,
+            description: "Local helper-mechanism directory if the claim publishes one; never commit contents.",
+        });
+    }
+
+    let mut verifier_commands = Vec::new();
+    for verifier in &recommended_verifiers {
+        let command = match *verifier {
+            "verify-plaintext-claim" => format!(
+                "cargo run --locked -- verify-plaintext-claim --input {} --source-id {} --format json",
+                plaintext.display(),
+                source_id
+            ),
+            "verify-running-key-claim" => format!(
+                "cargo run --locked -- verify-running-key-claim --plaintext {} --key {} --source-id {} --format json",
+                plaintext.display(),
+                key_stream.display(),
+                source_id
+            ),
+            "verify-claim-reconciliation" => format!(
+                "cargo run --locked -- verify-claim-reconciliation --input {} --source-id {} --format json",
+                reconciliation.display(),
+                source_id
+            ),
+            "verify-claim-bundle" => format!(
+                "cargo run --locked -- verify-claim-bundle --directory {} --source-id {} --format json",
+                bundle.display(),
+                source_id
+            ),
+            "verify-claim-mechanism" => format!(
+                "cargo run --locked -- verify-claim-mechanism --directory {} --source-id {} --format json",
+                mechanism.display(),
+                source_id
+            ),
+            _ => continue,
+        };
+        verifier_commands.push(command);
+    }
+
+    Ok(ClaimInputPlanReport {
+        source_id: source.id.to_string(),
+        label: source.label.to_string(),
+        url: source.url.to_string(),
+        archive_url: source.archive_url.map(str::to_string),
+        has_verification_archive: archived_source_ids.contains(source.id),
+        local_root: local_root.display().to_string(),
+        required_local_inputs,
+        recommended_verifiers,
+        verifier_commands,
+        local_only_boundary: "Stage external claim inputs outside the repository; do not commit plaintext, key streams, reconciliation tables with plaintext columns, or mechanism bundles.",
+        archive_boundary: "Only commit non-leaking verifier summaries/results that preserve no claimed plaintext, key stream, or mechanism payload.",
+        promoted_candidate: false,
+        note: "Claim-input plans are quarantine intake checklists only; they are not source-backed evidence or claimed solutions.",
+    })
 }
 
 fn representative_ready_lane<'a>(
@@ -16520,6 +16678,59 @@ fn print_claim_verification_status(format: OutputFormat) -> Result<()> {
 
             println!("\n## Safe Verifier Commands\n");
             println!("```bash\n{}\n```", report.claim_verification_command);
+        }
+    }
+    Ok(())
+}
+
+fn print_claim_input_plan(
+    source_id: String,
+    local_root: PathBuf,
+    format: OutputFormat,
+) -> Result<()> {
+    let report = build_claim_input_plan(&source_id, &local_root)?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&report)?),
+        OutputFormat::Markdown => {
+            println!("# Claim Input Plan\n");
+            println!("This is not a claimed solution.\n");
+            println!("source id: `{}`", report.source_id);
+            println!("label: {}", report.label);
+            println!("url: {}", report.url);
+            if let Some(archive_url) = &report.archive_url {
+                println!("archive: `{archive_url}`");
+            }
+            println!(
+                "has verification archive: {}",
+                report.has_verification_archive
+            );
+            println!("local root: `{}`", report.local_root);
+            println!("promoted: {}", report.promoted_candidate);
+            println!("note: {}\n", report.note);
+            println!("local-only boundary: {}", report.local_only_boundary);
+            println!("archive boundary: {}\n", report.archive_boundary);
+
+            println!("## Local Input Paths\n");
+            println!("| Name | Required | Path | Description |");
+            println!("| --- | --- | --- | --- |");
+            for input in &report.required_local_inputs {
+                println!(
+                    "| `{}` | {} | `{}` | {} |",
+                    input.name, input.required, input.path, input.description
+                );
+            }
+
+            println!("\n## Recommended Verifiers\n");
+            for verifier in &report.recommended_verifiers {
+                println!("- `{verifier}`");
+            }
+
+            println!("\n## Safe Local Commands\n");
+            println!("```bash");
+            for command in &report.verifier_commands {
+                println!("{command}");
+            }
+            println!("```");
         }
     }
     Ok(())

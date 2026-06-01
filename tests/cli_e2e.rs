@@ -5809,6 +5809,81 @@ fn claim_verification_status_reports_quarantine_inventory() {
 }
 
 #[test]
+fn claim_input_plan_reports_local_only_intake_paths() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "claim-input-plan",
+            "--source-id",
+            "ssrn-bonifacino-running-key-2025",
+        ])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Claim Input Plan"))
+        .stdout(predicate::str::contains("This is not a claimed solution."))
+        .stdout(predicate::str::contains("ssrn-bonifacino-running-key-2025"))
+        .stdout(predicate::str::contains("plaintext.txt"))
+        .stdout(predicate::str::contains("key-stream.txt"))
+        .stdout(predicate::str::contains("reconciliation.csv"))
+        .stdout(predicate::str::contains("verify-running-key-claim"))
+        .stdout(predicate::str::contains("verify-claim-reconciliation"))
+        .stdout(predicate::str::contains(
+            "do not commit plaintext, key streams",
+        ))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "claim-input-plan",
+            "--source-id",
+            "ssrn-bonifacino-generative-running-key-2025",
+            "--local-root",
+            "/private/tmp/k4-claim-test",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(
+        json["source_id"],
+        "ssrn-bonifacino-generative-running-key-2025"
+    );
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(
+        json["local_only_boundary"]
+            .as_str()
+            .unwrap()
+            .contains("do not commit plaintext")
+    );
+    assert!(
+        json["required_local_inputs"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|input| {
+                input["name"] == "mechanism"
+                    && input["required"] == false
+                    && input["path"]
+                        .as_str()
+                        .unwrap()
+                        .contains("/private/tmp/k4-claim-test")
+            })
+    );
+    assert!(
+        json["verifier_commands"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|command| command.as_str().unwrap().contains("verify-claim-mechanism"))
+    );
+}
+
+#[test]
 fn independent_evidence_status_reports_missing_and_invalid_archives() {
     let temp = tempfile::tempdir().unwrap();
 
