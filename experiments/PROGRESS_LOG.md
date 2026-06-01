@@ -3,6 +3,54 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-06-01: Post-Terminal Residue-Balance Lane Scored Negative
+
+Scored the already-preregistered
+`ciphertext-residue-balance-post-terminal-moduli-v1` artifact against the
+validated CIA row-boundary source-backed observation. This closes the remaining
+post-terminal residue-balance archive gap without adding new key material,
+plaintext, routes, or public-anchor-derived evidence.
+
+Commands:
+
+```bash
+cargo run --locked -- validate-ciphertext-residue-balance-observations \
+  --artifact experiments/predictions/ciphertext-residue-balance-post-terminal-moduli-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-residue-balance-post-terminal-moduli-v1.json \
+  --input experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --format json
+
+cargo run --locked -- evaluate-ciphertext-residue-balance \
+  --artifact experiments/predictions/ciphertext-residue-balance-post-terminal-moduli-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-residue-balance-post-terminal-moduli-v1.json \
+  --positions-file experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/ciphertext-residue-balance-observations/cia-k4-row-boundaries-post-terminal-moduli-v1 \
+  --format json
+
+cargo run --locked -- validate-evaluation-archive \
+  --input results/ciphertext-residue-balance-observations/cia-k4-row-boundaries-post-terminal-moduli-v1 \
+  --format json
+```
+
+Result:
+
+- selected modulus/residue: `55` / `0`
+- observed hits: `1/6`
+- matching position: `1`
+- null mean: `0.5472`
+- empirical p-value: `0.5141`
+- promoted: `false`
+- archive valid: `true`
+- valid source-backed archives: `38`
+- source-backed archive correction count: `38`
+- minimum source-backed adjusted p-value: `1.0`
+- all source-backed archives negative after correction: `true`
+
+This is negative/non-significant source-backed evidence. It does not promote a
+K4 solution, key, route, plaintext, or candidate.
+
 ## 2026-06-01: Narrow Period-Match Lane Scored Negative
 
 Added `ciphertext-period-match-narrow-v1`, a distinct ciphertext-only

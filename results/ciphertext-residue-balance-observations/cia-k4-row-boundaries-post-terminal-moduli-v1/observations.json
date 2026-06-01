@@ -1,0 +1,24 @@
+{
+  "id": "cia-k4-row-boundaries-v1",
+  "source_ids": [
+    "cia-sculpture"
+  ],
+  "source_review_file": "experiments/source-reviews/cia-source-review-v1.json",
+  "positions_one_based": [
+    1,
+    4,
+    5,
+    36,
+    37,
+    97
+  ],
+  "position_notes": {
+    "1": "CIA sculpture snapshot records this as the first non-anchor K4 row-boundary position from the text-version rendering.",
+    "36": "CIA sculpture snapshot records this as the last non-anchor position before the next rendered line break after excluding anchor positions.",
+    "37": "CIA sculpture snapshot records this as the first non-anchor K4 position after that rendered line break.",
+    "4": "CIA sculpture snapshot records this as the end of the short K4 suffix before the next rendered line.",
+    "5": "CIA sculpture snapshot records this as the first non-anchor K4 position after the short suffix line break.",
+    "97": "CIA sculpture snapshot records this as the final K4 position in the 97-character remaining message."
+  },
+  "rationale": "Pre-score source-backed observation from the CIA sculpture page text-version rendering: K4 appears as a short suffix followed by three rendered lines, so only non-anchor row-boundary positions are retained for evaluation."
+}

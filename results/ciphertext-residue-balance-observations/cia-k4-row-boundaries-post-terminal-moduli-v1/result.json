@@ -1,0 +1,105 @@
+{
+  "artifact_path": "experiments/predictions/ciphertext-residue-balance-post-terminal-moduli-v1.json",
+  "observation_id": "cia-k4-row-boundaries-v1",
+  "observation_source_ids": [
+    "cia-sculpture"
+  ],
+  "observation_source_review_file": "experiments/source-reviews/cia-source-review-v1.json",
+  "observation_rationale": "Pre-score source-backed observation from the CIA sculpture page text-version rendering: K4 appears as a short suffix followed by three rendered lines, so only non-anchor row-boundary positions are retained for evaluation.",
+  "observation_position_notes": {
+    "1": "CIA sculpture snapshot records this as the first non-anchor K4 row-boundary position from the text-version rendering.",
+    "36": "CIA sculpture snapshot records this as the last non-anchor position before the next rendered line break after excluding anchor positions.",
+    "37": "CIA sculpture snapshot records this as the first non-anchor K4 position after that rendered line break.",
+    "4": "CIA sculpture snapshot records this as the end of the short K4 suffix before the next rendered line.",
+    "5": "CIA sculpture snapshot records this as the first non-anchor K4 position after the short suffix line break.",
+    "97": "CIA sculpture snapshot records this as the final K4 position in the 97-character remaining message."
+  },
+  "source_backed_observation": true,
+  "observation_warning": null,
+  "observed_position_count": 6,
+  "observed_positions_one_based": [
+    1,
+    4,
+    5,
+    36,
+    37,
+    97
+  ],
+  "selected_residue_set_count": 7,
+  "best_modulus": 55,
+  "best_residue": 0,
+  "best_hits": 1,
+  "best_hit_rate": 0.16666666666666666,
+  "residue_set_results": [
+    {
+      "modulus": 55,
+      "residue": 0,
+      "hits": 1,
+      "hit_rate": 0.16666666666666666,
+      "matching_positions_one_based": [
+        1
+      ]
+    },
+    {
+      "modulus": 56,
+      "residue": 0,
+      "hits": 1,
+      "hit_rate": 0.16666666666666666,
+      "matching_positions_one_based": [
+        1
+      ]
+    },
+    {
+      "modulus": 57,
+      "residue": 0,
+      "hits": 1,
+      "hit_rate": 0.16666666666666666,
+      "matching_positions_one_based": [
+        1
+      ]
+    },
+    {
+      "modulus": 58,
+      "residue": 0,
+      "hits": 1,
+      "hit_rate": 0.16666666666666666,
+      "matching_positions_one_based": [
+        1
+      ]
+    },
+    {
+      "modulus": 59,
+      "residue": 0,
+      "hits": 1,
+      "hit_rate": 0.16666666666666666,
+      "matching_positions_one_based": [
+        1
+      ]
+    },
+    {
+      "modulus": 60,
+      "residue": 0,
+      "hits": 1,
+      "hit_rate": 0.16666666666666666,
+      "matching_positions_one_based": [
+        1
+      ]
+    },
+    {
+      "modulus": 61,
+      "residue": 0,
+      "hits": 1,
+      "hit_rate": 0.16666666666666666,
+      "matching_positions_one_based": [
+        1
+      ]
+    }
+  ],
+  "null_mean_best_hits": 0.54721,
+  "null_std_dev_best_hits": 0.5603848819339587,
+  "empirical_p_value": 0.5140848591514084,
+  "iterations": 100000,
+  "seed": 67,
+  "promoted_candidate": false,
+  "note": "Ciphertext-residue-balance evaluation scores source-backed non-anchor positions against a ciphertext-only residue-balance artifact with a seeded same-size best-of-modulus null; it is not a claimed solution."
+}
