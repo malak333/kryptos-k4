@@ -8765,7 +8765,7 @@ fn claim_verification_guidance(source_id: &str) -> (Vec<&'static str>, Vec<&'sta
                 "local reconciliation table if published",
             ],
         ),
-        "ssrn-bonifacino-weltzeituhr-error-key-2025" => (
+        "ssrn-bonifacino-weltzeituhr-error-key-2025" | "ssrn-bonifacino-full-derivation-2025" => (
             vec![
                 "verify-running-key-claim",
                 "verify-claim-mechanism",

@@ -3,6 +3,40 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-06-01: SSRN Full Derivation Claim Quarantined
+
+Added `ssrn-bonifacino-full-derivation-2025`, the companion SSRN full
+derivation paper for the Weltzeituhr error-key claim family, after live search
+surfaced it as a separate record from the already-registered error-key,
+running-key, and generative papers.
+
+This is a metadata-only, quote-free source snapshot. It is registered as
+`unverified-solution-claim` and is not eligible for scored independent
+observations, candidate material, or release-facing plaintext. A direct
+unauthenticated PDF fetch to `/private/tmp` returned HTTP 403, so no paper
+text, plaintext, key stream, reconciliation table, or mechanism payload was
+stored.
+
+Validation:
+
+```bash
+cargo run --locked -- validate-source-archive \
+  --source-id ssrn-bonifacino-full-derivation-2025 \
+  --input sources/archives/ssrn-bonifacino-full-derivation-2025-2026-06-01.md \
+  --format json
+
+cargo run --locked -- claim-verification-status --format json
+
+cargo run --locked -- release-check --format json
+```
+
+Current boundary:
+
+- registered source type: `community-solution-claim`
+- allowed use: `unverified-solution-claim`
+- recommended intake: `claim-input-plan`
+- promoted: `false`
+
 ## 2026-06-01: Quarantined Claim Input Plans Added
 
 Added `claim-input-plan`, a local-only intake checklist for quarantined external

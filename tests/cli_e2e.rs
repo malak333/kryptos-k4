@@ -1904,7 +1904,7 @@ fn source_frontier_classifies_all_registered_sources() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Source Frontier"))
-        .stdout(predicate::str::contains("sources: 29"))
+        .stdout(predicate::str::contains("sources: 30"))
         .stdout(predicate::str::contains(
             "scored-observation eligible sources: 2",
         ))
@@ -1948,7 +1948,7 @@ fn source_frontier_classifies_all_registered_sources() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["source_count"], 29);
+    assert_eq!(json["source_count"], 30);
     assert_eq!(json["scored_observation_eligible_count"], 2);
     assert_eq!(json["scored_position_marker_count"], 1);
     assert_eq!(json["valid_source_backed_archive_count"], 33);
@@ -1965,7 +1965,7 @@ fn source_frontier_classifies_all_registered_sources() {
         json["all_source_backed_archives_negative_after_correction"],
         true
     );
-    assert_eq!(json["quarantined_claim_count"], 6);
+    assert_eq!(json["quarantined_claim_count"], 7);
     assert_eq!(json["promoted_candidate"], false);
     assert!(
         json["frontier_blocking_conditions"]
@@ -2268,7 +2268,7 @@ fn source_frontier_summary_prints_compact_next_action() {
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
     assert_eq!(json["summary"], true);
-    assert_eq!(json["source_count"], 29);
+    assert_eq!(json["source_count"], 30);
     assert_eq!(json["valid_source_backed_archive_count"], 33);
     assert_eq!(json["all_source_backed_archives_negative"], false);
     assert_eq!(
@@ -5728,7 +5728,7 @@ fn claim_verification_status_reports_quarantine_inventory() {
         .success()
         .stdout(predicate::str::contains("Claim Verification Status"))
         .stdout(predicate::str::contains("This is not a claimed solution."))
-        .stdout(predicate::str::contains("quarantined claim sources: 6"))
+        .stdout(predicate::str::contains("quarantined claim sources: 7"))
         .stdout(predicate::str::contains("claim verification archives: 3"))
         .stdout(predicate::str::contains(
             "Sources Without Verification Archive",
@@ -5754,7 +5754,7 @@ fn claim_verification_status_reports_quarantine_inventory() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["quarantined_claim_source_count"], 6);
+    assert_eq!(json["quarantined_claim_source_count"], 7);
     assert_eq!(json["claim_verification_archive_count"], 3);
     assert_eq!(json["promoted_candidate"], false);
     assert!(
@@ -5801,6 +5801,19 @@ fn claim_verification_status_reports_quarantine_inventory() {
                 .as_str()
                 .unwrap()
                 .contains("do not commit plaintext")
+    }));
+    assert!(source_details.iter().any(|detail| {
+        detail["source_id"] == "ssrn-bonifacino-full-derivation-2025"
+            && detail["has_verification_archive"] == false
+            && detail["recommended_verifiers"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|verifier| verifier == "verify-claim-mechanism")
+            && detail["claim_input_plan_command"]
+                .as_str()
+                .unwrap()
+                .contains("claim-input-plan --source-id ssrn-bonifacino-full-derivation-2025")
     }));
     assert!(source_details.iter().any(|detail| {
         detail["source_id"] == "dearcipher-k4-claim-2026"

@@ -453,6 +453,19 @@ pub fn sources() -> Vec<Source> {
             use_note: "Public claimed derivation for a Weltzeituhr running-key K4 method; quarantined for future independent verification only, not source-backed evidence, not candidate material, and not release-facing plaintext.",
         },
         Source {
+            id: "ssrn-bonifacino-full-derivation-2025",
+            label: "SSRN Bonifacino 2025 full Weltzeituhr derivation paper",
+            url: "https://ssrn.com/abstract=5779902",
+            archive_url: Some(
+                "sources/archives/ssrn-bonifacino-full-derivation-2025-2026-06-01.md",
+            ),
+            accessed_at: "2026-06-01",
+            publication_date: Some("2025-11-21"),
+            source_type: "community-solution-claim",
+            allowed_use: "unverified-solution-claim",
+            use_note: "Public claimed full derivation for the Weltzeituhr error-key K4 method; quarantined for future independent verification only, not source-backed evidence, not candidate material, and not release-facing plaintext.",
+        },
+        Source {
             id: "ssrn-bonifacino-generative-running-key-2025",
             label: "SSRN Bonifacino 2025 generative running-key paper",
             url: "https://ssrn.com/abstract=5876462",
