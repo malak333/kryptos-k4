@@ -3,6 +3,7 @@
 source_id: `kryptosbot-findings-2026`
 source_url: https://kryptosbot.com/findings/
 reviewed_at: 2026-05-31
+refresh_reviewed_at: 2026-06-01
 archive_kind: quote-free local review snapshot
 non_scorable_reason: Findings context documents open structural anomalies and elimination boundaries but no scoreable non-anchor K4 observations.
 promoted_candidate: false
@@ -18,6 +19,10 @@ a scored observation file.
   internal findings, hypotheses, and open questions by confidence tier.
 - The page frames a five-position `W` delimiter hypothesis as a structural
   explanation candidate, not as a solved plaintext or key stream.
+- A 2026-06-01 source-context refresh found the page still using a five-`W`
+  delimiter framing with source-side position labels that do not match the
+  repo's canonical one-based K4 ciphertext coordinates. In repo coordinates,
+  the carved K4 `W` positions are `21,37,49,59,75`.
 - The page describes a CT-perturbation/symbol-swap anomaly as an unresolved
   clue candidate that still requires a precise mechanism before it can become
   evidence.

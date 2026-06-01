@@ -1099,6 +1099,25 @@ position observation. Do not spend a full implementation pass on a dedicated
 W-delimiter evaluator unless a future eligible source supplies independent
 non-anchor observations or a stronger pre-score structural prediction target.
 
+## 2026-06-01: W-Delimiter Coordinate Reconciliation Recorded
+
+Added a quote-free coordinate reconciliation for the registered
+`kryptosbot-findings-2026` methodology-context source:
+
+- reconciliation artifact:
+  `experiments/coordinate-reconciliations/kryptosbot-w-delimiter-v1.md`
+- source archive refreshed:
+  `sources/archives/kryptosbot-findings-2026-05-31.md`
+- repo canonical K4 one-based W positions: `21,37,49,59,75`
+- external source-side W-delimiter labels observed during refresh:
+  `20,36,48,58,74`
+
+Practical consequence: future W-delimiter work must use repo canonical
+one-based positions `21,37,49,59,75` unless an alternate coordinate convention
+is explicitly preregistered and validated before scoring. This is a coordinate
+guardrail only; it does not reopen the stopped W-delimiter lane, and it does not
+promote plaintext, key material, route, or mechanism evidence.
+
 ## 2026-05-31: KryptosBot Findings Source Registered
 
 Added `kryptosbot-findings-2026` as a quote-free local source snapshot for the

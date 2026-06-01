@@ -10,7 +10,7 @@ Status: stop and replan before any new scoring.
 
 Reason: the current source/evidence gates report `30` registered sources, `2`
 scored-observation eligible sources, `1` committed source-backed observation
-file, `33` valid source-backed evaluation archives, and all source-backed
+file, `37` valid source-backed evaluation archives, and all source-backed
 archives negative/non-significant after source-archive correction. The minimum
 raw source-backed archive p-value is the terminal residue-balance archive
 (`p=0.0436`), but the corrected archive-surface p-value is `1.0000`.
@@ -36,6 +36,12 @@ only `1/6` observed row-boundary hits at position `37`; the same-size
 non-anchor hypergeometric null gives mean `0.4110` and `p=0.3570`. This is
 negative/non-significant and does not justify a larger W-delimiter evaluator
 until new independent scoreable observations exist.
+
+Coordinate caveat: the 2026-06-01 source-context refresh records that external
+W-delimiter labels may use `20,36,48,58,74`; under this repo's canonical
+one-based K4 ciphertext indexing, those same carved `W` positions are
+`21,37,49,59,75`. Future W-delimiter work must not score the source-side labels
+as repo one-based positions without an explicit coordinate-convention artifact.
 
 Latest evidence is summarized in `experiments/PROGRESS_LOG.md`.
 
