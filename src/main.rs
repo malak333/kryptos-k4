@@ -5697,7 +5697,8 @@ fn validate_archived_prediction_context(
                 .map_err(Into::into)
         }
         "ciphertext-adjacent-contrast" => {
-            serde_json::to_value(kryptos_k4::build_committed_ciphertext_adjacent_contrast_prior())
+            let top = registration.ciphertext_adjacent_contrast_top.unwrap_or(20);
+            serde_json::to_value(kryptos_k4::build_ciphertext_adjacent_contrast_prior(top))
                 .map_err(Into::into)
         }
         "ciphertext-transition" => {
@@ -5717,8 +5718,16 @@ fn validate_archived_prediction_context(
                 .map_err(Into::into)
         }
         "ciphertext-window-balance" => {
-            serde_json::to_value(kryptos_k4::build_committed_ciphertext_window_balance_prior())
-                .map_err(Into::into)
+            let top = registration.ciphertext_window_balance_top.unwrap_or(20);
+            let window_widths = registration
+                .ciphertext_window_balance_widths
+                .clone()
+                .unwrap_or_else(|| vec![3, 5, 7]);
+            serde_json::to_value(kryptos_k4::build_ciphertext_window_balance_prior(
+                top,
+                window_widths,
+            ))
+            .map_err(Into::into)
         }
         "ciphertext-stehle-regularity" => {
             serde_json::to_value(kryptos_k4::build_committed_ciphertext_stehle_regularity_prior())

@@ -160,6 +160,13 @@ Current independent lanes:
   only through future source-backed non-anchor observations and
   `validate-ciphertext-adjacent-contrast-observations` then
   `evaluate-ciphertext-adjacent-contrast` with seeded controls.
+- `ciphertext-adjacent-contrast-mid-v1.json`, a populated ciphertext-only
+  mid-width adjacent-contrast lane with committed artifact
+  `experiments/predictions/ciphertext-adjacent-contrast-mid-v1.json`. The
+  artifact fixes the top 16 interior non-anchor positions with strongest
+  predeclared left/right neighbor contrast in Kryptos alphabet order. It passes
+  `--require-unique-artifact`; its committed CIA row-boundary archive is
+  negative/non-significant (`2/6`, empirical `p=0.3911`, promoted `false`).
 - `ciphertext-structure-prior-v1.json`, a populated ciphertext-only position
   prior lane with committed artifact
   `experiments/predictions/ciphertext-structure-prior-v1.json`. The artifact

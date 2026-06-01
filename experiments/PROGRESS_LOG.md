@@ -3,6 +3,83 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-06-01: Mid Adjacent-Contrast Lane Scored Negative
+
+Added `ciphertext-adjacent-contrast-mid-v1`, a distinct ciphertext-only
+adjacent-contrast lane that fixes the top 16 interior non-anchor positions by
+predeclared left/right neighbor contrast in Kryptos alphabet order. The lane
+uses public anchors only as an exclusion mask and does not use known-plaintext
+fragments, candidate words, routes, or prior source-backed observation hits for
+discovery.
+
+Committed files:
+
+- `experiments/preregistrations/ciphertext-adjacent-contrast-mid-v1.json`
+- `experiments/predictions/ciphertext-adjacent-contrast-mid-v1.json`
+- `results/ciphertext-adjacent-contrast-observations/cia-k4-row-boundaries-mid-v1/`
+
+Implementation note:
+
+- `validate-evaluation-archive` now honors preregistered custom
+  `ciphertext_adjacent_contrast_top` and `ciphertext_window_balance_*`
+  parameters instead of comparing every archive to only the default committed
+  artifact shape.
+
+Commands:
+
+```bash
+cargo run --locked -- ciphertext-adjacent-contrast-prior \
+  --top 16 \
+  --format json > experiments/predictions/ciphertext-adjacent-contrast-mid-v1.json
+
+cargo run --locked -- validate-preregistration \
+  --input experiments/preregistrations/ciphertext-adjacent-contrast-mid-v1.json \
+  --format json
+
+cargo run --locked -- validate-prediction-artifact \
+  --preregistration experiments/preregistrations/ciphertext-adjacent-contrast-mid-v1.json \
+  --require-unique-artifact \
+  --format json
+
+cargo run --locked -- evaluate-ciphertext-adjacent-contrast \
+  --artifact experiments/predictions/ciphertext-adjacent-contrast-mid-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-adjacent-contrast-mid-v1.json \
+  --positions-file experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/ciphertext-adjacent-contrast-observations/cia-k4-row-boundaries-mid-v1 \
+  --format json
+
+cargo run --locked -- validate-evaluation-archive \
+  --input results/ciphertext-adjacent-contrast-observations/cia-k4-row-boundaries-mid-v1 \
+  --format json
+```
+
+Result:
+
+- matched adjacent-contrast positions: `5, 37`
+- observed hits: `2/6`
+- null mean: `1.31194`
+- empirical p-value: `0.3911`
+- promoted: `false`
+- archive valid: `true`
+- valid source-backed archives: `36`
+- source-backed archive correction count: `36`
+- minimum source-backed adjusted p-value: `1.0`
+- all source-backed archives negative after correction: `true`
+
+Current inventory markers:
+
+- independent lanes: `82`
+- ready for source-backed observations: `82`
+- prediction artifacts: `82`
+- unique ready prediction targets: `40`
+- ciphertext-adjacent-contrast-position-prior-family lanes: `3`
+- ciphertext-adjacent-contrast-position-prior-family unique ready targets: `3`
+
+This is negative/non-significant source-backed evidence. It does not promote a
+K4 solution, key, route, plaintext, or candidate.
+
 ## 2026-06-01: Width-7 Grid Row Lane Scored Against CIA Row Boundaries
 
 Scored the distinct `non-anchor-position-grid-width7-row-v1` 14-by-7 row-edge

@@ -1,0 +1,30 @@
+{
+  "id": "ciphertext-adjacent-contrast-mid-v1",
+  "title": "Ciphertext mid adjacent-contrast non-anchor position prior",
+  "hypothesis_family": "ciphertext-adjacent-contrast-position-prior",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane predeclares a mid-width ciphertext-only adjacent-contrast rule before scoring any source-backed observations. It is not another public-anchor mining pass because discovery uses only neighboring K4 ciphertext-symbol contrast, with public anchors used only as an exclusion mask. It differs from the broader top-20 and narrow top-12 adjacent-contrast lanes by fixing a top-16 target before any observation scoring.",
+  "prediction_target": "Future independently sourced non-anchor K4 position observations should be enriched at the top 16 positions selected by the predeclared adjacent-ciphertext contrast rule.",
+  "prediction_artifact": "experiments/predictions/ciphertext-adjacent-contrast-mid-v1.json",
+  "ciphertext_adjacent_contrast_top": 16,
+  "discovery_inputs": [
+    "K4 ciphertext letters only, with positions interpreted as one-based absolute ciphertext positions.",
+    "Predeclared adjacent-contrast rule over neighboring ciphertext symbol values in the Kryptos alphabet.",
+    "A fixed top-16 position selection rule emitted before any independent observation scoring."
+  ],
+  "evaluation_inputs": [
+    "Future independently source-backed non-anchor K4 position observations with source IDs, one-based positions, notes, and rationale declared before scoring.",
+    "A committed prediction artifact generated from the adjacent-contrast rule before evaluating independent observations.",
+    "Observation files whose scored positions were not used to construct or tune the adjacent-contrast prediction artifact."
+  ],
+  "controls": [
+    "seeded same-size non-anchor position shuffle baseline",
+    "known public-anchor positions used only as an exclusion mask, not as scoring evidence or tuning input",
+    "multiple-comparison correction across all predeclared adjacent-contrast targets and broader independent lanes",
+    "archive validation requiring preregistration, prediction artifact, source-backed observation file, command metadata, and non-promotion caveat",
+    "promotion blocked unless future independent observations beat all predeclared controls without post-hoc retuning"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}
