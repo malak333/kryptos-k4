@@ -3,6 +3,27 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-06-01: Sanborn-Papers Archive Context Refreshed
+
+Refreshed the quote-free local snapshot for
+`kryptosbot-sanborn-papers-2026` against the current public archive page. The
+refresh records newer source-context facts around overlay/null-mask language,
+the code-breaker template concept, a Dan Brown-related 4-by-4 segmented-cipher
+context, and a separate Sanborn artwork described as duplicating Kryptos text.
+
+Boundary preserved:
+
+- no public K4 plaintext, key material, route, or verified method was added
+- no non-anchor K4 observation positions were selected from this context-only
+  source
+- any future overlay/null-mask or grille-style model must be preregistered
+  before scoring and evaluated only against independently sourced non-anchor
+  observations
+- the source remains `archive-context-only`
+
+This is source-governance progress only. It does not promote a K4 solution,
+key, route, plaintext, or candidate.
+
 ## 2026-06-01: Post-Terminal Residue-Balance Lane Scored Negative
 
 Scored the already-preregistered
