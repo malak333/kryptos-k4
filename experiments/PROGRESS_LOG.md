@@ -3,6 +3,32 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: Source Frontier Correction-Aware Boundary
+
+Updated `source-frontier` so the source-use frontier reports both the raw
+archive support-status boundary and the source-archive-corrected boundary.
+
+Validation:
+
+```bash
+cargo run --locked -- source-frontier --summary --format json
+```
+
+Current correction-aware markers:
+
+- valid source-backed archives: `33`
+- raw all-negative flag: `false`
+- source-backed archive correction count: `33`
+- minimum empirical p-value: `< 0.05`
+- minimum adjusted p-value: `1.0`
+- all source-backed archives negative after correction: `true`
+- frontier blocker:
+  `source-backed-evidence-negative-or-non-significant-after-correction`
+- promoted: `false`
+
+This preserves the raw follow-up signal while making the corrected stop/replan
+boundary explicit before any future evidence work.
+
 ## 2026-05-31: Focused Claim-Verification Status Added
 
 Added a focused `claim-verification-status` command for the quarantined

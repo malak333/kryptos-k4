@@ -1817,6 +1817,10 @@ struct SourceFrontierReport {
     scored_position_marker_count: usize,
     valid_source_backed_archive_count: usize,
     all_source_backed_archives_negative: bool,
+    source_backed_archive_correction_count: usize,
+    min_source_backed_empirical_p_value: Option<f64>,
+    min_source_backed_adjusted_p_value: Option<f64>,
+    all_source_backed_archives_negative_after_correction: bool,
     context_only_count: usize,
     quarantined_claim_count: usize,
     frontier_blocking_conditions: Vec<String>,
@@ -1854,6 +1858,10 @@ struct SourceFrontierSummary {
     scored_position_marker_count: usize,
     valid_source_backed_archive_count: usize,
     all_source_backed_archives_negative: bool,
+    source_backed_archive_correction_count: usize,
+    min_source_backed_empirical_p_value: Option<f64>,
+    min_source_backed_adjusted_p_value: Option<f64>,
+    all_source_backed_archives_negative_after_correction: bool,
     context_only_count: usize,
     quarantined_claim_count: usize,
     frontier_blocking_conditions: Vec<String>,
@@ -8309,34 +8317,15 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
         })
         .collect::<Vec<_>>();
 
-    let source_backed_archive_correction_count = evidence_report
-        .archives
-        .iter()
-        .filter(|archive| archive.valid && archive.source_backed_observation)
-        .filter(|archive| archive.empirical_p_value.is_some())
-        .count();
+    let (
+        source_backed_archive_correction_count,
+        min_source_backed_empirical_p_value,
+        min_source_backed_adjusted_p_value,
+        all_source_backed_archives_negative_after_correction,
+    ) = source_backed_archive_correction_metrics(&evidence_report);
     let adjusted_source_backed_p_value = |p: Option<f64>| -> Option<f64> {
         p.map(|value| (value * source_backed_archive_correction_count as f64).min(1.0))
     };
-    let min_source_backed_empirical_p_value = evidence_report
-        .archives
-        .iter()
-        .filter(|archive| archive.valid && archive.source_backed_observation)
-        .filter_map(|archive| archive.empirical_p_value)
-        .min_by(|a, b| a.total_cmp(b));
-    let min_source_backed_adjusted_p_value =
-        adjusted_source_backed_p_value(min_source_backed_empirical_p_value);
-    let all_source_backed_archives_negative_after_correction =
-        source_backed_archive_correction_count > 0
-            && evidence_report
-                .archives
-                .iter()
-                .filter(|archive| archive.valid && archive.source_backed_observation)
-                .all(|archive| {
-                    adjusted_source_backed_p_value(archive.empirical_p_value)
-                        .map(|p| p > 0.05)
-                        .unwrap_or(false)
-                });
     let evidence_support_summary = evidence_report
         .archives
         .iter()
@@ -8592,6 +8581,46 @@ fn claim_verification_archive_statuses(
             .then_with(|| left.directory.cmp(&right.directory))
     });
     Ok(archives)
+}
+
+fn source_backed_archive_correction_metrics(
+    evidence_report: &IndependentEvidenceStatusReport,
+) -> (usize, Option<f64>, Option<f64>, bool) {
+    let source_backed_archive_correction_count = evidence_report
+        .archives
+        .iter()
+        .filter(|archive| archive.valid && archive.source_backed_observation)
+        .filter(|archive| archive.empirical_p_value.is_some())
+        .count();
+    let adjusted_source_backed_p_value = |p: Option<f64>| -> Option<f64> {
+        p.map(|value| (value * source_backed_archive_correction_count as f64).min(1.0))
+    };
+    let min_source_backed_empirical_p_value = evidence_report
+        .archives
+        .iter()
+        .filter(|archive| archive.valid && archive.source_backed_observation)
+        .filter_map(|archive| archive.empirical_p_value)
+        .min_by(|a, b| a.total_cmp(b));
+    let min_source_backed_adjusted_p_value =
+        adjusted_source_backed_p_value(min_source_backed_empirical_p_value);
+    let all_source_backed_archives_negative_after_correction =
+        source_backed_archive_correction_count > 0
+            && evidence_report
+                .archives
+                .iter()
+                .filter(|archive| archive.valid && archive.source_backed_observation)
+                .all(|archive| {
+                    adjusted_source_backed_p_value(archive.empirical_p_value)
+                        .map(|p| p > 0.05)
+                        .unwrap_or(false)
+                });
+
+    (
+        source_backed_archive_correction_count,
+        min_source_backed_empirical_p_value,
+        min_source_backed_adjusted_p_value,
+        all_source_backed_archives_negative_after_correction,
+    )
 }
 
 fn build_claim_verification_status() -> Result<ClaimVerificationStatusReport> {
@@ -16936,6 +16965,14 @@ fn source_frontier_report() -> Result<SourceFrontierReport> {
         && valid_source_backed_archives
             .iter()
             .all(|archive| archive.support_status == "negative/non-significant");
+    let (
+        source_backed_archive_correction_count,
+        min_source_backed_empirical_p_value,
+        min_source_backed_adjusted_p_value,
+        all_source_backed_archives_negative_after_correction,
+    ) = source_backed_archive_correction_metrics(&evidence_report);
+    let effective_all_source_backed_archives_negative =
+        all_source_backed_archives_negative || all_source_backed_archives_negative_after_correction;
     let frontier_sources = sources()
         .into_iter()
         .map(|source| {
@@ -17045,6 +17082,11 @@ fn source_frontier_report() -> Result<SourceFrontierReport> {
         frontier_blocking_conditions
             .push("source-backed-evidence-negative-or-non-significant".to_string());
     }
+    if all_source_backed_archives_negative_after_correction {
+        frontier_blocking_conditions.push(
+            "source-backed-evidence-negative-or-non-significant-after-correction".to_string(),
+        );
+    }
     if unused_eligible_sources_are_non_scorable {
         frontier_blocking_conditions.push("unused-eligible-source-marked-non-scorable".to_string());
     }
@@ -17075,10 +17117,10 @@ fn source_frontier_report() -> Result<SourceFrontierReport> {
         "do not use context-only, archive-context-only, public-anchor-summary, public-clue-context, methodology-context, or quarantined-claim sources as scored independent observation evidence"
             .to_string(),
     ];
-    let recommended_next_step = if all_source_backed_archives_negative
+    let recommended_next_step = if effective_all_source_backed_archives_negative
         && unused_eligible_sources_are_non_scorable
     {
-        "Current source-backed archives are all negative/non-significant, and unused eligible sources are explicitly non-scorable; next useful work requires a new source-backed rationale, a new eligible source, or a distinct preregistered prediction artifact."
+        "Current source-backed archives are negative/non-significant after source-archive correction, and unused eligible sources are explicitly non-scorable; next useful work requires a new source-backed rationale, a new eligible source, or a distinct preregistered prediction artifact."
                 .to_string()
     } else {
         "Use scored-observation-ready sources only through source-review and observation validators; use context-only sources only for preregistration rationale; keep quarantined claims out of release-facing evidence."
@@ -17090,6 +17132,10 @@ fn source_frontier_report() -> Result<SourceFrontierReport> {
         scored_position_marker_count,
         valid_source_backed_archive_count,
         all_source_backed_archives_negative,
+        source_backed_archive_correction_count,
+        min_source_backed_empirical_p_value,
+        min_source_backed_adjusted_p_value,
+        all_source_backed_archives_negative_after_correction,
         context_only_count,
         quarantined_claim_count,
         frontier_blocking_conditions,
@@ -17134,6 +17180,22 @@ fn print_source_frontier(summary: bool, format: OutputFormat) -> Result<()> {
             println!(
                 "all source-backed archives negative: {}",
                 report.all_source_backed_archives_negative
+            );
+            println!(
+                "source-backed archive correction count: {}",
+                report.source_backed_archive_correction_count
+            );
+            println!(
+                "minimum source-backed empirical p-value: {}",
+                format_optional_p(report.min_source_backed_empirical_p_value)
+            );
+            println!(
+                "minimum source-backed adjusted p-value: {}",
+                format_optional_p(report.min_source_backed_adjusted_p_value)
+            );
+            println!(
+                "all source-backed archives negative after correction: {}",
+                report.all_source_backed_archives_negative_after_correction
             );
             println!("context-only sources: {}", report.context_only_count);
             println!("quarantined claims: {}", report.quarantined_claim_count);
@@ -17206,7 +17268,7 @@ fn print_source_frontier(summary: bool, format: OutputFormat) -> Result<()> {
                     }
                 );
                 println!(
-                    "- action: do not rerun negative row-boundary evidence as new evidence; add a new eligible source, update a source archive with explicit non-anchor scored positions, or validate a genuinely distinct prediction artifact before scoring."
+                    "- action: do not rerun correction-controlled negative row-boundary evidence as new evidence; add a new eligible source, update a source archive with explicit non-anchor scored positions, or validate a genuinely distinct prediction artifact before scoring."
                 );
                 return Ok(());
             }
@@ -17275,6 +17337,11 @@ fn source_frontier_summary(report: &SourceFrontierReport) -> SourceFrontierSumma
         scored_position_marker_count: report.scored_position_marker_count,
         valid_source_backed_archive_count: report.valid_source_backed_archive_count,
         all_source_backed_archives_negative: report.all_source_backed_archives_negative,
+        source_backed_archive_correction_count: report.source_backed_archive_correction_count,
+        min_source_backed_empirical_p_value: report.min_source_backed_empirical_p_value,
+        min_source_backed_adjusted_p_value: report.min_source_backed_adjusted_p_value,
+        all_source_backed_archives_negative_after_correction: report
+            .all_source_backed_archives_negative_after_correction,
         context_only_count: report.context_only_count,
         quarantined_claim_count: report.quarantined_claim_count,
         frontier_blocking_conditions: report.frontier_blocking_conditions.clone(),
@@ -17284,7 +17351,7 @@ fn source_frontier_summary(report: &SourceFrontierReport) -> SourceFrontierSumma
         eligible_but_currently_non_scorable_source_ids,
         already_scored_source_backed_archives,
         recommended_next_step: report.recommended_next_step.clone(),
-        action: "do not rerun negative row-boundary evidence as new evidence; add a new eligible source, update a source archive with explicit non-anchor scored positions, or validate a genuinely distinct prediction artifact before scoring.",
+        action: "do not rerun correction-controlled negative row-boundary evidence as new evidence; add a new eligible source, update a source archive with explicit non-anchor scored positions, or validate a genuinely distinct prediction artifact before scoring.",
         promoted_candidate: report.promoted_candidate,
         note: report.note,
     }

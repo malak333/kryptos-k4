@@ -1758,6 +1758,12 @@ fn source_frontier_classifies_all_registered_sources() {
         .stdout(predicate::str::contains(
             "all source-backed archives negative: false",
         ))
+        .stdout(predicate::str::contains(
+            "source-backed archive correction count: 33",
+        ))
+        .stdout(predicate::str::contains(
+            "all source-backed archives negative after correction: true",
+        ))
         .stdout(predicate::str::contains("Frontier Blocking Conditions"))
         .stdout(predicate::str::contains("Required Next Evidence"))
         .stdout(predicate::str::contains(
@@ -1790,8 +1796,28 @@ fn source_frontier_classifies_all_registered_sources() {
     assert_eq!(json["scored_position_marker_count"], 1);
     assert_eq!(json["valid_source_backed_archive_count"], 33);
     assert_eq!(json["all_source_backed_archives_negative"], false);
+    assert_eq!(json["source_backed_archive_correction_count"], 33);
+    assert!(
+        json["min_source_backed_empirical_p_value"]
+            .as_f64()
+            .unwrap()
+            < 0.05
+    );
+    assert_eq!(json["min_source_backed_adjusted_p_value"], 1.0);
+    assert_eq!(
+        json["all_source_backed_archives_negative_after_correction"],
+        true
+    );
     assert_eq!(json["quarantined_claim_count"], 6);
     assert_eq!(json["promoted_candidate"], false);
+    assert!(
+        json["frontier_blocking_conditions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|condition| condition.as_str().unwrap()
+                == "source-backed-evidence-negative-or-non-significant-after-correction")
+    );
     assert!(
         json["frontier_blocking_conditions"]
             .as_array()
@@ -1824,7 +1850,7 @@ fn source_frontier_classifies_all_registered_sources() {
         json["recommended_next_step"]
             .as_str()
             .unwrap()
-            .contains("scored-observation-ready sources")
+            .contains("after source-archive correction")
     );
 
     let sources = json["frontier_sources"].as_array().unwrap();
@@ -2055,6 +2081,12 @@ fn source_frontier_summary_prints_compact_next_action() {
             "unused-eligible-source-marked-non-scorable",
         ))
         .stdout(predicate::str::contains(
+            "source-backed-evidence-negative-or-non-significant-after-correction",
+        ))
+        .stdout(predicate::str::contains(
+            "all source-backed archives negative after correction: true",
+        ))
+        .stdout(predicate::str::contains(
             "scored-observation-ready sources: cia-sculpture",
         ))
         .stdout(predicate::str::contains(
@@ -2064,7 +2096,7 @@ fn source_frontier_summary_prints_compact_next_action() {
             "already-scored source-backed archives: cia-sculpture (33 archived evaluations)",
         ))
         .stdout(predicate::str::contains(
-            "do not rerun negative row-boundary evidence as new evidence",
+            "do not rerun correction-controlled negative row-boundary evidence as new evidence",
         ))
         .stdout(predicate::str::contains("promoted: false"))
         .stdout(predicate::str::contains("## Sources").not());
@@ -2083,6 +2115,11 @@ fn source_frontier_summary_prints_compact_next_action() {
     assert_eq!(json["valid_source_backed_archive_count"], 33);
     assert_eq!(json["all_source_backed_archives_negative"], false);
     assert_eq!(
+        json["all_source_backed_archives_negative_after_correction"],
+        true
+    );
+    assert_eq!(json["source_backed_archive_correction_count"], 33);
+    assert_eq!(
         json["scored_observation_ready_source_ids"][0],
         "cia-sculpture"
     );
@@ -2100,7 +2137,7 @@ fn source_frontier_summary_prints_compact_next_action() {
         json["action"]
             .as_str()
             .unwrap()
-            .contains("do not rerun negative row-boundary evidence")
+            .contains("do not rerun correction-controlled negative row-boundary evidence")
     );
     assert_eq!(json["promoted_candidate"], false);
     assert!(json.get("frontier_sources").is_none());
