@@ -489,6 +489,9 @@ enum Command {
         /// Directory containing lane preregistration JSON files.
         #[arg(long, default_value = "experiments/preregistrations")]
         directory: PathBuf,
+        /// Print a concise operational summary instead of the full gate table.
+        #[arg(long)]
+        summary: bool,
         /// Output format.
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
@@ -1937,6 +1940,46 @@ struct NextEvidenceGateReport {
     source_review_scaffold_command: &'static str,
     source_review_validation_command: &'static str,
     gates: Vec<NextEvidenceGate>,
+    promoted_candidate: bool,
+    note: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct NextEvidenceGateSummary {
+    summary: bool,
+    lane_directory: String,
+    ready_lanes: usize,
+    invalid_lanes: usize,
+    unique_ready_prediction_artifacts: usize,
+    duplicate_prediction_artifact_group_count: usize,
+    evaluator_pending_lane_count: usize,
+    eligible_source_ids: Vec<String>,
+    ineligible_source_count: usize,
+    quarantined_claim_source_count: usize,
+    claim_verification_archive_count: usize,
+    quarantined_claim_source_ids_without_archive: Vec<String>,
+    valid_source_backed_archive_count: usize,
+    invalid_archive_count: usize,
+    all_source_backed_archives_negative: bool,
+    source_backed_archive_correction_count: usize,
+    min_source_backed_empirical_p_value: Option<f64>,
+    min_source_backed_adjusted_p_value: Option<f64>,
+    all_source_backed_archives_negative_after_correction: bool,
+    used_eligible_source_ids: Vec<String>,
+    unused_eligible_source_ids: Vec<String>,
+    source_review_available: bool,
+    evidence_available: bool,
+    next_action_kind: String,
+    blocking_conditions: Vec<String>,
+    readiness_note: &'static str,
+    recommended_next_step: String,
+    next_check_commands: Vec<&'static str>,
+    required_observation_fields: Vec<&'static str>,
+    source_review_status_command: &'static str,
+    source_observation_status_command: &'static str,
+    source_review_scaffold_command: &'static str,
+    source_review_validation_command: &'static str,
+    family_gate_count: usize,
     promoted_candidate: bool,
     note: &'static str,
 }
@@ -3508,9 +3551,11 @@ fn main() -> Result<()> {
         Command::IndependentLaneStatus { directory, format } => {
             print_independent_lane_status(directory, format)?
         }
-        Command::NextEvidenceGate { directory, format } => {
-            print_next_evidence_gate(directory, format)?
-        }
+        Command::NextEvidenceGate {
+            directory,
+            summary,
+            format,
+        } => print_next_evidence_gate(directory, summary, format)?,
         Command::IndependentEvidenceStatus { roots, format } => {
             print_independent_evidence_status(roots, format)?
         }
@@ -9369,6 +9414,50 @@ fn evidence_gate_commands(
     }
 }
 
+fn next_evidence_gate_summary(report: &NextEvidenceGateReport) -> NextEvidenceGateSummary {
+    NextEvidenceGateSummary {
+        summary: true,
+        lane_directory: report.lane_directory.clone(),
+        ready_lanes: report.ready_lanes,
+        invalid_lanes: report.invalid_lanes,
+        unique_ready_prediction_artifacts: report.unique_ready_prediction_artifacts,
+        duplicate_prediction_artifact_group_count: report.duplicate_prediction_artifact_group_count,
+        evaluator_pending_lane_count: report.evaluator_pending_lane_count,
+        eligible_source_ids: report.eligible_source_ids.clone(),
+        ineligible_source_count: report.ineligible_source_count,
+        quarantined_claim_source_count: report.quarantined_claim_source_ids.len(),
+        claim_verification_archive_count: report.claim_verification_archive_count,
+        quarantined_claim_source_ids_without_archive: report
+            .quarantined_claim_source_ids_without_archive
+            .clone(),
+        valid_source_backed_archive_count: report.valid_source_backed_archive_count,
+        invalid_archive_count: report.invalid_archive_count,
+        all_source_backed_archives_negative: report.all_source_backed_archives_negative,
+        source_backed_archive_correction_count: report.source_backed_archive_correction_count,
+        min_source_backed_empirical_p_value: report.min_source_backed_empirical_p_value,
+        min_source_backed_adjusted_p_value: report.min_source_backed_adjusted_p_value,
+        all_source_backed_archives_negative_after_correction: report
+            .all_source_backed_archives_negative_after_correction,
+        used_eligible_source_ids: report.used_eligible_source_ids.clone(),
+        unused_eligible_source_ids: report.unused_eligible_source_ids.clone(),
+        source_review_available: report.source_review_available,
+        evidence_available: report.evidence_available,
+        next_action_kind: report.next_action_kind.clone(),
+        blocking_conditions: report.blocking_conditions.clone(),
+        readiness_note: report.readiness_note,
+        recommended_next_step: report.recommended_next_step.clone(),
+        next_check_commands: report.next_check_commands.clone(),
+        required_observation_fields: report.required_observation_fields.clone(),
+        source_review_status_command: report.source_review_status_command,
+        source_observation_status_command: report.source_observation_status_command,
+        source_review_scaffold_command: report.source_review_scaffold_command,
+        source_review_validation_command: report.source_review_validation_command,
+        family_gate_count: report.gates.len(),
+        promoted_candidate: report.promoted_candidate,
+        note: report.note,
+    }
+}
+
 fn preregistered_grid_edge_axis_label(preregistration: &Path) -> Option<String> {
     let input = fs::read_to_string(preregistration).ok()?;
     let registration: LanePreregistration = serde_json::from_str(&input).ok()?;
@@ -9377,8 +9466,145 @@ fn preregistered_grid_edge_axis_label(preregistration: &Path) -> Option<String> 
         .map(|axis| axis.label().to_string())
 }
 
-fn print_next_evidence_gate(directory: PathBuf, format: OutputFormat) -> Result<()> {
+fn print_next_evidence_gate(directory: PathBuf, summary: bool, format: OutputFormat) -> Result<()> {
     let report = build_next_evidence_gate_report(&directory)?;
+    if summary {
+        let summary = next_evidence_gate_summary(&report);
+        match format {
+            OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&summary)?),
+            OutputFormat::Markdown => {
+                println!("# Next Evidence Gate Summary\n");
+                println!("This is not a claimed solution.\n");
+                println!("lane directory: `{}`", summary.lane_directory);
+                println!("total ready lanes: {}", summary.ready_lanes);
+                println!(
+                    "unique ready prediction artifacts: {}",
+                    summary.unique_ready_prediction_artifacts
+                );
+                println!(
+                    "duplicate prediction artifact groups: {}",
+                    summary.duplicate_prediction_artifact_group_count
+                );
+                println!(
+                    "evaluator-pending lanes: {}",
+                    summary.evaluator_pending_lane_count
+                );
+                println!(
+                    "eligible scored-observation sources: {}",
+                    summary.eligible_source_ids.join(", ")
+                );
+                println!("ineligible sources: {}", summary.ineligible_source_count);
+                println!(
+                    "quarantined plaintext-claim sources: {}",
+                    summary.quarantined_claim_source_count
+                );
+                println!(
+                    "claim verification archives: {}",
+                    summary.claim_verification_archive_count
+                );
+                if !summary
+                    .quarantined_claim_source_ids_without_archive
+                    .is_empty()
+                {
+                    println!(
+                        "claim sources without verification archives: {}",
+                        summary
+                            .quarantined_claim_source_ids_without_archive
+                            .join(", ")
+                    );
+                }
+                println!(
+                    "valid source-backed archives: {}",
+                    summary.valid_source_backed_archive_count
+                );
+                println!("invalid archives: {}", summary.invalid_archive_count);
+                println!(
+                    "all source-backed archives negative: {}",
+                    summary.all_source_backed_archives_negative
+                );
+                println!(
+                    "source-backed archive correction count: {}",
+                    summary.source_backed_archive_correction_count
+                );
+                println!(
+                    "minimum source-backed p-value: {}",
+                    summary
+                        .min_source_backed_empirical_p_value
+                        .map(|p| format!("{p:.4}"))
+                        .unwrap_or_else(|| "n/a".to_string())
+                );
+                println!(
+                    "minimum source-backed adjusted p-value: {}",
+                    summary
+                        .min_source_backed_adjusted_p_value
+                        .map(|p| format!("{p:.4}"))
+                        .unwrap_or_else(|| "n/a".to_string())
+                );
+                println!(
+                    "all source-backed archives negative after correction: {}",
+                    summary.all_source_backed_archives_negative_after_correction
+                );
+                println!(
+                    "used eligible sources: {}",
+                    if summary.used_eligible_source_ids.is_empty() {
+                        "none".to_string()
+                    } else {
+                        summary.used_eligible_source_ids.join(", ")
+                    }
+                );
+                println!(
+                    "unused eligible sources: {}",
+                    if summary.unused_eligible_source_ids.is_empty() {
+                        "none".to_string()
+                    } else {
+                        summary.unused_eligible_source_ids.join(", ")
+                    }
+                );
+                println!(
+                    "source review available: {}",
+                    summary.source_review_available
+                );
+                println!("evidence available: {}", summary.evidence_available);
+                println!("next action kind: {}", summary.next_action_kind);
+                if !summary.blocking_conditions.is_empty() {
+                    println!("blocking conditions:");
+                    for condition in &summary.blocking_conditions {
+                        println!("- {condition}");
+                    }
+                }
+                println!("readiness note: {}", summary.readiness_note);
+                println!("recommended next step: {}", summary.recommended_next_step);
+                println!("family gate count: {}", summary.family_gate_count);
+                println!("promoted: {}", summary.promoted_candidate);
+                println!("note: {}\n", summary.note);
+                println!("next check commands:");
+                for command in &summary.next_check_commands {
+                    println!("- `{command}`");
+                }
+                println!("\nrequired observation fields:");
+                for field in &summary.required_observation_fields {
+                    println!("- {field}");
+                }
+                println!(
+                    "\nsource review status:\n```bash\n{}\n```",
+                    summary.source_review_status_command
+                );
+                println!(
+                    "source observation status:\n```bash\n{}\n```",
+                    summary.source_observation_status_command
+                );
+                println!(
+                    "source review scaffold:\n```bash\n{}\n```",
+                    summary.source_review_scaffold_command
+                );
+                println!(
+                    "source review validation:\n```bash\n{}\n```",
+                    summary.source_review_validation_command
+                );
+            }
+        }
+        return Ok(());
+    }
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&report)?),
         OutputFormat::Markdown => {

@@ -5720,6 +5720,61 @@ fn next_evidence_gate_prints_operational_checklist() {
 }
 
 #[test]
+fn next_evidence_gate_summary_omits_full_gate_table() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["next-evidence-gate", "--summary"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Next Evidence Gate Summary"))
+        .stdout(predicate::str::contains("This is not a claimed solution."))
+        .stdout(predicate::str::contains("total ready lanes: 79"))
+        .stdout(predicate::str::contains(
+            "unique ready prediction artifacts: 37",
+        ))
+        .stdout(predicate::str::contains("family gate count: 18"))
+        .stdout(predicate::str::contains(
+            "new-source-backed-rationale-or-distinct-prediction-artifact",
+        ))
+        .stdout(predicate::str::contains("--require-unique-artifact"))
+        .stdout(predicate::str::contains("promoted: false"))
+        .stdout(predicate::str::contains("Family Gates").not());
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["next-evidence-gate", "--summary", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["summary"], true);
+    assert_eq!(json["ready_lanes"], 79);
+    assert_eq!(json["invalid_lanes"], 0);
+    assert_eq!(json["unique_ready_prediction_artifacts"], 37);
+    assert_eq!(json["family_gate_count"], 18);
+    assert_eq!(
+        json["next_action_kind"],
+        "new-source-backed-rationale-or-distinct-prediction-artifact"
+    );
+    assert!(
+        json["blocking_conditions"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|condition| condition
+                .as_str()
+                .unwrap()
+                .contains("source-backed-evidence-negative-or-non-significant"))
+    );
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(json.get("gates").is_none());
+    assert!(json.get("evidence_support_details").is_none());
+    assert!(json.get("duplicate_prediction_artifact_groups").is_none());
+}
+
+#[test]
 fn claim_verification_status_reports_quarantine_inventory() {
     Command::cargo_bin("kryptos-k4")
         .unwrap()

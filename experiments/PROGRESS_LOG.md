@@ -3,6 +3,34 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-06-01: Next Evidence Gate Summary Mode Added
+
+Added `next-evidence-gate --summary` so automation and future K4 work can read
+the current source-backed evidence boundary without expanding the full gate
+table or all archived evidence-support details.
+
+The summary preserves the fields needed to avoid repeating stopped lanes:
+
+- `next_action_kind`
+- `blocking_conditions`
+- source-backed archive counts and corrected p-value status
+- used and unused eligible source IDs
+- claim-verification archive counts
+- next-check commands, including `--require-unique-artifact`
+- required source-backed observation fields
+
+Validation:
+
+```bash
+cargo run --locked -- next-evidence-gate --summary --format json
+cargo test --locked --test cli_e2e next_evidence_gate
+cargo run --locked -- release-check --format json
+cargo test --locked
+```
+
+Current boundary: this is operational tooling only. It does not add evidence,
+score a source, promote a candidate, or claim a solution.
+
 ## 2026-06-01: SSRN Full Derivation Claim Quarantined
 
 Added `ssrn-bonifacino-full-derivation-2025`, the companion SSRN full
