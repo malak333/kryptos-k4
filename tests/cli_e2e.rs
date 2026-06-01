@@ -6025,6 +6025,10 @@ fn independent_evidence_status_reports_archive_scores() {
         .stdout(predicate::str::contains(
             "ciphertext turning-point positions",
         ))
+        .stdout(predicate::str::contains(
+            "all source-backed archives negative after correction: true",
+        ))
+        .stdout(predicate::str::contains("Adjusted P"))
         .stdout(predicate::str::contains("negative/non-significant"))
         .stdout(predicate::str::contains("promoted: false"));
 
@@ -6038,6 +6042,12 @@ fn independent_evidence_status_reports_archive_scores() {
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
     let archives = json["archives"].as_array().unwrap();
+    assert_eq!(json["source_backed_archive_correction_count"], 33);
+    assert_eq!(
+        json["all_source_backed_archives_negative_after_correction"],
+        true
+    );
+    assert!(json["min_source_backed_adjusted_p_value"].as_f64().unwrap() > 0.05);
     let period = archives
         .iter()
         .find(|archive| {
@@ -6111,6 +6121,14 @@ fn independent_evidence_status_reports_archive_scores() {
         .iter()
         .find(|archive| archive["artifact_kind"] == "ciphertext-ct-perturbation")
         .expect("ciphertext-ct-perturbation evidence archive should be present");
+    let terminal_residue_balance = archives
+        .iter()
+        .find(|archive| {
+            archive["directory"].as_str().unwrap().contains(
+                "results/ciphertext-residue-balance-observations/cia-k4-row-boundaries-terminal-moduli-v1",
+            )
+        })
+        .expect("terminal-moduli residue-balance archive should be present");
     assert_eq!(period["best_model"], "period 2 residue 0");
     assert_eq!(period["observed_hits"], "4/6 positions");
     assert_eq!(period["observation_source_ids"][0], "cia-sculpture");
@@ -6214,6 +6232,16 @@ fn independent_evidence_status_reports_archive_scores() {
     assert_eq!(
         ciphertext_ct_perturbation["support_status"],
         "negative/non-significant"
+    );
+    assert_eq!(
+        terminal_residue_balance["support_status"],
+        "follow-up-required"
+    );
+    assert!(
+        terminal_residue_balance["source_backed_adjusted_p_value"]
+            .as_f64()
+            .unwrap()
+            > 1.0 - f64::EPSILON
     );
     assert_eq!(json["promoted_candidate"], false);
 }

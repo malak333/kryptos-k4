@@ -2253,6 +2253,10 @@ struct IndependentEvidenceStatusReport {
     valid_diagnostic_archive_count: usize,
     invalid_archive_count: usize,
     evidence_available: bool,
+    source_backed_archive_correction_count: usize,
+    min_source_backed_empirical_p_value: Option<f64>,
+    min_source_backed_adjusted_p_value: Option<f64>,
+    all_source_backed_archives_negative_after_correction: bool,
     archives: Vec<IndependentEvidenceArchiveSummary>,
     promoted_candidate: bool,
     note: &'static str,
@@ -2269,6 +2273,7 @@ struct IndependentEvidenceArchiveSummary {
     observed_hits: Option<String>,
     null_mean_best_hits: Option<f64>,
     empirical_p_value: Option<f64>,
+    source_backed_adjusted_p_value: Option<f64>,
     support_status: String,
     errors: Vec<String>,
     warnings: Vec<String>,
@@ -10679,6 +10684,39 @@ fn independent_evidence_status_report(
         .filter(|archive| archive.valid && !archive.source_backed_observation)
         .count();
     let invalid_archive_count = archives.iter().filter(|archive| !archive.valid).count();
+    let source_backed_archive_correction_count = archives
+        .iter()
+        .filter(|archive| archive.valid && archive.source_backed_observation)
+        .filter(|archive| archive.empirical_p_value.is_some())
+        .count();
+    for archive in &mut archives {
+        archive.source_backed_adjusted_p_value =
+            if archive.valid && archive.source_backed_observation {
+                archive
+                    .empirical_p_value
+                    .map(|value| (value * source_backed_archive_correction_count as f64).min(1.0))
+            } else {
+                None
+            };
+    }
+    let min_source_backed_empirical_p_value = archives
+        .iter()
+        .filter(|archive| archive.valid && archive.source_backed_observation)
+        .filter_map(|archive| archive.empirical_p_value)
+        .min_by(|a, b| a.total_cmp(b));
+    let min_source_backed_adjusted_p_value = min_source_backed_empirical_p_value
+        .map(|value| (value * source_backed_archive_correction_count as f64).min(1.0));
+    let all_source_backed_archives_negative_after_correction =
+        source_backed_archive_correction_count > 0
+            && archives
+                .iter()
+                .filter(|archive| archive.valid && archive.source_backed_observation)
+                .all(|archive| {
+                    archive
+                        .source_backed_adjusted_p_value
+                        .map(|value| value > 0.05)
+                        .unwrap_or(false)
+                });
 
     Ok(IndependentEvidenceStatusReport {
         roots: roots
@@ -10690,6 +10728,10 @@ fn independent_evidence_status_report(
         valid_diagnostic_archive_count,
         invalid_archive_count,
         evidence_available: valid_source_backed_archive_count > 0,
+        source_backed_archive_correction_count,
+        min_source_backed_empirical_p_value,
+        min_source_backed_adjusted_p_value,
+        all_source_backed_archives_negative_after_correction,
         archives,
         promoted_candidate: false,
         note: "Independent evidence status scans archived source-backed observation evaluations; it is not a claimed solution.",
@@ -10720,6 +10762,7 @@ fn summarize_evaluation_archive(path: &Path) -> IndependentEvidenceArchiveSummar
                 observed_hits: score_summary.observed_hits,
                 null_mean_best_hits: score_summary.null_mean_best_hits,
                 empirical_p_value: score_summary.empirical_p_value,
+                source_backed_adjusted_p_value: None,
                 support_status: score_summary.support_status,
                 errors: validation.errors,
                 warnings: validation.warnings,
@@ -10735,6 +10778,7 @@ fn summarize_evaluation_archive(path: &Path) -> IndependentEvidenceArchiveSummar
             observed_hits: None,
             null_mean_best_hits: None,
             empirical_p_value: None,
+            source_backed_adjusted_p_value: None,
             support_status: "invalid".to_string(),
             errors: vec![error.to_string()],
             warnings: Vec::new(),
@@ -11133,6 +11177,28 @@ fn print_independent_evidence_status(roots: Vec<PathBuf>, format: OutputFormat) 
             );
             println!("invalid archives: {}", report.invalid_archive_count);
             println!("evidence available: {}", report.evidence_available);
+            println!(
+                "source-backed correction count: {}",
+                report.source_backed_archive_correction_count
+            );
+            println!(
+                "min source-backed empirical p: {}",
+                report
+                    .min_source_backed_empirical_p_value
+                    .map(|p| format!("{p:.4}"))
+                    .unwrap_or_else(|| "n/a".to_string())
+            );
+            println!(
+                "min source-backed adjusted p: {}",
+                report
+                    .min_source_backed_adjusted_p_value
+                    .map(|p| format!("{p:.4}"))
+                    .unwrap_or_else(|| "n/a".to_string())
+            );
+            println!(
+                "all source-backed archives negative after correction: {}",
+                report.all_source_backed_archives_negative_after_correction
+            );
             println!("promoted: {}", report.promoted_candidate);
             println!("note: {}\n", report.note);
             if report.archives.is_empty() {
@@ -11141,12 +11207,14 @@ fn print_independent_evidence_status(roots: Vec<PathBuf>, format: OutputFormat) 
                 );
             } else {
                 println!(
-                    "| Directory | Kind | Sources | Source-Backed | Valid | Best Model | Hits | P | Status | Errors | Warnings |"
+                    "| Directory | Kind | Sources | Source-Backed | Valid | Best Model | Hits | P | Adjusted P | Status | Errors | Warnings |"
                 );
-                println!("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |");
+                println!(
+                    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"
+                );
                 for archive in &report.archives {
                     println!(
-                        "| `{}` | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |",
+                        "| `{}` | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} | {} |",
                         archive.directory,
                         archive.artifact_kind,
                         archive.observation_source_ids.join(", "),
@@ -11156,6 +11224,10 @@ fn print_independent_evidence_status(roots: Vec<PathBuf>, format: OutputFormat) 
                         archive.observed_hits.as_deref().unwrap_or(""),
                         archive
                             .empirical_p_value
+                            .map(|p| format!("{p:.4}"))
+                            .unwrap_or_default(),
+                        archive
+                            .source_backed_adjusted_p_value
                             .map(|p| format!("{p:.4}"))
                             .unwrap_or_default(),
                         archive.support_status,
