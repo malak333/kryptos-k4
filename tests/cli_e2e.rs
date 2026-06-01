@@ -5513,6 +5513,62 @@ fn next_evidence_gate_prints_operational_checklist() {
 }
 
 #[test]
+fn claim_verification_status_reports_quarantine_inventory() {
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .arg("claim-verification-status")
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("Claim Verification Status"))
+        .stdout(predicate::str::contains("This is not a claimed solution."))
+        .stdout(predicate::str::contains("quarantined claim sources: 6"))
+        .stdout(predicate::str::contains("claim verification archives: 3"))
+        .stdout(predicate::str::contains(
+            "Sources Without Verification Archive",
+        ))
+        .stdout(predicate::str::contains("ssrn-bonifacino-running-key-2025"))
+        .stdout(predicate::str::contains("verify-plaintext-claim"))
+        .stdout(predicate::str::contains("verify-running-key-claim"))
+        .stdout(predicate::str::contains("verify-claim-mechanism"))
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["claim-verification-status", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["quarantined_claim_source_count"], 6);
+    assert_eq!(json["claim_verification_archive_count"], 3);
+    assert_eq!(json["promoted_candidate"], false);
+    assert!(
+        json["claim_verification_command"]
+            .as_str()
+            .unwrap()
+            .contains("verify-claim-mechanism")
+    );
+    assert!(
+        json["claim_verification_archives"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|archive| {
+                archive["source_id"] == "solvekryptos-2026-claim"
+                    && archive["structural_checks_passed"] == false
+                    && archive["promoted_candidate"] == false
+                    && archive["status"] == "quarantine-structural-check-failed"
+            })
+    );
+    assert_eq!(
+        json["quarantined_claim_source_ids_without_archive"][0],
+        "ssrn-bonifacino-running-key-2025"
+    );
+}
+
+#[test]
 fn independent_evidence_status_reports_missing_and_invalid_archives() {
     let temp = tempfile::tempdir().unwrap();
 

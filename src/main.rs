@@ -1652,6 +1652,12 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
     },
+    /// Report quarantined claim sources and committed non-leaking verification archives.
+    ClaimVerificationStatus {
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Print sources eligible for scored independent position observations.
     ObservationSources {
         /// Output format.
@@ -1862,6 +1868,8 @@ struct SourceFrontierSummary {
     note: &'static str,
 }
 
+const CLAIM_VERIFICATION_COMMANDS: &str = "cargo run --locked -- verify-plaintext-claim --input <local-claim.txt> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-running-key-claim --plaintext <local-claim.txt> --key <local-key-stream.txt> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-reconciliation --input <local-claim-table.csv> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-bundle --directory <local-claim-bundle-dir> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-mechanism --directory <local-claim-bundle-dir> --source-id <unverified-solution-claim-source-id> --format json";
+
 #[derive(Debug, Serialize)]
 struct NextEvidenceGateReport {
     lane_directory: String,
@@ -1929,6 +1937,18 @@ struct ClaimVerificationArchiveStatus {
     structural_checks_passed: Option<bool>,
     promoted_candidate: bool,
     status: String,
+}
+
+#[derive(Debug, Serialize)]
+struct ClaimVerificationStatusReport {
+    quarantined_claim_source_count: usize,
+    quarantined_claim_source_ids: Vec<String>,
+    claim_verification_archive_count: usize,
+    claim_verification_archives: Vec<ClaimVerificationArchiveStatus>,
+    quarantined_claim_source_ids_without_archive: Vec<String>,
+    claim_verification_command: &'static str,
+    promoted_candidate: bool,
+    note: &'static str,
 }
 
 #[derive(Debug, Serialize)]
@@ -4059,6 +4079,7 @@ fn main() -> Result<()> {
             source_id,
             format,
         } => print_verify_claim_mechanism(directory, source_id, format)?,
+        Command::ClaimVerificationStatus { format } => print_claim_verification_status(format)?,
         Command::ObservationSources { format } => print_observation_sources(format)?,
         Command::SourceFrontier { summary, format } => print_source_frontier(summary, format)?,
         Command::ReleaseCheck { format } => print_release_check(format)?,
@@ -8464,7 +8485,7 @@ fn build_next_evidence_gate_report(directory: &Path) -> Result<NextEvidenceGateR
         claim_verification_archive_count: claim_verification_archives.len(),
         claim_verification_archives,
         quarantined_claim_source_ids_without_archive,
-        claim_verification_command: "cargo run --locked -- verify-plaintext-claim --input <local-claim.txt> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-running-key-claim --plaintext <local-claim.txt> --key <local-key-stream.txt> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-reconciliation --input <local-claim-table.csv> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-bundle --directory <local-claim-bundle-dir> --source-id <unverified-solution-claim-source-id> --format json\ncargo run --locked -- verify-claim-mechanism --directory <local-claim-bundle-dir> --source-id <unverified-solution-claim-source-id> --format json",
+        claim_verification_command: CLAIM_VERIFICATION_COMMANDS,
         valid_source_backed_archive_count: evidence_report.valid_source_backed_archive_count,
         invalid_archive_count: evidence_report.invalid_archive_count,
         all_source_backed_archives_negative,
@@ -8571,6 +8592,36 @@ fn claim_verification_archive_statuses(
             .then_with(|| left.directory.cmp(&right.directory))
     });
     Ok(archives)
+}
+
+fn build_claim_verification_status() -> Result<ClaimVerificationStatusReport> {
+    let repo_root = std::env::current_dir()?;
+    let quarantined_claim_source_ids: Vec<String> = sources()
+        .into_iter()
+        .filter(|source| source.allowed_use == "unverified-solution-claim")
+        .map(|source| source.id.to_string())
+        .collect();
+    let claim_verification_archives = claim_verification_archive_statuses(&repo_root)?;
+    let archived_source_ids: std::collections::BTreeSet<_> = claim_verification_archives
+        .iter()
+        .map(|archive| archive.source_id.as_str())
+        .collect();
+    let quarantined_claim_source_ids_without_archive = quarantined_claim_source_ids
+        .iter()
+        .filter(|source_id| !archived_source_ids.contains(source_id.as_str()))
+        .cloned()
+        .collect();
+
+    Ok(ClaimVerificationStatusReport {
+        quarantined_claim_source_count: quarantined_claim_source_ids.len(),
+        quarantined_claim_source_ids,
+        claim_verification_archive_count: claim_verification_archives.len(),
+        claim_verification_archives,
+        quarantined_claim_source_ids_without_archive,
+        claim_verification_command: CLAIM_VERIFICATION_COMMANDS,
+        promoted_candidate: false,
+        note: "Claim-verification status is a quarantine inventory only; it is not source-backed evidence or a claimed solution.",
+    })
 }
 
 fn representative_ready_lane<'a>(
@@ -16264,6 +16315,65 @@ fn print_verify_claim_mechanism(
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&verification)?),
         OutputFormat::Markdown => print_claim_mechanism_verification(&verification),
+    }
+    Ok(())
+}
+
+fn print_claim_verification_status(format: OutputFormat) -> Result<()> {
+    let report = build_claim_verification_status()?;
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&report)?),
+        OutputFormat::Markdown => {
+            println!("# Claim Verification Status\n");
+            println!("This is not a claimed solution.\n");
+            println!(
+                "quarantined claim sources: {}",
+                report.quarantined_claim_source_count
+            );
+            println!(
+                "claim verification archives: {}",
+                report.claim_verification_archive_count
+            );
+            println!("promoted: {}", report.promoted_candidate);
+            println!("note: {}\n", report.note);
+
+            println!("## Quarantined Claim Sources\n");
+            for source_id in &report.quarantined_claim_source_ids {
+                println!("- `{source_id}`");
+            }
+
+            if !report
+                .quarantined_claim_source_ids_without_archive
+                .is_empty()
+            {
+                println!("\n## Sources Without Verification Archive\n");
+                for source_id in &report.quarantined_claim_source_ids_without_archive {
+                    println!("- `{source_id}`");
+                }
+            }
+
+            if !report.claim_verification_archives.is_empty() {
+                println!("\n## Verification Archives\n");
+                println!("| Directory | Source ID | Structural Checks | Promoted | Status |");
+                println!("| --- | --- | --- | --- | --- |");
+                for archive in &report.claim_verification_archives {
+                    println!(
+                        "| `{}` | `{}` | {} | {} | {} |",
+                        archive.directory,
+                        archive.source_id,
+                        archive
+                            .structural_checks_passed
+                            .map(|passed| passed.to_string())
+                            .unwrap_or_else(|| "n/a".to_string()),
+                        archive.promoted_candidate,
+                        archive.status
+                    );
+                }
+            }
+
+            println!("\n## Safe Verifier Commands\n");
+            println!("```bash\n{}\n```", report.claim_verification_command);
+        }
     }
     Ok(())
 }

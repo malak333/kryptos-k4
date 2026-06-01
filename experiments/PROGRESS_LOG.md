@@ -3,6 +3,38 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: Focused Claim-Verification Status Added
+
+Added a focused `claim-verification-status` command for the quarantined
+solution-claim lane.
+
+Purpose:
+
+- list registered `unverified-solution-claim` source IDs
+- list committed non-leaking claim-verification archives
+- list quarantined claim sources still missing a local verification archive
+- print the safe verifier commands without printing or storing claimed
+  plaintext, key streams, or plaintext-bearing tables
+
+This does not promote any claim and does not convert claim material into
+source-backed evidence.
+
+Validation:
+
+```bash
+cargo run --locked -- claim-verification-status --format json
+```
+
+Current result:
+
+- quarantined claim sources: `6`
+- claim verification archives: `3`
+- sources still without verification archive:
+  `ssrn-bonifacino-running-key-2025`,
+  `ssrn-bonifacino-weltzeituhr-error-key-2025`, and
+  `ssrn-bonifacino-generative-running-key-2025`
+- promoted: `false`
+
 ## 2026-05-31: Stein Courtyard-Crypto Methodology Source Added
 
 Registered a quote-free methodology-context source snapshot for David Stein's
