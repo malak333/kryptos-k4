@@ -1527,6 +1527,7 @@ fn check_stopped_lanes_documented(repo_root: &Path) -> ReleaseCheck {
     let contents = fs::read_to_string(&path).unwrap_or_default();
     let lowercase_contents = contents.to_ascii_lowercase();
     let mut mismatches = Vec::new();
+    let expected_source_count_marker = format!("`{}` registered sources", sources().len());
 
     if contents.trim().is_empty() {
         mismatches.push("file is missing or empty".to_string());
@@ -1535,6 +1536,11 @@ fn check_stopped_lanes_documented(repo_root: &Path) -> ReleaseCheck {
         if !contents.contains(marker) {
             mismatches.push(format!("missing marker `{marker}`"));
         }
+    }
+    if !contents.contains(&expected_source_count_marker) {
+        mismatches.push(format!(
+            "stale source frontier count; expected marker `{expected_source_count_marker}`"
+        ));
     }
     if lowercase_contents.contains("promoted: true")
         || lowercase_contents.contains("promoted_candidate: true")
@@ -2991,6 +2997,23 @@ mod tests {
     }
 
     #[test]
+    fn release_checks_fail_when_stopped_lanes_source_count_is_stale() {
+        let temp = release_ready_temp_dir();
+        let stopped_lanes =
+            stopped_lanes_fixture().replace("`30` registered sources", "`29` registered sources");
+        fs::write(
+            temp.path().join("experiments/STOPPED_LANES.md"),
+            stopped_lanes,
+        )
+        .unwrap();
+
+        let check = check_stopped_lanes_documented(temp.path());
+        assert!(!check.passed);
+        assert!(check.detail.contains("stale source frontier count"));
+        assert!(run_release_checks(temp.path()).is_err());
+    }
+
+    #[test]
     fn release_checks_fail_when_progress_log_has_stale_inventory() {
         let temp = release_ready_temp_dir();
         fs::write(
@@ -3225,6 +3248,10 @@ all-source-backed-archives-negative flag
 
 This file records stopped release-check fixture lanes.
 It is not a solution claim.
+
+## Current Evidence Frontier
+
+Reason: the current source/evidence gates report `30` registered sources.
 
 ## Public Anchor-Derived Key-Material Lanes
 

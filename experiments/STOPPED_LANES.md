@@ -8,7 +8,7 @@ It is not a solution claim.
 
 Status: stop and replan before any new scoring.
 
-Reason: the current source/evidence gates report `28` registered sources, `2`
+Reason: the current source/evidence gates report `30` registered sources, `2`
 scored-observation eligible sources, `1` committed source-backed observation
 file, `33` valid source-backed evaluation archives, and all source-backed
 archives negative/non-significant after source-archive correction. The minimum
