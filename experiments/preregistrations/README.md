@@ -220,6 +220,14 @@ Current independent lanes:
   periods 1 through 26, using public anchors only as an exclusion mask. It
   passes `--require-unique-artifact`; its committed CIA row-boundary archive is
   negative/non-significant (`1/6`, empirical `p=0.9934`, promoted `false`).
+- `ciphertext-period-match-extended-v1.json`, a populated extended
+  ciphertext-only shifted same-letter period-match lane with committed artifact
+  `experiments/predictions/ciphertext-period-match-extended-v1.json`. The
+  artifact fixes endpoint sets from the top 9 shifted same-letter period
+  matches over periods 1 through 40, using public anchors only as an exclusion
+  mask. It passes `--require-unique-artifact`; its committed CIA row-boundary
+  archive is negative/non-significant (`1/6`, empirical `p=0.9978`, promoted
+  `false`).
 - `ciphertext-transition-prior-v1.json`, a populated ciphertext-only
   adjacent-transition lane with committed artifact
   `experiments/predictions/ciphertext-transition-prior-v1.json`. The artifact

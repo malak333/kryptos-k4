@@ -1,0 +1,250 @@
+{
+  "artifact_kind": "ciphertext-period-match-prior",
+  "hypothesis_family": "ciphertext-period-match-position-prior",
+  "source_inputs": [
+    "Public K4 ciphertext only",
+    "Public anchor positions used only as an exclusion mask for future non-anchor targets"
+  ],
+  "discovery_inputs": [
+    "Compute same-letter shifted ciphertext matches for periods 1..=40",
+    "Predeclare the 9 periods with the most shifted matches; tie-break by non-anchor endpoint coverage, then lower period",
+    "Score only non-anchor endpoints of those shifted same-letter pairs",
+    "No candidate words, routes, plaintext claims, or public-anchor additive fragments"
+  ],
+  "prediction_target": "Future source-backed non-anchor K4 position observations should be enriched in endpoints of predeclared ciphertext-only same-letter period matches before any candidate-word or public-anchor-derived tuning is performed.",
+  "max_period": 40,
+  "top_periods": 9,
+  "non_anchor_position_count": 73,
+  "non_anchor_positions_one_based": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49,
+    50,
+    51,
+    52,
+    53,
+    54,
+    55,
+    56,
+    57,
+    58,
+    59,
+    60,
+    61,
+    62,
+    63,
+    75,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84,
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,
+    91,
+    92,
+    93,
+    94,
+    95,
+    96,
+    97
+  ],
+  "period_match_set_count": 9,
+  "period_match_sets": [
+    {
+      "period": 1,
+      "shifted_match_count": 6,
+      "shifted_comparison_count": 96,
+      "endpoint_position_count": 6,
+      "positions_one_based": [
+        19,
+        20,
+        43,
+        44,
+        47,
+        48
+      ]
+    },
+    {
+      "period": 2,
+      "shifted_match_count": 4,
+      "shifted_comparison_count": 95,
+      "endpoint_position_count": 7,
+      "positions_one_based": [
+        6,
+        8,
+        36,
+        38,
+        88,
+        90,
+        92
+      ]
+    },
+    {
+      "period": 3,
+      "shifted_match_count": 4,
+      "shifted_comparison_count": 94,
+      "endpoint_position_count": 7,
+      "positions_one_based": [
+        39,
+        40,
+        42,
+        43,
+        57,
+        60,
+        61
+      ]
+    },
+    {
+      "period": 4,
+      "shifted_match_count": 5,
+      "shifted_comparison_count": 93,
+      "endpoint_position_count": 8,
+      "positions_one_based": [
+        12,
+        16,
+        18,
+        40,
+        44,
+        78,
+        88,
+        92
+      ]
+    },
+    {
+      "period": 7,
+      "shifted_match_count": 9,
+      "shifted_comparison_count": 90,
+      "endpoint_position_count": 13,
+      "positions_one_based": [
+        1,
+        8,
+        13,
+        15,
+        16,
+        20,
+        40,
+        46,
+        53,
+        77,
+        84,
+        87,
+        94
+      ]
+    },
+    {
+      "period": 10,
+      "shifted_match_count": 5,
+      "shifted_comparison_count": 87,
+      "endpoint_position_count": 7,
+      "positions_one_based": [
+        43,
+        44,
+        49,
+        59,
+        62,
+        76,
+        86
+      ]
+    },
+    {
+      "period": 16,
+      "shifted_match_count": 4,
+      "shifted_comparison_count": 81,
+      "endpoint_position_count": 7,
+      "positions_one_based": [
+        21,
+        37,
+        42,
+        59,
+        75,
+        78,
+        94
+      ]
+    },
+    {
+      "period": 28,
+      "shifted_match_count": 4,
+      "shifted_comparison_count": 69,
+      "endpoint_position_count": 7,
+      "positions_one_based": [
+        21,
+        46,
+        49,
+        56,
+        57,
+        84,
+        85
+      ]
+    },
+    {
+      "period": 38,
+      "shifted_match_count": 5,
+      "shifted_comparison_count": 59,
+      "endpoint_position_count": 8,
+      "positions_one_based": [
+        16,
+        21,
+        37,
+        54,
+        58,
+        59,
+        75,
+        96
+      ]
+    }
+  ],
+  "controls": [
+    "source-backed observation file required before scoring",
+    "public anchor positions excluded from period-match endpoint target positions",
+    "seeded same-size non-anchor position-shuffle baseline required",
+    "best-of-selected-period null control required",
+    "multiple-comparison context across all preregistered independent lanes required before interpretation",
+    "promotion blocked unless future independent observations beat controls without post-hoc retuning"
+  ],
+  "public_anchor_fragments_used_for_discovery": false,
+  "public_anchor_fragments_used_as_primary_evidence": false,
+  "promoted_candidate": false,
+  "note": "Ciphertext period-match prior is a planning artifact for future independent observations; it is not a claimed solution, key, route, plaintext, or promotion criterion."
+}

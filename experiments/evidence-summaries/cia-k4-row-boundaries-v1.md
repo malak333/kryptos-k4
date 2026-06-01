@@ -74,6 +74,10 @@ This is not a claimed solution.
   `experiments/preregistrations/ciphertext-period-match-v1.json`
 - Ciphertext period-match artifact:
   `experiments/predictions/ciphertext-period-match-v1.json`
+- Ciphertext extended period-match preregistration:
+  `experiments/preregistrations/ciphertext-period-match-extended-v1.json`
+- Ciphertext extended period-match artifact:
+  `experiments/predictions/ciphertext-period-match-extended-v1.json`
 - Ciphertext adjacent-contrast preregistration:
   `experiments/preregistrations/ciphertext-adjacent-contrast-prior-v1.json`
 - Ciphertext adjacent-contrast artifact:
@@ -239,6 +243,12 @@ cargo run --locked -- validate-ciphertext-repeat-distance-observations \
 cargo run --locked -- validate-ciphertext-period-match-observations \
   --artifact experiments/predictions/ciphertext-period-match-v1.json \
   --preregistration experiments/preregistrations/ciphertext-period-match-v1.json \
+  --input experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --format json
+
+cargo run --locked -- validate-ciphertext-period-match-observations \
+  --artifact experiments/predictions/ciphertext-period-match-extended-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-period-match-extended-v1.json \
   --input experiments/position-observations/cia-k4-row-boundaries-v1.json \
   --format json
 
@@ -484,6 +494,15 @@ cargo run --locked -- evaluate-ciphertext-period-match \
   --output-dir results/ciphertext-period-match-observations/cia-k4-row-boundaries-v1 \
   --format json
 
+cargo run --locked -- evaluate-ciphertext-period-match \
+  --artifact experiments/predictions/ciphertext-period-match-extended-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-period-match-extended-v1.json \
+  --positions-file experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/ciphertext-period-match-observations/cia-k4-row-boundaries-extended-v1 \
+  --format json
+
 cargo run --locked -- evaluate-ciphertext-adjacent-contrast \
   --artifact experiments/predictions/ciphertext-adjacent-contrast-prior-v1.json \
   --preregistration experiments/preregistrations/ciphertext-adjacent-contrast-prior-v1.json \
@@ -675,6 +694,10 @@ cargo run --locked -- validate-evaluation-archive \
   --format json
 
 cargo run --locked -- validate-evaluation-archive \
+  --input results/ciphertext-period-match-observations/cia-k4-row-boundaries-extended-v1 \
+  --format json
+
+cargo run --locked -- validate-evaluation-archive \
   --input results/ciphertext-adjacent-contrast-observations/cia-k4-row-boundaries-v1 \
   --format json
 
@@ -756,6 +779,7 @@ locally.
 | Ciphertext rarity | rare ciphertext-letter positions | 2/6 | 1.64 | 1.05 | 0.5282 | false |
 | Ciphertext repeat-distance | ciphertext repeat-distance positions | 2/6 | 1.64 | 1.05 | 0.5273 | false |
 | Ciphertext period-match | ciphertext shifted same-letter period 2 endpoints | 1/6 | 1.61 | 0.73 | 0.9733 | false |
+| Ciphertext extended period-match | ciphertext shifted same-letter period 2 endpoints | 1/6 | 1.84 | 0.69 | 0.9978 | false |
 | Ciphertext adjacent-contrast | ciphertext adjacent-contrast positions | 2/6 | 1.64 | 1.05 | 0.5259 | false |
 | Ciphertext transition | adjacent transition-pressure positions | 0/6 | 1.63 | 1.05 | 1.0000 | false |
 | Ciphertext skip-transition | skip-transition positions | 0/6 | 1.64 | 1.05 | 1.0000 | false |
@@ -788,6 +812,7 @@ seeded same-size null `p=0.3558`; this also remains negative/non-significant.
 Interpretation: the source-backed row-boundary observation does not support the
 committed period, period-3, period-5, period-14, spacing, mirror, grid-row, grid-column, grid-compass-axis, grid-width-7-row, grid-4x25-row, Tableau/HILL, ciphertext-prior,
 ciphertext-hotspot, ciphertext-rarity, ciphertext-repeat-distance,
+ciphertext-period-match, extended ciphertext-period-match,
 ciphertext-adjacent-contrast,
 ciphertext-transition,
 ciphertext-skip-transition, ciphertext-turning-point,

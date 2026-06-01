@@ -241,6 +241,7 @@ grid-layout same-size position-set `p=0.5600`, Tableau/HILL row/column
 concentration `p=0.3311`, ciphertext-prior `p=0.6845`,
 ciphertext-hotspot `p=1.0000`, ciphertext-rarity `p=0.5282`,
 ciphertext-period-match `p=0.9733`,
+ciphertext-period-match-extended `p=0.9978`,
 ciphertext-transition `p=1.0000`, ciphertext-skip-transition `p=1.0000`,
 ciphertext-turning-point `p=0.5247`, ciphertext-window-balance `p=1.0000`,
 ciphertext-residue-balance `p=0.4803`,
