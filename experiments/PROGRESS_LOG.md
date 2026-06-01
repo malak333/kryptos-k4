@@ -3,6 +3,38 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: Claim-Verification Status Guidance Added
+
+Extended `claim-verification-status` with per-source verification guidance for
+the quarantined solution-claim lane.
+
+Purpose:
+
+- keep the existing quarantine inventory and non-leaking archive status
+- show whether each registered claim source already has a verification archive
+- list the local verifier commands appropriate to each claim family
+- list required temporary local inputs without committing or printing plaintext,
+  key streams, plaintext-bearing reconciliation tables, or mechanism bundles
+
+This is still a verifier-routing aid only. It does not promote any claim and
+does not convert claim material into source-backed evidence.
+
+Validation:
+
+```bash
+cargo run --locked -- claim-verification-status --format json
+cargo run --locked -- release-check --format json
+cargo test --locked
+```
+
+Current result:
+
+- quarantined claim sources: `6`
+- claim verification archives: `3`
+- unarchived SSRN claim sources now carry explicit local input/verifier
+  guidance
+- promoted: `false`
+
 ## 2026-05-31: Weltzeituhr Error-Key SSRN Metadata Corrected
 
 Corrected the registered SSRN source metadata for

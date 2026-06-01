@@ -1948,12 +1948,25 @@ struct ClaimVerificationArchiveStatus {
 }
 
 #[derive(Debug, Serialize)]
+struct ClaimVerificationSourceDetail {
+    source_id: String,
+    label: String,
+    url: String,
+    archive_url: Option<String>,
+    has_verification_archive: bool,
+    recommended_verifiers: Vec<&'static str>,
+    required_local_inputs: Vec<&'static str>,
+    boundary: &'static str,
+}
+
+#[derive(Debug, Serialize)]
 struct ClaimVerificationStatusReport {
     quarantined_claim_source_count: usize,
     quarantined_claim_source_ids: Vec<String>,
     claim_verification_archive_count: usize,
     claim_verification_archives: Vec<ClaimVerificationArchiveStatus>,
     quarantined_claim_source_ids_without_archive: Vec<String>,
+    quarantined_claim_source_details: Vec<ClaimVerificationSourceDetail>,
     claim_verification_command: &'static str,
     promoted_candidate: bool,
     note: &'static str,
@@ -8625,9 +8638,12 @@ fn source_backed_archive_correction_metrics(
 
 fn build_claim_verification_status() -> Result<ClaimVerificationStatusReport> {
     let repo_root = std::env::current_dir()?;
-    let quarantined_claim_source_ids: Vec<String> = sources()
+    let quarantined_claim_sources: Vec<_> = sources()
         .into_iter()
         .filter(|source| source.allowed_use == "unverified-solution-claim")
+        .collect();
+    let quarantined_claim_source_ids: Vec<String> = quarantined_claim_sources
+        .iter()
         .map(|source| source.id.to_string())
         .collect();
     let claim_verification_archives = claim_verification_archive_statuses(&repo_root)?;
@@ -8640,6 +8656,23 @@ fn build_claim_verification_status() -> Result<ClaimVerificationStatusReport> {
         .filter(|source_id| !archived_source_ids.contains(source_id.as_str()))
         .cloned()
         .collect();
+    let quarantined_claim_source_details = quarantined_claim_sources
+        .iter()
+        .map(|source| {
+            let (recommended_verifiers, required_local_inputs) =
+                claim_verification_guidance(source.id);
+            ClaimVerificationSourceDetail {
+                source_id: source.id.to_string(),
+                label: source.label.to_string(),
+                url: source.url.to_string(),
+                archive_url: source.archive_url.map(str::to_string),
+                has_verification_archive: archived_source_ids.contains(source.id),
+                recommended_verifiers,
+                required_local_inputs,
+                boundary: "Use temporary local claim files only; do not commit plaintext, key streams, reconciliation tables with plaintext columns, or mechanism bundles containing plaintext.",
+            }
+        })
+        .collect();
 
     Ok(ClaimVerificationStatusReport {
         quarantined_claim_source_count: quarantined_claim_source_ids.len(),
@@ -8647,10 +8680,72 @@ fn build_claim_verification_status() -> Result<ClaimVerificationStatusReport> {
         claim_verification_archive_count: claim_verification_archives.len(),
         claim_verification_archives,
         quarantined_claim_source_ids_without_archive,
+        quarantined_claim_source_details,
         claim_verification_command: CLAIM_VERIFICATION_COMMANDS,
         promoted_candidate: false,
         note: "Claim-verification status is a quarantine inventory only; it is not source-backed evidence or a claimed solution.",
     })
+}
+
+fn claim_verification_guidance(source_id: &str) -> (Vec<&'static str>, Vec<&'static str>) {
+    match source_id {
+        "solvekryptos-2026-claim" => (
+            vec![
+                "verify-claim-bundle",
+                "verify-claim-mechanism",
+                "verify-claim-reconciliation",
+                "verify-plaintext-claim",
+            ],
+            vec![
+                "local canonical bundle directory",
+                "local mechanism directory",
+                "local reconciliation table",
+                "local plaintext file",
+            ],
+        ),
+        "dearcipher-k4-claim-2026" | "prlog-bishop-k4-plaintext-2020" => {
+            (vec!["verify-plaintext-claim"], vec!["local plaintext file"])
+        }
+        "ssrn-bonifacino-running-key-2025" => (
+            vec![
+                "verify-running-key-claim",
+                "verify-claim-reconciliation",
+                "verify-plaintext-claim",
+            ],
+            vec![
+                "local plaintext file",
+                "local key stream file",
+                "local reconciliation table if published",
+            ],
+        ),
+        "ssrn-bonifacino-weltzeituhr-error-key-2025" => (
+            vec![
+                "verify-running-key-claim",
+                "verify-claim-mechanism",
+                "verify-claim-reconciliation",
+            ],
+            vec![
+                "local plaintext file",
+                "local key stream file",
+                "local mechanism directory if published",
+                "local reconciliation table if published",
+            ],
+        ),
+        "ssrn-bonifacino-generative-running-key-2025" => (
+            vec![
+                "verify-claim-mechanism",
+                "verify-running-key-claim",
+                "verify-claim-reconciliation",
+            ],
+            vec![
+                "local plaintext file",
+                "local key stream file",
+                "local generative mechanism directory",
+                "local reconciliation table if published",
+            ],
+        ),
+        _ => (vec!["verify-plaintext-claim"], vec!["local plaintext file"]),
+    }
 }
 
 fn representative_ready_lane<'a>(
@@ -16379,6 +16474,29 @@ fn print_claim_verification_status(format: OutputFormat) -> Result<()> {
                 for source_id in &report.quarantined_claim_source_ids_without_archive {
                     println!("- `{source_id}`");
                 }
+            }
+
+            println!("\n## Verification Detail\n");
+            println!(
+                "| Source ID | Archived | Recommended Verifiers | Required Local Inputs | Boundary |"
+            );
+            println!("| --- | --- | --- | --- | --- |");
+            for detail in &report.quarantined_claim_source_details {
+                let recommended_verifiers = detail
+                    .recommended_verifiers
+                    .iter()
+                    .map(|verifier| format!("`{verifier}`"))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+                let required_local_inputs = detail.required_local_inputs.join("; ");
+                println!(
+                    "| `{}` | {} | {} | {} | {} |",
+                    detail.source_id,
+                    detail.has_verification_archive,
+                    recommended_verifiers,
+                    required_local_inputs,
+                    detail.boundary
+                );
             }
 
             if !report.claim_verification_archives.is_empty() {

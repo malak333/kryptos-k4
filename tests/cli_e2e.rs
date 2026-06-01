@@ -5571,7 +5571,12 @@ fn claim_verification_status_reports_quarantine_inventory() {
         .stdout(predicate::str::contains(
             "Sources Without Verification Archive",
         ))
+        .stdout(predicate::str::contains("Verification Detail"))
         .stdout(predicate::str::contains("ssrn-bonifacino-running-key-2025"))
+        .stdout(predicate::str::contains("local key stream file"))
+        .stdout(predicate::str::contains(
+            "Use temporary local claim files only",
+        ))
         .stdout(predicate::str::contains("verify-plaintext-claim"))
         .stdout(predicate::str::contains("verify-running-key-claim"))
         .stdout(predicate::str::contains("verify-claim-mechanism"))
@@ -5611,6 +5616,34 @@ fn claim_verification_status_reports_quarantine_inventory() {
         json["quarantined_claim_source_ids_without_archive"][0],
         "ssrn-bonifacino-running-key-2025"
     );
+    let source_details = json["quarantined_claim_source_details"].as_array().unwrap();
+    assert!(source_details.iter().any(|detail| {
+        detail["source_id"] == "ssrn-bonifacino-running-key-2025"
+            && detail["has_verification_archive"] == false
+            && detail["recommended_verifiers"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|verifier| verifier == "verify-running-key-claim")
+            && detail["required_local_inputs"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|input| input == "local key stream file")
+            && detail["boundary"]
+                .as_str()
+                .unwrap()
+                .contains("do not commit plaintext")
+    }));
+    assert!(source_details.iter().any(|detail| {
+        detail["source_id"] == "dearcipher-k4-claim-2026"
+            && detail["has_verification_archive"] == true
+            && detail["recommended_verifiers"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .any(|verifier| verifier == "verify-plaintext-claim")
+    }));
 }
 
 #[test]
