@@ -183,6 +183,17 @@ pub fn sources() -> Vec<Source> {
             use_note: "Academic cryptodiagnosis and Gromark-family hypothesis.",
         },
         Source {
+            id: "stein-courtyard-crypto",
+            label: "David Stein courtyard-crypto article mirror",
+            url: "https://www.elonka.com/kryptos/mirrors/daw/steinarticle.html",
+            archive_url: Some("sources/archives/stein-courtyard-crypto-2026-05-31.md"),
+            accessed_at: "2026-05-31",
+            publication_date: Some("1999"),
+            source_type: "reference",
+            allowed_use: "methodology-context",
+            use_note: "Public mirror of David Stein's CIA solved-section methodology article; useful for historical method boundaries, not scored K4 observations.",
+        },
+        Source {
             id: "scientific-american-2025",
             label: "Scientific American 2025 final clues report",
             url: "https://www.scientificamerican.com/article/cia-kryptos-puzzle-creator-releases-final-clues/",

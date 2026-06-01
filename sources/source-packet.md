@@ -11,6 +11,7 @@ This packet records the public sources used by the CLI data model. It intentiona
 | `cia-sculpture` | primary | https://www.cia.gov/legacy/headquarters/kryptos-sculpture/ | `sources/archives/cia-sculpture-2026-05-27.md` | Public sculpture/chart/K4 context | Records public sculpture context, the chart/table component, and CIA's 97-character K4 framing. |
 | `elonka-kryptos` | reference | https://www.elonka.com/kryptos/ | `sources/archives/elonka-kryptos-2026-05-27.md` | Public ciphertext and public clue summary | Provides public K4 ciphertext transcription and public clue-position summary used for anchors, but not independent scored evidence. |
 | `histocrypt-2021-bean` | academic | https://ecp.ep.liu.se/index.php/histocrypt/article/view/153 | `sources/archives/histocrypt-2021-bean-2026-05-27.md` | Cryptodiagnosis context only | Supplies published cryptodiagnosis context for one-to-one and Gromark-like hypothesis tests without adding scoreable non-anchor observations. |
+| `stein-courtyard-crypto` | reference | https://www.elonka.com/kryptos/mirrors/daw/steinarticle.html | `sources/archives/stein-courtyard-crypto-2026-05-31.md` | Methodology context only | Records David Stein's solved-section methodology context from a public mirror while excluding K4 plaintext, key material, routes, and scored observation positions. |
 | `scientific-american-2025` | major-reporting | https://www.scientificamerican.com/article/cia-kryptos-puzzle-creator-releases-final-clues/ | `sources/archives/scientific-american-2025-final-clues-2026-05-27.md` | Public clue and Berlin World Clock context | Summarizes public 2025 clue context, including Egypt/Berlin Wall context, the Berlin World Clock clarification, and K5 parallel-position context without treating it as scored K4 evidence. |
 | `scientific-american-2026-kryptos-cracked` | major-reporting | https://www.scientificamerican.com/article/how-the-cias-kryptos-sculpture-gave-up-its-final-secret/ | `sources/archives/scientific-american-2026-kryptos-cracked-2026-05-31.md` | Archive-discovery context only | Records public reporting that the K4 answer was found in Smithsonian archive material, while preserving the boundary that the public still lacks a reproducible method, key stream, route, or scoreable non-anchor observation. |
 | `ap-2025-auction` | major-reporting | https://www.ap.org/news-highlights/spotlights/2025/kryptos-final-code-remains-unsolved-the-cia-sculptures-creator-is-auctioning-the-solution/ | `sources/archives/ap-2025-auction-2026-05-27.md` | Archive-sale context only | Records the public auction context, the archive-discovery versus decipherment boundary, and K5/archive-material context without copying or scoring archive-discovered plaintext. |
@@ -55,6 +56,9 @@ This packet records the public sources used by the CLI data model. It intentiona
 - Do not score methodology-context open questions, including the HILL tableau
   question, unless a separate preregistration defines the target and controls
   before scoring.
+- Do not convert solved-section methodology context from Stein's article into
+  K4 evidence unless a separate preregistration defines the K4 target and
+  source-backed observation controls before scoring.
 - Do not convert live-search dashboards, claimed reject counts, or independent
   project phase labels into scored evidence. Treat them as methodology context
   unless a separate source-backed observation file defines exact non-anchor

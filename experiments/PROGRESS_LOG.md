@@ -3,6 +3,44 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: Stein Courtyard-Crypto Methodology Source Added
+
+Registered a quote-free methodology-context source snapshot for David Stein's
+publicly mirrored CIA article on solving the earlier Kryptos sections:
+
+- source id: `stein-courtyard-crypto`
+- archive: `sources/archives/stein-courtyard-crypto-2026-05-31.md`
+- source packet: `sources/source-packet.md`
+- boundary: solved-section method history only; no K4 plaintext, key material,
+  route, scored non-anchor position set, or candidate promotion
+
+Validation:
+
+```bash
+cargo run --locked -- validate-source-archive \
+  --source-id stein-courtyard-crypto \
+  --input sources/archives/stein-courtyard-crypto-2026-05-31.md \
+  --format json
+
+cargo run --locked -- source-frontier --summary --format json
+```
+
+Result:
+
+- source archive valid: `true`
+- source count: `29`
+- scored-observation eligible sources: `2`
+- context-only sources: `21`
+- valid source-backed archives: `33`
+- promoted: `false`
+
+Practical consequence: Stein's solved-section methods are now documented as
+methodology context for future preregistration rationale and stopped-lane
+boundaries, not as independent K4 evidence. The current source-frontier action
+is unchanged: future scored progress still requires a new eligible
+`public-facts-only` source, a scored-position update to an eligible archive, or
+a genuinely distinct prediction artifact.
+
 ## 2026-05-31: CT-Perturbation Lane Scored And Rejected
 
 Added and scored a source-grounded CT-perturbation lane:
