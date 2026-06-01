@@ -3,6 +3,78 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-06-01: Narrow Period-Match Lane Scored Negative
+
+Added `ciphertext-period-match-narrow-v1`, a distinct ciphertext-only
+shifted same-letter period-match lane that fixes the top 3 periods over the
+existing period range `1..=20` before any source-backed observation scoring.
+The lane uses public anchors only as an exclusion mask and does not use
+known-plaintext fragments, candidate words, routes, or prior source-backed
+observation hits for discovery.
+
+Committed files:
+
+- `experiments/preregistrations/ciphertext-period-match-narrow-v1.json`
+- `experiments/predictions/ciphertext-period-match-narrow-v1.json`
+- `results/ciphertext-period-match-observations/cia-k4-row-boundaries-narrow-v1/`
+
+Commands:
+
+```bash
+cargo run --locked -- ciphertext-period-match-prior \
+  --top-periods 3 \
+  --format json > experiments/predictions/ciphertext-period-match-narrow-v1.json
+
+cargo run --locked -- validate-preregistration \
+  --input experiments/preregistrations/ciphertext-period-match-narrow-v1.json \
+  --format json
+
+cargo run --locked -- validate-prediction-artifact \
+  --preregistration experiments/preregistrations/ciphertext-period-match-narrow-v1.json \
+  --require-unique-artifact \
+  --format json
+
+cargo run --locked -- evaluate-ciphertext-period-match \
+  --artifact experiments/predictions/ciphertext-period-match-narrow-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-period-match-narrow-v1.json \
+  --positions-file experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/ciphertext-period-match-observations/cia-k4-row-boundaries-narrow-v1 \
+  --format json
+
+cargo run --locked -- validate-evaluation-archive \
+  --input results/ciphertext-period-match-observations/cia-k4-row-boundaries-narrow-v1 \
+  --format json
+```
+
+Result:
+
+- selected periods: `1`, `4`, `7`
+- best selected period: `7`
+- matching period-match positions: `1`
+- observed hits: `1/6`
+- null mean: `1.4145`
+- empirical p-value: `0.9051`
+- promoted: `false`
+- archive valid: `true`
+- valid source-backed archives: `37`
+- source-backed archive correction count: `37`
+- minimum source-backed adjusted p-value: `1.0`
+- all source-backed archives negative after correction: `true`
+
+Current inventory markers:
+
+- independent lanes: `83`
+- ready for source-backed observations: `83`
+- prediction artifacts: `83`
+- unique ready prediction targets: `41`
+- ciphertext-period-match-position-prior-family lanes: `3`
+- ciphertext-period-match-position-prior-family unique ready targets: `3`
+
+This is negative/non-significant source-backed evidence. It does not promote a
+K4 solution, key, route, plaintext, or candidate.
+
 ## 2026-06-01: Mid Adjacent-Contrast Lane Scored Negative
 
 Added `ciphertext-adjacent-contrast-mid-v1`, a distinct ciphertext-only
