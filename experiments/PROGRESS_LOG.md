@@ -33,6 +33,8 @@ cargo test --locked
 Current boundary:
 
 - source IDs must have `allowed_use` = `unverified-solution-claim`
+- `claim-verification-status` links each claim source to its exact
+  `claim-input-plan` command
 - non-claim sources are rejected by `claim-input-plan`
 - generated plans are quarantine checklists only, not source-backed evidence
 - promoted: `false`

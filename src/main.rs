@@ -1968,6 +1968,7 @@ struct ClaimVerificationSourceDetail {
     has_verification_archive: bool,
     recommended_verifiers: Vec<&'static str>,
     required_local_inputs: Vec<&'static str>,
+    claim_input_plan_command: String,
     boundary: &'static str,
 }
 
@@ -8711,6 +8712,10 @@ fn build_claim_verification_status() -> Result<ClaimVerificationStatusReport> {
                 has_verification_archive: archived_source_ids.contains(source.id),
                 recommended_verifiers,
                 required_local_inputs,
+                claim_input_plan_command: format!(
+                    "cargo run --locked -- claim-input-plan --source-id {} --format json",
+                    source.id
+                ),
                 boundary: "Use temporary local claim files only; do not commit plaintext, key streams, reconciliation tables with plaintext columns, or mechanism bundles containing plaintext.",
             }
         })
@@ -16636,9 +16641,9 @@ fn print_claim_verification_status(format: OutputFormat) -> Result<()> {
 
             println!("\n## Verification Detail\n");
             println!(
-                "| Source ID | Archived | Recommended Verifiers | Required Local Inputs | Boundary |"
+                "| Source ID | Archived | Recommended Verifiers | Required Local Inputs | Input Plan | Boundary |"
             );
-            println!("| --- | --- | --- | --- | --- |");
+            println!("| --- | --- | --- | --- | --- | --- |");
             for detail in &report.quarantined_claim_source_details {
                 let recommended_verifiers = detail
                     .recommended_verifiers
@@ -16648,11 +16653,12 @@ fn print_claim_verification_status(format: OutputFormat) -> Result<()> {
                     .join(", ");
                 let required_local_inputs = detail.required_local_inputs.join("; ");
                 println!(
-                    "| `{}` | {} | {} | {} | {} |",
+                    "| `{}` | {} | {} | {} | `{}` | {} |",
                     detail.source_id,
                     detail.has_verification_archive,
                     recommended_verifiers,
                     required_local_inputs,
+                    detail.claim_input_plan_command,
                     detail.boundary
                 );
             }

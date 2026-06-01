@@ -5736,6 +5736,7 @@ fn claim_verification_status_reports_quarantine_inventory() {
         .stdout(predicate::str::contains("Verification Detail"))
         .stdout(predicate::str::contains("ssrn-bonifacino-running-key-2025"))
         .stdout(predicate::str::contains("local key stream file"))
+        .stdout(predicate::str::contains("claim-input-plan --source-id"))
         .stdout(predicate::str::contains(
             "Use temporary local claim files only",
         ))
@@ -5792,6 +5793,10 @@ fn claim_verification_status_reports_quarantine_inventory() {
                 .unwrap()
                 .iter()
                 .any(|input| input == "local key stream file")
+            && detail["claim_input_plan_command"]
+                .as_str()
+                .unwrap()
+                .contains("claim-input-plan --source-id ssrn-bonifacino-running-key-2025")
             && detail["boundary"]
                 .as_str()
                 .unwrap()
