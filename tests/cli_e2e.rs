@@ -5044,14 +5044,16 @@ fn next_evidence_gate_prints_operational_checklist() {
             .unwrap()
             .contains("verify-claim-mechanism")
     );
-    assert_eq!(json["claim_verification_archive_count"], 7);
+    assert_eq!(json["claim_verification_archive_count"], 8);
     assert!(
         json["claim_verification_archives"]
             .as_array()
             .unwrap()
             .iter()
             .any(|archive| {
-                archive["source_id"] == "solvekryptos-2026-claim"
+                archive["directory"]
+                    == "results/claim-verifications/solvekryptos-current-v13-20260601"
+                    && archive["source_id"] == "solvekryptos-2026-claim"
                     && archive["structural_checks_passed"] == false
                     && archive["promoted_candidate"] == false
                     && archive["status"] == "quarantine-structural-check-failed"
@@ -5784,7 +5786,10 @@ fn claim_verification_status_reports_quarantine_inventory() {
         .stdout(predicate::str::contains("Claim Verification Status"))
         .stdout(predicate::str::contains("This is not a claimed solution."))
         .stdout(predicate::str::contains("quarantined claim sources: 7"))
-        .stdout(predicate::str::contains("claim verification archives: 7"))
+        .stdout(predicate::str::contains("claim verification archives: 8"))
+        .stdout(predicate::str::contains(
+            "results/claim-verifications/solvekryptos-current-v13-20260601",
+        ))
         .stdout(predicate::str::contains("Sources Without Verification Archive").not())
         .stdout(predicate::str::contains("Verification Detail"))
         .stdout(predicate::str::contains("ssrn-bonifacino-running-key-2025"))
@@ -5808,7 +5813,7 @@ fn claim_verification_status_reports_quarantine_inventory() {
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
     assert_eq!(json["quarantined_claim_source_count"], 7);
-    assert_eq!(json["claim_verification_archive_count"], 7);
+    assert_eq!(json["claim_verification_archive_count"], 8);
     assert_eq!(json["promoted_candidate"], false);
     assert!(
         json["claim_verification_command"]
@@ -5822,7 +5827,9 @@ fn claim_verification_status_reports_quarantine_inventory() {
             .unwrap()
             .iter()
             .any(|archive| {
-                archive["source_id"] == "solvekryptos-2026-claim"
+                archive["directory"]
+                    == "results/claim-verifications/solvekryptos-current-v13-20260601"
+                    && archive["source_id"] == "solvekryptos-2026-claim"
                     && archive["structural_checks_passed"] == false
                     && archive["promoted_candidate"] == false
                     && archive["status"] == "quarantine-structural-check-failed"

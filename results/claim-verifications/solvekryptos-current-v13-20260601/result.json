@@ -1,0 +1,84 @@
+{
+  "source_id": "solvekryptos-2026-claim",
+  "bundle_directory": "/private/tmp/solvekryptos-current-bundle/solvekryptos-canonical-bundle",
+  "required_files_checked": 8,
+  "expected_required_files": 8,
+  "f_table_checked_count": 26,
+  "f_table_match_count": 26,
+  "helper_card_checked_count": 26,
+  "helper_card_match_count": 26,
+  "z1_z2_delta_checked_count": 26,
+  "z1_z2_delta_match_count": 26,
+  "control_card_checked_count": 9,
+  "control_card_match_count": 9,
+  "z2_effective_key_matches": true,
+  "z2_r_grid_checked_count": 31,
+  "z2_r_grid_match_count": 31,
+  "z2_final_grid_checked_count": 31,
+  "z2_final_grid_match_count": 31,
+  "y_template_rule_checked_count": 31,
+  "y_template_rule_match_count": 27,
+  "y_template_gate_checked_count": 31,
+  "y_template_gate_match_count": 27,
+  "y_template_mismatches": [
+    {
+      "y_position_one_based": 23,
+      "k4_position_one_based": 27,
+      "expected_gate_value": 1,
+      "observed_gate_value": 0
+    },
+    {
+      "y_position_one_based": 27,
+      "k4_position_one_based": 31,
+      "expected_gate_value": 0,
+      "observed_gate_value": 1
+    },
+    {
+      "y_position_one_based": 28,
+      "k4_position_one_based": 32,
+      "expected_gate_value": 1,
+      "observed_gate_value": 0
+    },
+    {
+      "y_position_one_based": 29,
+      "k4_position_one_based": 33,
+      "expected_gate_value": 1,
+      "observed_gate_value": 0
+    }
+  ],
+  "y_template_declared_zero_positions_one_based": [
+    1,
+    2,
+    8,
+    11,
+    16,
+    17,
+    23,
+    24,
+    28,
+    29,
+    30
+  ],
+  "y_template_rule_zero_positions_one_based": [
+    1,
+    2,
+    8,
+    11,
+    16,
+    17,
+    24,
+    27,
+    30
+  ],
+  "y_template_declared_not_in_rule_zero_positions_one_based": [
+    23,
+    28,
+    29
+  ],
+  "y_template_rule_not_in_declared_zero_positions_one_based": [
+    27
+  ],
+  "structural_checks_passed": false,
+  "promoted_candidate": false,
+  "note": "Claim-mechanism verification checks published f/helper-card relationships, control-card consistency, Z2 footer handoff, Y-pass gate-template consistency, and the Z2 helper path into the r/R grids without printing, storing, or promoting claimed plaintext."
+}

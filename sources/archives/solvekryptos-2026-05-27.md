@@ -3,6 +3,7 @@
 source_id: `solvekryptos-2026-claim`
 source_url: https://solvekryptos.com/
 reviewed_at: 2026-05-27
+refresh_reviewed_at: 2026-06-01
 archive_kind: quote-free local review snapshot
 non_scorable_reason: Quarantined solution claims are not source-backed observation evidence and must only be screened by temporary local verifiers.
 promoted_candidate: false
@@ -89,6 +90,21 @@ artifact.
   It stores only structural counts, Y/K4 position numbers, expected/observed
   gate values, and the non-promotion boundary; it does not store claimed
   plaintext, key material, or plaintext-bearing reconciliation rows.
+- On 2026-06-01, the public resources page labeled the canonical bundle
+  download as v13. The current ZIP was downloaded only into `/private/tmp` and
+  rechecked with `verify-claim-bundle` and `verify-claim-mechanism`.
+- The current v13 bundle-level check passed the same non-leaking structural
+  compatibility checks: required files present, repo ciphertext matched,
+  plaintext length matched, reconciliation checks passed, `R`/`r` grids and
+  gate map matched, Z2 handoff matched, and all four public anchors matched.
+- The current v13 mechanism check still failed with 27/31 Y-pass template rule
+  and gate-map matches, the same four Y-position disagreements, and the same
+  declared-vs-rule zero-position disagreement.
+- The current v13 non-plaintext mechanism verifier result is archived at
+  `results/claim-verifications/solvekryptos-current-v13-20260601/`.
+  It stores only structural counts, Y/K4 position numbers, expected/observed
+  gate values, and the non-promotion boundary; it does not store claimed
+  plaintext, key material, or plaintext-bearing reconciliation rows.
 - The temporary bundle remains outside the repository. The repository still
   does not store the claimed plaintext or any plaintext-bearing reconciliation
   table.
@@ -117,6 +133,9 @@ artifact.
   from its printed rule. It still does not verify an on-site physical reading
   of the helper stream, validate source provenance for that stream, or promote
   the claim.
+- The 2026-06-01 current v13 recheck preserves that rejection: the bundle-level
+  reconciliation is internally consistent, but the stricter mechanism check
+  still fails the same Y-pass template/gate rows.
 - Any future use must implement an independent mechanical verifier that checks
   the claimed mechanism without adding release-facing full plaintext or
   accepting the claim as evidence by assertion.

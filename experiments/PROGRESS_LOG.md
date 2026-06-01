@@ -1118,6 +1118,28 @@ is explicitly preregistered and validated before scoring. This is a coordinate
 guardrail only; it does not reopen the stopped W-delimiter lane, and it does not
 promote plaintext, key material, route, or mechanism evidence.
 
+## 2026-06-01: SolveKryptos Current v13 Mechanism Rechecked
+
+Downloaded the current public SolveKryptos canonical bundle only to
+`/private/tmp` after the public resources page labeled the bundle v13, then
+ran the existing non-leaking quarantine verifiers.
+
+- source: `solvekryptos-2026-claim`
+- archived mechanism result:
+  `results/claim-verifications/solvekryptos-current-v13-20260601/`
+- `verify-claim-bundle`: passed internal bundle/reconciliation checks
+- `verify-claim-mechanism`: failed
+- Y-template rule checks: `27/31`
+- Y-template gate-map checks: `27/31`
+- failed Y positions: `23,27,28,29`
+- corresponding K4 positions: `27,31,32,33`
+
+Practical consequence: the current v13 bundle remains internally compatible at
+the reconciliation/file level, but the stricter mechanism verifier still
+rejects full helper-machinery consistency. No plaintext, key stream,
+plaintext-bearing reconciliation table, or mechanism bundle was committed, and
+the claim remains quarantined and unpromoted.
+
 ## 2026-05-31: KryptosBot Findings Source Registered
 
 Added `kryptosbot-findings-2026` as a quote-free local source snapshot for the
