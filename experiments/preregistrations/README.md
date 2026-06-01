@@ -199,6 +199,13 @@ Current independent lanes:
   through future source-backed non-anchor observations and
   `validate-ciphertext-period-match-observations` then
   `evaluate-ciphertext-period-match` with seeded controls.
+- `ciphertext-period-match-wide-v1.json`, a populated wider ciphertext-only
+  shifted same-letter period-match lane with committed artifact
+  `experiments/predictions/ciphertext-period-match-wide-v1.json`. The artifact
+  fixes endpoint sets from the top 7 shifted same-letter period matches over
+  periods 1 through 26, using public anchors only as an exclusion mask. It
+  passes `--require-unique-artifact`; its committed CIA row-boundary archive is
+  negative/non-significant (`1/6`, empirical `p=0.9934`, promoted `false`).
 - `ciphertext-transition-prior-v1.json`, a populated ciphertext-only
   adjacent-transition lane with committed artifact
   `experiments/predictions/ciphertext-transition-prior-v1.json`. The artifact

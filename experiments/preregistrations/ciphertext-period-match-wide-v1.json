@@ -1,0 +1,30 @@
+{
+  "id": "ciphertext-period-match-wide-v1",
+  "title": "Ciphertext-only wide shifted period-match endpoint prior",
+  "hypothesis_family": "ciphertext-period-match-position-prior",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "Tests whether independently observed non-anchor positions fall on endpoints of a wider ciphertext-only same-letter shifted period-match rule. This is not another public-anchor mining pass because discovery uses only raw K4 ciphertext self-coincidence structure, with public anchors used only as an exclusion mask. It differs from ciphertext-period-match-v1 by fixing periods 1 through 26 and the top 7 shifted-match periods before any observation scoring.",
+  "prediction_target": "Future source-backed non-anchor K4 position observations should be enriched in endpoints of the predeclared wide shifted same-letter period-match sets.",
+  "prediction_artifact": "experiments/predictions/ciphertext-period-match-wide-v1.json",
+  "ciphertext_period_match_max_period": 26,
+  "ciphertext_period_match_top_periods": 7,
+  "discovery_inputs": [
+    "Public K4 ciphertext self-coincidence profile for periods 1..=26.",
+    "Deterministic top-period selection by shifted same-letter match count and non-anchor endpoint coverage.",
+    "No candidate words, routes, plaintext claims, or additive fragment scoring."
+  ],
+  "evaluation_inputs": [
+    "Validated source-backed non-anchor K4 position observations from an eligible source archive.",
+    "Seeded same-size non-anchor position-shuffle null over the best selected period-match set."
+  ],
+  "controls": [
+    "Validate the deterministic prediction artifact before scoring.",
+    "Validate source-backed observation file and source review before scoring.",
+    "Exclude public anchor positions from target endpoint sets.",
+    "Use seeded same-size non-anchor position-shuffle null controls.",
+    "Interpret only with multiple-comparison context across all independent lanes."
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

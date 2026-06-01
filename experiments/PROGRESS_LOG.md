@@ -3816,6 +3816,74 @@ target is fixed before scoring.
 
 ## 2026-05-28 - Ciphertext Hotspot Archive Scored
 
+## 2026-06-01: Wide Ciphertext Period-Match Lane Scored Negative
+
+Added `ciphertext-period-match-wide-v1`, a wider ciphertext-only shifted
+same-letter period-match endpoint prior. The preregistration fixes periods
+`1..=26` and the top 7 selected periods before scoring. Discovery uses only K4
+ciphertext self-coincidence structure, with public anchors used only as an
+exclusion mask and no candidate words, routes, key material, plaintext claims,
+or public-anchor additive fragment scoring.
+
+Committed files:
+
+- `experiments/preregistrations/ciphertext-period-match-wide-v1.json`
+- `experiments/predictions/ciphertext-period-match-wide-v1.json`
+- `results/ciphertext-period-match-observations/cia-k4-row-boundaries-wide-v1/`
+
+Validator/tooling update:
+
+- `validate-prediction-artifact` now reads preregistered
+  `ciphertext_period_match_max_period` and
+  `ciphertext_period_match_top_periods` fields instead of validating only the
+  default period-match artifact shape.
+- `validate-evaluation-archive` applies the same preregistered period-match
+  parameters to archived source-backed evaluations.
+
+Commands run:
+
+```bash
+cargo run --locked -- ciphertext-period-match-prior \
+  --max-period 26 \
+  --top-periods 7 \
+  --format json > experiments/predictions/ciphertext-period-match-wide-v1.json
+
+cargo run --locked -- validate-preregistration \
+  --input experiments/preregistrations/ciphertext-period-match-wide-v1.json \
+  --format json
+
+cargo run --locked -- validate-prediction-artifact \
+  --preregistration experiments/preregistrations/ciphertext-period-match-wide-v1.json \
+  --require-unique-artifact \
+  --format json
+
+cargo run --locked -- evaluate-ciphertext-period-match \
+  --artifact experiments/predictions/ciphertext-period-match-wide-v1.json \
+  --preregistration experiments/preregistrations/ciphertext-period-match-wide-v1.json \
+  --positions-file experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/ciphertext-period-match-observations/cia-k4-row-boundaries-wide-v1 \
+  --format json
+
+cargo run --locked -- validate-evaluation-archive \
+  --input results/ciphertext-period-match-observations/cia-k4-row-boundaries-wide-v1 \
+  --format json
+```
+
+Result: best selected period `2`, `1/6` hits, null mean `1.7441`, null sd
+`0.6998`, empirical `p=0.9934`, promoted `false`. This is
+negative/non-significant source-backed evidence, not a K4 solution.
+
+Current inventory markers:
+
+- independent lanes: `81`
+- ready for source-backed observations: `81`
+- prediction artifacts: `81`
+- unique ready prediction targets: `39`
+- ciphertext-period-match-position-prior-family lanes: `2`
+- ciphertext-period-match-position-prior-family unique ready targets: `2`
+
 The previously preregistered `ciphertext-hotspot-prior-v1` lane was scored
 against the committed CIA row-boundary observation so the archive inventory no
 longer has a ready-but-unscored ciphertext-only target.

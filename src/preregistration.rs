@@ -1,9 +1,9 @@
 use crate::{
     CiphertextResidueBalancePrior, GridLayoutEdgeAxis, PeriodPredictionPlanSet,
     build_all_period_prediction_plans, build_all_spacing_prediction_plans,
-    build_ciphertext_adjacent_contrast_prior, build_ciphertext_residue_balance_prior,
-    build_ciphertext_window_balance_prior, build_committed_ciphertext_ct_perturbation_prior,
-    build_committed_ciphertext_hotspot_prior, build_committed_ciphertext_period_match_prior,
+    build_ciphertext_adjacent_contrast_prior, build_ciphertext_period_match_prior,
+    build_ciphertext_residue_balance_prior, build_ciphertext_window_balance_prior,
+    build_committed_ciphertext_ct_perturbation_prior, build_committed_ciphertext_hotspot_prior,
     build_committed_ciphertext_rarity_prior, build_committed_ciphertext_repeat_distance_prior,
     build_committed_ciphertext_residue_balance_prior,
     build_committed_ciphertext_skip_transition_prior,
@@ -48,6 +48,10 @@ pub struct LanePreregistration {
     pub ciphertext_window_balance_widths: Option<Vec<usize>>,
     #[serde(default)]
     pub ciphertext_adjacent_contrast_top: Option<usize>,
+    #[serde(default)]
+    pub ciphertext_period_match_max_period: Option<usize>,
+    #[serde(default)]
+    pub ciphertext_period_match_top_periods: Option<usize>,
     pub discovery_inputs: Vec<String>,
     pub evaluation_inputs: Vec<String>,
     pub controls: Vec<String>,
@@ -864,9 +868,14 @@ pub fn validate_prediction_artifact_with_repo_root(
         Some("ciphertext-turning-point") => Some(serde_json::to_value(
             build_committed_ciphertext_turning_point_prior(),
         )?),
-        Some("ciphertext-period-match") => Some(serde_json::to_value(
-            build_committed_ciphertext_period_match_prior(),
-        )?),
+        Some("ciphertext-period-match") => {
+            let max_period = registration.ciphertext_period_match_max_period.unwrap_or(20);
+            let top_periods = registration.ciphertext_period_match_top_periods.unwrap_or(5);
+            Some(serde_json::to_value(build_ciphertext_period_match_prior(
+                max_period,
+                top_periods,
+            ))?)
+        }
         Some("ciphertext-stehle-regularity") => Some(serde_json::to_value(
             build_committed_ciphertext_stehle_regularity_prior(),
         )?),
@@ -1360,6 +1369,8 @@ mod tests {
             ciphertext_window_balance_top: None,
             ciphertext_window_balance_widths: None,
             ciphertext_adjacent_contrast_top: None,
+            ciphertext_period_match_max_period: None,
+            ciphertext_period_match_top_periods: None,
             discovery_inputs: vec!["registered structural model".to_string()],
             evaluation_inputs: vec!["withheld non-anchor prediction target".to_string()],
             controls: vec!["seeded shuffle baseline".to_string()],
@@ -1635,6 +1646,44 @@ mod tests {
 
         assert!(validation.valid, "{:?}", validation.errors);
         assert_eq!(validation.artifact_kind, "ciphertext-residue-balance");
+        assert_eq!(validation.artifact_period_count, Some(7));
+    }
+
+    #[test]
+    fn prediction_artifact_validation_accepts_custom_period_match_parameters() {
+        let temp = TempDir::new().unwrap();
+        let preregistration_dir = temp.path().join("experiments/preregistrations");
+        let prediction_dir = temp.path().join("experiments/predictions");
+        std::fs::create_dir_all(&preregistration_dir).unwrap();
+        std::fs::create_dir_all(&prediction_dir).unwrap();
+
+        let artifact_path = "experiments/predictions/period-match-wide.json";
+        std::fs::write(
+            temp.path().join(artifact_path),
+            serde_json::to_string_pretty(&build_ciphertext_period_match_prior(26, 7)).unwrap(),
+        )
+        .unwrap();
+
+        let mut registration = valid_registration();
+        registration.id = "period-match-wide".to_string();
+        registration.hypothesis_family = "ciphertext-period-match-position-prior".to_string();
+        registration.prediction_artifact = Some(artifact_path.to_string());
+        registration.ciphertext_period_match_max_period = Some(26);
+        registration.ciphertext_period_match_top_periods = Some(7);
+        std::fs::write(
+            preregistration_dir.join("period-match-wide.json"),
+            serde_json::to_string_pretty(&registration).unwrap(),
+        )
+        .unwrap();
+
+        let validation = validate_prediction_artifact_with_repo_root(
+            &preregistration_dir.join("period-match-wide.json"),
+            temp.path(),
+        )
+        .unwrap();
+
+        assert!(validation.valid, "{:?}", validation.errors);
+        assert_eq!(validation.artifact_kind, "ciphertext-period-match");
         assert_eq!(validation.artifact_period_count, Some(7));
     }
 
