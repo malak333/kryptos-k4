@@ -1657,6 +1657,9 @@ enum Command {
     },
     /// Report quarantined claim sources and committed non-leaking verification archives.
     ClaimVerificationStatus {
+        /// Print only the high-signal quarantine summary.
+        #[arg(long)]
+        summary: bool,
         /// Output format.
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
@@ -2024,6 +2027,22 @@ struct ClaimVerificationStatusReport {
     quarantined_claim_source_ids_without_archive: Vec<String>,
     quarantined_claim_source_details: Vec<ClaimVerificationSourceDetail>,
     claim_verification_command: &'static str,
+    promoted_candidate: bool,
+    note: &'static str,
+}
+
+#[derive(Debug, Serialize)]
+struct ClaimVerificationStatusSummary {
+    summary: bool,
+    quarantined_claim_source_count: usize,
+    claim_verification_archive_count: usize,
+    unverified_claim_source_count: usize,
+    quarantined_claim_source_ids_without_archive: Vec<String>,
+    failed_verification_archive_count: usize,
+    failed_verification_source_ids: Vec<String>,
+    next_action_kind: &'static str,
+    recommended_next_step: String,
+    claim_input_plan_commands: Vec<String>,
     promoted_candidate: bool,
     note: &'static str,
 }
@@ -4188,7 +4207,9 @@ fn main() -> Result<()> {
             source_id,
             format,
         } => print_verify_claim_mechanism(directory, source_id, format)?,
-        Command::ClaimVerificationStatus { format } => print_claim_verification_status(format)?,
+        Command::ClaimVerificationStatus { summary, format } => {
+            print_claim_verification_status(summary, format)?
+        }
         Command::ClaimInputPlan {
             source_id,
             local_root,
@@ -8782,6 +8803,53 @@ fn build_claim_verification_status() -> Result<ClaimVerificationStatusReport> {
         promoted_candidate: false,
         note: "Claim-verification status is a quarantine inventory only; it is not source-backed evidence or a claimed solution.",
     })
+}
+
+fn summarize_claim_verification_status(
+    report: &ClaimVerificationStatusReport,
+) -> ClaimVerificationStatusSummary {
+    let failed_verification_source_ids = report
+        .claim_verification_archives
+        .iter()
+        .filter(|archive| archive.structural_checks_passed == Some(false))
+        .map(|archive| archive.source_id.clone())
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .collect::<Vec<_>>();
+    let claim_input_plan_commands = report
+        .quarantined_claim_source_details
+        .iter()
+        .filter(|detail| !detail.has_verification_archive)
+        .map(|detail| detail.claim_input_plan_command.clone())
+        .collect::<Vec<_>>();
+    let unverified_claim_source_count = report.quarantined_claim_source_ids_without_archive.len();
+    let recommended_next_step = if unverified_claim_source_count > 0 {
+        format!(
+            "Stage temporary local claim inputs outside the repo for {} unverified claim source(s), then run the listed claim-input-plan and verifier commands without committing plaintext-bearing material.",
+            unverified_claim_source_count
+        )
+    } else if !failed_verification_source_ids.is_empty() {
+        "Inspect failed quarantine verification archives before treating any claim as a follow-up lead; do not promote failed or plaintext-bearing material.".to_string()
+    } else {
+        "All registered claim sources have quarantine archives; future claim work requires new external claim material or stronger independent verification.".to_string()
+    };
+
+    ClaimVerificationStatusSummary {
+        summary: true,
+        quarantined_claim_source_count: report.quarantined_claim_source_count,
+        claim_verification_archive_count: report.claim_verification_archive_count,
+        unverified_claim_source_count,
+        quarantined_claim_source_ids_without_archive: report
+            .quarantined_claim_source_ids_without_archive
+            .clone(),
+        failed_verification_archive_count: failed_verification_source_ids.len(),
+        failed_verification_source_ids,
+        next_action_kind: "local-claim-inputs-required",
+        recommended_next_step,
+        claim_input_plan_commands,
+        promoted_candidate: report.promoted_candidate,
+        note: report.note,
+    }
 }
 
 fn claim_verification_guidance(source_id: &str) -> (Vec<&'static str>, Vec<&'static str>) {
@@ -16904,11 +16972,74 @@ fn print_verify_claim_mechanism(
     Ok(())
 }
 
-fn print_claim_verification_status(format: OutputFormat) -> Result<()> {
+fn print_claim_verification_status(summary: bool, format: OutputFormat) -> Result<()> {
     let report = build_claim_verification_status()?;
+    let summary_report = summarize_claim_verification_status(&report);
     match format {
-        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&report)?),
+        OutputFormat::Json => {
+            if summary {
+                println!("{}", serde_json::to_string_pretty(&summary_report)?);
+            } else {
+                println!("{}", serde_json::to_string_pretty(&report)?);
+            }
+        }
         OutputFormat::Markdown => {
+            if summary {
+                println!("# Claim Verification Status Summary\n");
+                println!("This is not a claimed solution.\n");
+                println!(
+                    "quarantined claim sources: {}",
+                    summary_report.quarantined_claim_source_count
+                );
+                println!(
+                    "claim verification archives: {}",
+                    summary_report.claim_verification_archive_count
+                );
+                println!(
+                    "unverified claim sources: {}",
+                    summary_report.unverified_claim_source_count
+                );
+                println!(
+                    "failed verification archives: {}",
+                    summary_report.failed_verification_archive_count
+                );
+                println!("next action: {}", summary_report.next_action_kind);
+                println!("promoted: {}", summary_report.promoted_candidate);
+                println!("note: {}\n", summary_report.note);
+
+                if !summary_report
+                    .quarantined_claim_source_ids_without_archive
+                    .is_empty()
+                {
+                    println!("## Sources Without Verification Archive\n");
+                    for source_id in &summary_report.quarantined_claim_source_ids_without_archive {
+                        println!("- `{source_id}`");
+                    }
+                    println!();
+                }
+
+                if !summary_report.failed_verification_source_ids.is_empty() {
+                    println!("## Failed Verification Sources\n");
+                    for source_id in &summary_report.failed_verification_source_ids {
+                        println!("- `{source_id}`");
+                    }
+                    println!();
+                }
+
+                println!("## Recommended Next Step\n");
+                println!("{}\n", summary_report.recommended_next_step);
+
+                if !summary_report.claim_input_plan_commands.is_empty() {
+                    println!("## Claim Input Plan Commands\n");
+                    println!("```bash");
+                    for command in &summary_report.claim_input_plan_commands {
+                        println!("{command}");
+                    }
+                    println!("```");
+                }
+                return Ok(());
+            }
+
             println!("# Claim Verification Status\n");
             println!("This is not a claimed solution.\n");
             println!(

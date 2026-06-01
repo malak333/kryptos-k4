@@ -5879,6 +5879,55 @@ fn claim_verification_status_reports_quarantine_inventory() {
                 .iter()
                 .any(|verifier| verifier == "verify-plaintext-claim")
     }));
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["claim-verification-status", "--summary"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains(
+            "Claim Verification Status Summary",
+        ))
+        .stdout(predicate::str::contains("unverified claim sources: 4"))
+        .stdout(predicate::str::contains("failed verification archives: 1"))
+        .stdout(predicate::str::contains("local-claim-inputs-required"))
+        .stdout(predicate::str::contains(
+            "ssrn-bonifacino-full-derivation-2025",
+        ))
+        .stdout(predicate::str::contains("solvekryptos-2026-claim"))
+        .stdout(predicate::str::contains(
+            "claim-input-plan --source-id ssrn-bonifacino-running-key-2025",
+        ))
+        .stdout(predicate::str::contains("Verification Detail").not())
+        .stdout(predicate::str::contains("promoted: false"));
+
+    let summary_output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["claim-verification-status", "--summary", "--format", "json"])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let summary_json: Value = serde_json::from_slice(&summary_output).unwrap();
+    assert_eq!(summary_json["summary"], true);
+    assert_eq!(summary_json["unverified_claim_source_count"], 4);
+    assert_eq!(summary_json["failed_verification_archive_count"], 1);
+    assert_eq!(
+        summary_json["next_action_kind"],
+        "local-claim-inputs-required"
+    );
+    assert!(
+        summary_json["claim_input_plan_commands"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|command| command
+                .as_str()
+                .unwrap()
+                .contains("ssrn-bonifacino-generative-running-key-2025"))
+    );
+    assert_eq!(summary_json["promoted_candidate"], false);
 }
 
 #[test]
