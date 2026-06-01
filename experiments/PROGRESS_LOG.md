@@ -51,6 +51,54 @@ Result:
 This is a pre-score prediction artifact only. It does not promote a K4
 solution, key, route, plaintext, or candidate.
 
+## 2026-06-01: 4-by-25 Segmented Grid Row-Edge Lane Scored Negative
+
+Scored the already-preregistered
+`non-anchor-position-grid-4x25-row-v1` artifact against the validated CIA
+row-boundary source-backed observation. This was allowed by the evidence gate
+because the artifact is a distinct preregistered prediction target; it does not
+reuse the row-boundary observation to construct the 4-by-25 grid rule.
+
+Commands:
+
+```bash
+cargo run --locked -- validate-grid-observations \
+  --artifact experiments/predictions/non-anchor-position-grid-4x25-row-v1.json \
+  --preregistration experiments/preregistrations/non-anchor-position-grid-4x25-row-v1.json \
+  --input experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --format json
+
+cargo run --locked -- evaluate-grid-prediction \
+  --artifact experiments/predictions/non-anchor-position-grid-4x25-row-v1.json \
+  --preregistration experiments/preregistrations/non-anchor-position-grid-4x25-row-v1.json \
+  --positions-file experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --edge-axis row \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/grid-observations/cia-k4-row-boundaries-4x25-row-v1 \
+  --format json
+
+cargo run --locked -- validate-evaluation-archive \
+  --input results/grid-observations/cia-k4-row-boundaries-4x25-row-v1 \
+  --format json
+```
+
+Result:
+
+- observed row-edge hits: `1/6`
+- matching position: `1`
+- null mean: `0.4106`
+- empirical p-value: `0.3558`
+- archive valid: `true`
+- valid source-backed archives: `39`
+- source-backed archive correction count: `39`
+- minimum source-backed adjusted p-value: `1.0`
+- all source-backed archives negative after correction: `true`
+- promoted: `false`
+
+This is negative/non-significant source-backed evidence. It does not promote a
+K4 solution, key, route, plaintext, or candidate.
+
 ## 2026-06-01: Sanborn-Papers Archive Context Refreshed
 
 Refreshed the quote-free local snapshot for

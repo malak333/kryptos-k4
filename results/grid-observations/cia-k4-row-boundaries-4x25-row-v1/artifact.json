@@ -1,0 +1,525 @@
+{
+  "row_count": 4,
+  "column_count": 25,
+  "padded_position_count": 100,
+  "pad_positions_one_based": [
+    98,
+    99,
+    100
+  ],
+  "non_anchor_position_count": 73,
+  "anchor_position_count": 24,
+  "scored_edge_axis": "row",
+  "row_edge_positions_one_based": [
+    1,
+    50,
+    51,
+    75,
+    76
+  ],
+  "column_edge_positions_one_based": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    76,
+    77,
+    78,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84,
+    85,
+    86,
+    87,
+    88,
+    89,
+    90,
+    91,
+    92,
+    93,
+    94,
+    95,
+    96,
+    97
+  ],
+  "rows": [
+    {
+      "row_one_based": 1,
+      "start_position_one_based": 1,
+      "end_position_one_based": 25,
+      "non_anchor_positions_one_based": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21
+      ],
+      "row_edge_positions_one_based": [
+        1
+      ]
+    },
+    {
+      "row_one_based": 2,
+      "start_position_one_based": 26,
+      "end_position_one_based": 50,
+      "non_anchor_positions_one_based": [
+        35,
+        36,
+        37,
+        38,
+        39,
+        40,
+        41,
+        42,
+        43,
+        44,
+        45,
+        46,
+        47,
+        48,
+        49,
+        50
+      ],
+      "row_edge_positions_one_based": [
+        50
+      ]
+    },
+    {
+      "row_one_based": 3,
+      "start_position_one_based": 51,
+      "end_position_one_based": 75,
+      "non_anchor_positions_one_based": [
+        51,
+        52,
+        53,
+        54,
+        55,
+        56,
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        75
+      ],
+      "row_edge_positions_one_based": [
+        51,
+        75
+      ]
+    },
+    {
+      "row_one_based": 4,
+      "start_position_one_based": 76,
+      "end_position_one_based": 100,
+      "non_anchor_positions_one_based": [
+        76,
+        77,
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97
+      ],
+      "row_edge_positions_one_based": [
+        76
+      ]
+    }
+  ],
+  "columns": [
+    {
+      "column_one_based": 1,
+      "top_position_one_based": 1,
+      "bottom_position_one_based": 76,
+      "non_anchor_positions_one_based": [
+        1,
+        51,
+        76
+      ],
+      "column_edge_positions_one_based": [
+        1,
+        76
+      ]
+    },
+    {
+      "column_one_based": 2,
+      "top_position_one_based": 2,
+      "bottom_position_one_based": 77,
+      "non_anchor_positions_one_based": [
+        2,
+        52,
+        77
+      ],
+      "column_edge_positions_one_based": [
+        2,
+        77
+      ]
+    },
+    {
+      "column_one_based": 3,
+      "top_position_one_based": 3,
+      "bottom_position_one_based": 78,
+      "non_anchor_positions_one_based": [
+        3,
+        53,
+        78
+      ],
+      "column_edge_positions_one_based": [
+        3,
+        78
+      ]
+    },
+    {
+      "column_one_based": 4,
+      "top_position_one_based": 4,
+      "bottom_position_one_based": 79,
+      "non_anchor_positions_one_based": [
+        4,
+        54,
+        79
+      ],
+      "column_edge_positions_one_based": [
+        4,
+        79
+      ]
+    },
+    {
+      "column_one_based": 5,
+      "top_position_one_based": 5,
+      "bottom_position_one_based": 80,
+      "non_anchor_positions_one_based": [
+        5,
+        55,
+        80
+      ],
+      "column_edge_positions_one_based": [
+        5,
+        80
+      ]
+    },
+    {
+      "column_one_based": 6,
+      "top_position_one_based": 6,
+      "bottom_position_one_based": 81,
+      "non_anchor_positions_one_based": [
+        6,
+        56,
+        81
+      ],
+      "column_edge_positions_one_based": [
+        6,
+        81
+      ]
+    },
+    {
+      "column_one_based": 7,
+      "top_position_one_based": 7,
+      "bottom_position_one_based": 82,
+      "non_anchor_positions_one_based": [
+        7,
+        57,
+        82
+      ],
+      "column_edge_positions_one_based": [
+        7,
+        82
+      ]
+    },
+    {
+      "column_one_based": 8,
+      "top_position_one_based": 8,
+      "bottom_position_one_based": 83,
+      "non_anchor_positions_one_based": [
+        8,
+        58,
+        83
+      ],
+      "column_edge_positions_one_based": [
+        8,
+        83
+      ]
+    },
+    {
+      "column_one_based": 9,
+      "top_position_one_based": 9,
+      "bottom_position_one_based": 84,
+      "non_anchor_positions_one_based": [
+        9,
+        59,
+        84
+      ],
+      "column_edge_positions_one_based": [
+        9,
+        84
+      ]
+    },
+    {
+      "column_one_based": 10,
+      "top_position_one_based": 10,
+      "bottom_position_one_based": 85,
+      "non_anchor_positions_one_based": [
+        10,
+        35,
+        60,
+        85
+      ],
+      "column_edge_positions_one_based": [
+        10,
+        85
+      ]
+    },
+    {
+      "column_one_based": 11,
+      "top_position_one_based": 11,
+      "bottom_position_one_based": 86,
+      "non_anchor_positions_one_based": [
+        11,
+        36,
+        61,
+        86
+      ],
+      "column_edge_positions_one_based": [
+        11,
+        86
+      ]
+    },
+    {
+      "column_one_based": 12,
+      "top_position_one_based": 12,
+      "bottom_position_one_based": 87,
+      "non_anchor_positions_one_based": [
+        12,
+        37,
+        62,
+        87
+      ],
+      "column_edge_positions_one_based": [
+        12,
+        87
+      ]
+    },
+    {
+      "column_one_based": 13,
+      "top_position_one_based": 13,
+      "bottom_position_one_based": 88,
+      "non_anchor_positions_one_based": [
+        13,
+        38,
+        63,
+        88
+      ],
+      "column_edge_positions_one_based": [
+        13,
+        88
+      ]
+    },
+    {
+      "column_one_based": 14,
+      "top_position_one_based": 14,
+      "bottom_position_one_based": 89,
+      "non_anchor_positions_one_based": [
+        14,
+        39,
+        89
+      ],
+      "column_edge_positions_one_based": [
+        14,
+        89
+      ]
+    },
+    {
+      "column_one_based": 15,
+      "top_position_one_based": 15,
+      "bottom_position_one_based": 90,
+      "non_anchor_positions_one_based": [
+        15,
+        40,
+        90
+      ],
+      "column_edge_positions_one_based": [
+        15,
+        90
+      ]
+    },
+    {
+      "column_one_based": 16,
+      "top_position_one_based": 16,
+      "bottom_position_one_based": 91,
+      "non_anchor_positions_one_based": [
+        16,
+        41,
+        91
+      ],
+      "column_edge_positions_one_based": [
+        16,
+        91
+      ]
+    },
+    {
+      "column_one_based": 17,
+      "top_position_one_based": 17,
+      "bottom_position_one_based": 92,
+      "non_anchor_positions_one_based": [
+        17,
+        42,
+        92
+      ],
+      "column_edge_positions_one_based": [
+        17,
+        92
+      ]
+    },
+    {
+      "column_one_based": 18,
+      "top_position_one_based": 18,
+      "bottom_position_one_based": 93,
+      "non_anchor_positions_one_based": [
+        18,
+        43,
+        93
+      ],
+      "column_edge_positions_one_based": [
+        18,
+        93
+      ]
+    },
+    {
+      "column_one_based": 19,
+      "top_position_one_based": 19,
+      "bottom_position_one_based": 94,
+      "non_anchor_positions_one_based": [
+        19,
+        44,
+        94
+      ],
+      "column_edge_positions_one_based": [
+        19,
+        94
+      ]
+    },
+    {
+      "column_one_based": 20,
+      "top_position_one_based": 20,
+      "bottom_position_one_based": 95,
+      "non_anchor_positions_one_based": [
+        20,
+        45,
+        95
+      ],
+      "column_edge_positions_one_based": [
+        20,
+        95
+      ]
+    },
+    {
+      "column_one_based": 21,
+      "top_position_one_based": 21,
+      "bottom_position_one_based": 96,
+      "non_anchor_positions_one_based": [
+        21,
+        46,
+        96
+      ],
+      "column_edge_positions_one_based": [
+        21,
+        96
+      ]
+    },
+    {
+      "column_one_based": 22,
+      "top_position_one_based": 22,
+      "bottom_position_one_based": 97,
+      "non_anchor_positions_one_based": [
+        47,
+        97
+      ],
+      "column_edge_positions_one_based": [
+        97
+      ]
+    },
+    {
+      "column_one_based": 23,
+      "top_position_one_based": 23,
+      "bottom_position_one_based": 98,
+      "non_anchor_positions_one_based": [
+        48
+      ],
+      "column_edge_positions_one_based": []
+    },
+    {
+      "column_one_based": 24,
+      "top_position_one_based": 24,
+      "bottom_position_one_based": 99,
+      "non_anchor_positions_one_based": [
+        49
+      ],
+      "column_edge_positions_one_based": []
+    },
+    {
+      "column_one_based": 25,
+      "top_position_one_based": 25,
+      "bottom_position_one_based": 100,
+      "non_anchor_positions_one_based": [
+        50,
+        75
+      ],
+      "column_edge_positions_one_based": []
+    }
+  ],
+  "promoted_candidate": false,
+  "source_inputs": "K4 ciphertext length, public anchor positions for exclusion only, and context-only padded-grid rationale fixed before scoring as 4 rows by 25 columns; no fragment values, candidate words, routes, or public anchor-derived key fragments are scored.",
+  "prediction_rule": "Place K4 positions into a predeclared 4-by-25 padded grid with positions 98, 99, 100 as padding. The scored target is enrichment at non-anchor row-edge positions; the orthogonal edge axis remains pre-score metadata only, without retuning the layout after observations are seen.",
+  "note": "Grid-layout prediction plan only; this emits predeclared source-context structural targets for future independent evidence and is not a decryption claim."
+}

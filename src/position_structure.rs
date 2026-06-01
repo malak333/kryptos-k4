@@ -1208,7 +1208,7 @@ pub fn evaluate_grid_layout_prediction_positions_with_axis(
         iterations,
         seed,
         promoted_candidate: false,
-        note: "Grid-layout prediction evaluation scores independent non-anchor positions against a committed 7-by-14 edge-axis artifact with a seeded same-size position-set null; it is not a claimed solution.",
+        note: "Grid-layout prediction evaluation scores independent non-anchor positions against a committed grid edge-axis artifact with a seeded same-size position-set null; it is not a claimed solution.",
     })
 }
 

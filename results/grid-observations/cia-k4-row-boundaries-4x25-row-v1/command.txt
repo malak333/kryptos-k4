@@ -1,0 +1,1 @@
+evaluate-grid-prediction --artifact artifact.json --preregistration preregistration.json --positions-file observations.json --edge-axis row --iterations 100000 --seed 67

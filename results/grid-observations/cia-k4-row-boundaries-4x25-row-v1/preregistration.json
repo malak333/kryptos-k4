@@ -1,0 +1,36 @@
+{
+  "id": "non-anchor-position-grid-4x25-row-v1",
+  "title": "Non-anchor 4-by-25 segmented grid row-edge prediction",
+  "hypothesis_family": "position-grid-layout-prediction",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [
+    "kryptosbot-sanborn-papers-2026"
+  ],
+  "rationale": "This lane predeclares a 4-by-25 padded row-edge target before any future source-backed observation is scored. The registered Sanborn-papers archive is archive-context-only, so it can justify a bounded segmented-cipher structural rule but cannot supply scored positions. This is not another public-anchor mining pass because discovery uses only K4 ciphertext length, the fixed public-anchor exclusion mask, and the source-context 4-by-4 segmented-cipher/overlay rationale; it does not use candidate material, route results, additive fragment values, prior row-boundary evidence, or public-fragment match counts.",
+  "prediction_target": "Future independently sourced non-anchor K4 position observations should be enriched at predeclared row-edge positions in a 4-by-25 row-major padded grid if a segmented overlay or null-mask structure is relevant.",
+  "prediction_artifact": "experiments/predictions/non-anchor-position-grid-4x25-row-v1.json",
+  "grid_edge_axis": "row",
+  "grid_row_count": 4,
+  "grid_column_count": 25,
+  "discovery_inputs": [
+    "K4 ciphertext length of 97 characters",
+    "Known-clue occupied positions for exclusion only",
+    "Registered archive-context source kryptosbot-sanborn-papers-2026 for bounded overlay, segmented-cipher, and multi-element puzzle context",
+    "Predeclared 4-by-25 row-major padded grid and row-edge rule emitted before observing or scoring future source-backed positions"
+  ],
+  "evaluation_inputs": [
+    "Future source-documented non-anchor K4 position observations",
+    "Observation files that declare eligible source IDs, one-based positions, per-position notes, and rationale before evaluation",
+    "Source-backed position sets not used to construct or tune the 4-by-25 grid-layout artifact"
+  ],
+  "controls": [
+    "seeded null over sampled non-anchor position sets of the same size",
+    "validate-grid-observations and evaluate-grid-prediction required before interpreting source-backed observations",
+    "the evaluator must use --edge-axis row with this preregistration before a source-backed archive can be treated as evidence",
+    "validate-prediction-artifact --require-unique-artifact must pass before treating this as a distinct prediction target",
+    "multiple-comparison correction if interpreted beside period, spacing, mirror, 7-by-14 grid, 14-by-7 grid, Tableau/HILL, or ciphertext-prior families",
+    "archive-context-only sources cannot directly provide scored observation positions"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

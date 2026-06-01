@@ -13172,7 +13172,7 @@ fn validate_grid_observations(
         valid: errors.is_empty(),
         errors,
         promoted_candidate: false,
-        note: "Grid observation validation checks source-backed non-anchor positions before 7-by-14 edge-axis scoring; it is not a claimed solution.",
+        note: "Grid observation validation checks source-backed non-anchor positions before preregistered grid edge-axis scoring; it is not a claimed solution.",
     })
 }
 

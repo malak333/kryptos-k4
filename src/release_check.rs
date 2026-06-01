@@ -747,7 +747,7 @@ fn check_evidence_summaries_present(repo_root: &Path) -> ReleaseCheck {
         passed: mismatches.is_empty(),
         detail: if mismatches.is_empty() {
             format!(
-                "Committed source-backed observations have evidence summaries with archive command references and negative period/spacing/mirror/grid-row/grid-column/grid-compass-axis/tableau-HILL/ciphertext-prior/ciphertext-hotspot/ciphertext-rarity/ciphertext-repeat-distance/ciphertext-adjacent-contrast/ciphertext-transition/ciphertext-skip-transition/ciphertext-turning-point/ciphertext-window-balance/ciphertext-ct-perturbation/ciphertext-stehle-regularity/ciphertext-residue-balance result metrics. path={}; checked={}",
+                "Committed source-backed observations have evidence summaries with archive command references and negative period/spacing/mirror/grid-row/grid-column/grid-compass-axis/grid-width-7-row/grid-4x25-row/tableau-HILL/ciphertext-prior/ciphertext-hotspot/ciphertext-rarity/ciphertext-repeat-distance/ciphertext-adjacent-contrast/ciphertext-transition/ciphertext-skip-transition/ciphertext-turning-point/ciphertext-window-balance/ciphertext-ct-perturbation/ciphertext-stehle-regularity/ciphertext-residue-balance result metrics. path={}; checked={}",
                 repo_root.join("experiments/evidence-summaries").display(),
                 observations.len()
             )

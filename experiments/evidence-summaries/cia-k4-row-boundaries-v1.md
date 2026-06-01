@@ -420,6 +420,16 @@ cargo run --locked -- evaluate-grid-prediction \
   --output-dir results/grid-observations/cia-k4-row-boundaries-width7-row-v1 \
   --format json
 
+cargo run --locked -- evaluate-grid-prediction \
+  --artifact experiments/predictions/non-anchor-position-grid-4x25-row-v1.json \
+  --preregistration experiments/preregistrations/non-anchor-position-grid-4x25-row-v1.json \
+  --positions-file experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --edge-axis row \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/grid-observations/cia-k4-row-boundaries-4x25-row-v1 \
+  --format json
+
 cargo run --locked -- evaluate-tableau-hill-prediction \
   --artifact experiments/predictions/tableau-hill-v1.json \
   --preregistration experiments/preregistrations/tableau-hill-v1.json \
@@ -739,6 +749,7 @@ locally.
 | Grid column | 7x14 column edges | 4/6 | 2.22 | 1.14 | 0.1303 | false |
 | Grid compass-axis | 7x14 compass-axis positions | 1/6 | 1.97 | 1.11 | 0.9166 | false |
 | Grid width-7 row | 14x7 row edges | 2/6 | 1.73 | 1.07 | 0.5590 | false |
+| Grid 4x25 row | 4x25 row edges | 1/6 | 0.41 | 0.60 | 0.3558 | false |
 | Tableau/HILL | 7x14 row 1 concentration | 3/6 | 2.36 | 0.58 | 0.3311 | false |
 | Ciphertext prior | ciphertext prior period 2 residue 0 | 4/6 | 3.91 | 0.77 | 0.6845 | false |
 | Ciphertext hotspot | ciphertext hotspot positions | 0/6 | 1.64 | 1.05 | 1.0000 | false |
@@ -770,10 +781,12 @@ archive found `1/6` hits at position `36`, with seeded same-size null
 `p=0.9166`; this is also negative/non-significant evidence. The distinct
 14-by-7 width-7 row-edge artifact found `2/6` hits at positions `1` and `36`,
 with seeded same-size null `p=0.5590`; this keeps the width-7 grid lane
-negative/non-significant under the same source-backed observation.
+negative/non-significant under the same source-backed observation. The distinct
+4-by-25 segmented row-edge artifact found `1/6` hit at position `1`, with
+seeded same-size null `p=0.3558`; this also remains negative/non-significant.
 
 Interpretation: the source-backed row-boundary observation does not support the
-committed period, period-3, period-5, period-14, spacing, mirror, grid-row, grid-column, grid-compass-axis, grid-width-7-row, Tableau/HILL, ciphertext-prior,
+committed period, period-3, period-5, period-14, spacing, mirror, grid-row, grid-column, grid-compass-axis, grid-width-7-row, grid-4x25-row, Tableau/HILL, ciphertext-prior,
 ciphertext-hotspot, ciphertext-rarity, ciphertext-repeat-distance,
 ciphertext-adjacent-contrast,
 ciphertext-transition,
