@@ -153,7 +153,10 @@ period lanes while the committed source-backed archives remain
 negative/non-significant. `ciphertext-window-balance-v1` is a distinct
 ciphertext-only prediction artifact with a source-backed validator/evaluator;
 the committed CIA row-boundary observation scored `0/6` window-balance hits
-with empirical `p=1.0000`. The current unused
+with empirical `p=1.0000`. The window-balance family also includes narrow,
+mid, and wide preregistered ciphertext-only variants that remain unscored until
+future source-backed non-anchor observations pass the same validator/evaluator
+boundary. The current unused
 eligible `cia-artifact` archive has
 no scored-position markers and now carries an explicit `non_scorable_reason`,
 so the gate reports it as non-scorable until a new source-backed rationale

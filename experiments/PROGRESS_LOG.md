@@ -3,6 +3,50 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: Mid Window-Balance Prediction Target Added
+
+Added `ciphertext-window-balance-mid-v1`, a ciphertext-only local-window
+balance lane that fixes a distinct top-16 non-anchor target using window widths
+`[5, 7, 9]`.
+
+This lane is a preregistered prediction target only. It uses K4 ciphertext and
+the fixed public-anchor exclusion mask as discovery inputs; it does not score
+or mine public anchor fragments as evidence.
+
+Validation:
+
+```bash
+cargo run --locked -- ciphertext-window-balance-prior \
+  --top 16 \
+  --window-widths 5,7,9 \
+  --format json > experiments/predictions/ciphertext-window-balance-mid-v1.json
+
+cargo run --locked -- validate-preregistration \
+  --input experiments/preregistrations/ciphertext-window-balance-mid-v1.json \
+  --format json
+
+cargo run --locked -- validate-prediction-artifact \
+  --preregistration experiments/preregistrations/ciphertext-window-balance-mid-v1.json \
+  --require-unique-artifact \
+  --format json
+```
+
+Current readiness markers:
+
+- lane count: `77`
+- independent lanes: `77`
+- ready for source-backed observations: `77`
+- prediction artifacts: `77`
+- unique prediction artifacts: `35`
+- unique ready prediction artifacts: `35`
+- unique ready prediction targets: `35`
+- ciphertext-window-balance-position-prior-family lanes: `4`
+- ciphertext-window-balance-position-prior-family unique ready targets: `4`
+- promoted: `false`
+
+The lane remains unscored until future source-backed non-anchor observations
+pass the family-specific validator and evaluator.
+
 ## 2026-05-31: Source Frontier Correction-Aware Boundary
 
 Updated `source-frontier` so the source-use frontier reports both the raw
