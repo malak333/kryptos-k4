@@ -3,6 +3,57 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-06-01: Mega-Wide Window-Balance Lane Preregistered
+
+Added `ciphertext-window-balance-mega-wide-v1`, a distinct ciphertext-only
+local-window balance target. The lane fixes top-12 non-anchor positions from
+centered windows of widths `21`, `23`, and `25` before any source-backed
+observation scoring. It uses only raw K4 ciphertext symbol values and position
+indices, with public anchors as an exclusion mask; it does not use
+public-anchor fragments, candidate key material, routes, additive fragment
+values, source-backed observation positions, or prior row-boundary scores for
+discovery.
+
+Commands:
+
+```bash
+cargo run --locked -- ciphertext-window-balance-prior \
+  --top 12 \
+  --window-widths 21,23,25 \
+  --format json > experiments/predictions/ciphertext-window-balance-mega-wide-v1.json
+
+cargo run --locked -- validate-preregistration \
+  --input experiments/preregistrations/ciphertext-window-balance-mega-wide-v1.json \
+  --format json
+
+cargo run --locked -- validate-prediction-artifact \
+  --preregistration experiments/preregistrations/ciphertext-window-balance-mega-wide-v1.json \
+  --require-unique-artifact \
+  --format json
+```
+
+Result:
+
+- preregistration valid: `true`
+- prediction artifact valid: `true`
+- artifact kind: `ciphertext-window-balance`
+- expected/artifact plan count: `12` / `12`
+- expected/artifact period count: `12` / `12`
+- independent lanes: `86`
+- ready for source-backed observations: `86`
+- prediction artifacts: `86`
+- unique ready prediction targets: `44`
+- ciphertext-window-balance-position-prior-family lanes: `6`
+- ciphertext-window-balance-position-prior-family unique ready targets: `6`
+- valid source-backed archives: `40`
+- source-backed archive correction count: `40`
+- minimum source-backed adjusted p-value: `1.0`
+- all source-backed archives negative after correction: `true`
+- promoted: `false`
+
+This is a pre-score planning artifact only. It does not promote a K4 solution,
+key, route, plaintext, or candidate.
+
 ## 2026-06-01: Extended Ciphertext Period-Match Lane Scored Negative
 
 Added and scored `ciphertext-period-match-extended-v1`, a distinct
