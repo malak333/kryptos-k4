@@ -245,7 +245,9 @@ ciphertext-residue-balance `p=0.4803`,
 high-moduli ciphertext-residue-balance `p=0.6416`, very-high-moduli
 ciphertext-residue-balance `p=0.3125`, and ultra-high-moduli
 ciphertext-residue-balance `p=0.8289`, and super-extreme-moduli
-ciphertext-residue-balance `p=0.6741`.
+ciphertext-residue-balance `p=0.6741`. The distinct 14-by-7 width-7
+row-edge grid artifact is also negative on this same observation
+(`2/6`, `p=0.5590`).
 It promotes no candidate.
 `release-check` requires registered local source archive paths to exist, so the
 source registry cannot silently point at missing snapshots.

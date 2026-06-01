@@ -3,6 +3,49 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-06-01: Width-7 Grid Row Lane Scored Against CIA Row Boundaries
+
+Scored the distinct `non-anchor-position-grid-width7-row-v1` 14-by-7 row-edge
+artifact against the existing CIA sculpture row-boundary observation file. This
+is allowed by the current frontier because the artifact is a distinct
+pre-registered prediction target; it does not create a new source-backed
+observation.
+
+Commands:
+
+```bash
+cargo run --locked -- evaluate-grid-prediction \
+  --artifact experiments/predictions/non-anchor-position-grid-width7-row-v1.json \
+  --preregistration experiments/preregistrations/non-anchor-position-grid-width7-row-v1.json \
+  --positions-file experiments/position-observations/cia-k4-row-boundaries-v1.json \
+  --edge-axis row \
+  --iterations 100000 \
+  --seed 67 \
+  --output-dir results/grid-observations/cia-k4-row-boundaries-width7-row-v1 \
+  --format json
+
+cargo run --locked -- validate-evaluation-archive \
+  --input results/grid-observations/cia-k4-row-boundaries-width7-row-v1 \
+  --format json
+```
+
+Result:
+
+- observed selected-edge hits: `2/6`
+- empirical p-value: `0.5590`
+- archive valid: `true`
+- valid source-backed archives: `34`
+- source-backed archive correction count: `34`
+- minimum source-backed adjusted p-value: `1.0`
+- all source-backed archives negative after correction: `true`
+- promoted: `false`
+
+Interpretation: the width-7 grid row-edge hypothesis is negative/non-significant
+on the existing source-backed row-boundary observation. This closes that
+artifact against the current observation; future progress still requires a new
+eligible source, changed source-backed observation boundary, or another
+distinct preregistered prediction target.
+
 ## 2026-06-01: Width-7 Grid Prediction Lane Added
 
 Added dimension-aware grid-layout prediction artifacts and a new

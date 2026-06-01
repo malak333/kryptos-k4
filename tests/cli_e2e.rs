@@ -1911,12 +1911,12 @@ fn source_frontier_classifies_all_registered_sources() {
         .stdout(predicate::str::contains(
             "sources with scored-position markers: 1",
         ))
-        .stdout(predicate::str::contains("valid source-backed archives: 33"))
+        .stdout(predicate::str::contains("valid source-backed archives: 34"))
         .stdout(predicate::str::contains(
             "all source-backed archives negative: false",
         ))
         .stdout(predicate::str::contains(
-            "source-backed archive correction count: 33",
+            "source-backed archive correction count: 34",
         ))
         .stdout(predicate::str::contains(
             "all source-backed archives negative after correction: true",
@@ -1929,7 +1929,7 @@ fn source_frontier_classifies_all_registered_sources() {
         .stdout(predicate::str::contains("Disallowed Next Actions"))
         .stdout(predicate::str::contains("Archived Evaluations"))
         .stdout(predicate::str::contains(
-            "Already used in 33 source-backed evaluation archives",
+            "Already used in 34 source-backed evaluation archives",
         ))
         .stdout(predicate::str::contains("context-only"))
         .stdout(predicate::str::contains("quarantined-claim"))
@@ -1951,9 +1951,9 @@ fn source_frontier_classifies_all_registered_sources() {
     assert_eq!(json["source_count"], 30);
     assert_eq!(json["scored_observation_eligible_count"], 2);
     assert_eq!(json["scored_position_marker_count"], 1);
-    assert_eq!(json["valid_source_backed_archive_count"], 33);
+    assert_eq!(json["valid_source_backed_archive_count"], 34);
     assert_eq!(json["all_source_backed_archives_negative"], false);
-    assert_eq!(json["source_backed_archive_correction_count"], 33);
+    assert_eq!(json["source_backed_archive_correction_count"], 34);
     assert!(
         json["min_source_backed_empirical_p_value"]
             .as_f64()
@@ -2032,7 +2032,7 @@ fn source_frontier_classifies_all_registered_sources() {
         .unwrap();
     assert_eq!(cia_sculpture["frontier_class"], "scored-observation-ready");
     assert_eq!(cia_sculpture["current_archive_has_scored_positions"], true);
-    assert_eq!(cia_sculpture["source_backed_archive_count"], 33);
+    assert_eq!(cia_sculpture["source_backed_archive_count"], 34);
     assert!(
         cia_sculpture["allowed_next_action"]
             .as_str()
@@ -2250,7 +2250,7 @@ fn source_frontier_summary_prints_compact_next_action() {
             "eligible but currently non-scorable sources: cia-artifact",
         ))
         .stdout(predicate::str::contains(
-            "already-scored source-backed archives: cia-sculpture (33 archived evaluations)",
+            "already-scored source-backed archives: cia-sculpture (34 archived evaluations)",
         ))
         .stdout(predicate::str::contains(
             "do not rerun correction-controlled negative row-boundary evidence as new evidence",
@@ -2269,13 +2269,13 @@ fn source_frontier_summary_prints_compact_next_action() {
     let json: Value = serde_json::from_slice(&output).unwrap();
     assert_eq!(json["summary"], true);
     assert_eq!(json["source_count"], 30);
-    assert_eq!(json["valid_source_backed_archive_count"], 33);
+    assert_eq!(json["valid_source_backed_archive_count"], 34);
     assert_eq!(json["all_source_backed_archives_negative"], false);
     assert_eq!(
         json["all_source_backed_archives_negative_after_correction"],
         true
     );
-    assert_eq!(json["source_backed_archive_correction_count"], 33);
+    assert_eq!(json["source_backed_archive_correction_count"], 34);
     assert_eq!(
         json["scored_observation_ready_source_ids"][0],
         "cia-sculpture"
@@ -2288,7 +2288,7 @@ fn source_frontier_summary_prints_compact_next_action() {
         json["already_scored_source_backed_archives"][0]
             .as_str()
             .unwrap()
-            .contains("cia-sculpture (33 archived evaluations)")
+            .contains("cia-sculpture (34 archived evaluations)")
     );
     assert!(
         json["action"]
@@ -6091,7 +6091,7 @@ fn independent_evidence_status_reports_archive_scores() {
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
     let archives = json["archives"].as_array().unwrap();
-    assert_eq!(json["source_backed_archive_correction_count"], 33);
+    assert_eq!(json["source_backed_archive_correction_count"], 34);
     assert_eq!(
         json["all_source_backed_archives_negative_after_correction"],
         true

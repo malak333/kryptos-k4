@@ -233,8 +233,9 @@ observation evaluation archives already exist before interpreting a lane as
 having evidence.
 The current source-backed row-boundary observation is documented in
 `experiments/evidence-summaries/cia-k4-row-boundaries-v1.md`. It validates and
-archives locally, but the period, spacing, mirror, grid, and Tableau/HILL controls are negative
-(`p=0.7897`, `p=1.0000`, `p=0.2090`, `p=0.5600`, and `p=0.3311` respectively), so
+archives locally, but the period, spacing, mirror, grid, width-7 grid, and
+Tableau/HILL controls are negative (`p=0.7897`, `p=1.0000`, `p=0.2090`,
+`p=0.5600`, `p=0.5590`, and `p=0.3311` respectively), so
 it is evidence against continuing that row-boundary lane rather than support for
 a candidate.
 Run `non-anchor-positions` when preparing that observation file so the selected
