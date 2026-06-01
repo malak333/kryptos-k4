@@ -5044,7 +5044,7 @@ fn next_evidence_gate_prints_operational_checklist() {
             .unwrap()
             .contains("verify-claim-mechanism")
     );
-    assert_eq!(json["claim_verification_archive_count"], 3);
+    assert_eq!(json["claim_verification_archive_count"], 7);
     assert!(
         json["claim_verification_archives"]
             .as_array()
@@ -5069,10 +5069,10 @@ fn next_evidence_gate_prints_operational_checklist() {
                     && archive["status"] == "quarantine-structural-check-passed"
             })
     );
-    assert_eq!(
-        json["quarantined_claim_source_ids_without_archive"][0],
-        "ssrn-bonifacino-running-key-2025"
-    );
+    assert!(json["quarantined_claim_source_ids_without_archive"]
+        .as_array()
+        .unwrap()
+        .is_empty());
     let valid_source_backed_archives = json["valid_source_backed_archive_count"]
         .as_u64()
         .expect("valid_source_backed_archive_count should be numeric");
@@ -5784,10 +5784,8 @@ fn claim_verification_status_reports_quarantine_inventory() {
         .stdout(predicate::str::contains("Claim Verification Status"))
         .stdout(predicate::str::contains("This is not a claimed solution."))
         .stdout(predicate::str::contains("quarantined claim sources: 7"))
-        .stdout(predicate::str::contains("claim verification archives: 3"))
-        .stdout(predicate::str::contains(
-            "Sources Without Verification Archive",
-        ))
+        .stdout(predicate::str::contains("claim verification archives: 7"))
+        .stdout(predicate::str::contains("Sources Without Verification Archive").not())
         .stdout(predicate::str::contains("Verification Detail"))
         .stdout(predicate::str::contains("ssrn-bonifacino-running-key-2025"))
         .stdout(predicate::str::contains("local key stream file"))
@@ -5810,7 +5808,7 @@ fn claim_verification_status_reports_quarantine_inventory() {
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
     assert_eq!(json["quarantined_claim_source_count"], 7);
-    assert_eq!(json["claim_verification_archive_count"], 3);
+    assert_eq!(json["claim_verification_archive_count"], 7);
     assert_eq!(json["promoted_candidate"], false);
     assert!(
         json["claim_verification_command"]
@@ -5830,14 +5828,26 @@ fn claim_verification_status_reports_quarantine_inventory() {
                     && archive["status"] == "quarantine-structural-check-failed"
             })
     );
-    assert_eq!(
-        json["quarantined_claim_source_ids_without_archive"][0],
-        "ssrn-bonifacino-running-key-2025"
+    assert!(json["quarantined_claim_source_ids_without_archive"]
+        .as_array()
+        .unwrap()
+        .is_empty());
+    assert!(
+        json["claim_verification_archives"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|archive| {
+                archive["source_id"] == "ssrn-bonifacino-full-derivation-2025"
+                    && archive["structural_checks_passed"] == false
+                    && archive["promoted_candidate"] == false
+                    && archive["status"] == "quarantine-structural-check-failed"
+            })
     );
     let source_details = json["quarantined_claim_source_details"].as_array().unwrap();
     assert!(source_details.iter().any(|detail| {
         detail["source_id"] == "ssrn-bonifacino-running-key-2025"
-            && detail["has_verification_archive"] == false
+            && detail["has_verification_archive"] == true
             && detail["recommended_verifiers"]
                 .as_array()
                 .unwrap()
@@ -5859,7 +5869,7 @@ fn claim_verification_status_reports_quarantine_inventory() {
     }));
     assert!(source_details.iter().any(|detail| {
         detail["source_id"] == "ssrn-bonifacino-full-derivation-2025"
-            && detail["has_verification_archive"] == false
+            && detail["has_verification_archive"] == true
             && detail["recommended_verifiers"]
                 .as_array()
                 .unwrap()
@@ -5888,16 +5898,14 @@ fn claim_verification_status_reports_quarantine_inventory() {
         .stdout(predicate::str::contains(
             "Claim Verification Status Summary",
         ))
-        .stdout(predicate::str::contains("unverified claim sources: 4"))
-        .stdout(predicate::str::contains("failed verification archives: 1"))
+        .stdout(predicate::str::contains("unverified claim sources: 0"))
+        .stdout(predicate::str::contains("failed verification archives: 5"))
         .stdout(predicate::str::contains("local-claim-inputs-required"))
         .stdout(predicate::str::contains(
             "ssrn-bonifacino-full-derivation-2025",
         ))
         .stdout(predicate::str::contains("solvekryptos-2026-claim"))
-        .stdout(predicate::str::contains(
-            "claim-input-plan --source-id ssrn-bonifacino-running-key-2025",
-        ))
+        .stdout(predicate::str::contains("claim-input-plan --source-id").not())
         .stdout(predicate::str::contains("Verification Detail").not())
         .stdout(predicate::str::contains("promoted: false"));
 
@@ -5911,22 +5919,16 @@ fn claim_verification_status_reports_quarantine_inventory() {
         .clone();
     let summary_json: Value = serde_json::from_slice(&summary_output).unwrap();
     assert_eq!(summary_json["summary"], true);
-    assert_eq!(summary_json["unverified_claim_source_count"], 4);
-    assert_eq!(summary_json["failed_verification_archive_count"], 1);
+    assert_eq!(summary_json["unverified_claim_source_count"], 0);
+    assert_eq!(summary_json["failed_verification_archive_count"], 5);
     assert_eq!(
         summary_json["next_action_kind"],
         "local-claim-inputs-required"
     );
-    assert!(
-        summary_json["claim_input_plan_commands"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|command| command
-                .as_str()
-                .unwrap()
-                .contains("ssrn-bonifacino-generative-running-key-2025"))
-    );
+    assert!(summary_json["claim_input_plan_commands"]
+        .as_array()
+        .unwrap()
+        .is_empty());
     assert_eq!(summary_json["promoted_candidate"], false);
 }
 

@@ -1,0 +1,25 @@
+{
+  "source_id": "ssrn-bonifacino-weltzeituhr-error-key-2025",
+  "verifier": "claim-input-unavailable",
+  "source_url": "https://ssrn.com/abstract=5779863",
+  "access_attempted_at": "2026-06-01",
+  "input_status": "unavailable",
+  "local_inputs_present": false,
+  "required_local_inputs": [
+    "plaintext",
+    "key_stream"
+  ],
+  "optional_local_inputs_missing": [
+    "reconciliation",
+    "mechanism"
+  ],
+  "recommended_verifiers_not_run": [
+    "verify-running-key-claim",
+    "verify-claim-mechanism",
+    "verify-claim-reconciliation"
+  ],
+  "access_observation": "The SSRN record page was reachable, but no local plaintext, key stream, reconciliation, or mechanism input was available for a safe verifier run.",
+  "structural_checks_passed": false,
+  "promoted_candidate": false,
+  "note": "Claim-input-unavailable archive records that no local claimed plaintext or mechanism input was available; it does not print, store, or promote claimed plaintext."
+}

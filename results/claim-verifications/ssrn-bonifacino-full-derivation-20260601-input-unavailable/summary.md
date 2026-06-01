@@ -1,0 +1,20 @@
+# SSRN Bonifacino Full Derivation Claim Input Status
+
+This is not a claimed solution.
+
+source id: `ssrn-bonifacino-full-derivation-2025`
+source URL: https://ssrn.com/abstract=5779902
+verifier status: input unavailable
+promoted: false
+
+## Result
+
+The SSRN record page was reachable. A direct PDF fetch to temporary local
+storage returned an HTML access challenge rather than a PDF, so no local
+plaintext, key-stream, reconciliation, or mechanism input was available for a
+safe verifier run. The recommended `verify-running-key-claim`,
+`verify-claim-mechanism`, and `verify-claim-reconciliation` commands were not
+run for this source.
+
+This archive does not store claimed plaintext, a key stream, reconciliation
+tables, or mechanism payloads. It records only the quarantine/input boundary.
