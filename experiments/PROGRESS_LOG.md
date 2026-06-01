@@ -3,6 +3,48 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-06-01: Ultra-Wide Window-Balance Prediction Target Added
+
+Added `ciphertext-window-balance-ultra-wide-v1`, a ciphertext-only local-window
+balance lane that fixes a distinct top-12 non-anchor target using ultra-wide
+window widths `[15, 17, 19]`.
+
+This lane is a preregistered prediction target only. It uses K4 ciphertext and
+the fixed public-anchor exclusion mask as discovery inputs; it does not score
+or mine public anchor fragments as evidence.
+
+Validation:
+
+```bash
+cargo run --locked -- ciphertext-window-balance-prior \
+  --top 12 \
+  --window-widths 15,17,19 \
+  --format json > experiments/predictions/ciphertext-window-balance-ultra-wide-v1.json
+
+cargo run --locked -- validate-preregistration \
+  --input experiments/preregistrations/ciphertext-window-balance-ultra-wide-v1.json \
+  --format json
+
+cargo run --locked -- validate-prediction-artifact \
+  --preregistration experiments/preregistrations/ciphertext-window-balance-ultra-wide-v1.json \
+  --require-unique-artifact \
+  --format json
+```
+
+Current committed target:
+
+- artifact: `experiments/predictions/ciphertext-window-balance-ultra-wide-v1.json`
+- selected positions: `58, 59, 60, 61, 62, 76, 77, 80, 81, 82, 87, 88`
+- independent lanes: `78`
+- ready for source-backed observations: `78`
+- prediction artifacts: `78`
+- unique prediction artifacts: `36`
+- unique ready prediction artifacts: `36`
+- unique ready prediction targets: `36`
+- ciphertext-window-balance-position-prior-family lanes: `5`
+- ciphertext-window-balance-position-prior-family unique ready targets: `5`
+- promoted: `false`
+
 ## 2026-05-31: Claim-Verification Status Guidance Added
 
 Extended `claim-verification-status` with per-source verification guidance for
