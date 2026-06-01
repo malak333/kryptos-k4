@@ -9,8 +9,8 @@ use crate::{
     build_committed_ciphertext_skip_transition_prior,
     build_committed_ciphertext_stehle_regularity_prior, build_committed_ciphertext_structure_prior,
     build_committed_ciphertext_transition_prior, build_committed_ciphertext_turning_point_prior,
-    build_grid_layout_prediction_plan_for_axis, build_mirror_prediction_plan,
-    build_period_prediction_plan, sources,
+    build_grid_layout_prediction_plan_for_axis, build_grid_layout_prediction_plan_with_dimensions,
+    build_mirror_prediction_plan, build_period_prediction_plan, sources,
 };
 use anyhow::{Result, bail};
 use serde::{Deserialize, Serialize};
@@ -38,6 +38,10 @@ pub struct LanePreregistration {
     pub prediction_artifact: Option<String>,
     #[serde(default)]
     pub grid_edge_axis: Option<GridLayoutEdgeAxis>,
+    #[serde(default)]
+    pub grid_row_count: Option<usize>,
+    #[serde(default)]
+    pub grid_column_count: Option<usize>,
     #[serde(default)]
     pub ciphertext_window_balance_top: Option<usize>,
     #[serde(default)]
@@ -696,11 +700,39 @@ fn validate_registration(registration: LanePreregistration) -> PreregistrationVa
                 .to_string(),
         );
     }
+    if registration.hypothesis_family == "position-grid-layout-prediction" {
+        match (registration.grid_row_count, registration.grid_column_count) {
+            (Some(rows), Some(columns)) => {
+                if rows == 0 || columns == 0 {
+                    errors.push(
+                        "grid_row_count and grid_column_count must be greater than zero"
+                            .to_string(),
+                    );
+                } else if rows.saturating_mul(columns) < crate::K4_CIPHERTEXT.len() {
+                    errors.push(format!(
+                        "grid_row_count x grid_column_count must cover all {} K4 positions",
+                        crate::K4_CIPHERTEXT.len()
+                    ));
+                }
+            }
+            (Some(_), None) | (None, Some(_)) => errors
+                .push("grid_row_count and grid_column_count must be declared together".to_string()),
+            (None, None) => {}
+        }
+    }
     if registration.hypothesis_family != "position-grid-layout-prediction"
         && registration.grid_edge_axis.is_some()
     {
         errors.push(
             "grid_edge_axis is only valid for position-grid-layout-prediction lanes".to_string(),
+        );
+    }
+    if registration.hypothesis_family != "position-grid-layout-prediction"
+        && (registration.grid_row_count.is_some() || registration.grid_column_count.is_some())
+    {
+        errors.push(
+            "grid_row_count and grid_column_count are only valid for position-grid-layout-prediction lanes"
+                .to_string(),
         );
     }
 
@@ -791,7 +823,12 @@ pub fn validate_prediction_artifact_with_repo_root(
                 .grid_edge_axis
                 .unwrap_or(GridLayoutEdgeAxis::Row);
             Some(serde_json::to_value(
-                build_grid_layout_prediction_plan_for_axis(edge_axis)?,
+                match (registration.grid_row_count, registration.grid_column_count) {
+                    (Some(rows), Some(columns)) => {
+                        build_grid_layout_prediction_plan_with_dimensions(rows, columns, edge_axis)?
+                    }
+                    _ => build_grid_layout_prediction_plan_for_axis(edge_axis)?,
+                },
             )?)
         }
         Some("tableau-hill") => Some(serde_json::to_value(
@@ -1318,6 +1355,8 @@ mod tests {
                 "Predict a non-anchor position class before comparing anchor fragments.".to_string(),
             prediction_artifact: None,
             grid_edge_axis: None,
+            grid_row_count: None,
+            grid_column_count: None,
             ciphertext_window_balance_top: None,
             ciphertext_window_balance_widths: None,
             ciphertext_adjacent_contrast_top: None,
@@ -1414,6 +1453,35 @@ mod tests {
                 .errors
                 .iter()
                 .any(|error| { error.contains("must declare grid_edge_axis") })
+        );
+    }
+
+    #[test]
+    fn grid_preregistration_dimensions_must_be_complete_and_cover_k4() {
+        let mut registration = valid_registration();
+        registration.hypothesis_family = "position-grid-layout-prediction".to_string();
+        registration.prediction_artifact =
+            Some("experiments/predictions/non-anchor-position-grid-width7-row-v1.json".to_string());
+        registration.grid_edge_axis = Some(GridLayoutEdgeAxis::Row);
+        registration.grid_row_count = Some(14);
+
+        let incomplete = validate_registration(registration.clone());
+        assert!(!incomplete.valid);
+        assert!(
+            incomplete
+                .errors
+                .iter()
+                .any(|error| error.contains("declared together"))
+        );
+
+        registration.grid_column_count = Some(6);
+        let too_small = validate_registration(registration);
+        assert!(!too_small.valid);
+        assert!(
+            too_small
+                .errors
+                .iter()
+                .any(|error| error.contains("must cover all"))
         );
     }
 

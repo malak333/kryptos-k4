@@ -1,6 +1,6 @@
 {
-  "row_count": 7,
-  "column_count": 14,
+  "row_count": 14,
+  "column_count": 7,
   "padded_position_count": 98,
   "pad_positions_one_based": [
     98
@@ -10,14 +10,26 @@
   "scored_edge_axis": "row",
   "row_edge_positions_one_based": [
     1,
+    7,
+    8,
     14,
     15,
+    21,
+    35,
+    36,
     42,
     43,
+    49,
+    50,
     56,
     57,
+    63,
+    77,
+    78,
     84,
-    85
+    85,
+    91,
+    92
   ],
   "column_edge_positions_one_based": [
     1,
@@ -27,20 +39,6 @@
     5,
     6,
     7,
-    8,
-    9,
-    10,
-    11,
-    12,
-    13,
-    14,
-    85,
-    86,
-    87,
-    88,
-    89,
-    90,
-    91,
     92,
     93,
     94,
@@ -52,7 +50,7 @@
     {
       "row_one_based": 1,
       "start_position_one_based": 1,
-      "end_position_one_based": 14,
+      "end_position_one_based": 7,
       "non_anchor_positions_one_based": [
         1,
         2,
@@ -60,7 +58,18 @@
         4,
         5,
         6,
-        7,
+        7
+      ],
+      "row_edge_positions_one_based": [
+        1,
+        7
+      ]
+    },
+    {
+      "row_one_based": 2,
+      "start_position_one_based": 8,
+      "end_position_one_based": 14,
+      "non_anchor_positions_one_based": [
         8,
         9,
         10,
@@ -70,14 +79,14 @@
         14
       ],
       "row_edge_positions_one_based": [
-        1,
+        8,
         14
       ]
     },
     {
-      "row_one_based": 2,
+      "row_one_based": 3,
       "start_position_one_based": 15,
-      "end_position_one_based": 28,
+      "end_position_one_based": 21,
       "non_anchor_positions_one_based": [
         15,
         16,
@@ -88,15 +97,33 @@
         21
       ],
       "row_edge_positions_one_based": [
-        15
+        15,
+        21
       ]
     },
     {
-      "row_one_based": 3,
+      "row_one_based": 4,
+      "start_position_one_based": 22,
+      "end_position_one_based": 28,
+      "non_anchor_positions_one_based": [],
+      "row_edge_positions_one_based": []
+    },
+    {
+      "row_one_based": 5,
       "start_position_one_based": 29,
+      "end_position_one_based": 35,
+      "non_anchor_positions_one_based": [
+        35
+      ],
+      "row_edge_positions_one_based": [
+        35
+      ]
+    },
+    {
+      "row_one_based": 6,
+      "start_position_one_based": 36,
       "end_position_one_based": 42,
       "non_anchor_positions_one_based": [
-        35,
         36,
         37,
         38,
@@ -106,13 +133,14 @@
         42
       ],
       "row_edge_positions_one_based": [
+        36,
         42
       ]
     },
     {
-      "row_one_based": 4,
+      "row_one_based": 7,
       "start_position_one_based": 43,
-      "end_position_one_based": 56,
+      "end_position_one_based": 49,
       "non_anchor_positions_one_based": [
         43,
         44,
@@ -120,7 +148,18 @@
         46,
         47,
         48,
-        49,
+        49
+      ],
+      "row_edge_positions_one_based": [
+        43,
+        49
+      ]
+    },
+    {
+      "row_one_based": 8,
+      "start_position_one_based": 50,
+      "end_position_one_based": 56,
+      "non_anchor_positions_one_based": [
         50,
         51,
         52,
@@ -130,14 +169,14 @@
         56
       ],
       "row_edge_positions_one_based": [
-        43,
+        50,
         56
       ]
     },
     {
-      "row_one_based": 5,
+      "row_one_based": 9,
       "start_position_one_based": 57,
-      "end_position_one_based": 70,
+      "end_position_one_based": 63,
       "non_anchor_positions_one_based": [
         57,
         58,
@@ -148,17 +187,35 @@
         63
       ],
       "row_edge_positions_one_based": [
-        57
+        57,
+        63
       ]
     },
     {
-      "row_one_based": 6,
+      "row_one_based": 10,
+      "start_position_one_based": 64,
+      "end_position_one_based": 70,
+      "non_anchor_positions_one_based": [],
+      "row_edge_positions_one_based": []
+    },
+    {
+      "row_one_based": 11,
       "start_position_one_based": 71,
-      "end_position_one_based": 84,
+      "end_position_one_based": 77,
       "non_anchor_positions_one_based": [
         75,
         76,
-        77,
+        77
+      ],
+      "row_edge_positions_one_based": [
+        77
+      ]
+    },
+    {
+      "row_one_based": 12,
+      "start_position_one_based": 78,
+      "end_position_one_based": 84,
+      "non_anchor_positions_one_based": [
         78,
         79,
         80,
@@ -168,13 +225,14 @@
         84
       ],
       "row_edge_positions_one_based": [
+        78,
         84
       ]
     },
     {
-      "row_one_based": 7,
+      "row_one_based": 13,
       "start_position_one_based": 85,
-      "end_position_one_based": 98,
+      "end_position_one_based": 91,
       "non_anchor_positions_one_based": [
         85,
         86,
@@ -182,7 +240,18 @@
         88,
         89,
         90,
-        91,
+        91
+      ],
+      "row_edge_positions_one_based": [
+        85,
+        91
+      ]
+    },
+    {
+      "row_one_based": 14,
+      "start_position_one_based": 92,
+      "end_position_one_based": 98,
+      "non_anchor_positions_one_based": [
         92,
         93,
         94,
@@ -191,7 +260,7 @@
         97
       ],
       "row_edge_positions_one_based": [
-        85
+        92
       ]
     }
   ],
@@ -199,232 +268,155 @@
     {
       "column_one_based": 1,
       "top_position_one_based": 1,
-      "bottom_position_one_based": 85,
+      "bottom_position_one_based": 92,
       "non_anchor_positions_one_based": [
         1,
+        8,
         15,
+        36,
         43,
+        50,
         57,
-        85
+        78,
+        85,
+        92
       ],
       "column_edge_positions_one_based": [
         1,
-        85
+        92
       ]
     },
     {
       "column_one_based": 2,
       "top_position_one_based": 2,
-      "bottom_position_one_based": 86,
+      "bottom_position_one_based": 93,
       "non_anchor_positions_one_based": [
         2,
+        9,
         16,
+        37,
         44,
+        51,
         58,
-        86
+        79,
+        86,
+        93
       ],
       "column_edge_positions_one_based": [
         2,
-        86
+        93
       ]
     },
     {
       "column_one_based": 3,
       "top_position_one_based": 3,
-      "bottom_position_one_based": 87,
+      "bottom_position_one_based": 94,
       "non_anchor_positions_one_based": [
         3,
+        10,
         17,
+        38,
         45,
+        52,
         59,
-        87
+        80,
+        87,
+        94
       ],
       "column_edge_positions_one_based": [
         3,
-        87
+        94
       ]
     },
     {
       "column_one_based": 4,
       "top_position_one_based": 4,
-      "bottom_position_one_based": 88,
+      "bottom_position_one_based": 95,
       "non_anchor_positions_one_based": [
         4,
+        11,
         18,
+        39,
         46,
+        53,
         60,
-        88
+        81,
+        88,
+        95
       ],
       "column_edge_positions_one_based": [
         4,
-        88
+        95
       ]
     },
     {
       "column_one_based": 5,
       "top_position_one_based": 5,
-      "bottom_position_one_based": 89,
+      "bottom_position_one_based": 96,
       "non_anchor_positions_one_based": [
         5,
+        12,
         19,
+        40,
         47,
+        54,
         61,
         75,
-        89
+        82,
+        89,
+        96
       ],
       "column_edge_positions_one_based": [
         5,
-        89
+        96
       ]
     },
     {
       "column_one_based": 6,
       "top_position_one_based": 6,
-      "bottom_position_one_based": 90,
+      "bottom_position_one_based": 97,
       "non_anchor_positions_one_based": [
         6,
+        13,
         20,
+        41,
         48,
+        55,
         62,
         76,
-        90
+        83,
+        90,
+        97
       ],
       "column_edge_positions_one_based": [
         6,
-        90
+        97
       ]
     },
     {
       "column_one_based": 7,
       "top_position_one_based": 7,
-      "bottom_position_one_based": 91,
-      "non_anchor_positions_one_based": [
-        7,
-        21,
-        35,
-        49,
-        63,
-        77,
-        91
-      ],
-      "column_edge_positions_one_based": [
-        7,
-        91
-      ]
-    },
-    {
-      "column_one_based": 8,
-      "top_position_one_based": 8,
-      "bottom_position_one_based": 92,
-      "non_anchor_positions_one_based": [
-        8,
-        36,
-        50,
-        78,
-        92
-      ],
-      "column_edge_positions_one_based": [
-        8,
-        92
-      ]
-    },
-    {
-      "column_one_based": 9,
-      "top_position_one_based": 9,
-      "bottom_position_one_based": 93,
-      "non_anchor_positions_one_based": [
-        9,
-        37,
-        51,
-        79,
-        93
-      ],
-      "column_edge_positions_one_based": [
-        9,
-        93
-      ]
-    },
-    {
-      "column_one_based": 10,
-      "top_position_one_based": 10,
-      "bottom_position_one_based": 94,
-      "non_anchor_positions_one_based": [
-        10,
-        38,
-        52,
-        80,
-        94
-      ],
-      "column_edge_positions_one_based": [
-        10,
-        94
-      ]
-    },
-    {
-      "column_one_based": 11,
-      "top_position_one_based": 11,
-      "bottom_position_one_based": 95,
-      "non_anchor_positions_one_based": [
-        11,
-        39,
-        53,
-        81,
-        95
-      ],
-      "column_edge_positions_one_based": [
-        11,
-        95
-      ]
-    },
-    {
-      "column_one_based": 12,
-      "top_position_one_based": 12,
-      "bottom_position_one_based": 96,
-      "non_anchor_positions_one_based": [
-        12,
-        40,
-        54,
-        82,
-        96
-      ],
-      "column_edge_positions_one_based": [
-        12,
-        96
-      ]
-    },
-    {
-      "column_one_based": 13,
-      "top_position_one_based": 13,
-      "bottom_position_one_based": 97,
-      "non_anchor_positions_one_based": [
-        13,
-        41,
-        55,
-        83,
-        97
-      ],
-      "column_edge_positions_one_based": [
-        13,
-        97
-      ]
-    },
-    {
-      "column_one_based": 14,
-      "top_position_one_based": 14,
       "bottom_position_one_based": 98,
       "non_anchor_positions_one_based": [
+        7,
         14,
+        21,
+        35,
         42,
+        49,
         56,
-        84
+        63,
+        77,
+        84,
+        91
       ],
       "column_edge_positions_one_based": [
-        14
+        7
       ]
     }
   ],
   "promoted_candidate": false,
-  "source_inputs": "K4 ciphertext length, public anchor positions for exclusion only, and context-only padded-grid rationale fixed before scoring as 7 rows by 14 columns; no fragment values, candidate words, routes, or public anchor-derived key fragments are scored.",
-  "prediction_rule": "Place K4 positions into a predeclared 7-by-14 padded grid with positions 98 as padding. The scored target is enrichment at non-anchor row-edge positions; the orthogonal edge axis remains pre-score metadata only, without retuning the layout after observations are seen.",
+  "source_inputs": "K4 ciphertext length, public anchor positions for exclusion only, and context-only padded-grid rationale fixed before scoring as 14 rows by 7 columns; no fragment values, candidate words, routes, or public anchor-derived key fragments are scored.",
+  "prediction_rule": "Place K4 positions into a predeclared 14-by-7 padded grid with positions 98 as padding. The scored target is enrichment at non-anchor row-edge positions; the orthogonal edge axis remains pre-score metadata only, without retuning the layout after observations are seen.",
   "note": "Grid-layout prediction plan only; this emits predeclared source-context structural targets for future independent evidence and is not a decryption claim."
 }

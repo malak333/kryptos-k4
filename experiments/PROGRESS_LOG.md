@@ -3,6 +3,50 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-06-01: Width-7 Grid Prediction Lane Added
+
+Added dimension-aware grid-layout prediction artifacts and a new
+`non-anchor-position-grid-width7-row-v1` lane. The new lane fixes a 14-by-7
+row-major grid with row-edge scoring before any future source-backed
+observation file is selected or evaluated.
+
+This is a distinct prediction artifact from the existing 7-by-14 grid lanes.
+It is grounded only in the registered `kryptos-today-progress-2026`
+methodology-context width-7 rationale, so it does not use that source as scored
+evidence and does not use candidate material, route results, plaintext claims,
+or public known-plaintext fragment values.
+
+Validation commands for this lane:
+
+```bash
+cargo run --locked -- grid-layout-prediction-plan \
+  --rows 14 \
+  --columns 7 \
+  --edge-axis row \
+  --format json
+
+cargo run --locked -- validate-preregistration \
+  --input experiments/preregistrations/non-anchor-position-grid-width7-row-v1.json \
+  --format json
+
+cargo run --locked -- validate-prediction-artifact \
+  --preregistration experiments/preregistrations/non-anchor-position-grid-width7-row-v1.json \
+  --require-unique-artifact \
+  --format json
+```
+
+Current boundary: this is a pre-score structural target only. It does not add a
+source-backed observation file, promote evidence, or claim a solution.
+
+Current inventory markers after this lane:
+
+- independent lanes: `80`
+- ready for source-backed observations: `80`
+- prediction artifacts: `80`
+- unique ready prediction targets: `38`
+- grid-layout-family lanes: `4`
+- grid-layout-family unique ready targets: `4`
+
 ## 2026-06-01: Next Evidence Gate Summary Mode Added
 
 Added `next-evidence-gate --summary` so automation and future K4 work can read

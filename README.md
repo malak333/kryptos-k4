@@ -69,7 +69,7 @@ cargo run -- spacing-prediction-plan --format json
 cargo run -- mirror-prediction-plan
 cargo run -- mirror-prediction-plan --format json
 cargo run -- grid-layout-prediction-plan
-cargo run -- grid-layout-prediction-plan --format json
+cargo run -- grid-layout-prediction-plan --rows 14 --columns 7 --format json
 cargo run -- validate-period-observations --artifact experiments/predictions/non-anchor-position-period-v1.json --preregistration experiments/preregistrations/non-anchor-position-period-v1.json --input <source-backed-observations.json> --format json
 cargo run -- evaluate-period-prediction --artifact experiments/predictions/non-anchor-position-period-v1.json --preregistration experiments/preregistrations/non-anchor-position-period-v1.json --positions-file <source-backed-observations.json> --iterations 1000 --seed 67 --output-dir results/period-observations/latest --format json
 cargo run -- validate-evaluation-archive --input results/period-observations/latest
@@ -122,14 +122,16 @@ artifact, `non-anchor-position-mirror-v1`, which predeclares 35 non-anchor
 mirror pairs across the 97-character K4 axis. That artifact is source-context
 grounded and now has a source-backed validation/evaluation path; it is still
 not evidence by itself.
-It also includes `non-anchor-position-grid-layout-v1` and
-`non-anchor-position-grid-column-v1`, which separately predeclare 7-by-14
-padded grid-layout row-edge and column-edge targets from context-only
-Sanborn-papers source rationale. Each deterministic artifact carries its
-registered `grid_edge_axis`, and source-backed
-`evaluate-grid-prediction --positions-file` runs must match that axis. The
-archived row-boundary evidence command uses the row-edge preregistration and
-`--edge-axis row`; the column-edge lane is a distinct future target, not a
+It also includes `non-anchor-position-grid-layout-v1`,
+`non-anchor-position-grid-column-v1`, and
+`non-anchor-position-grid-width7-row-v1`, which separately predeclare bounded
+padded grid-layout edge targets from context-only Sanborn-papers and Project K4
+source rationale. Each deterministic artifact carries its registered
+`grid_edge_axis` and dimensions, and source-backed
+`evaluate-grid-prediction --positions-file` runs must match that axis and
+artifact. The archived row-boundary evidence command uses the 7-by-14 row-edge
+preregistration and `--edge-axis row`; the column-edge and width-7 lanes are
+distinct future targets, not a
 reinterpretation of that archive.
 That source can justify the preregistered structure, but it cannot directly
 provide scored observation positions.
@@ -517,12 +519,12 @@ cargo run -- summarize-key-runs --input-dir results/key-tests/expanded-lane --fo
 | `period-prediction-plan` | Emits non-anchor K4 position residue classes for one or all registered periods in Markdown or JSON without scoring fragment values or candidate material. |
 | `spacing-prediction-plan` | Emits non-anchor K4 spacing residue classes for registered moduli in Markdown or JSON without scoring fragment values or candidate material. |
 | `mirror-prediction-plan` | Emits non-anchor mirror-pair targets across the 97-character K4 position axis in Markdown or JSON without scoring fragment values or candidate material. |
-| `grid-layout-prediction-plan` | Emits a non-anchor 7-by-14 padded grid-layout artifact in Markdown or JSON with an explicit scored row or column edge axis, without scoring fragment values or candidate material. |
+| `grid-layout-prediction-plan` | Emits a non-anchor padded grid-layout artifact in Markdown or JSON with explicit row/column dimensions and a scored row, column, or compass edge axis, without scoring fragment values or candidate material. |
 | `tableau-hill-prediction-plan` | Emits a fixed HILL/tableau source-mapping artifact in Markdown or JSON for source-backed row/column concentration evaluation, without scoring fragment values, candidate material, or public-anchor-derived evidence. |
 | `evaluate-period-prediction` | Scores independently supplied one-based non-anchor positions against a committed period prediction artifact with a best-of-period null control in Markdown or JSON; marks quick `--positions` input as diagnostic, requires `--preregistration` for source-backed `--positions-file` JSON records, and can archive `artifact.json`, `preregistration.json`, `observations.json`, linked `source-review.json`, `result.json`, `summary.md`, and `command.txt` with `--output-dir`. |
 | `evaluate-spacing-prediction` | Scores independently supplied one-based non-anchor positions against a committed spacing prediction artifact with a best-of-modulus null control in Markdown or JSON; marks quick `--positions` input as diagnostic, requires `--preregistration` for source-backed `--positions-file` JSON records, and can archive `artifact.json`, `preregistration.json`, `observations.json`, linked `source-review.json`, `result.json`, `summary.md`, and `command.txt` with `--output-dir`. |
 | `evaluate-mirror-prediction` | Scores independently supplied one-based non-anchor positions against committed mirror-pair targets with a seeded same-size non-anchor position-set null in Markdown or JSON; marks quick `--positions` input as diagnostic, requires `--preregistration` for source-backed `--positions-file` JSON records, and can archive `artifact.json`, `preregistration.json`, `observations.json`, linked `source-review.json`, `result.json`, `summary.md`, and `command.txt` with `--output-dir`. |
-| `evaluate-grid-prediction` | Scores independently supplied one-based non-anchor positions against a committed 7-by-14 grid-layout artifact with a seeded same-size non-anchor position-set null in Markdown or JSON; `--edge-axis row` is the committed v1 evidence target and `--edge-axis column` is diagnostic/future-preregistered follow-up only, marks quick `--positions` input as diagnostic, requires `--preregistration` for source-backed `--positions-file` JSON records, rejects source-backed scoring when `--edge-axis` does not match the preregistered `grid_edge_axis`, and can archive `artifact.json`, `preregistration.json`, `observations.json`, linked `source-review.json`, `result.json`, `summary.md`, and `command.txt` with `--output-dir`. |
+| `evaluate-grid-prediction` | Scores independently supplied one-based non-anchor positions against a committed grid-layout artifact with a seeded same-size non-anchor position-set null in Markdown or JSON; marks quick `--positions` input as diagnostic, requires `--preregistration` for source-backed `--positions-file` JSON records, rejects source-backed scoring when `--edge-axis` does not match the preregistered `grid_edge_axis`, and can archive `artifact.json`, `preregistration.json`, `observations.json`, linked `source-review.json`, `result.json`, `summary.md`, and `command.txt` with `--output-dir`. |
 | `evaluate-tableau-hill-prediction` | Scores independently supplied one-based non-anchor positions for best row/column concentration on the committed Tableau/HILL 7-by-14 source map with a seeded same-size non-anchor position-set null in Markdown or JSON; marks quick `--positions` input as diagnostic, requires `--preregistration` for source-backed `--positions-file` JSON records, and can archive `artifact.json`, `preregistration.json`, `observations.json`, linked `source-review.json`, `result.json`, `summary.md`, and `command.txt` with `--output-dir`. |
 | `evaluate-ciphertext-hotspot` | Scores independently supplied one-based non-anchor positions against the committed ciphertext-hotspot artifact with a seeded same-size non-anchor position-set null in Markdown or JSON; marks quick `--positions` input as diagnostic, requires `--preregistration` for source-backed `--positions-file` JSON records, and can archive `artifact.json`, `preregistration.json`, `observations.json`, linked `source-review.json`, `result.json`, `summary.md`, and `command.txt` with `--output-dir`. |
 | `evaluate-ciphertext-rarity` | Scores independently supplied one-based non-anchor positions against the committed ciphertext-rarity artifact with a seeded same-size non-anchor position-set null in Markdown or JSON; marks quick `--positions` input as diagnostic, requires `--preregistration` for source-backed `--positions-file` JSON records, and can archive `artifact.json`, `preregistration.json`, `observations.json`, linked `source-review.json`, `result.json`, `summary.md`, and `command.txt` with `--output-dir`. |

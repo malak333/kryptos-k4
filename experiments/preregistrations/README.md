@@ -447,6 +447,14 @@ Current independent lanes:
   compass-axis layout lane with `grid_edge_axis: compass-axis` in the committed
   artifact
   `experiments/predictions/non-anchor-position-grid-compass-axis-v1.json`
+- `non-anchor-position-grid-width7-row-v1.json`, a populated 14-by-7
+  width-7 row-edge layout lane with `grid_edge_axis: row`,
+  `grid_row_count: 14`, and `grid_column_count: 7` in the committed artifact
+  `experiments/predictions/non-anchor-position-grid-width7-row-v1.json`.
+  The lane is grounded only in the registered `kryptos-today-progress-2026`
+  methodology-context width-7 rationale and remains a pre-score prediction
+  target until future source-backed non-anchor observations are validated and
+  evaluated.
 - `tableau-hill-v1.json`, a tooling-ready Tableau/HILL source-mapping
   lane grounded in `rumkin-k4-reference`, `cia-sculpture`, and
   `kryptosbot-sanborn-papers-2026`, with committed artifact

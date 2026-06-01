@@ -424,7 +424,7 @@
     }
   ],
   "promoted_candidate": false,
-  "source_inputs": "K4 ciphertext length, public anchor positions for exclusion only, and context-only 7-by-14 padding rationale from `kryptosbot-sanborn-papers-2026`; no fragment values, candidate words, routes, or public anchor-derived key fragments are scored.",
-  "prediction_rule": "Place K4 positions into a predeclared 7-by-14 padded grid with position 98 as padding. The scored target is enrichment at non-anchor compass-axis-edge positions; the orthogonal edge axis remains pre-score metadata only, without retuning the layout after observations are seen.",
+  "source_inputs": "K4 ciphertext length, public anchor positions for exclusion only, and context-only padded-grid rationale fixed before scoring as 7 rows by 14 columns; no fragment values, candidate words, routes, or public anchor-derived key fragments are scored.",
+  "prediction_rule": "Place K4 positions into a predeclared 7-by-14 padded grid with positions 98 as padding. The scored target is enrichment at non-anchor compass-axis-edge positions; the orthogonal edge axis remains pre-score metadata only, without retuning the layout after observations are seen.",
   "note": "Grid-layout prediction plan only; this emits predeclared source-context structural targets for future independent evidence and is not a decryption claim."
 }

@@ -814,10 +814,26 @@ pub fn build_grid_layout_prediction_plan() -> Result<GridLayoutPredictionPlan> {
 pub fn build_grid_layout_prediction_plan_for_axis(
     scored_edge_axis: GridLayoutEdgeAxis,
 ) -> Result<GridLayoutPredictionPlan> {
-    let row_count = 7;
-    let column_count = 14;
+    build_grid_layout_prediction_plan_with_dimensions(7, 14, scored_edge_axis)
+}
+
+pub fn build_grid_layout_prediction_plan_with_dimensions(
+    row_count: usize,
+    column_count: usize,
+    scored_edge_axis: GridLayoutEdgeAxis,
+) -> Result<GridLayoutPredictionPlan> {
+    if row_count == 0 || column_count == 0 {
+        bail!("grid-layout dimensions must be greater than zero");
+    }
     let padded_position_count = row_count * column_count;
     let k4_len = K4_CIPHERTEXT.len();
+    if padded_position_count < k4_len {
+        bail!(
+            "grid-layout dimensions {}x{} cover only {padded_position_count} cells for {k4_len} K4 positions",
+            row_count,
+            column_count
+        );
+    }
     let pad_positions_one_based = ((k4_len + 1)..=padded_position_count).collect::<Vec<_>>();
     let anchor_positions = anchor_position_set();
     let non_anchor_positions = non_anchor_positions_one_based(&anchor_positions);
@@ -871,6 +887,15 @@ pub fn build_grid_layout_prediction_plan_for_axis(
     }
     column_edge_positions_one_based.sort_unstable();
     column_edge_positions_one_based.dedup();
+    let padding_label = if pad_positions_one_based.is_empty() {
+        "none".to_string()
+    } else {
+        pad_positions_one_based
+            .iter()
+            .map(|position| position.to_string())
+            .collect::<Vec<_>>()
+            .join(", ")
+    };
 
     Ok(GridLayoutPredictionPlan {
         row_count,
@@ -885,9 +910,15 @@ pub fn build_grid_layout_prediction_plan_for_axis(
         rows,
         columns,
         promoted_candidate: false,
-        source_inputs: "K4 ciphertext length, public anchor positions for exclusion only, and context-only 7-by-14 padding rationale from `kryptosbot-sanborn-papers-2026`; no fragment values, candidate words, routes, or public anchor-derived key fragments are scored.".to_string(),
+        source_inputs: format!(
+            "K4 ciphertext length, public anchor positions for exclusion only, and context-only padded-grid rationale fixed before scoring as {} rows by {} columns; no fragment values, candidate words, routes, or public anchor-derived key fragments are scored.",
+            row_count, column_count
+        ),
         prediction_rule: format!(
-            "Place K4 positions into a predeclared 7-by-14 padded grid with position 98 as padding. The scored target is enrichment at non-anchor {}-edge positions; the orthogonal edge axis remains pre-score metadata only, without retuning the layout after observations are seen.",
+            "Place K4 positions into a predeclared {}-by-{} padded grid with positions {} as padding. The scored target is enrichment at non-anchor {}-edge positions; the orthogonal edge axis remains pre-score metadata only, without retuning the layout after observations are seen.",
+            row_count,
+            column_count,
+            padding_label,
             scored_edge_axis.label()
         ),
         note: "Grid-layout prediction plan only; this emits predeclared source-context structural targets for future independent evidence and is not a decryption claim.".to_string(),

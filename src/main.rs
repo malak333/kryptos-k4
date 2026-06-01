@@ -33,15 +33,15 @@ use kryptos_k4::{
     build_ciphertext_stehle_regularity_prior, build_ciphertext_structure_prior,
     build_ciphertext_transition_prior, build_ciphertext_turning_point_prior,
     build_ciphertext_window_balance_prior, build_grid_layout_prediction_plan_for_axis,
-    build_mirror_prediction_plan, build_period_prediction_plan, build_report,
-    build_tableau_hill_prediction_plan, candidate_sequences,
-    evaluate_ciphertext_adjacent_contrast_positions, evaluate_ciphertext_ct_perturbation_positions,
-    evaluate_ciphertext_hotspot_positions, evaluate_ciphertext_period_match_positions,
-    evaluate_ciphertext_rarity_positions, evaluate_ciphertext_repeat_distance_positions,
-    evaluate_ciphertext_residue_balance_positions, evaluate_ciphertext_skip_transition_positions,
-    evaluate_ciphertext_stehle_regularity_positions, evaluate_ciphertext_structure_prior_positions,
-    evaluate_ciphertext_transition_positions, evaluate_ciphertext_turning_point_positions,
-    evaluate_ciphertext_window_balance_positions,
+    build_grid_layout_prediction_plan_with_dimensions, build_mirror_prediction_plan,
+    build_period_prediction_plan, build_report, build_tableau_hill_prediction_plan,
+    candidate_sequences, evaluate_ciphertext_adjacent_contrast_positions,
+    evaluate_ciphertext_ct_perturbation_positions, evaluate_ciphertext_hotspot_positions,
+    evaluate_ciphertext_period_match_positions, evaluate_ciphertext_rarity_positions,
+    evaluate_ciphertext_repeat_distance_positions, evaluate_ciphertext_residue_balance_positions,
+    evaluate_ciphertext_skip_transition_positions, evaluate_ciphertext_stehle_regularity_positions,
+    evaluate_ciphertext_structure_prior_positions, evaluate_ciphertext_transition_positions,
+    evaluate_ciphertext_turning_point_positions, evaluate_ciphertext_window_balance_positions,
     evaluate_grid_layout_prediction_positions_with_axis, evaluate_mirror_prediction_positions,
     evaluate_period_prediction_positions, evaluate_spacing_prediction_positions,
     evaluate_tableau_hill_prediction_positions, explain_key_material, findings,
@@ -907,11 +907,17 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
     },
-    /// Emit a predeclared 7-by-14 padded grid-layout target for future independent evidence.
+    /// Emit a predeclared padded grid-layout target for future independent evidence.
     GridLayoutPredictionPlan {
         /// Scored edge axis to commit in the emitted artifact.
         #[arg(long = "edge-axis", value_enum, default_value_t = CliGridEdgeAxis::Row)]
         edge_axis: CliGridEdgeAxis,
+        /// Number of grid rows to predeclare.
+        #[arg(long, default_value_t = 7)]
+        rows: usize,
+        /// Number of grid columns to predeclare.
+        #[arg(long, default_value_t = 14)]
+        columns: usize,
         /// Output format.
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
@@ -3808,9 +3814,12 @@ fn main() -> Result<()> {
         } => print_period_prediction_plan(period, all, format)?,
         Command::SpacingPredictionPlan { format } => print_spacing_prediction_plan(format)?,
         Command::MirrorPredictionPlan { format } => print_mirror_prediction_plan(format)?,
-        Command::GridLayoutPredictionPlan { edge_axis, format } => {
-            print_grid_layout_prediction_plan(edge_axis.into(), format)?
-        }
+        Command::GridLayoutPredictionPlan {
+            edge_axis,
+            rows,
+            columns,
+            format,
+        } => print_grid_layout_prediction_plan(edge_axis.into(), rows, columns, format)?,
         Command::TableauHillPredictionPlan { format } => {
             print_tableau_hill_prediction_plan(format)?
         }
@@ -5655,8 +5664,13 @@ fn validate_archived_prediction_context(
                         .map(|plan| plan.scored_edge_axis)
                 })
                 .unwrap_or(GridLayoutEdgeAxis::Row);
-            build_grid_layout_prediction_plan_for_axis(edge_axis)
-                .and_then(|plan| serde_json::to_value(plan).map_err(Into::into))
+            match (registration.grid_row_count, registration.grid_column_count) {
+                (Some(rows), Some(columns)) => {
+                    build_grid_layout_prediction_plan_with_dimensions(rows, columns, edge_axis)
+                }
+                _ => build_grid_layout_prediction_plan_for_axis(edge_axis),
+            }
+            .and_then(|plan| serde_json::to_value(plan).map_err(Into::into))
         }
         "tableau-hill" => {
             serde_json::to_value(build_tableau_hill_prediction_plan()).map_err(Into::into)
@@ -13432,9 +13446,11 @@ fn print_mirror_prediction_plan_markdown(plan: &MirrorPredictionPlanSet) {
 
 fn print_grid_layout_prediction_plan(
     edge_axis: GridLayoutEdgeAxis,
+    rows: usize,
+    columns: usize,
     format: OutputFormat,
 ) -> Result<()> {
-    let plan = build_grid_layout_prediction_plan_for_axis(edge_axis)?;
+    let plan = build_grid_layout_prediction_plan_with_dimensions(rows, columns, edge_axis)?;
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&plan)?),
         OutputFormat::Markdown => print_grid_layout_prediction_plan_markdown(&plan),
