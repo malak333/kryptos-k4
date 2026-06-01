@@ -3,6 +3,47 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-06-01: Narrow Adjacent-Contrast Prediction Target Added
+
+Added `ciphertext-adjacent-contrast-narrow-v1`, a ciphertext-only adjacent
+contrast lane that fixes a distinct top-12 non-anchor target from the existing
+predeclared adjacent-neighbor contrast rule.
+
+This lane is a preregistered prediction target only. It uses K4 ciphertext and
+the fixed public-anchor exclusion mask as discovery inputs; it does not score
+or mine public anchor fragments as evidence.
+
+Validation:
+
+```bash
+cargo run --locked -- ciphertext-adjacent-contrast-prior \
+  --top 12 \
+  --format json > experiments/predictions/ciphertext-adjacent-contrast-narrow-v1.json
+
+cargo run --locked -- validate-preregistration \
+  --input experiments/preregistrations/ciphertext-adjacent-contrast-narrow-v1.json \
+  --format json
+
+cargo run --locked -- validate-prediction-artifact \
+  --preregistration experiments/preregistrations/ciphertext-adjacent-contrast-narrow-v1.json \
+  --require-unique-artifact \
+  --format json
+```
+
+Current committed target:
+
+- artifact: `experiments/predictions/ciphertext-adjacent-contrast-narrow-v1.json`
+- selected positions: `5, 6, 7, 37, 38, 39, 46, 53, 75, 78, 81, 87`
+- independent lanes: `79`
+- ready for source-backed observations: `79`
+- prediction artifacts: `79`
+- unique prediction artifacts: `37`
+- unique ready prediction artifacts: `37`
+- unique ready prediction targets: `37`
+- ciphertext-adjacent-contrast-position-prior-family lanes: `2`
+- ciphertext-adjacent-contrast-position-prior-family unique ready targets: `2`
+- promoted: `false`
+
 ## 2026-06-01: Ultra-Wide Window-Balance Prediction Target Added
 
 Added `ciphertext-window-balance-ultra-wide-v1`, a ciphertext-only local-window

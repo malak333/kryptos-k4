@@ -1,11 +1,10 @@
 use crate::{
     CiphertextResidueBalancePrior, GridLayoutEdgeAxis, PeriodPredictionPlanSet,
     build_all_period_prediction_plans, build_all_spacing_prediction_plans,
-    build_ciphertext_residue_balance_prior, build_ciphertext_window_balance_prior,
-    build_committed_ciphertext_adjacent_contrast_prior,
-    build_committed_ciphertext_ct_perturbation_prior, build_committed_ciphertext_hotspot_prior,
-    build_committed_ciphertext_period_match_prior, build_committed_ciphertext_rarity_prior,
-    build_committed_ciphertext_repeat_distance_prior,
+    build_ciphertext_adjacent_contrast_prior, build_ciphertext_residue_balance_prior,
+    build_ciphertext_window_balance_prior, build_committed_ciphertext_ct_perturbation_prior,
+    build_committed_ciphertext_hotspot_prior, build_committed_ciphertext_period_match_prior,
+    build_committed_ciphertext_rarity_prior, build_committed_ciphertext_repeat_distance_prior,
     build_committed_ciphertext_residue_balance_prior,
     build_committed_ciphertext_skip_transition_prior,
     build_committed_ciphertext_stehle_regularity_prior, build_committed_ciphertext_structure_prior,
@@ -43,6 +42,8 @@ pub struct LanePreregistration {
     pub ciphertext_window_balance_top: Option<usize>,
     #[serde(default)]
     pub ciphertext_window_balance_widths: Option<Vec<usize>>,
+    #[serde(default)]
+    pub ciphertext_adjacent_contrast_top: Option<usize>,
     pub discovery_inputs: Vec<String>,
     pub evaluation_inputs: Vec<String>,
     pub controls: Vec<String>,
@@ -808,9 +809,12 @@ pub fn validate_prediction_artifact_with_repo_root(
         Some("ciphertext-rarity") => Some(serde_json::to_value(
             build_committed_ciphertext_rarity_prior(),
         )?),
-        Some("ciphertext-adjacent-contrast") => Some(serde_json::to_value(
-            build_committed_ciphertext_adjacent_contrast_prior(),
-        )?),
+        Some("ciphertext-adjacent-contrast") => {
+            let top = registration.ciphertext_adjacent_contrast_top.unwrap_or(20);
+            Some(serde_json::to_value(
+                build_ciphertext_adjacent_contrast_prior(top),
+            )?)
+        }
         Some("ciphertext-repeat-distance") => Some(serde_json::to_value(
             build_committed_ciphertext_repeat_distance_prior(),
         )?),
@@ -1316,6 +1320,7 @@ mod tests {
             grid_edge_axis: None,
             ciphertext_window_balance_top: None,
             ciphertext_window_balance_widths: None,
+            ciphertext_adjacent_contrast_top: None,
             discovery_inputs: vec!["registered structural model".to_string()],
             evaluation_inputs: vec!["withheld non-anchor prediction target".to_string()],
             controls: vec!["seeded shuffle baseline".to_string()],

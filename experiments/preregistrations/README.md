@@ -152,6 +152,14 @@ Current independent lanes:
   only through future source-backed non-anchor observations and
   `validate-ciphertext-adjacent-contrast-observations` then
   `evaluate-ciphertext-adjacent-contrast` with seeded controls.
+- `ciphertext-adjacent-contrast-narrow-v1.json`, a populated ciphertext-only
+  narrow adjacent-contrast lane with committed artifact
+  `experiments/predictions/ciphertext-adjacent-contrast-narrow-v1.json`. The
+  artifact fixes the top 12 interior non-anchor positions with strongest
+  predeclared left/right neighbor contrast in Kryptos alphabet order; score it
+  only through future source-backed non-anchor observations and
+  `validate-ciphertext-adjacent-contrast-observations` then
+  `evaluate-ciphertext-adjacent-contrast` with seeded controls.
 - `ciphertext-structure-prior-v1.json`, a populated ciphertext-only position
   prior lane with committed artifact
   `experiments/predictions/ciphertext-structure-prior-v1.json`. The artifact
