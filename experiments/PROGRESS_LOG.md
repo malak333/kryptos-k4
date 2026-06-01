@@ -3,6 +3,54 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-06-01: 4-by-25 Segmented Grid Lane Preregistered
+
+Added `non-anchor-position-grid-4x25-row-v1`, a source-context-only
+4-by-25 padded grid-layout row-edge prediction target. The lane uses the
+refreshed `kryptosbot-sanborn-papers-2026` archive context only as rationale
+for a bounded segmented-cipher/overlay structural rule; it does not score public
+anchor fragments, candidate key material, routes, additive fragment values, or
+prior row-boundary evidence.
+
+Commands:
+
+```bash
+cargo run --locked -- grid-layout-prediction-plan \
+  --rows 4 \
+  --columns 25 \
+  --edge-axis row \
+  --format json > experiments/predictions/non-anchor-position-grid-4x25-row-v1.json
+
+cargo run --locked -- validate-preregistration \
+  --input experiments/preregistrations/non-anchor-position-grid-4x25-row-v1.json \
+  --format json
+
+cargo run --locked -- validate-prediction-artifact \
+  --preregistration experiments/preregistrations/non-anchor-position-grid-4x25-row-v1.json \
+  --require-unique-artifact \
+  --format json
+```
+
+Result:
+
+- preregistration valid: `true`
+- prediction artifact valid: `true`
+- artifact kind: `grid`
+- registered grid edge axis: `row`
+- expected/artifact plan count: `4` / `4`
+- expected/artifact period count: `4` / `4`
+- warnings: none
+- promoted: `false`
+- independent lanes: `84`
+- ready for source-backed observations: `84`
+- prediction artifacts: `84`
+- unique ready prediction targets: `42`
+- grid-layout-family lanes: `5`
+- grid-layout-family unique ready targets: `5`
+
+This is a pre-score prediction artifact only. It does not promote a K4
+solution, key, route, plaintext, or candidate.
+
 ## 2026-06-01: Sanborn-Papers Archive Context Refreshed
 
 Refreshed the quote-free local snapshot for

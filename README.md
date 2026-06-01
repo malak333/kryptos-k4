@@ -124,14 +124,16 @@ grounded and now has a source-backed validation/evaluation path; it is still
 not evidence by itself.
 It also includes `non-anchor-position-grid-layout-v1`,
 `non-anchor-position-grid-column-v1`, and
-`non-anchor-position-grid-width7-row-v1`, which separately predeclare bounded
+`non-anchor-position-grid-width7-row-v1`, plus
+`non-anchor-position-grid-4x25-row-v1`, which separately predeclare bounded
 padded grid-layout edge targets from context-only Sanborn-papers and Project K4
 source rationale. Each deterministic artifact carries its registered
 `grid_edge_axis` and dimensions, and source-backed
 `evaluate-grid-prediction --positions-file` runs must match that axis and
 artifact. The archived row-boundary evidence command uses the 7-by-14 row-edge
 preregistration and `--edge-axis row`; the column-edge and width-7 lanes are
-distinct future targets, not a
+distinct future targets, and the 4-by-25 lane is a separate segmented-grid row
+edge target, not a
 reinterpretation of that archive.
 That source can justify the preregistered structure, but it cannot directly
 provide scored observation positions.

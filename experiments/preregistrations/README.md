@@ -476,6 +476,14 @@ Current independent lanes:
   methodology-context width-7 rationale and remains a pre-score prediction
   target until future source-backed non-anchor observations are validated and
   evaluated.
+- `non-anchor-position-grid-4x25-row-v1.json`, a populated 4-by-25 segmented
+  row-edge layout lane with `grid_edge_axis: row`, `grid_row_count: 4`, and
+  `grid_column_count: 25` in the committed artifact
+  `experiments/predictions/non-anchor-position-grid-4x25-row-v1.json`. The
+  lane is grounded only in the registered `kryptosbot-sanborn-papers-2026`
+  archive-context segmented-cipher/overlay rationale and remains a pre-score
+  prediction target until future source-backed non-anchor observations are
+  validated and evaluated.
 - `tableau-hill-v1.json`, a tooling-ready Tableau/HILL source-mapping
   lane grounded in `rumkin-k4-reference`, `cia-sculpture`, and
   `kryptosbot-sanborn-papers-2026`, with committed artifact

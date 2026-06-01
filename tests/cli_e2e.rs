@@ -4130,15 +4130,15 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Independent Lane Status"))
-        .stdout(predicate::str::contains("lanes: 83"))
+        .stdout(predicate::str::contains("lanes: 84"))
         .stdout(predicate::str::contains(
-            "ready for source-backed observations: 83",
+            "ready for source-backed observations: 84",
         ))
         .stdout(predicate::str::contains("invalid lanes: 0"))
-        .stdout(predicate::str::contains("prediction artifacts: 83"))
-        .stdout(predicate::str::contains("unique prediction artifacts: 41"))
+        .stdout(predicate::str::contains("prediction artifacts: 84"))
+        .stdout(predicate::str::contains("unique prediction artifacts: 42"))
         .stdout(predicate::str::contains(
-            "unique ready prediction artifacts: 41",
+            "unique ready prediction artifacts: 42",
         ))
         .stdout(predicate::str::contains("duplicate artifact groups: 1"))
         .stdout(predicate::str::contains("duplicate artifact lanes: 43"))
@@ -4186,7 +4186,7 @@ fn independent_lane_status_summarizes_ready_lanes() {
             "| ciphertext-window-balance-position-prior | 5 | 5 | 5 | 5 | 5 | 0 |",
         ))
         .stdout(predicate::str::contains(
-            "| position-grid-layout-prediction | 4 | 4 | 4 | 4 | 4 | 0 |",
+            "| position-grid-layout-prediction | 5 | 5 | 5 | 5 | 5 | 0 |",
         ))
         .stdout(predicate::str::contains(
             "| position-mirror-prediction | 1 | 1 | 1 | 1 | 1 | 0 |",
@@ -4228,12 +4228,12 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["lane_count"], 83);
-    assert_eq!(json["ready_for_source_backed_observations"], 83);
+    assert_eq!(json["lane_count"], 84);
+    assert_eq!(json["ready_for_source_backed_observations"], 84);
     assert_eq!(json["invalid_lanes"], 0);
-    assert_eq!(json["prediction_artifacts"], 83);
-    assert_eq!(json["unique_prediction_artifacts"], 41);
-    assert_eq!(json["unique_ready_prediction_artifacts"], 41);
+    assert_eq!(json["prediction_artifacts"], 84);
+    assert_eq!(json["unique_prediction_artifacts"], 42);
+    assert_eq!(json["unique_ready_prediction_artifacts"], 42);
     assert_eq!(json["duplicate_prediction_artifact_lane_count"], 43);
     assert_eq!(json["duplicate_prediction_artifact_extra_lane_count"], 42);
     let families = json["family_summaries"].as_array().unwrap();
@@ -4326,8 +4326,8 @@ fn independent_lane_status_summarizes_ready_lanes() {
     }));
     assert!(families.iter().any(|family| {
         family["hypothesis_family"] == "position-grid-layout-prediction"
-            && family["lanes"] == 4
-            && family["unique_ready_prediction_artifacts"] == 4
+            && family["lanes"] == 5
+            && family["unique_ready_prediction_artifacts"] == 5
             && family["duplicate_artifact_groups"] == 0
     }));
     assert!(families.iter().any(|family| {
@@ -4757,7 +4757,7 @@ fn next_evidence_gate_prints_operational_checklist() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Next Evidence Gate"))
-        .stdout(predicate::str::contains("total ready lanes: 83"))
+        .stdout(predicate::str::contains("total ready lanes: 84"))
         .stdout(predicate::str::contains(
             "ciphertext-adjacent-contrast-position-prior",
         ))
@@ -4798,7 +4798,7 @@ fn next_evidence_gate_prints_operational_checklist() {
         .stdout(predicate::str::contains("family ready lanes: 47"))
         .stdout(predicate::str::contains("family unique ready artifacts: 5"))
         .stdout(predicate::str::contains(
-            "unique ready prediction artifacts: 41",
+            "unique ready prediction artifacts: 42",
         ))
         .stdout(predicate::str::contains(
             "duplicate prediction artifact groups: 1",
@@ -4940,7 +4940,7 @@ fn next_evidence_gate_prints_operational_checklist() {
             "validate-tableau-hill-observations",
         ))
         .stdout(predicate::str::contains("evaluate-tableau-hill-prediction"))
-        .stdout(predicate::str::contains("--edge-axis column"))
+        .stdout(predicate::str::contains("--edge-axis row"))
         .stdout(predicate::str::contains("validate-evaluation-archive"))
         .stdout(predicate::str::contains("evidence support details"))
         .stdout(predicate::str::contains(
@@ -4957,9 +4957,9 @@ fn next_evidence_gate_prints_operational_checklist() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["ready_lanes"], 83);
+    assert_eq!(json["ready_lanes"], 84);
     assert_eq!(json["invalid_lanes"], 0);
-    assert_eq!(json["unique_ready_prediction_artifacts"], 41);
+    assert_eq!(json["unique_ready_prediction_artifacts"], 42);
     assert_eq!(json["duplicate_prediction_artifact_group_count"], 1);
     assert_eq!(
         json["duplicate_prediction_artifact_groups"][0]["lane_ids"]
@@ -5645,7 +5645,7 @@ fn next_evidence_gate_prints_operational_checklist() {
     assert!(gates.iter().any(|gate| {
         gate["hypothesis_family"] == "position-grid-layout-prediction"
             && gate["representative_preregistration"]
-                == "experiments/preregistrations/non-anchor-position-grid-column-v1.json"
+                == "experiments/preregistrations/non-anchor-position-grid-4x25-row-v1.json"
             && gate["validation_command"]
                 .as_str()
                 .unwrap()
@@ -5657,7 +5657,7 @@ fn next_evidence_gate_prints_operational_checklist() {
             && gate["evaluation_command"]
                 .as_str()
                 .unwrap()
-                .contains("--edge-axis column")
+                .contains("--edge-axis row")
             && gate["archive_validation_command"]
                 .as_str()
                 .unwrap()
@@ -5730,9 +5730,9 @@ fn next_evidence_gate_summary_omits_full_gate_table() {
         .success()
         .stdout(predicate::str::contains("Next Evidence Gate Summary"))
         .stdout(predicate::str::contains("This is not a claimed solution."))
-        .stdout(predicate::str::contains("total ready lanes: 83"))
+        .stdout(predicate::str::contains("total ready lanes: 84"))
         .stdout(predicate::str::contains(
-            "unique ready prediction artifacts: 41",
+            "unique ready prediction artifacts: 42",
         ))
         .stdout(predicate::str::contains("family gate count: 18"))
         .stdout(predicate::str::contains(
@@ -5752,9 +5752,9 @@ fn next_evidence_gate_summary_omits_full_gate_table() {
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
     assert_eq!(json["summary"], true);
-    assert_eq!(json["ready_lanes"], 83);
+    assert_eq!(json["ready_lanes"], 84);
     assert_eq!(json["invalid_lanes"], 0);
-    assert_eq!(json["unique_ready_prediction_artifacts"], 41);
+    assert_eq!(json["unique_ready_prediction_artifacts"], 42);
     assert_eq!(json["family_gate_count"], 18);
     assert_eq!(
         json["next_action_kind"],
