@@ -1,7 +1,7 @@
 # SSRN Bonifacino Weltzeituhr Error-Key Source Snapshot
 
 source_id: `ssrn-bonifacino-weltzeituhr-error-key-2025`
-source_url: https://ssrn.com/abstract=5779902
+source_url: https://ssrn.com/abstract=5779863
 reviewed_at: 2026-05-31
 archive_kind: quote-free local review snapshot
 non_scorable_reason: Quarantined solution claims are not source-backed observation evidence and must only be screened by temporary local verifiers.
@@ -13,13 +13,13 @@ artifact.
 
 ## Reviewed Facts
 
-- The SSRN record is titled "Full Derivation of the Weltzeituhr Error Key
-  Decryption Method for Kryptos K4" and lists Ryan Bonifacino as author.
-- The SSRN page says the paper was posted on 2025-11-21 and gives 2025-11-18 as
+- The SSRN record is titled "The Weltzeituhr Error Key: A Mechanically
+  Reproducible Decryption of Kryptos K4" and lists Ryan Bonifacino as author.
+- The SSRN page says the paper was posted on 2025-12-23 and gives 2025-11-18 as
   the written date.
-- The abstract describes a proposed mechanical K4 decryption method tied to the
-  Berlin Weltzeituhr and says the approach uses a running-key Vigenere variant
-  generated from a deterministic rule.
+- The abstract describes a proposed mechanical and reproducible K4 decryption
+  method tied to the physical construction and documented repair history of the
+  Berlin Weltzeituhr.
 - This record belongs to the same claim family as the companion running-key
   candidate paper and generative-method paper.
 - The source is a public community solution claim, not confirmation from Jim

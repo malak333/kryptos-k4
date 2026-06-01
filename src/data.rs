@@ -441,13 +441,13 @@ pub fn sources() -> Vec<Source> {
         },
         Source {
             id: "ssrn-bonifacino-weltzeituhr-error-key-2025",
-            label: "SSRN Bonifacino 2025 Weltzeituhr error-key derivation paper",
-            url: "https://ssrn.com/abstract=5779902",
+            label: "SSRN Bonifacino 2025 Weltzeituhr error-key paper",
+            url: "https://ssrn.com/abstract=5779863",
             archive_url: Some(
                 "sources/archives/ssrn-bonifacino-weltzeituhr-error-key-2025-2026-05-31.md",
             ),
             accessed_at: "2026-05-31",
-            publication_date: Some("2025-11-21"),
+            publication_date: Some("2025-12-23"),
             source_type: "community-solution-claim",
             allowed_use: "unverified-solution-claim",
             use_note: "Public claimed derivation for a Weltzeituhr running-key K4 method; quarantined for future independent verification only, not source-backed evidence, not candidate material, and not release-facing plaintext.",

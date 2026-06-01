@@ -3,6 +3,24 @@
 This log records command-backed findings that affect what should be tried next.
 It is not a claimed solution.
 
+## 2026-05-31: Weltzeituhr Error-Key SSRN Metadata Corrected
+
+Corrected the registered SSRN source metadata for
+`ssrn-bonifacino-weltzeituhr-error-key-2025` after live source verification.
+
+Current source metadata:
+
+- canonical URL: `https://ssrn.com/abstract=5779863`
+- title: `The Weltzeituhr Error Key: A Mechanically Reproducible Decryption of Kryptos K4`
+- posted date: `2025-12-23`
+- written date: `2025-11-18`
+- allowed use: `unverified-solution-claim`
+- promoted: `false`
+
+This is provenance hygiene only. The source remains quarantined and does not
+become source-backed evidence, candidate material, key-stream evidence, or a
+claimed solution.
+
 ## 2026-05-31: Mid Window-Balance Prediction Target Added
 
 Added `ciphertext-window-balance-mid-v1`, a ciphertext-only local-window
