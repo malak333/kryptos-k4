@@ -1,0 +1,32 @@
+{
+  "id": "non-anchor-position-grid-layout-v1",
+  "title": "Non-anchor 7-by-14 grid-layout row-edge prediction",
+  "hypothesis_family": "position-grid-layout-prediction",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [
+    "kryptosbot-sanborn-papers-2026"
+  ],
+  "rationale": "This lane predeclares a source-context structural model from the registered Sanborn-papers archive snapshot before scoring any new observations. The source is archive-context-only, so it is not scored as evidence itself; it only fixes the 7-by-14 padded layout rule before future source-backed non-anchor positions are evaluated. This is not another pass over public-anchor additive fragments, candidate words, routed key material, or the existing row-boundary observation.",
+  "prediction_target": "Future independently sourced non-anchor K4 position observations should be enriched at predeclared 7-by-14 row-edge positions if a padded rectangular layout is structurally relevant.",
+  "prediction_artifact": "experiments/predictions/non-anchor-position-grid-layout-v1.json",
+  "grid_edge_axis": "row",
+  "discovery_inputs": [
+    "K4 ciphertext length of 97 characters",
+    "Known-clue occupied positions for exclusion only",
+    "Context-only KryptosBot/Sanborn-papers rationale that 97 plus one padding character is compatible with a 7-by-14 rectangular layout",
+    "Predeclared row-edge rule emitted before observing or scoring future source-backed positions"
+  ],
+  "evaluation_inputs": [
+    "Future source-documented non-anchor K4 position observations",
+    "Observation files that declare eligible source IDs, one-based positions, per-position notes, and rationale before evaluation",
+    "Source-backed position sets not used to construct the 7-by-14 grid-layout artifact"
+  ],
+  "controls": [
+    "seeded null over sampled non-anchor position sets of the same size",
+    "validate-grid-observations and evaluate-grid-prediction required before interpreting source-backed observations",
+    "multiple-comparison correction if interpreted beside period, spacing, or mirror families",
+    "archive-context-only sources cannot directly provide scored observation positions"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

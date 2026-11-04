@@ -1,0 +1,464 @@
+{
+  "artifact_path": "experiments/predictions/non-anchor-position-period-v1.json",
+  "observation_id": "cia-k4-row-boundaries-v1",
+  "observation_source_ids": [
+    "cia-sculpture"
+  ],
+  "observation_source_review_file": "experiments/source-reviews/cia-source-review-v1.json",
+  "observation_rationale": "Pre-score source-backed observation from the CIA sculpture page text-version rendering: K4 appears as a short suffix followed by three rendered lines, so only non-anchor row-boundary positions are retained for evaluation.",
+  "observation_position_notes": {
+    "1": "CIA sculpture snapshot records this as the first non-anchor K4 row-boundary position from the text-version rendering.",
+    "36": "CIA sculpture snapshot records this as the last non-anchor position before the next rendered line break after excluding anchor positions.",
+    "37": "CIA sculpture snapshot records this as the first non-anchor K4 position after that rendered line break.",
+    "4": "CIA sculpture snapshot records this as the end of the short K4 suffix before the next rendered line.",
+    "5": "CIA sculpture snapshot records this as the first non-anchor K4 position after the short suffix line break.",
+    "97": "CIA sculpture snapshot records this as the final K4 position in the 97-character remaining message."
+  },
+  "source_backed_observation": true,
+  "observation_warning": null,
+  "observed_position_count": 6,
+  "observed_positions_one_based": [
+    1,
+    4,
+    5,
+    36,
+    37,
+    97
+  ],
+  "best_period": 2,
+  "best_residue": 0,
+  "best_hits": 4,
+  "best_hit_rate": 0.6666666666666666,
+  "null_mean_best_hits": 4.0592,
+  "null_std_dev_best_hits": 0.7296679792895959,
+  "empirical_p_value": 0.7896921030789692,
+  "iterations": 100000,
+  "seed": 67,
+  "period_results": [
+    {
+      "period": 2,
+      "best_residue": 0,
+      "best_hits": 4,
+      "best_hit_rate": 0.6666666666666666,
+      "residue_hits": [
+        {
+          "residue": 0,
+          "hits": 4,
+          "matching_positions_one_based": [
+            1,
+            5,
+            37,
+            97
+          ]
+        },
+        {
+          "residue": 1,
+          "hits": 2,
+          "matching_positions_one_based": [
+            4,
+            36
+          ]
+        }
+      ]
+    },
+    {
+      "period": 3,
+      "best_residue": 0,
+      "best_hits": 4,
+      "best_hit_rate": 0.6666666666666666,
+      "residue_hits": [
+        {
+          "residue": 0,
+          "hits": 4,
+          "matching_positions_one_based": [
+            1,
+            4,
+            37,
+            97
+          ]
+        },
+        {
+          "residue": 1,
+          "hits": 1,
+          "matching_positions_one_based": [
+            5
+          ]
+        },
+        {
+          "residue": 2,
+          "hits": 1,
+          "matching_positions_one_based": [
+            36
+          ]
+        }
+      ]
+    },
+    {
+      "period": 4,
+      "best_residue": 0,
+      "best_hits": 4,
+      "best_hit_rate": 0.6666666666666666,
+      "residue_hits": [
+        {
+          "residue": 0,
+          "hits": 4,
+          "matching_positions_one_based": [
+            1,
+            5,
+            37,
+            97
+          ]
+        },
+        {
+          "residue": 1,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 2,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 3,
+          "hits": 2,
+          "matching_positions_one_based": [
+            4,
+            36
+          ]
+        }
+      ]
+    },
+    {
+      "period": 5,
+      "best_residue": 0,
+      "best_hits": 2,
+      "best_hit_rate": 0.3333333333333333,
+      "residue_hits": [
+        {
+          "residue": 0,
+          "hits": 2,
+          "matching_positions_one_based": [
+            1,
+            36
+          ]
+        },
+        {
+          "residue": 1,
+          "hits": 2,
+          "matching_positions_one_based": [
+            37,
+            97
+          ]
+        },
+        {
+          "residue": 2,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 3,
+          "hits": 1,
+          "matching_positions_one_based": [
+            4
+          ]
+        },
+        {
+          "residue": 4,
+          "hits": 1,
+          "matching_positions_one_based": [
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "period": 7,
+      "best_residue": 0,
+      "best_hits": 2,
+      "best_hit_rate": 0.3333333333333333,
+      "residue_hits": [
+        {
+          "residue": 0,
+          "hits": 2,
+          "matching_positions_one_based": [
+            1,
+            36
+          ]
+        },
+        {
+          "residue": 1,
+          "hits": 1,
+          "matching_positions_one_based": [
+            37
+          ]
+        },
+        {
+          "residue": 2,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 3,
+          "hits": 1,
+          "matching_positions_one_based": [
+            4
+          ]
+        },
+        {
+          "residue": 4,
+          "hits": 1,
+          "matching_positions_one_based": [
+            5
+          ]
+        },
+        {
+          "residue": 5,
+          "hits": 1,
+          "matching_positions_one_based": [
+            97
+          ]
+        },
+        {
+          "residue": 6,
+          "hits": 0,
+          "matching_positions_one_based": []
+        }
+      ]
+    },
+    {
+      "period": 8,
+      "best_residue": 0,
+      "best_hits": 2,
+      "best_hit_rate": 0.3333333333333333,
+      "residue_hits": [
+        {
+          "residue": 0,
+          "hits": 2,
+          "matching_positions_one_based": [
+            1,
+            97
+          ]
+        },
+        {
+          "residue": 1,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 2,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 3,
+          "hits": 2,
+          "matching_positions_one_based": [
+            4,
+            36
+          ]
+        },
+        {
+          "residue": 4,
+          "hits": 2,
+          "matching_positions_one_based": [
+            5,
+            37
+          ]
+        },
+        {
+          "residue": 5,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 6,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 7,
+          "hits": 0,
+          "matching_positions_one_based": []
+        }
+      ]
+    },
+    {
+      "period": 13,
+      "best_residue": 0,
+      "best_hits": 1,
+      "best_hit_rate": 0.16666666666666666,
+      "residue_hits": [
+        {
+          "residue": 0,
+          "hits": 1,
+          "matching_positions_one_based": [
+            1
+          ]
+        },
+        {
+          "residue": 1,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 2,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 3,
+          "hits": 1,
+          "matching_positions_one_based": [
+            4
+          ]
+        },
+        {
+          "residue": 4,
+          "hits": 1,
+          "matching_positions_one_based": [
+            5
+          ]
+        },
+        {
+          "residue": 5,
+          "hits": 1,
+          "matching_positions_one_based": [
+            97
+          ]
+        },
+        {
+          "residue": 6,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 7,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 8,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 9,
+          "hits": 1,
+          "matching_positions_one_based": [
+            36
+          ]
+        },
+        {
+          "residue": 10,
+          "hits": 1,
+          "matching_positions_one_based": [
+            37
+          ]
+        },
+        {
+          "residue": 11,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 12,
+          "hits": 0,
+          "matching_positions_one_based": []
+        }
+      ]
+    },
+    {
+      "period": 14,
+      "best_residue": 0,
+      "best_hits": 1,
+      "best_hit_rate": 0.16666666666666666,
+      "residue_hits": [
+        {
+          "residue": 0,
+          "hits": 1,
+          "matching_positions_one_based": [
+            1
+          ]
+        },
+        {
+          "residue": 1,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 2,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 3,
+          "hits": 1,
+          "matching_positions_one_based": [
+            4
+          ]
+        },
+        {
+          "residue": 4,
+          "hits": 1,
+          "matching_positions_one_based": [
+            5
+          ]
+        },
+        {
+          "residue": 5,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 6,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 7,
+          "hits": 1,
+          "matching_positions_one_based": [
+            36
+          ]
+        },
+        {
+          "residue": 8,
+          "hits": 1,
+          "matching_positions_one_based": [
+            37
+          ]
+        },
+        {
+          "residue": 9,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 10,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 11,
+          "hits": 0,
+          "matching_positions_one_based": []
+        },
+        {
+          "residue": 12,
+          "hits": 1,
+          "matching_positions_one_based": [
+            97
+          ]
+        },
+        {
+          "residue": 13,
+          "hits": 0,
+          "matching_positions_one_based": []
+        }
+      ]
+    }
+  ],
+  "promoted_candidate": false,
+  "note": "Period prediction evaluation scores independent non-anchor positions against a committed artifact with a best-of-period null; it is not a claimed solution."
+}

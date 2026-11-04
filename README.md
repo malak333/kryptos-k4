@@ -1,5 +1,7 @@
 # Kryptos K4 Research CLI
 
+> **Slim-down note (2026-11-03):** duplicate and escalating-variant lanes were pruned. References below to lanes that no longer exist are historical; those files are preserved at git tag `pre-slimdown`. See `docs/negative-results.md`.
+
 `kryptos-k4` is a Rust CLI for source-grounded Kryptos K4 research. It preserves the public K4 ciphertext, known public anchors, source provenance, and repeatable constraint analyses without using leaked or archive-discovered plaintext.
 
 This project is not a claimed K4 solution.
@@ -40,13 +42,6 @@ cargo run -- position-structure --target spans --alphabet all --iterations 1000 
 cargo run -- structural-models --target spans --alphabet kryptos --iterations 1000 --seed 42
 cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-period-v1.json
 cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-v1.json
-cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-period-v2.json --format json
-cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-v2.json --format json
-cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-period-v3.json --format json
-cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-v3.json --format json
-cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-period-v4.json --format json
-cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-v4.json --format json
-cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-period-followup-v1.json --format json
 cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-spacing-v1.json --format json
 cargo run -- validate-prediction-artifact --preregistration experiments/preregistrations/non-anchor-position-spacing-v1.json --format json
 cargo run -- validate-preregistration --input experiments/preregistrations/non-anchor-position-mirror-v1.json --format json

@@ -1,0 +1,29 @@
+{
+  "id": "ciphertext-transition-prior-v1",
+  "title": "Ciphertext adjacent-transition position prior v1",
+  "hypothesis_family": "ciphertext-transition-position-prior",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane predeclares a ciphertext-only adjacent-transition position target before scoring any future source-backed observation. It does not tune candidate key material, routes, plaintext claims, or additive-fragment matches, so it is not another pass over public-anchor-derived evidence.",
+  "prediction_target": "Future independently sourced non-anchor K4 position observations should be enriched in the committed high-transition-pressure positions if adjacent ciphertext transitions mark structurally important positions.",
+  "prediction_artifact": "experiments/predictions/ciphertext-transition-prior-v1.json",
+  "discovery_inputs": [
+    "Public K4 ciphertext only",
+    "Fixed exclusion mask for already-known clue spans, used only to set the future non-anchor target universe",
+    "Fixed rule: map ciphertext letters to Kryptos alphabet order, sum circular adjacent-letter distances for each non-anchor position, choose the 20 highest-scoring positions, and tie-break by max adjacent distance then lower one-based position"
+  ],
+  "evaluation_inputs": [
+    "Future independently sourced non-anchor K4 position observations",
+    "Source-reviewed observation files with eligible source IDs, one-based positions, per-position notes, and rationale declared before evaluation",
+    "Position-only scoring target that excludes known clue-span additive fragments as primary evidence"
+  ],
+  "controls": [
+    "source-backed observation file required before scoring",
+    "seeded same-size non-anchor position-shuffle baseline",
+    "multiple-comparison context across all preregistered independent lanes before interpretation",
+    "require-unique-artifact gate for any lane intended to add a new prediction target",
+    "promotion blocked unless future independent observations beat controls without post-hoc retuning"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

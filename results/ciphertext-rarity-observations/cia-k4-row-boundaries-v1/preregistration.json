@@ -1,0 +1,29 @@
+{
+  "id": "ciphertext-rarity-prior-v1",
+  "title": "Ciphertext rare-letter position prior v1",
+  "hypothesis_family": "ciphertext-rarity-position-prior",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane is a ciphertext-only preregistered target, not another public-anchor mining pass. It does not add candidate words, routes, claimed plaintext, public-anchor additive fragments, or anchor-derived match counts as evidence. Public anchors are used only as an exclusion mask so future scoring is limited to independently sourced non-anchor observations.",
+  "prediction_target": "Future independently sourced non-anchor K4 position observations should be enriched in the predeclared rare-ciphertext-letter positions from the committed artifact at a rate exceeding seeded same-size non-anchor position-shuffle and multiple-comparison controls.",
+  "prediction_artifact": "experiments/predictions/ciphertext-rarity-prior-v1.json",
+  "discovery_inputs": [
+    "Public K4 ciphertext only",
+    "Fixed exclusion mask for already-known clue spans, used only to set the future non-anchor target universe",
+    "Fixed rule: count ciphertext letters across non-anchor positions, choose the 20 positions whose letters are rarest, and tie-break by lower one-based position"
+  ],
+  "evaluation_inputs": [
+    "Future independently sourced non-anchor K4 position observations",
+    "Source-reviewed observation files with eligible source IDs, one-based positions, per-position notes, and rationale declared before evaluation",
+    "Position-only scoring target that excludes public anchor additive fragments as primary evidence"
+  ],
+  "controls": [
+    "source-backed observation file required before scoring",
+    "seeded same-size non-anchor position-shuffle baseline",
+    "multiple-comparison context across all preregistered independent lanes before interpretation",
+    "require-unique-artifact gate for any lane intended to add a new prediction target",
+    "promotion blocked unless future independent observations beat controls without post-hoc retuning"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

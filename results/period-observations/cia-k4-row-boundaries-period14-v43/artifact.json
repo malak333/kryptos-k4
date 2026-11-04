@@ -1,0 +1,175 @@
+{
+  "period_count": 1,
+  "plans": [
+    {
+      "period": 14,
+      "non_anchor_position_count": 73,
+      "anchor_position_count": 24,
+      "residues": [
+        {
+          "residue": 0,
+          "position_count": 5,
+          "positions_one_based": [
+            1,
+            15,
+            43,
+            57,
+            85
+          ]
+        },
+        {
+          "residue": 1,
+          "position_count": 5,
+          "positions_one_based": [
+            2,
+            16,
+            44,
+            58,
+            86
+          ]
+        },
+        {
+          "residue": 2,
+          "position_count": 5,
+          "positions_one_based": [
+            3,
+            17,
+            45,
+            59,
+            87
+          ]
+        },
+        {
+          "residue": 3,
+          "position_count": 5,
+          "positions_one_based": [
+            4,
+            18,
+            46,
+            60,
+            88
+          ]
+        },
+        {
+          "residue": 4,
+          "position_count": 6,
+          "positions_one_based": [
+            5,
+            19,
+            47,
+            61,
+            75,
+            89
+          ]
+        },
+        {
+          "residue": 5,
+          "position_count": 6,
+          "positions_one_based": [
+            6,
+            20,
+            48,
+            62,
+            76,
+            90
+          ]
+        },
+        {
+          "residue": 6,
+          "position_count": 7,
+          "positions_one_based": [
+            7,
+            21,
+            35,
+            49,
+            63,
+            77,
+            91
+          ]
+        },
+        {
+          "residue": 7,
+          "position_count": 5,
+          "positions_one_based": [
+            8,
+            36,
+            50,
+            78,
+            92
+          ]
+        },
+        {
+          "residue": 8,
+          "position_count": 5,
+          "positions_one_based": [
+            9,
+            37,
+            51,
+            79,
+            93
+          ]
+        },
+        {
+          "residue": 9,
+          "position_count": 5,
+          "positions_one_based": [
+            10,
+            38,
+            52,
+            80,
+            94
+          ]
+        },
+        {
+          "residue": 10,
+          "position_count": 5,
+          "positions_one_based": [
+            11,
+            39,
+            53,
+            81,
+            95
+          ]
+        },
+        {
+          "residue": 11,
+          "position_count": 5,
+          "positions_one_based": [
+            12,
+            40,
+            54,
+            82,
+            96
+          ]
+        },
+        {
+          "residue": 12,
+          "position_count": 5,
+          "positions_one_based": [
+            13,
+            41,
+            55,
+            83,
+            97
+          ]
+        },
+        {
+          "residue": 13,
+          "position_count": 4,
+          "positions_one_based": [
+            14,
+            42,
+            56,
+            84
+          ]
+        }
+      ],
+      "promoted_candidate": false,
+      "source_inputs": "K4 ciphertext length, public anchor positions, and context-only 7-by-14 layout rationale from `kryptosbot-sanborn-papers-2026`; no fragment values, candidate words, or public anchor-derived key fragments are scored.",
+      "prediction_rule": "Group every non-anchor K4 position by zero-based position modulo the registered period; future independent evidence must be evaluated against these residue classes without retuning.",
+      "note": "Period prediction plan only; this emits a predeclared target for future independent evidence and is not a decryption claim."
+    }
+  ],
+  "promoted_candidate": false,
+  "note": "Single-period prediction plan set only; this emits a distinct predeclared target for future independent evidence and is not a decryption claim."
+}

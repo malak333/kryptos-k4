@@ -1,0 +1,33 @@
+{
+  "id": "non-anchor-position-grid-column-v1",
+  "title": "Non-anchor 7-by-14 grid-layout column-edge prediction",
+  "hypothesis_family": "position-grid-layout-prediction",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [
+    "kryptosbot-sanborn-papers-2026"
+  ],
+  "rationale": "This lane predeclares the orthogonal column-edge target from the same source-context 7-by-14 padded layout rule before any future source-backed observation is scored. The source is archive-context-only, so it can justify the structural rule but cannot supply scored positions. This lane exists so column-edge scoring is explicit and preregistered rather than inferred from the earlier row-edge lane or from the prior diagnostic column run.",
+  "prediction_target": "Future independently sourced non-anchor K4 position observations should be enriched at predeclared 7-by-14 column-edge positions if vertical edge structure is relevant to the padded rectangular layout.",
+  "prediction_artifact": "experiments/predictions/non-anchor-position-grid-column-v1.json",
+  "grid_edge_axis": "column",
+  "discovery_inputs": [
+    "K4 ciphertext length of 97 characters",
+    "Known-clue occupied positions for exclusion only",
+    "Context-only KryptosBot/Sanborn-papers rationale that 97 plus one padding character is compatible with a 7-by-14 rectangular layout",
+    "Predeclared column-edge rule emitted before observing or scoring future source-backed positions"
+  ],
+  "evaluation_inputs": [
+    "Future source-documented non-anchor K4 position observations",
+    "Observation files that declare eligible source IDs, one-based positions, per-position notes, and rationale before evaluation",
+    "Source-backed position sets not used to construct the 7-by-14 grid-layout artifact"
+  ],
+  "controls": [
+    "seeded null over sampled non-anchor position sets of the same size",
+    "validate-grid-observations and evaluate-grid-prediction required before interpreting source-backed observations",
+    "the evaluator must use --edge-axis column and this preregistration before a source-backed archive can be treated as evidence",
+    "multiple-comparison correction if interpreted beside period, spacing, mirror, row-edge grid, or Tableau/HILL families",
+    "archive-context-only sources cannot directly provide scored observation positions"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

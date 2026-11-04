@@ -1,0 +1,29 @@
+{
+  "id": "ciphertext-repeat-distance-v1",
+  "title": "Ciphertext repeat-distance non-anchor position prior",
+  "hypothesis_family": "ciphertext-repeat-distance-position-prior",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane predeclares a ciphertext-only repeat-distance rule before any new evidence is scored. It is not another public-anchor mining pass because discovery does not use public known-plaintext anchors, additive fragment values, candidate key material, routed-key results, held-out anchor controls, source-expanded candidate screens, or prior public-fragment structure screens.",
+  "prediction_target": "Future independently sourced non-anchor K4 position observations should be enriched at positions selected by a predeclared repeat-distance support rule over the raw K4 ciphertext sequence before any candidate-word, route, key-material, or public-anchor-derived fragment scoring is performed.",
+  "prediction_artifact": "experiments/predictions/ciphertext-repeat-distance-v1.json",
+  "discovery_inputs": [
+    "K4 ciphertext letters only, with positions interpreted as one-based absolute ciphertext positions.",
+    "Predeclared repeat-distance support rule using repeated ciphertext symbols and their pairwise distances across the full ciphertext.",
+    "A fixed top-position selection rule emitted before any independent observation scoring."
+  ],
+  "evaluation_inputs": [
+    "Future independently source-backed non-anchor K4 position observations with source IDs, one-based positions, notes, and rationale declared before scoring.",
+    "A committed prediction artifact generated from the predeclared ciphertext repeat-distance rule before evaluating the independent observations.",
+    "Public anchor fragments may appear only in provenance, exclusion, or negative-control summaries, not as the primary evidence target."
+  ],
+  "controls": [
+    "seeded same-size non-anchor position shuffle baseline",
+    "symbol-label shuffle baseline preserving ciphertext position count and alphabet membership",
+    "multiple-comparison correction across any predeclared distance windows or support thresholds",
+    "archive validation requiring preregistration, prediction artifact, source-backed observation file, command metadata, and non-promotion caveat",
+    "promotion blocked unless future independent observations beat all predeclared controls without post-hoc retuning"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

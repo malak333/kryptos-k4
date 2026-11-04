@@ -621,115 +621,6 @@ fn ciphertext_window_balance_prior_has_committed_prediction_artifact() {
     assert_eq!(validation["artifact_kind"], "ciphertext-window-balance");
     assert_eq!(validation["expected_plan_count"], 20);
     assert_eq!(validation["duplicate_artifact_paths"].as_array(), None);
-
-    let narrow_output = Command::cargo_bin("kryptos-k4")
-        .unwrap()
-        .args([
-            "ciphertext-window-balance-prior",
-            "--top",
-            "12",
-            "--window-widths",
-            "3,5",
-            "--format",
-            "json",
-        ])
-        .assert()
-        .success()
-        .get_output()
-        .stdout
-        .clone();
-    let narrow_json: Value = serde_json::from_slice(&narrow_output).unwrap();
-    let narrow_fixture: Value = serde_json::from_str(
-        &std::fs::read_to_string(
-            "experiments/predictions/ciphertext-window-balance-narrow-v1.json",
-        )
-        .unwrap(),
-    )
-    .unwrap();
-    assert_eq!(narrow_fixture, narrow_json);
-
-    let narrow_validation_output = Command::cargo_bin("kryptos-k4")
-        .unwrap()
-        .args([
-            "validate-prediction-artifact",
-            "--preregistration",
-            "experiments/preregistrations/ciphertext-window-balance-narrow-v1.json",
-            "--require-unique-artifact",
-            "--format",
-            "json",
-        ])
-        .assert()
-        .success()
-        .get_output()
-        .stdout
-        .clone();
-    let narrow_validation: Value = serde_json::from_slice(&narrow_validation_output).unwrap();
-    assert_eq!(narrow_validation["valid"], true);
-    assert_eq!(
-        narrow_validation["artifact_kind"],
-        "ciphertext-window-balance"
-    );
-    assert_eq!(narrow_validation["expected_plan_count"], 12);
-    assert_eq!(narrow_validation["artifact_plan_count"], 12);
-    assert_eq!(
-        narrow_validation["duplicate_artifact_paths"].as_array(),
-        None
-    );
-
-    let ultra_wide_output = Command::cargo_bin("kryptos-k4")
-        .unwrap()
-        .args([
-            "ciphertext-window-balance-prior",
-            "--top",
-            "12",
-            "--window-widths",
-            "15,17,19",
-            "--format",
-            "json",
-        ])
-        .assert()
-        .success()
-        .get_output()
-        .stdout
-        .clone();
-    let ultra_wide_json: Value = serde_json::from_slice(&ultra_wide_output).unwrap();
-    let ultra_wide_fixture: Value = serde_json::from_str(
-        &std::fs::read_to_string(
-            "experiments/predictions/ciphertext-window-balance-ultra-wide-v1.json",
-        )
-        .unwrap(),
-    )
-    .unwrap();
-    assert_eq!(ultra_wide_fixture, ultra_wide_json);
-
-    let ultra_wide_validation_output = Command::cargo_bin("kryptos-k4")
-        .unwrap()
-        .args([
-            "validate-prediction-artifact",
-            "--preregistration",
-            "experiments/preregistrations/ciphertext-window-balance-ultra-wide-v1.json",
-            "--require-unique-artifact",
-            "--format",
-            "json",
-        ])
-        .assert()
-        .success()
-        .get_output()
-        .stdout
-        .clone();
-    let ultra_wide_validation: Value =
-        serde_json::from_slice(&ultra_wide_validation_output).unwrap();
-    assert_eq!(ultra_wide_validation["valid"], true);
-    assert_eq!(
-        ultra_wide_validation["artifact_kind"],
-        "ciphertext-window-balance"
-    );
-    assert_eq!(ultra_wide_validation["expected_plan_count"], 12);
-    assert_eq!(ultra_wide_validation["artifact_plan_count"], 12);
-    assert_eq!(
-        ultra_wide_validation["duplicate_artifact_paths"].as_array(),
-        None
-    );
 }
 
 #[test]
@@ -780,58 +671,6 @@ fn ciphertext_adjacent_contrast_prior_has_committed_prediction_artifact() {
     assert_eq!(validation["expected_plan_count"], 20);
     assert_eq!(validation["artifact_plan_count"], 20);
     assert_eq!(validation["duplicate_artifact_paths"].as_array(), None);
-
-    let narrow_output = Command::cargo_bin("kryptos-k4")
-        .unwrap()
-        .args([
-            "ciphertext-adjacent-contrast-prior",
-            "--top",
-            "12",
-            "--format",
-            "json",
-        ])
-        .assert()
-        .success()
-        .get_output()
-        .stdout
-        .clone();
-    let narrow_json: Value = serde_json::from_slice(&narrow_output).unwrap();
-    let narrow_fixture: Value = serde_json::from_str(
-        &std::fs::read_to_string(
-            "experiments/predictions/ciphertext-adjacent-contrast-narrow-v1.json",
-        )
-        .unwrap(),
-    )
-    .unwrap();
-    assert_eq!(narrow_fixture, narrow_json);
-
-    let narrow_validation_output = Command::cargo_bin("kryptos-k4")
-        .unwrap()
-        .args([
-            "validate-prediction-artifact",
-            "--preregistration",
-            "experiments/preregistrations/ciphertext-adjacent-contrast-narrow-v1.json",
-            "--require-unique-artifact",
-            "--format",
-            "json",
-        ])
-        .assert()
-        .success()
-        .get_output()
-        .stdout
-        .clone();
-    let narrow_validation: Value = serde_json::from_slice(&narrow_validation_output).unwrap();
-    assert_eq!(narrow_validation["valid"], true);
-    assert_eq!(
-        narrow_validation["artifact_kind"],
-        "ciphertext-adjacent-contrast"
-    );
-    assert_eq!(narrow_validation["expected_plan_count"], 12);
-    assert_eq!(narrow_validation["artifact_plan_count"], 12);
-    assert_eq!(
-        narrow_validation["duplicate_artifact_paths"].as_array(),
-        None
-    );
 }
 
 #[test]
@@ -1753,7 +1592,7 @@ fn source_observation_status_reports_reviewed_used_and_blocked_sources() {
         .stdout(predicate::str::contains("used eligible sources: 1"))
         .stdout(predicate::str::contains("unused eligible sources: 1"))
         .stdout(predicate::str::contains(
-            "all source-backed archives negative: false",
+            "all source-backed archives negative: true",
         ))
         .stdout(predicate::str::contains(
             "new-source-backed-rationale-new-source-or-distinct-prediction-artifact",
@@ -1779,7 +1618,7 @@ fn source_observation_status_reports_reviewed_used_and_blocked_sources() {
     assert_eq!(json["used_eligible_source_count"], 1);
     assert_eq!(json["unused_eligible_source_count"], 1);
     assert_eq!(json["sources_with_scored_position_markers"], 1);
-    assert_eq!(json["all_source_backed_archives_negative"], false);
+    assert_eq!(json["all_source_backed_archives_negative"], true);
     assert_eq!(
         json["next_action_kind"],
         "new-source-backed-rationale-new-source-or-distinct-prediction-artifact"
@@ -1911,12 +1750,12 @@ fn source_frontier_classifies_all_registered_sources() {
         .stdout(predicate::str::contains(
             "sources with scored-position markers: 1",
         ))
-        .stdout(predicate::str::contains("valid source-backed archives: 40"))
+        .stdout(predicate::str::contains("valid source-backed archives: 26"))
         .stdout(predicate::str::contains(
-            "all source-backed archives negative: false",
+            "all source-backed archives negative: true",
         ))
         .stdout(predicate::str::contains(
-            "source-backed archive correction count: 40",
+            "source-backed archive correction count: 26",
         ))
         .stdout(predicate::str::contains(
             "all source-backed archives negative after correction: true",
@@ -1929,7 +1768,7 @@ fn source_frontier_classifies_all_registered_sources() {
         .stdout(predicate::str::contains("Disallowed Next Actions"))
         .stdout(predicate::str::contains("Archived Evaluations"))
         .stdout(predicate::str::contains(
-            "Already used in 40 source-backed evaluation archives",
+            "Already used in 26 source-backed evaluation archives",
         ))
         .stdout(predicate::str::contains("context-only"))
         .stdout(predicate::str::contains("quarantined-claim"))
@@ -1951,14 +1790,16 @@ fn source_frontier_classifies_all_registered_sources() {
     assert_eq!(json["source_count"], 30);
     assert_eq!(json["scored_observation_eligible_count"], 2);
     assert_eq!(json["scored_position_marker_count"], 1);
-    assert_eq!(json["valid_source_backed_archive_count"], 40);
-    assert_eq!(json["all_source_backed_archives_negative"], false);
-    assert_eq!(json["source_backed_archive_correction_count"], 40);
+    assert_eq!(json["valid_source_backed_archive_count"], 26);
+    assert_eq!(json["all_source_backed_archives_negative"], true);
+    assert_eq!(json["source_backed_archive_correction_count"], 26);
     assert!(
-        json["min_source_backed_empirical_p_value"]
+        (json["min_source_backed_empirical_p_value"]
             .as_f64()
             .unwrap()
-            < 0.05
+            - 0.1303)
+            .abs()
+            < 1e-4
     );
     assert_eq!(json["min_source_backed_adjusted_p_value"], 1.0);
     assert_eq!(
@@ -2032,7 +1873,7 @@ fn source_frontier_classifies_all_registered_sources() {
         .unwrap();
     assert_eq!(cia_sculpture["frontier_class"], "scored-observation-ready");
     assert_eq!(cia_sculpture["current_archive_has_scored_positions"], true);
-    assert_eq!(cia_sculpture["source_backed_archive_count"], 40);
+    assert_eq!(cia_sculpture["source_backed_archive_count"], 26);
     assert!(
         cia_sculpture["allowed_next_action"]
             .as_str()
@@ -2250,7 +2091,7 @@ fn source_frontier_summary_prints_compact_next_action() {
             "eligible but currently non-scorable sources: cia-artifact",
         ))
         .stdout(predicate::str::contains(
-            "already-scored source-backed archives: cia-sculpture (40 archived evaluations)",
+            "already-scored source-backed archives: cia-sculpture (26 archived evaluations)",
         ))
         .stdout(predicate::str::contains(
             "do not rerun correction-controlled negative row-boundary evidence as new evidence",
@@ -2269,13 +2110,13 @@ fn source_frontier_summary_prints_compact_next_action() {
     let json: Value = serde_json::from_slice(&output).unwrap();
     assert_eq!(json["summary"], true);
     assert_eq!(json["source_count"], 30);
-    assert_eq!(json["valid_source_backed_archive_count"], 40);
-    assert_eq!(json["all_source_backed_archives_negative"], false);
+    assert_eq!(json["valid_source_backed_archive_count"], 26);
+    assert_eq!(json["all_source_backed_archives_negative"], true);
     assert_eq!(
         json["all_source_backed_archives_negative_after_correction"],
         true
     );
-    assert_eq!(json["source_backed_archive_correction_count"], 40);
+    assert_eq!(json["source_backed_archive_correction_count"], 26);
     assert_eq!(
         json["scored_observation_ready_source_ids"][0],
         "cia-sculpture"
@@ -2288,7 +2129,7 @@ fn source_frontier_summary_prints_compact_next_action() {
         json["already_scored_source_backed_archives"][0]
             .as_str()
             .unwrap()
-            .contains("cia-sculpture (40 archived evaluations)")
+            .contains("cia-sculpture (26 archived evaluations)")
     );
     assert!(
         json["action"]
@@ -3732,20 +3573,8 @@ fn committed_period_prediction_artifact_matches_cli_output() {
         .clone();
     let generated: Value = serde_json::from_slice(&output).unwrap();
 
-    for path in [
-        "experiments/predictions/non-anchor-position-period-v1.json",
-        "experiments/predictions/non-anchor-position-period-diagnostic-v1.json",
-        "experiments/predictions/non-anchor-position-period-followup-v1.json",
-        "experiments/predictions/non-anchor-position-period-v2.json",
-        "experiments/predictions/non-anchor-position-period-v3.json",
-        "experiments/predictions/non-anchor-position-period-v4.json",
-        "experiments/predictions/non-anchor-position-period-v5.json",
-        "experiments/predictions/non-anchor-position-period-v6.json",
-        "experiments/predictions/non-anchor-position-period-v7.json",
-        "experiments/predictions/non-anchor-position-period-v8.json",
-        "experiments/predictions/non-anchor-position-period-v9.json",
-        "experiments/predictions/non-anchor-position-period-v10.json",
-    ] {
+    {
+        let path = "experiments/predictions/non-anchor-position-period-v1.json";
         let fixture: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
 
         assert_eq!(fixture, generated, "{path} is stale");
@@ -3976,17 +3805,8 @@ fn validate_preregistration_rejects_unchanged_template() {
 
 #[test]
 fn validate_prediction_artifact_checks_committed_independent_target() {
-    for preregistration in [
-        "experiments/preregistrations/non-anchor-position-period-v1.json",
-        "experiments/preregistrations/non-anchor-position-period-diagnostic-v1.json",
-        "experiments/preregistrations/non-anchor-position-period-followup-v1.json",
-        "experiments/preregistrations/non-anchor-position-period-v2.json",
-        "experiments/preregistrations/non-anchor-position-period-v3.json",
-        "experiments/preregistrations/non-anchor-position-period-v4.json",
-        "experiments/preregistrations/non-anchor-position-period-v5.json",
-        "experiments/preregistrations/non-anchor-position-period-v6.json",
-        "experiments/preregistrations/non-anchor-position-period-v7.json",
-    ] {
+    {
+        let preregistration = "experiments/preregistrations/non-anchor-position-period-v1.json";
         Command::cargo_bin("kryptos-k4")
             .unwrap()
             .args([
@@ -4036,19 +3856,7 @@ fn validate_prediction_artifact_checks_committed_independent_target() {
     assert_eq!(json["valid"], true);
     assert_eq!(json["expected_period_count"], 8);
     assert_eq!(json["artifact_period_count"], 8);
-    assert!(json["warnings"].as_array().unwrap().iter().any(|warning| {
-        warning
-            .as_str()
-            .unwrap()
-            .contains("duplicate readiness lanes are inventory only")
-    }));
-    assert!(
-        json["duplicate_artifact_paths"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|path| path == "experiments/predictions/non-anchor-position-period-v35.json")
-    );
+    assert_eq!(json["duplicate_artifact_paths"].as_array(), None);
     assert_eq!(json["promoted_candidate"], false);
 
     Command::cargo_bin("kryptos-k4")
@@ -4056,19 +3864,12 @@ fn validate_prediction_artifact_checks_committed_independent_target() {
         .args([
             "validate-prediction-artifact",
             "--preregistration",
-            "experiments/preregistrations/non-anchor-position-period-v35.json",
+            "experiments/preregistrations/non-anchor-position-period-v1.json",
             "--require-unique-artifact",
         ])
         .assert()
-        .failure()
-        .stdout(predicate::str::contains("valid: false"))
-        .stdout(predicate::str::contains("duplicate artifacts:"))
-        .stdout(predicate::str::contains(
-            "rerun without --require-unique-artifact only when duplicate readiness inventory is intentional",
-        ))
-        .stderr(predicate::str::contains(
-            "prediction artifact failed validation",
-        ));
+        .success()
+        .stdout(predicate::str::contains("valid: true"));
 
     let output = Command::cargo_bin("kryptos-k4")
         .unwrap()
@@ -4130,24 +3931,24 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Independent Lane Status"))
-        .stdout(predicate::str::contains("lanes: 86"))
+        .stdout(predicate::str::contains("lanes: 26"))
         .stdout(predicate::str::contains(
-            "ready for source-backed observations: 86",
+            "ready for source-backed observations: 26",
         ))
         .stdout(predicate::str::contains("invalid lanes: 0"))
-        .stdout(predicate::str::contains("prediction artifacts: 86"))
-        .stdout(predicate::str::contains("unique prediction artifacts: 44"))
+        .stdout(predicate::str::contains("prediction artifacts: 26"))
+        .stdout(predicate::str::contains("unique prediction artifacts: 26"))
         .stdout(predicate::str::contains(
-            "unique ready prediction artifacts: 44",
+            "unique ready prediction artifacts: 26",
         ))
-        .stdout(predicate::str::contains("duplicate artifact groups: 1"))
-        .stdout(predicate::str::contains("duplicate artifact lanes: 43"))
+        .stdout(predicate::str::contains("duplicate artifact groups: 0"))
+        .stdout(predicate::str::contains("duplicate artifact lanes: 0"))
         .stdout(predicate::str::contains(
-            "extra duplicate artifact lanes: 42",
+            "extra duplicate artifact lanes: 0",
         ))
         .stdout(predicate::str::contains("Family Summary"))
         .stdout(predicate::str::contains(
-            "| ciphertext-adjacent-contrast-position-prior | 3 | 3 | 3 | 3 | 3 | 0 |",
+            "| ciphertext-adjacent-contrast-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
         ))
         .stdout(predicate::str::contains(
             "| ciphertext-ct-perturbation-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
@@ -4165,10 +3966,10 @@ fn independent_lane_status_summarizes_ready_lanes() {
             "| ciphertext-repeat-distance-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
         ))
         .stdout(predicate::str::contains(
-            "| ciphertext-period-match-position-prior | 4 | 4 | 4 | 4 | 4 | 0 |",
+            "| ciphertext-period-match-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
         ))
         .stdout(predicate::str::contains(
-            "| ciphertext-residue-balance-position-prior | 9 | 9 | 9 | 9 | 9 | 0 |",
+            "| ciphertext-residue-balance-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
         ))
         .stdout(predicate::str::contains(
             "| ciphertext-skip-transition-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
@@ -4183,7 +3984,7 @@ fn independent_lane_status_summarizes_ready_lanes() {
             "| ciphertext-turning-point-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
         ))
         .stdout(predicate::str::contains(
-            "| ciphertext-window-balance-position-prior | 6 | 6 | 6 | 6 | 6 | 0 |",
+            "| ciphertext-window-balance-position-prior | 1 | 1 | 1 | 1 | 1 | 0 |",
         ))
         .stdout(predicate::str::contains(
             "| position-grid-layout-prediction | 5 | 5 | 5 | 5 | 5 | 0 |",
@@ -4192,7 +3993,7 @@ fn independent_lane_status_summarizes_ready_lanes() {
             "| position-mirror-prediction | 1 | 1 | 1 | 1 | 1 | 0 |",
         ))
         .stdout(predicate::str::contains(
-            "| position-period-prediction | 47 | 47 | 47 | 5 | 5 | 1 |",
+            "| position-period-prediction | 5 | 5 | 5 | 5 | 5 | 0 |",
         ))
         .stdout(predicate::str::contains(
             "| position-spacing-prediction | 1 | 1 | 1 | 1 | 1 | 0 |",
@@ -4200,19 +4001,7 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout(predicate::str::contains(
             "| tableau-hill-prediction | 1 | 1 | 1 | 1 | 1 | 0 |",
         ))
-        .stdout(predicate::str::contains("Duplicate Prediction Artifacts"))
-        .stdout(predicate::str::contains(
-            "non-anchor-position-period-followup-v1",
-        ))
-        .stdout(predicate::str::contains("non-anchor-position-period-v45"))
         .stdout(predicate::str::contains("ciphertext-window-balance-v1"))
-        .stdout(predicate::str::contains(
-            "ciphertext-window-balance-narrow-v1",
-        ))
-        .stdout(predicate::str::contains("ciphertext-window-balance-mid-v1"))
-        .stdout(predicate::str::contains(
-            "ciphertext-window-balance-mega-wide-v1",
-        ))
         .stdout(predicate::str::contains(
             "ready-for-source-backed-observations",
         ))
@@ -4231,22 +4020,22 @@ fn independent_lane_status_summarizes_ready_lanes() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["lane_count"], 86);
-    assert_eq!(json["ready_for_source_backed_observations"], 86);
+    assert_eq!(json["lane_count"], 26);
+    assert_eq!(json["ready_for_source_backed_observations"], 26);
     assert_eq!(json["invalid_lanes"], 0);
-    assert_eq!(json["prediction_artifacts"], 86);
-    assert_eq!(json["unique_prediction_artifacts"], 44);
-    assert_eq!(json["unique_ready_prediction_artifacts"], 44);
-    assert_eq!(json["duplicate_prediction_artifact_lane_count"], 43);
-    assert_eq!(json["duplicate_prediction_artifact_extra_lane_count"], 42);
+    assert_eq!(json["prediction_artifacts"], 26);
+    assert_eq!(json["unique_prediction_artifacts"], 26);
+    assert_eq!(json["unique_ready_prediction_artifacts"], 26);
+    assert_eq!(json["duplicate_prediction_artifact_lane_count"], 0);
+    assert_eq!(json["duplicate_prediction_artifact_extra_lane_count"], 0);
     let families = json["family_summaries"].as_array().unwrap();
     assert!(families.iter().any(|family| {
         family["hypothesis_family"] == "ciphertext-adjacent-contrast-position-prior"
-            && family["lanes"] == 3
-            && family["ready_for_source_backed_observations"] == 3
-            && family["prediction_artifacts"] == 3
-            && family["unique_prediction_artifacts"] == 3
-            && family["unique_ready_prediction_artifacts"] == 3
+            && family["lanes"] == 1
+            && family["ready_for_source_backed_observations"] == 1
+            && family["prediction_artifacts"] == 1
+            && family["unique_prediction_artifacts"] == 1
+            && family["unique_ready_prediction_artifacts"] == 1
             && family["duplicate_artifact_groups"] == 0
     }));
     assert!(families.iter().any(|family| {
@@ -4284,14 +4073,14 @@ fn independent_lane_status_summarizes_ready_lanes() {
     }));
     assert!(families.iter().any(|family| {
         family["hypothesis_family"] == "ciphertext-period-match-position-prior"
-            && family["lanes"] == 4
-            && family["unique_ready_prediction_artifacts"] == 4
+            && family["lanes"] == 1
+            && family["unique_ready_prediction_artifacts"] == 1
             && family["duplicate_artifact_groups"] == 0
     }));
     assert!(families.iter().any(|family| {
         family["hypothesis_family"] == "ciphertext-residue-balance-position-prior"
-            && family["lanes"] == 9
-            && family["unique_ready_prediction_artifacts"] == 9
+            && family["lanes"] == 1
+            && family["unique_ready_prediction_artifacts"] == 1
             && family["duplicate_artifact_groups"] == 0
     }));
     assert!(families.iter().any(|family| {
@@ -4320,11 +4109,11 @@ fn independent_lane_status_summarizes_ready_lanes() {
     }));
     assert!(families.iter().any(|family| {
         family["hypothesis_family"] == "ciphertext-window-balance-position-prior"
-            && family["lanes"] == 6
-            && family["ready_for_source_backed_observations"] == 6
-            && family["prediction_artifacts"] == 6
-            && family["unique_prediction_artifacts"] == 6
-            && family["unique_ready_prediction_artifacts"] == 6
+            && family["lanes"] == 1
+            && family["ready_for_source_backed_observations"] == 1
+            && family["prediction_artifacts"] == 1
+            && family["unique_prediction_artifacts"] == 1
+            && family["unique_ready_prediction_artifacts"] == 1
             && family["duplicate_artifact_groups"] == 0
     }));
     assert!(families.iter().any(|family| {
@@ -4341,11 +4130,11 @@ fn independent_lane_status_summarizes_ready_lanes() {
     }));
     assert!(families.iter().any(|family| {
         family["hypothesis_family"] == "position-period-prediction"
-            && family["lanes"] == 47
-            && family["ready_for_source_backed_observations"] == 47
-            && family["prediction_artifacts"] == 47
+            && family["lanes"] == 5
+            && family["ready_for_source_backed_observations"] == 5
+            && family["prediction_artifacts"] == 5
             && family["unique_ready_prediction_artifacts"] == 5
-            && family["duplicate_artifact_groups"] == 1
+            && family["duplicate_artifact_groups"] == 0
     }));
     assert!(families.iter().any(|family| {
         family["hypothesis_family"] == "position-spacing-prediction"
@@ -4366,11 +4155,11 @@ fn independent_lane_status_summarizes_ready_lanes() {
             .as_array()
             .unwrap()
             .len(),
-        1
+        0
     );
     assert_eq!(json["promoted_candidate"], false);
     assert!(json["lanes"].as_array().unwrap().iter().any(|lane| {
-        lane["id"] == "non-anchor-position-period-v45"
+        lane["id"] == "non-anchor-position-period-v44"
             && lane["ready_for_source_backed_observations"] == true
             && lane["prediction_artifact_valid"] == true
             && lane["promoted_candidate"] == false
@@ -4383,7 +4172,7 @@ fn independent_lane_status_summarizes_ready_lanes() {
             && lane["promoted_candidate"] == false
     }));
     assert!(json["lanes"].as_array().unwrap().iter().any(|lane| {
-        lane["id"] == "ciphertext-window-balance-mega-wide-v1"
+        lane["id"] == "ciphertext-window-balance-v1"
             && lane["ready_for_source_backed_observations"] == true
             && lane["status"] == "ready-for-source-backed-observations"
             && lane["prediction_artifact_valid"] == true
@@ -4442,9 +4231,9 @@ fn init_position_observations_writes_guarded_source_backed_file() {
         .args([
             "validate-period-observations",
             "--artifact",
-            "experiments/predictions/non-anchor-position-period-v5.json",
+            "experiments/predictions/non-anchor-position-period-v1.json",
             "--preregistration",
-            "experiments/preregistrations/non-anchor-position-period-v5.json",
+            "experiments/preregistrations/non-anchor-position-period-v1.json",
             "--input",
             output_path.to_str().unwrap(),
             "--format",
@@ -4520,9 +4309,9 @@ fn init_position_observations_links_valid_source_review_file() {
         .args([
             "validate-period-observations",
             "--artifact",
-            "experiments/predictions/non-anchor-position-period-v5.json",
+            "experiments/predictions/non-anchor-position-period-v1.json",
             "--preregistration",
-            "experiments/preregistrations/non-anchor-position-period-v5.json",
+            "experiments/preregistrations/non-anchor-position-period-v1.json",
             "--input",
             output_path.to_str().unwrap(),
             "--format",
@@ -4760,7 +4549,7 @@ fn next_evidence_gate_prints_operational_checklist() {
         .assert()
         .success()
         .stdout(predicate::str::contains("Next Evidence Gate"))
-        .stdout(predicate::str::contains("total ready lanes: 86"))
+        .stdout(predicate::str::contains("total ready lanes: 26"))
         .stdout(predicate::str::contains(
             "ciphertext-adjacent-contrast-position-prior",
         ))
@@ -4798,23 +4587,14 @@ fn next_evidence_gate_prints_operational_checklist() {
         ))
         .stdout(predicate::str::contains("position-grid-layout-prediction"))
         .stdout(predicate::str::contains("position-mirror-prediction"))
-        .stdout(predicate::str::contains("family ready lanes: 47"))
-        .stdout(predicate::str::contains("family unique ready artifacts: 6"))
+        .stdout(predicate::str::contains("family ready lanes: 5"))
+        .stdout(predicate::str::contains("family unique ready artifacts: 5"))
         .stdout(predicate::str::contains(
-            "unique ready prediction artifacts: 44",
+            "unique ready prediction artifacts: 26",
         ))
         .stdout(predicate::str::contains(
-            "duplicate prediction artifact groups: 1",
+            "duplicate prediction artifact groups: 0",
         ))
-        .stdout(predicate::str::contains(
-            "duplicate prediction artifact details",
-        ))
-        .stdout(predicate::str::contains("non-anchor-position-period-v35"))
-        .stdout(predicate::str::contains("non-anchor-position-period-v36"))
-        .stdout(predicate::str::contains("non-anchor-position-period-v37"))
-        .stdout(predicate::str::contains("non-anchor-position-period-v38"))
-        .stdout(predicate::str::contains("non-anchor-position-period-v39"))
-        .stdout(predicate::str::contains("non-anchor-position-period-v45"))
         .stdout(predicate::str::contains("evaluator-pending lanes: 0"))
         .stdout(predicate::str::contains("tableau-hill-prediction"))
         .stdout(predicate::str::contains("cia-artifact, cia-sculpture"))
@@ -4826,7 +4606,7 @@ fn next_evidence_gate_prints_operational_checklist() {
             "used eligible sources: cia-sculpture",
         ))
         .stdout(predicate::str::contains(
-            "all source-backed archives negative: false",
+            "all source-backed archives negative: true",
         ))
         .stdout(predicate::str::contains(
             "unused eligible sources: cia-artifact",
@@ -4842,7 +4622,6 @@ fn next_evidence_gate_prints_operational_checklist() {
             "new-source-backed-rationale-or-distinct-prediction-artifact",
         ))
         .stdout(predicate::str::contains("blocking conditions:"))
-        .stdout(predicate::str::contains("follow-up-required"))
         .stdout(predicate::str::contains(
             "source-backed-evidence-negative-or-non-significant-after-correction",
         ))
@@ -4960,52 +4739,10 @@ fn next_evidence_gate_prints_operational_checklist() {
         .stdout
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
-    assert_eq!(json["ready_lanes"], 86);
+    assert_eq!(json["ready_lanes"], 26);
     assert_eq!(json["invalid_lanes"], 0);
-    assert_eq!(json["unique_ready_prediction_artifacts"], 44);
-    assert_eq!(json["duplicate_prediction_artifact_group_count"], 1);
-    assert_eq!(
-        json["duplicate_prediction_artifact_groups"][0]["lane_ids"]
-            .as_array()
-            .unwrap()
-            .len(),
-        43
-    );
-    assert!(
-        json["duplicate_prediction_artifact_groups"][0]["lane_ids"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|lane| lane == "non-anchor-position-period-v35")
-    );
-    assert!(
-        json["duplicate_prediction_artifact_groups"][0]["lane_ids"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|lane| lane == "non-anchor-position-period-v36")
-    );
-    assert!(
-        json["duplicate_prediction_artifact_groups"][0]["lane_ids"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|lane| lane == "non-anchor-position-period-v37")
-    );
-    assert!(
-        json["duplicate_prediction_artifact_groups"][0]["lane_ids"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|lane| lane == "non-anchor-position-period-v39")
-    );
-    assert!(
-        json["duplicate_prediction_artifact_groups"][0]["lane_ids"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|lane| lane == "non-anchor-position-period-v45")
-    );
+    assert_eq!(json["unique_ready_prediction_artifacts"], 26);
+    assert_eq!(json["duplicate_prediction_artifact_group_count"], 0);
     assert_eq!(json["evaluator_pending_lane_count"], 0);
     assert!(
         json["evaluator_pending_lanes"]
@@ -5074,24 +4811,28 @@ fn next_evidence_gate_prints_operational_checklist() {
                     && archive["status"] == "quarantine-structural-check-passed"
             })
     );
-    assert!(json["quarantined_claim_source_ids_without_archive"]
-        .as_array()
-        .unwrap()
-        .is_empty());
+    assert!(
+        json["quarantined_claim_source_ids_without_archive"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
     let valid_source_backed_archives = json["valid_source_backed_archive_count"]
         .as_u64()
         .expect("valid_source_backed_archive_count should be numeric");
     assert_eq!(json["invalid_archive_count"], 0);
-    assert_eq!(json["all_source_backed_archives_negative"], false);
+    assert_eq!(json["all_source_backed_archives_negative"], true);
     assert_eq!(
         json["source_backed_archive_correction_count"],
         valid_source_backed_archives
     );
     assert!(
-        json["min_source_backed_empirical_p_value"]
+        (json["min_source_backed_empirical_p_value"]
             .as_f64()
             .unwrap()
-            <= 0.05
+            - 0.1303)
+            .abs()
+            < 1e-4
     );
     assert!(json["min_source_backed_adjusted_p_value"].as_f64().unwrap() > 0.05);
     assert_eq!(
@@ -5374,9 +5115,9 @@ fn next_evidence_gate_prints_operational_checklist() {
     assert!(gates.iter().any(|gate| {
         gate["hypothesis_family"] == "ciphertext-adjacent-contrast-position-prior"
             && gate["representative_preregistration"]
-                == "experiments/preregistrations/ciphertext-adjacent-contrast-mid-v1.json"
-            && gate["ready_lanes"] == 3
-            && gate["unique_ready_prediction_artifacts"] == 3
+                == "experiments/preregistrations/ciphertext-adjacent-contrast-prior-v1.json"
+            && gate["ready_lanes"] == 1
+            && gate["unique_ready_prediction_artifacts"] == 1
             && gate["validation_command"]
                 .as_str()
                 .unwrap()
@@ -5384,7 +5125,7 @@ fn next_evidence_gate_prints_operational_checklist() {
             && gate["validation_command"]
                 .as_str()
                 .unwrap()
-                .contains("experiments/predictions/ciphertext-adjacent-contrast-mid-v1.json")
+                .contains("experiments/predictions/ciphertext-adjacent-contrast-prior-v1.json")
             && gate["evaluation_command"]
                 .as_str()
                 .unwrap()
@@ -5481,7 +5222,7 @@ fn next_evidence_gate_prints_operational_checklist() {
     assert!(gates.iter().any(|gate| {
         gate["hypothesis_family"] == "ciphertext-period-match-position-prior"
             && gate["representative_preregistration"]
-                == "experiments/preregistrations/ciphertext-period-match-extended-v1.json"
+                == "experiments/preregistrations/ciphertext-period-match-v1.json"
             && gate["validation_command"]
                 .as_str()
                 .unwrap()
@@ -5489,7 +5230,7 @@ fn next_evidence_gate_prints_operational_checklist() {
             && gate["validation_command"]
                 .as_str()
                 .unwrap()
-                .contains("experiments/predictions/ciphertext-period-match-extended-v1.json")
+                .contains("experiments/predictions/ciphertext-period-match-v1.json")
             && gate["evaluation_command"]
                 .as_str()
                 .unwrap()
@@ -5502,14 +5243,15 @@ fn next_evidence_gate_prints_operational_checklist() {
     assert!(gates.iter().any(|gate| {
         gate["hypothesis_family"] == "ciphertext-residue-balance-position-prior"
             && gate["representative_preregistration"]
-                == "experiments/preregistrations/ciphertext-residue-balance-extreme-moduli-v1.json"
+                == "experiments/preregistrations/ciphertext-residue-balance-prior-v1.json"
             && gate["validation_command"]
                 .as_str()
                 .unwrap()
                 .contains("validate-ciphertext-residue-balance-observations")
-            && gate["validation_command"].as_str().unwrap().contains(
-                "experiments/predictions/ciphertext-residue-balance-extreme-moduli-v1.json",
-            )
+            && gate["validation_command"]
+                .as_str()
+                .unwrap()
+                .contains("experiments/predictions/ciphertext-residue-balance-prior-v1.json")
             && gate["evaluation_command"]
                 .as_str()
                 .unwrap()
@@ -5627,7 +5369,7 @@ fn next_evidence_gate_prints_operational_checklist() {
     assert!(gates.iter().any(|gate| {
         gate["hypothesis_family"] == "ciphertext-window-balance-position-prior"
             && gate["representative_preregistration"]
-                == "experiments/preregistrations/ciphertext-window-balance-mega-wide-v1.json"
+                == "experiments/preregistrations/ciphertext-window-balance-v1.json"
             && gate["validation_command"]
                 .as_str()
                 .unwrap()
@@ -5635,7 +5377,7 @@ fn next_evidence_gate_prints_operational_checklist() {
             && gate["validation_command"]
                 .as_str()
                 .unwrap()
-                .contains("experiments/predictions/ciphertext-window-balance-mega-wide-v1.json")
+                .contains("experiments/predictions/ciphertext-window-balance-v1.json")
             && gate["evaluation_command"]
                 .as_str()
                 .unwrap()
@@ -5733,9 +5475,9 @@ fn next_evidence_gate_summary_omits_full_gate_table() {
         .success()
         .stdout(predicate::str::contains("Next Evidence Gate Summary"))
         .stdout(predicate::str::contains("This is not a claimed solution."))
-        .stdout(predicate::str::contains("total ready lanes: 86"))
+        .stdout(predicate::str::contains("total ready lanes: 26"))
         .stdout(predicate::str::contains(
-            "unique ready prediction artifacts: 44",
+            "unique ready prediction artifacts: 26",
         ))
         .stdout(predicate::str::contains("family gate count: 18"))
         .stdout(predicate::str::contains(
@@ -5755,9 +5497,9 @@ fn next_evidence_gate_summary_omits_full_gate_table() {
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
     assert_eq!(json["summary"], true);
-    assert_eq!(json["ready_lanes"], 86);
+    assert_eq!(json["ready_lanes"], 26);
     assert_eq!(json["invalid_lanes"], 0);
-    assert_eq!(json["unique_ready_prediction_artifacts"], 44);
+    assert_eq!(json["unique_ready_prediction_artifacts"], 26);
     assert_eq!(json["family_gate_count"], 18);
     assert_eq!(
         json["next_action_kind"],
@@ -5838,10 +5580,12 @@ fn claim_verification_status_reports_quarantine_inventory() {
                     && archive["status"] == "quarantine-structural-check-failed"
             })
     );
-    assert!(json["quarantined_claim_source_ids_without_archive"]
-        .as_array()
-        .unwrap()
-        .is_empty());
+    assert!(
+        json["quarantined_claim_source_ids_without_archive"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
     assert!(
         json["claim_verification_archives"]
             .as_array()
@@ -5935,10 +5679,12 @@ fn claim_verification_status_reports_quarantine_inventory() {
         summary_json["next_action_kind"],
         "local-claim-inputs-required"
     );
-    assert!(summary_json["claim_input_plan_commands"]
-        .as_array()
-        .unwrap()
-        .is_empty());
+    assert!(
+        summary_json["claim_input_plan_commands"]
+            .as_array()
+            .unwrap()
+            .is_empty()
+    );
     assert_eq!(summary_json["promoted_candidate"], false);
 }
 
@@ -6103,7 +5849,7 @@ fn independent_evidence_status_reports_archive_scores() {
         .clone();
     let json: Value = serde_json::from_slice(&output).unwrap();
     let archives = json["archives"].as_array().unwrap();
-    assert_eq!(json["source_backed_archive_correction_count"], 40);
+    assert_eq!(json["source_backed_archive_correction_count"], 26);
     assert_eq!(
         json["all_source_backed_archives_negative_after_correction"],
         true
@@ -6167,7 +5913,7 @@ fn independent_evidence_status_reports_archive_scores() {
         .find(|archive| {
             archive["artifact_kind"] == "ciphertext-period-match"
                 && archive["directory"].as_str().unwrap().contains(
-                    "results/ciphertext-period-match-observations/cia-k4-row-boundaries-narrow-v1",
+                    "results/ciphertext-period-match-observations/cia-k4-row-boundaries-v1",
                 )
         })
         .expect("ciphertext-period-match evidence archive should be present");
@@ -6187,22 +5933,6 @@ fn independent_evidence_status_reports_archive_scores() {
         .iter()
         .find(|archive| archive["artifact_kind"] == "ciphertext-ct-perturbation")
         .expect("ciphertext-ct-perturbation evidence archive should be present");
-    let terminal_residue_balance = archives
-        .iter()
-        .find(|archive| {
-            archive["directory"].as_str().unwrap().contains(
-                "results/ciphertext-residue-balance-observations/cia-k4-row-boundaries-terminal-moduli-v1",
-            )
-        })
-        .expect("terminal-moduli residue-balance archive should be present");
-    let post_terminal_residue_balance = archives
-        .iter()
-        .find(|archive| {
-            archive["directory"].as_str().unwrap().contains(
-                "results/ciphertext-residue-balance-observations/cia-k4-row-boundaries-post-terminal-moduli-v1",
-            )
-        })
-        .expect("post-terminal-moduli residue-balance archive should be present");
     assert_eq!(period["best_model"], "period 2 residue 0");
     assert_eq!(period["observed_hits"], "4/6 positions");
     assert_eq!(period["observation_source_ids"][0], "cia-sculpture");
@@ -6264,7 +5994,7 @@ fn independent_evidence_status_reports_archive_scores() {
     );
     assert_eq!(
         ciphertext_period_match["best_model"],
-        "ciphertext shifted same-letter period 7 endpoints"
+        "ciphertext shifted same-letter period 2 endpoints"
     );
     assert_eq!(ciphertext_period_match["observed_hits"], "1/6 positions");
     assert_eq!(
@@ -6305,28 +6035,6 @@ fn independent_evidence_status_reports_archive_scores() {
     assert_eq!(ciphertext_ct_perturbation["observed_hits"], "1/6 positions");
     assert_eq!(
         ciphertext_ct_perturbation["support_status"],
-        "negative/non-significant"
-    );
-    assert_eq!(
-        terminal_residue_balance["support_status"],
-        "follow-up-required"
-    );
-    assert!(
-        terminal_residue_balance["source_backed_adjusted_p_value"]
-            .as_f64()
-            .unwrap()
-            > 1.0 - f64::EPSILON
-    );
-    assert_eq!(
-        post_terminal_residue_balance["best_model"],
-        "ciphertext residue-balance modulus 55 residue 0"
-    );
-    assert_eq!(
-        post_terminal_residue_balance["observed_hits"],
-        "1/6 positions"
-    );
-    assert_eq!(
-        post_terminal_residue_balance["support_status"],
         "negative/non-significant"
     );
     assert_eq!(json["promoted_candidate"], false);
@@ -8288,7 +7996,7 @@ fn findings_json_is_parseable_and_non_promotional() {
                 .unwrap()
                 .iter()
                 .any(|source| {
-                    source == "experiments/preregistrations/non-anchor-position-period-v2.json"
+                    source == "experiments/preregistrations/non-anchor-position-period-v40.json"
                 })
             && finding["promoted_candidate"] == false
     }));

@@ -1,0 +1,29 @@
+{
+  "id": "ciphertext-residue-balance-prior-v1",
+  "title": "Ciphertext-only residue balance prior",
+  "hypothesis_family": "ciphertext-residue-balance-position-prior",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane predeclares a ciphertext-only positional residue rule before scoring any new observations. It is not another public-anchor mining pass because discovery uses only K4 ciphertext position statistics and excludes known public anchor-derived plaintext spans, additive fragment values, key-material candidates, route searches, and held-out anchor controls.",
+  "prediction_target": "Future source-reviewed non-anchor K4 position observations should be enriched in the predeclared ciphertext-only residue-balance position set before any candidate-word, key-material, route, or public-anchor-derived fragment scoring is performed.",
+  "prediction_artifact": "experiments/predictions/ciphertext-residue-balance-prior-v1.json",
+  "discovery_inputs": [
+    "Public K4 ciphertext characters and one-based ciphertext positions only",
+    "Predeclared residue-balance rule over ciphertext positions, with known solved clue positions used only as an exclusion mask",
+    "No public known-plaintext anchor fragments, additive-key values, candidate words, key-material offsets, or route/permutation results"
+  ],
+  "evaluation_inputs": [
+    "Future source-reviewed non-anchor K4 position observations selected before scoring",
+    "Observation files with per-position source notes and validation against the registered non-anchor universe",
+    "Independent target positions that are not public known-plaintext anchor fragments and are not derived from anchor additive-key values"
+  ],
+  "controls": [
+    "seeded same-size non-anchor position-shuffle baseline for residue-set enrichment",
+    "best-of-rule null control if more than one residue-balance variant is registered",
+    "multiple-comparison correction across all preregistered independent lanes before interpretation",
+    "source-review and source-archive gates before observation scoring",
+    "promotion blocked unless future independent observations beat all predeclared controls without post-hoc retuning"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

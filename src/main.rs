@@ -5688,13 +5688,17 @@ fn validate_archived_prediction_context(
                 .map_err(Into::into)
         }
         "ciphertext-period-match" => {
-            let max_period = registration.ciphertext_period_match_max_period.unwrap_or(20);
-            let top_periods = registration.ciphertext_period_match_top_periods.unwrap_or(5);
+            let max_period = registration
+                .ciphertext_period_match_max_period
+                .unwrap_or(20);
+            let top_periods = registration
+                .ciphertext_period_match_top_periods
+                .unwrap_or(5);
             serde_json::to_value(kryptos_k4::build_ciphertext_period_match_prior(
                 max_period,
                 top_periods,
             ))
-                .map_err(Into::into)
+            .map_err(Into::into)
         }
         "ciphertext-adjacent-contrast" => {
             let top = registration.ciphertext_adjacent_contrast_top.unwrap_or(20);

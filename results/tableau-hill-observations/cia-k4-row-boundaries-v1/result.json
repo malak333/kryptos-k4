@@ -1,0 +1,132 @@
+{
+  "artifact_path": "experiments/predictions/tableau-hill-v1.json",
+  "observation_id": "cia-k4-row-boundaries-v1",
+  "observation_source_ids": [
+    "cia-sculpture"
+  ],
+  "observation_source_review_file": "experiments/source-reviews/cia-source-review-v1.json",
+  "observation_rationale": "Pre-score source-backed observation from the CIA sculpture page text-version rendering: K4 appears as a short suffix followed by three rendered lines, so only non-anchor row-boundary positions are retained for evaluation.",
+  "observation_position_notes": {
+    "1": "CIA sculpture snapshot records this as the first non-anchor K4 row-boundary position from the text-version rendering.",
+    "36": "CIA sculpture snapshot records this as the last non-anchor position before the next rendered line break after excluding anchor positions.",
+    "37": "CIA sculpture snapshot records this as the first non-anchor K4 position after that rendered line break.",
+    "4": "CIA sculpture snapshot records this as the end of the short K4 suffix before the next rendered line.",
+    "5": "CIA sculpture snapshot records this as the first non-anchor K4 position after the short suffix line break.",
+    "97": "CIA sculpture snapshot records this as the final K4 position in the 97-character remaining message."
+  },
+  "source_backed_observation": true,
+  "observation_warning": null,
+  "observed_position_count": 6,
+  "observed_positions_one_based": [
+    1,
+    4,
+    5,
+    36,
+    37,
+    97
+  ],
+  "best_axis": "row",
+  "best_index_one_based": 1,
+  "best_hits": 3,
+  "best_hit_rate": 0.5,
+  "matching_positions_one_based": [
+    1,
+    4,
+    5
+  ],
+  "row_results": [
+    {
+      "axis": "row",
+      "index_one_based": 1,
+      "hits": 3,
+      "hit_rate": 0.5,
+      "matching_positions_one_based": [
+        1,
+        4,
+        5
+      ]
+    },
+    {
+      "axis": "row",
+      "index_one_based": 3,
+      "hits": 2,
+      "hit_rate": 0.3333333333333333,
+      "matching_positions_one_based": [
+        36,
+        37
+      ]
+    },
+    {
+      "axis": "row",
+      "index_one_based": 7,
+      "hits": 1,
+      "hit_rate": 0.16666666666666666,
+      "matching_positions_one_based": [
+        97
+      ]
+    }
+  ],
+  "column_results": [
+    {
+      "axis": "column",
+      "index_one_based": 1,
+      "hits": 1,
+      "hit_rate": 0.16666666666666666,
+      "matching_positions_one_based": [
+        1
+      ]
+    },
+    {
+      "axis": "column",
+      "index_one_based": 4,
+      "hits": 1,
+      "hit_rate": 0.16666666666666666,
+      "matching_positions_one_based": [
+        4
+      ]
+    },
+    {
+      "axis": "column",
+      "index_one_based": 5,
+      "hits": 1,
+      "hit_rate": 0.16666666666666666,
+      "matching_positions_one_based": [
+        5
+      ]
+    },
+    {
+      "axis": "column",
+      "index_one_based": 8,
+      "hits": 1,
+      "hit_rate": 0.16666666666666666,
+      "matching_positions_one_based": [
+        36
+      ]
+    },
+    {
+      "axis": "column",
+      "index_one_based": 9,
+      "hits": 1,
+      "hit_rate": 0.16666666666666666,
+      "matching_positions_one_based": [
+        37
+      ]
+    },
+    {
+      "axis": "column",
+      "index_one_based": 13,
+      "hits": 1,
+      "hit_rate": 0.16666666666666666,
+      "matching_positions_one_based": [
+        97
+      ]
+    }
+  ],
+  "null_mean_best_hits": 2.35536,
+  "null_std_dev_best_hits": 0.5776670930566262,
+  "empirical_p_value": 0.3311066889331107,
+  "iterations": 100000,
+  "seed": 67,
+  "promoted_candidate": false,
+  "note": "Tableau/HILL prediction evaluation scores independent non-anchor positions for row/column concentration on the committed 7-by-14 source map with a seeded same-size position-set null; it is not a claimed solution."
+}

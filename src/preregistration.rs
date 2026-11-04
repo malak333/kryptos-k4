@@ -869,8 +869,12 @@ pub fn validate_prediction_artifact_with_repo_root(
             build_committed_ciphertext_turning_point_prior(),
         )?),
         Some("ciphertext-period-match") => {
-            let max_period = registration.ciphertext_period_match_max_period.unwrap_or(20);
-            let top_periods = registration.ciphertext_period_match_top_periods.unwrap_or(5);
+            let max_period = registration
+                .ciphertext_period_match_max_period
+                .unwrap_or(20);
+            let top_periods = registration
+                .ciphertext_period_match_top_periods
+                .unwrap_or(5);
             Some(serde_json::to_value(build_ciphertext_period_match_prior(
                 max_period,
                 top_periods,

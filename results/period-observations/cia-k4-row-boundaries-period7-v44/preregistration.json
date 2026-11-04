@@ -1,0 +1,31 @@
+{
+  "id": "non-anchor-position-period-v44",
+  "title": "Non-anchor absolute-position period-7 prediction v44",
+  "hypothesis_family": "position-period-prediction",
+  "evidence_kind": "independent-prediction-target",
+  "source_ids": [],
+  "rationale": "This lane predeclares an absolute-position period-7 residue target before any new observation file is scored. It is not another public-anchor mining pass because discovery does not use public known-plaintext anchors, additive fragment values, candidate key material, routed-key results, held-out anchor controls, or source-expanded candidate screens. The lane is a pure independent prediction target: it can only gain evidentiary weight from future source-reviewed non-anchor observations fixed before evaluation.",
+  "prediction_target": "Future independently documented non-anchor K4 position observations should be enriched in one or more predeclared one-based absolute-position residue classes for period 7 at a rate exceeding seeded null, best-of-residue, and multiple-comparison controls.",
+  "prediction_artifact": "experiments/predictions/non-anchor-position-period-v44.json",
+  "discovery_inputs": [
+    "Absolute one-based K4 position residues for predeclared period 7 emitted before future observation scoring",
+    "K4 ciphertext length fixes the finite position universe",
+    "Non-anchor complement mask fixed before any observation scoring",
+    "No candidate words, key material, routes, plaintext guesses, or additive fragment values used to select the residue target"
+  ],
+  "evaluation_inputs": [
+    "Future independently sourced non-anchor K4 position observations",
+    "Source-reviewed observation files with source IDs, one-based positions, per-position notes, and rationale declared before evaluation",
+    "Position-only scoring target that excludes public anchor additive fragments as primary evidence"
+  ],
+  "controls": [
+    "seeded same-size non-anchor position shuffle baseline",
+    "best-of-residue null over all period-7 residue classes",
+    "multiple-comparison correction across the period-7 residue targets",
+    "public-anchor positions excluded from scoring and never used as primary evidence",
+    "require-unique-artifact gate before treating this as a distinct prediction target",
+    "promotion blocked unless future independent observations beat all predeclared controls without post-hoc retuning"
+  ],
+  "uses_public_anchor_fragments_for_discovery": false,
+  "uses_public_anchor_fragments_as_primary_evidence": false
+}

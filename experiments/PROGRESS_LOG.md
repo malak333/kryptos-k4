@@ -4439,3 +4439,37 @@ new turning-point evaluator:
 
 This is negative/non-significant source-backed evidence. It does not promote a
 K4 solution, key, route, plaintext, or candidate.
+
+## 2026-11-03 - Slim-Down Phase 1: Duplicate and Variant Lanes Pruned
+
+Pre-prune state is preserved at git tag `pre-slimdown`. Removed 42 period
+lanes whose prediction content was identical to
+`non-anchor-position-period-v1` (v2 through v39, v41, v45, diagnostic-v1,
+followup-v1) and 18 escalating parameter variants of the residue-balance,
+window-balance, period-match, and adjacent-contrast ciphertext-prior lanes,
+plus their evaluation archives. The distinct period targets v1, v40 (period
+3), v42 (period 5), v43 (period 14), and v44 (period 7) are kept. Results are
+consolidated in `docs/negative-results.md`.
+
+`results/` evaluation archives are now tracked; only `results/key-tests/`
+local batch output stays ignored.
+
+Current independent-lane inventory markers:
+
+- independent lanes: `26`
+- ready for source-backed observations: `26`
+- prediction artifacts: `26`
+- unique ready prediction targets: `26`
+- duplicate artifact lanes: `0`
+- extra duplicate artifact lanes: `0`
+- period-family lanes: `5`
+- period-family unique ready targets: `5`
+- grid-layout-family lanes: `5`
+- grid-layout-family unique ready targets: `5`
+- source-backed observation files: `1`
+- evidence summaries: `1`
+
+The source-backed observation remains
+`experiments/position-observations/cia-k4-row-boundaries-v1.json`, summarized
+in `experiments/evidence-summaries/cia-k4-row-boundaries-v1.md`. Every
+evaluation against it is negative/non-significant and promotes no candidate.

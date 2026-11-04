@@ -1,5 +1,7 @@
 # Stopped K4 Experiment Lanes
 
+> **Slim-down note (2026-11-03):** duplicate and escalating-variant lanes were pruned. References below to lanes that no longer exist are historical; those files are preserved at git tag `pre-slimdown`. See `docs/negative-results.md`.
+
 This file records research lanes that should not be expanded without genuinely
 new source-grounded evidence or an independent pre-registered prediction target.
 It is not a solution claim.
