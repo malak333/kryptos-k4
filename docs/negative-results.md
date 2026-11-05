@@ -132,6 +132,43 @@ stream is committed. Non-leaking results live under
 
 Anchor compatibility is a minimum check. It cannot promote a claim.
 
+## Anchor elimination
+
+`kryptos-k4 eliminate` tests concrete cipher families by whether they
+reproduce all 24 anchor letters. Each configuration has a list of checks; one
+failure eliminates it. The run is archived in
+`results/eliminations/anchor-elimination-v1/`.
+
+Facts from the anchors alone:
+
+- **No pure transposition.** The anchors need three `E`; K4 has two.
+- **No Porta, and no cipher that never maps a letter to itself.** Anchor
+  letters encrypt to themselves at one-based positions 33 (`S`) and 74 (`K`).
+- **Bean's equality.** Positions 28 and 66 both encrypt `R` to `P`, so any
+  position-keyed tableau cipher has equal keys there.
+- **No periodic substitution, with any alphabets, fits at periods** 1–7, 9,
+  10, 14, 15, 17, 21, 25, 34, 42, 43, or 45.
+
+Families, using 37 keyed alphabets fixed before scoring (standard plus 36
+Kryptos, clue, and theme keywords) in every plaintext/ciphertext pairing:
+
+| Family | Configurations | Survivors | Expected by chance | Most checks survived |
+| --- | ---: | ---: | ---: | ---: |
+| Periodic tableau and Quagmire I–IV, period 1–26 | 106,782 | 188 | 158.2 | 1 |
+| Gronsfeld, period 1–26 | 2,886 | 0 | 0.0 | — |
+| Ciphertext autokey, lag 1–52 | 421,356 | 0 | 0.0 | — |
+| Plaintext autokey, lag 1–52 | 421,356 | 1,261 | 960.4 | 3 |
+| Gromark, lag 2–12, mod 10 or 26 | 90,354 | 0 | 0.0 | — |
+| Keyed columnar (width 2–8, every order) with periodic tableau (period 1–13), both orders | 14,424,384 | 0 | 0.0 | — |
+
+Survivors pass at most three checks, at the rate chance predicts. Each checker
+keeps a planted true key in its unit tests, so zero survivors is a real
+elimination, not a bug.
+
+Limits: only the 37 registered alphabets (not arbitrary alphabets), the stated
+periods, lags, and widths, and standard/Kryptos tableaux for the columnar
+search. Running keys need a corpus file; see `running-key`.
+
 ## Lessons
 
 1. One six-position observation cannot support dozens of models. Adding

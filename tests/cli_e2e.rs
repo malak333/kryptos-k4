@@ -1316,7 +1316,10 @@ fn findings_json_is_parseable_and_non_promotional() {
         .iter()
         .map(|finding| finding["id"].as_str().unwrap())
         .collect();
-    assert_eq!(ids, ["F1", "F2", "F3", "F4", "F5", "F6", "F13", "F14"]);
+    assert_eq!(
+        ids,
+        ["F1", "F2", "F3", "F4", "F5", "F6", "F13", "F14", "F15"]
+    );
     assert!(json.as_array().unwrap().iter().any(|finding| {
         finding["id"] == "F5"
             && finding["output_summary"]
@@ -1585,4 +1588,118 @@ fn export_data_writes_machine_readable_files() {
         source["url"].as_str().unwrap().starts_with("https://")
             && !source["accessed_at"].as_str().unwrap().is_empty()
     }));
+}
+
+#[test]
+fn eliminate_reports_structural_facts_and_family_eliminations() {
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "eliminate",
+            "--max-lag",
+            "12",
+            "--max-columnar-width",
+            "3",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["promoted_candidate"], false);
+    assert_eq!(json["structural"]["anchor_letters"], 24);
+    assert_eq!(
+        json["structural"]["self_encrypting_positions_one_based"],
+        serde_json::json!([33, 74])
+    );
+    assert_eq!(
+        json["structural"]["transposition_shortfall"],
+        serde_json::json!([["E", 3, 2]])
+    );
+    let families = json["families"].as_array().unwrap();
+    let names: Vec<_> = families
+        .iter()
+        .map(|family| family["family"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        names,
+        [
+            "periodic-tableau",
+            "gronsfeld",
+            "ciphertext-autokey",
+            "plaintext-autokey",
+            "gromark",
+            "columnar-plus-tableau"
+        ]
+    );
+    for family in families {
+        assert!(family["configurations"].as_u64().unwrap() > 0);
+        assert!(family["max_survivor_checks"].as_u64().unwrap() <= 3);
+    }
+    let gromark = families
+        .iter()
+        .find(|family| family["family"] == "gromark")
+        .unwrap();
+    assert_eq!(gromark["surviving"], 0);
+
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["eliminate", "--max-lag", "4", "--max-columnar-width", "0"])
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("# Anchor Elimination"))
+        .stdout(predicate::str::contains("Pure transposition is impossible"))
+        .stdout(predicate::str::contains("promoted: false"));
+}
+
+#[test]
+fn running_key_finds_a_planted_key_and_rejects_short_corpora() {
+    let ciphertext = K4_CIPHERTEXT.as_bytes();
+    let mut corpus: Vec<u8> = (0..400u32)
+        .map(|i| b'A' + ((i * 7 + 3) % 26) as u8)
+        .collect();
+    let offset = 50;
+    for anchor in known_anchors() {
+        for (index, plain) in anchor.plaintext.bytes().enumerate() {
+            let position = anchor.start_zero_based + index;
+            let key = (ciphertext[position] + 26 - plain) % 26;
+            corpus[offset + position] = b'A' + key;
+        }
+    }
+    let temp = tempfile::tempdir().unwrap();
+    let corpus_path = temp.path().join("corpus.txt");
+    std::fs::write(&corpus_path, &corpus).unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "running-key",
+            "--corpus",
+            corpus_path.to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert!(json["full_matches"].as_u64().unwrap() >= 1);
+    assert_eq!(json["top_hits"][0]["offset"], offset);
+    assert_eq!(json["top_hits"][0]["matches"], 24);
+    assert_eq!(json["promoted_candidate"], false);
+
+    let short_path = temp.path().join("short.txt");
+    std::fs::write(&short_path, "TOO SHORT").unwrap();
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["running-key", "--corpus", short_path.to_str().unwrap()])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("at least 74"));
 }

@@ -5,6 +5,7 @@ mod cli;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use cli::claim::print_verify_claim;
+use cli::eliminate::{print_eliminate, print_running_key};
 use cli::info::{
     export_data, print_anchors, print_baseline, print_candidate_sequences,
     print_ciphertext_profile, print_constraints, print_facts, print_findings, print_hypotheses,
@@ -18,7 +19,7 @@ use cli::{
     CliAlphabet, CliBaselineAlphabet, CliBaselineTarget, CliCandidateTransform, CliFragmentMode,
     OutputFormat, write_output_file_atomically,
 };
-use kryptos_k4::{build_report, render_report};
+use kryptos_k4::{EliminationOptions, build_report, render_report};
 use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
@@ -201,6 +202,39 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
     },
+    /// Eliminate cipher families by whether they reproduce all 24 public anchor letters.
+    Eliminate {
+        /// Maximum key period for periodic and Gronsfeld families.
+        #[arg(long, default_value_t = 26)]
+        max_period: usize,
+        /// Maximum autokey lag (primer length).
+        #[arg(long, default_value_t = 52)]
+        max_lag: usize,
+        /// Maximum keyed-columnar width (every column order is tried). Use 0 to skip.
+        #[arg(long, default_value_t = 8)]
+        max_columnar_width: usize,
+        /// Maximum key period after or before columnar transposition.
+        #[arg(long, default_value_t = 13)]
+        max_columnar_period: usize,
+        /// Survivors to list per family.
+        #[arg(long, default_value_t = 10)]
+        top: usize,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
+    /// Test every offset of a local text file as a running key against the anchors.
+    RunningKey {
+        /// Local text file; non-letters are ignored.
+        #[arg(long)]
+        corpus: PathBuf,
+        /// Best offsets to list.
+        #[arg(long, default_value_t = 10)]
+        top: usize,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Print registered research hypotheses.
     Hypotheses {
         /// Output format.
@@ -367,6 +401,28 @@ fn main() -> Result<()> {
             seed,
             format,
         } => print_baseline(target, alphabet, iterations, seed, format)?,
+        Command::Eliminate {
+            max_period,
+            max_lag,
+            max_columnar_width,
+            max_columnar_period,
+            top,
+            format,
+        } => print_eliminate(
+            EliminationOptions {
+                max_period,
+                max_lag,
+                max_columnar_width,
+                max_columnar_period,
+                top,
+            },
+            format,
+        )?,
+        Command::RunningKey {
+            corpus,
+            top,
+            format,
+        } => print_running_key(corpus, top, format)?,
         Command::Hypotheses { format } => print_hypotheses(format)?,
         Command::CandidateSequences { format } => print_candidate_sequences(format)?,
         Command::Routes { format } => print_routes(format)?,

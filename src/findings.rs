@@ -164,6 +164,29 @@ pub fn findings() -> Vec<Finding> {
             next_test: "Stop mining ciphertext-only priors; test concrete cipher methods against the public anchors instead.",
             promoted_candidate: false,
         },
+        Finding {
+            id: "F15",
+            title: "Anchor reproduction eliminates the classical periodic, autokey, Gromark, and bounded columnar families",
+            related_hypothesis: "H1/H2/H3",
+            source_inputs: &[
+                "elonka-kryptos",
+                "histocrypt-2021-bean",
+                "src/eliminate.rs",
+                "results/eliminations/anchor-elimination-v1",
+            ],
+            transformation_steps: &[
+                "derive structural facts from the 24 public anchor letters alone",
+                "for each configuration (family, alphabets, sign, period or lag, transposition), list the anchor checks a correct configuration must pass and eliminate it on any failure",
+                "use 37 keyed alphabets fixed before scoring (standard plus 36 Kryptos, clue, and theme keywords) in every plaintext/ciphertext pairing",
+                "record the probability that a random configuration passes the same checks, and sum it into the survivors expected by chance",
+                "confirm with planted synthetic encryptions that each checker keeps a true key",
+            ],
+            output_summary: "No pure transposition fits (the anchors need three E but K4 has two). Porta and any cipher without self-encryption are impossible (anchor letters encrypt to themselves at one-based 33 and 74). No periodic substitution with any alphabets fits at periods 1-7, 9, 10, 14, 15, 17, 21, 25, 34, 42, 43, or 45. Over 15.5 million configurations, Gronsfeld (2886), ciphertext autokey (421356), Gromark with lag 2-12 mod 10 or 26 (90354), and keyed columnar width 2-8 before or after a periodic tableau of period 1-13 (14424384) have zero survivors. Periodic tableaux and Quagmire I-IV with period 1-26 leave 188 survivors against 158.2 expected by chance, none passing more than one check; plaintext autokey with lag 1-52 leaves 1261 against 960.4 expected, none passing more than three.",
+            baseline_comparison: "Each check carries its chance pass probability (1/26 for a letter equality, 10/26 for a digit-range check, 1/10 for a mod-10 recurrence). Survivor counts match the chance expectation, and the best survivor of any family has chance probability above 5e-5 among hundreds of thousands of configurations.",
+            interpretation: "Within the registered alphabets and bounds, these families cannot produce K4. The result is limited to the 37 alphabets and the stated periods, lags, and widths; arbitrary unkeyed alphabets, longer transposition keys, and other families remain open.",
+            next_test: "Run running-key offsets over a fixed public corpus with running-key, and extend elimination to route transpositions and non-keyword alphabets.",
+            promoted_candidate: false,
+        },
     ]
 }
 
