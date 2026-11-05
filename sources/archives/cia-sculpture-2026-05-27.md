@@ -36,7 +36,7 @@ observation file.
   are recorded only in
   `experiments/position-observations/cia-k4-row-boundaries-v1.json` and
   summarized in
-  `experiments/evidence-summaries/cia-k4-row-boundaries-v1.md`.
+  `docs/negative-results.md`.
 - scored_observation: `experiments/position-observations/cia-k4-row-boundaries-v1.json`
 - scored_positions_one_based: 1,4,5,36,37,97
 - No candidate material, key stream, route, or plaintext is promoted.

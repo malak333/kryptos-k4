@@ -1,0 +1,909 @@
+{
+  "artifact_path": "experiments/predictions/non-anchor-position-spacing-v1.json",
+  "observation_id": "cia-k4-row-boundaries-v1",
+  "observation_source_ids": [
+    "cia-sculpture"
+  ],
+  "observation_source_review_file": "experiments/source-reviews/cia-source-review-v1.json",
+  "observation_rationale": "Pre-score source-backed observation from the CIA sculpture page text-version rendering: K4 appears as a short suffix followed by three rendered lines, so only non-anchor row-boundary positions are retained for evaluation.",
+  "observation_position_notes": {
+    "1": "CIA sculpture snapshot records this as the first non-anchor K4 row-boundary position from the text-version rendering.",
+    "36": "CIA sculpture snapshot records this as the last non-anchor position before the next rendered line break after excluding anchor positions.",
+    "37": "CIA sculpture snapshot records this as the first non-anchor K4 position after that rendered line break.",
+    "4": "CIA sculpture snapshot records this as the end of the short K4 suffix before the next rendered line.",
+    "5": "CIA sculpture snapshot records this as the first non-anchor K4 position after the short suffix line break.",
+    "97": "CIA sculpture snapshot records this as the final K4 position in the 97-character remaining message."
+  },
+  "source_backed_observation": true,
+  "observation_warning": null,
+  "observed_position_count": 6,
+  "observed_pair_count": 15,
+  "observed_positions_one_based": [
+    1,
+    4,
+    5,
+    36,
+    37,
+    97
+  ],
+  "best_modulus": 2,
+  "best_residue": 1,
+  "best_hits": 8,
+  "best_hit_rate": 0.5333333333333333,
+  "null_mean_best_hits": 8.94,
+  "null_std_dev_best_hits": 1.2889220302250726,
+  "empirical_p_value": 1.0,
+  "iterations": 100000,
+  "seed": 67,
+  "modulus_results": [
+    {
+      "modulus": 2,
+      "best_residue": 1,
+      "best_hits": 8,
+      "best_hit_rate": 0.5333333333333333,
+      "residue_hits": [
+        {
+          "residue": 0,
+          "hits": 7,
+          "matching_pairs_one_based": [
+            [
+              1,
+              5
+            ],
+            [
+              1,
+              37
+            ],
+            [
+              1,
+              97
+            ],
+            [
+              4,
+              36
+            ],
+            [
+              5,
+              37
+            ],
+            [
+              5,
+              97
+            ],
+            [
+              37,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 1,
+          "hits": 8,
+          "matching_pairs_one_based": [
+            [
+              1,
+              4
+            ],
+            [
+              1,
+              36
+            ],
+            [
+              4,
+              5
+            ],
+            [
+              4,
+              37
+            ],
+            [
+              4,
+              97
+            ],
+            [
+              5,
+              36
+            ],
+            [
+              36,
+              37
+            ],
+            [
+              36,
+              97
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "modulus": 4,
+      "best_residue": 0,
+      "best_hits": 7,
+      "best_hit_rate": 0.4666666666666667,
+      "residue_hits": [
+        {
+          "residue": 0,
+          "hits": 7,
+          "matching_pairs_one_based": [
+            [
+              1,
+              5
+            ],
+            [
+              1,
+              37
+            ],
+            [
+              1,
+              97
+            ],
+            [
+              4,
+              36
+            ],
+            [
+              5,
+              37
+            ],
+            [
+              5,
+              97
+            ],
+            [
+              37,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 1,
+          "hits": 5,
+          "matching_pairs_one_based": [
+            [
+              4,
+              5
+            ],
+            [
+              4,
+              37
+            ],
+            [
+              4,
+              97
+            ],
+            [
+              36,
+              37
+            ],
+            [
+              36,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 2,
+          "hits": 0,
+          "matching_pairs_one_based": []
+        },
+        {
+          "residue": 3,
+          "hits": 3,
+          "matching_pairs_one_based": [
+            [
+              1,
+              4
+            ],
+            [
+              1,
+              36
+            ],
+            [
+              5,
+              36
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "modulus": 3,
+      "best_residue": 0,
+      "best_hits": 6,
+      "best_hit_rate": 0.4,
+      "residue_hits": [
+        {
+          "residue": 0,
+          "hits": 6,
+          "matching_pairs_one_based": [
+            [
+              1,
+              4
+            ],
+            [
+              1,
+              37
+            ],
+            [
+              1,
+              97
+            ],
+            [
+              4,
+              37
+            ],
+            [
+              4,
+              97
+            ],
+            [
+              37,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 1,
+          "hits": 5,
+          "matching_pairs_one_based": [
+            [
+              1,
+              5
+            ],
+            [
+              4,
+              5
+            ],
+            [
+              5,
+              36
+            ],
+            [
+              36,
+              37
+            ],
+            [
+              36,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 2,
+          "hits": 4,
+          "matching_pairs_one_based": [
+            [
+              1,
+              36
+            ],
+            [
+              4,
+              36
+            ],
+            [
+              5,
+              37
+            ],
+            [
+              5,
+              97
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "modulus": 5,
+      "best_residue": 1,
+      "best_hits": 6,
+      "best_hit_rate": 0.4,
+      "residue_hits": [
+        {
+          "residue": 0,
+          "hits": 2,
+          "matching_pairs_one_based": [
+            [
+              1,
+              36
+            ],
+            [
+              37,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 1,
+          "hits": 6,
+          "matching_pairs_one_based": [
+            [
+              1,
+              37
+            ],
+            [
+              1,
+              97
+            ],
+            [
+              4,
+              5
+            ],
+            [
+              5,
+              36
+            ],
+            [
+              36,
+              37
+            ],
+            [
+              36,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 2,
+          "hits": 3,
+          "matching_pairs_one_based": [
+            [
+              4,
+              36
+            ],
+            [
+              5,
+              37
+            ],
+            [
+              5,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 3,
+          "hits": 3,
+          "matching_pairs_one_based": [
+            [
+              1,
+              4
+            ],
+            [
+              4,
+              37
+            ],
+            [
+              4,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 4,
+          "hits": 1,
+          "matching_pairs_one_based": [
+            [
+              1,
+              5
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "modulus": 7,
+      "best_residue": 1,
+      "best_hits": 4,
+      "best_hit_rate": 0.26666666666666666,
+      "residue_hits": [
+        {
+          "residue": 0,
+          "hits": 1,
+          "matching_pairs_one_based": [
+            [
+              1,
+              36
+            ]
+          ]
+        },
+        {
+          "residue": 1,
+          "hits": 4,
+          "matching_pairs_one_based": [
+            [
+              1,
+              37
+            ],
+            [
+              4,
+              5
+            ],
+            [
+              5,
+              97
+            ],
+            [
+              36,
+              37
+            ]
+          ]
+        },
+        {
+          "residue": 2,
+          "hits": 1,
+          "matching_pairs_one_based": [
+            [
+              4,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 3,
+          "hits": 2,
+          "matching_pairs_one_based": [
+            [
+              1,
+              4
+            ],
+            [
+              5,
+              36
+            ]
+          ]
+        },
+        {
+          "residue": 4,
+          "hits": 4,
+          "matching_pairs_one_based": [
+            [
+              1,
+              5
+            ],
+            [
+              4,
+              36
+            ],
+            [
+              5,
+              37
+            ],
+            [
+              37,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 5,
+          "hits": 3,
+          "matching_pairs_one_based": [
+            [
+              1,
+              97
+            ],
+            [
+              4,
+              37
+            ],
+            [
+              36,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 6,
+          "hits": 0,
+          "matching_pairs_one_based": []
+        }
+      ]
+    },
+    {
+      "modulus": 8,
+      "best_residue": 4,
+      "best_hits": 4,
+      "best_hit_rate": 0.26666666666666666,
+      "residue_hits": [
+        {
+          "residue": 0,
+          "hits": 3,
+          "matching_pairs_one_based": [
+            [
+              1,
+              97
+            ],
+            [
+              4,
+              36
+            ],
+            [
+              5,
+              37
+            ]
+          ]
+        },
+        {
+          "residue": 1,
+          "hits": 3,
+          "matching_pairs_one_based": [
+            [
+              4,
+              5
+            ],
+            [
+              4,
+              37
+            ],
+            [
+              36,
+              37
+            ]
+          ]
+        },
+        {
+          "residue": 2,
+          "hits": 0,
+          "matching_pairs_one_based": []
+        },
+        {
+          "residue": 3,
+          "hits": 2,
+          "matching_pairs_one_based": [
+            [
+              1,
+              4
+            ],
+            [
+              1,
+              36
+            ]
+          ]
+        },
+        {
+          "residue": 4,
+          "hits": 4,
+          "matching_pairs_one_based": [
+            [
+              1,
+              5
+            ],
+            [
+              1,
+              37
+            ],
+            [
+              5,
+              97
+            ],
+            [
+              37,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 5,
+          "hits": 2,
+          "matching_pairs_one_based": [
+            [
+              4,
+              97
+            ],
+            [
+              36,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 6,
+          "hits": 0,
+          "matching_pairs_one_based": []
+        },
+        {
+          "residue": 7,
+          "hits": 1,
+          "matching_pairs_one_based": [
+            [
+              5,
+              36
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "modulus": 14,
+      "best_residue": 4,
+      "best_hits": 4,
+      "best_hit_rate": 0.26666666666666666,
+      "residue_hits": [
+        {
+          "residue": 0,
+          "hits": 0,
+          "matching_pairs_one_based": []
+        },
+        {
+          "residue": 1,
+          "hits": 2,
+          "matching_pairs_one_based": [
+            [
+              4,
+              5
+            ],
+            [
+              36,
+              37
+            ]
+          ]
+        },
+        {
+          "residue": 2,
+          "hits": 0,
+          "matching_pairs_one_based": []
+        },
+        {
+          "residue": 3,
+          "hits": 2,
+          "matching_pairs_one_based": [
+            [
+              1,
+              4
+            ],
+            [
+              5,
+              36
+            ]
+          ]
+        },
+        {
+          "residue": 4,
+          "hits": 4,
+          "matching_pairs_one_based": [
+            [
+              1,
+              5
+            ],
+            [
+              4,
+              36
+            ],
+            [
+              5,
+              37
+            ],
+            [
+              37,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 5,
+          "hits": 2,
+          "matching_pairs_one_based": [
+            [
+              4,
+              37
+            ],
+            [
+              36,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 6,
+          "hits": 0,
+          "matching_pairs_one_based": []
+        },
+        {
+          "residue": 7,
+          "hits": 1,
+          "matching_pairs_one_based": [
+            [
+              1,
+              36
+            ]
+          ]
+        },
+        {
+          "residue": 8,
+          "hits": 2,
+          "matching_pairs_one_based": [
+            [
+              1,
+              37
+            ],
+            [
+              5,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 9,
+          "hits": 1,
+          "matching_pairs_one_based": [
+            [
+              4,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 10,
+          "hits": 0,
+          "matching_pairs_one_based": []
+        },
+        {
+          "residue": 11,
+          "hits": 0,
+          "matching_pairs_one_based": []
+        },
+        {
+          "residue": 12,
+          "hits": 1,
+          "matching_pairs_one_based": [
+            [
+              1,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 13,
+          "hits": 0,
+          "matching_pairs_one_based": []
+        }
+      ]
+    },
+    {
+      "modulus": 13,
+      "best_residue": 1,
+      "best_hits": 3,
+      "best_hit_rate": 0.2,
+      "residue_hits": [
+        {
+          "residue": 0,
+          "hits": 0,
+          "matching_pairs_one_based": []
+        },
+        {
+          "residue": 1,
+          "hits": 3,
+          "matching_pairs_one_based": [
+            [
+              4,
+              5
+            ],
+            [
+              5,
+              97
+            ],
+            [
+              36,
+              37
+            ]
+          ]
+        },
+        {
+          "residue": 2,
+          "hits": 1,
+          "matching_pairs_one_based": [
+            [
+              4,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 3,
+          "hits": 1,
+          "matching_pairs_one_based": [
+            [
+              1,
+              4
+            ]
+          ]
+        },
+        {
+          "residue": 4,
+          "hits": 1,
+          "matching_pairs_one_based": [
+            [
+              1,
+              5
+            ]
+          ]
+        },
+        {
+          "residue": 5,
+          "hits": 2,
+          "matching_pairs_one_based": [
+            [
+              1,
+              97
+            ],
+            [
+              5,
+              36
+            ]
+          ]
+        },
+        {
+          "residue": 6,
+          "hits": 2,
+          "matching_pairs_one_based": [
+            [
+              4,
+              36
+            ],
+            [
+              5,
+              37
+            ]
+          ]
+        },
+        {
+          "residue": 7,
+          "hits": 1,
+          "matching_pairs_one_based": [
+            [
+              4,
+              37
+            ]
+          ]
+        },
+        {
+          "residue": 8,
+          "hits": 1,
+          "matching_pairs_one_based": [
+            [
+              37,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 9,
+          "hits": 2,
+          "matching_pairs_one_based": [
+            [
+              1,
+              36
+            ],
+            [
+              36,
+              97
+            ]
+          ]
+        },
+        {
+          "residue": 10,
+          "hits": 1,
+          "matching_pairs_one_based": [
+            [
+              1,
+              37
+            ]
+          ]
+        },
+        {
+          "residue": 11,
+          "hits": 0,
+          "matching_pairs_one_based": []
+        },
+        {
+          "residue": 12,
+          "hits": 0,
+          "matching_pairs_one_based": []
+        }
+      ]
+    }
+  ],
+  "promoted_candidate": false,
+  "note": "Spacing prediction evaluation scores independent non-anchor positions against a committed spacing artifact with a best-of-modulus null; it is not a claimed solution."
+}

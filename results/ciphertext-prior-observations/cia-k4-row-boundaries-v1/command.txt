@@ -1,0 +1,1 @@
+evaluate-ciphertext-prior --positions-file observations.json --max-period 20 --max-ngram 4 --prior-iterations 100000 --prior-seed 67 --iterations 100000 --seed 67
