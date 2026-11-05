@@ -23,7 +23,9 @@ show that this observation should not be scored again.
 ## Surviving evaluation archives
 
 Archives live under `results/<family>/cia-k4-row-boundaries-*/` (each has
-`summary.md`, `result.json`, and the exact command). Empirical p-values come
+`summary.md`, `result.json`, and the exact command). The scoring commands in
+`command.txt` were removed from the CLI in the slim-down; to re-run one, check
+out git tag `pre-slimdown` first. Empirical p-values come
 from seeded non-anchor position-shuffle nulls (seed 67, 100,000 iterations
 unless the archive says otherwise).
 

@@ -1,6 +1,6 @@
 # Kryptos K4 Research CLI
 
-> **Slim-down note (2026-11-03):** duplicate and escalating-variant lanes were pruned. References below to lanes that no longer exist are historical; those files are preserved at git tag `pre-slimdown`. See `docs/negative-results.md`.
+> **Slim-down note (2026-11-04):** duplicate lanes were pruned and the CLI was cut to 19 commands (run `kryptos-k4 --help`). Lane, observation, source-review, and evidence-gate commands described below no longer exist; they and every pruned file are preserved at git tag `pre-slimdown`. See `docs/negative-results.md`. This README will be rewritten in the next cleanup phase.
 
 `kryptos-k4` is a Rust CLI for source-grounded Kryptos K4 research. It preserves the public K4 ciphertext, known public anchors, source provenance, and repeatable constraint analyses without using leaked or archive-discovered plaintext.
 
