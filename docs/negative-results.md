@@ -153,8 +153,13 @@ Facts from the anchors alone:
   1–15, 17, 18, 21, 22, or 25. This is exact: each anchor is a difference
   constraint between an unknown alphabet position and an unknown key column.
   Both pass at period 19, which 1.5–2.1% of ciphertext shuffles also do. A
-  post-hoc combined test gives p = 0.049, which is not evidence. Keyword
-  alphabets at period 19 are already eliminated.
+  post-hoc combined test gives p = 0.049, which is not evidence.
+- **No dictionary keyword alphabet fits Quagmire I, II, or III at periods
+  1–25.** Every word in Webster's Second and the system proper-names list
+  (about 208,000 distinct alphabets, 48.8 million configurations) was tested.
+  The only survivors are at period 26, where the anchors are almost
+  untested, at the chance rate. Preregistration:
+  `experiments/eliminations/dictionary-keywords-preregistration.md`.
 
 Families, using 37 keyed alphabets fixed before scoring (standard plus 36
 Kryptos, clue, and theme keywords) in every plaintext/ciphertext pairing:
@@ -172,7 +177,7 @@ Survivors pass at most three checks, at the rate chance predicts. Each checker
 keeps a planted true key in its unit tests, so zero survivors is a real
 elimination, not a bug.
 
-Limits: only the 37 registered alphabets (not arbitrary alphabets), the stated
+Limits: the 37 registered alphabets plus the dictionary alphabets above (Quagmire IV is tested only with registered pairs), the stated
 periods, lags, and widths, and standard/Kryptos tableaux for the columnar
 search. Running keys are covered below.
 

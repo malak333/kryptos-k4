@@ -7,7 +7,7 @@ Routine runs that repeat an earlier result do not get an entry.
 The earlier long-form log (96 entries, 2026-05-20 through 2026-06-01) is
 `experiments/PROGRESS_LOG.md` at git tag `pre-slimdown`.
 
-## 2026-11-05: Route transpositions (phase 6)
+## 2026-11-04: Route transpositions (phase 6)
 
 - Added the route family to `eliminate`: 18,849 route permutations (ten grid
   routes at widths 2–48, K3-style double rotations, inverses, reversals).
@@ -16,6 +16,8 @@ The earlier long-form log (96 entries, 2026-05-20 through 2026-06-01) is
 - Exact any-alphabet test for Quagmire I and II (weighted union-find): ruled
   out at every period to 12 and most to 26; period 19 is the weakest gap,
   p = 0.049 post hoc (F19).
+- Added `eliminate --wordlist`: every Webster's Second and proper-name keyword
+  alphabet as Quagmire I–III. No survivor at periods 1–25 (F20).
 
 ## 2026-11-04: Running keys (phase 5)
 

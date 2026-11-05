@@ -1,13 +1,37 @@
 use super::OutputFormat;
 use anyhow::{Context, Result, bail};
 use kryptos_k4::{
-    EliminationOptions, EliminationReport, KeyLanguageOptions, KeyLanguageReport, RunningKeyReport,
-    key_language, normalize_letters, run_elimination, scan_running_key,
+    EliminationOptions, EliminationReport, KeyLanguageOptions, KeyLanguageReport, Problem,
+    RunningKeyReport, eliminate_dictionary_quagmire, key_language, normalize_letters,
+    run_elimination, scan_running_key,
 };
 use std::{fs, path::PathBuf};
 
-pub(crate) fn print_eliminate(options: EliminationOptions, format: OutputFormat) -> Result<()> {
-    let report = run_elimination(options);
+pub(crate) fn print_eliminate(
+    options: EliminationOptions,
+    wordlists: &[PathBuf],
+    format: OutputFormat,
+) -> Result<()> {
+    let mut report = run_elimination(options);
+    if !wordlists.is_empty() {
+        let mut words = Vec::new();
+        for path in wordlists {
+            let text = fs::read_to_string(path)
+                .with_context(|| format!("failed to read word list `{}`", path.display()))?;
+            words.extend(
+                text.lines()
+                    .map(str::trim)
+                    .filter(|w| w.bytes().any(|b| b.is_ascii_alphabetic()))
+                    .map(str::to_string),
+            );
+        }
+        report.families.push(eliminate_dictionary_quagmire(
+            &Problem::k4(),
+            &words,
+            options.max_period,
+            options.top,
+        ));
+    }
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&report)?),
         OutputFormat::Markdown => print!("{}", render_elimination(&report)),

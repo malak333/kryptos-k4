@@ -27,6 +27,7 @@ Combined surprisal against 2000 ciphertext shuffles (seed 1): K4 13.48, null mea
 | `gromark` | 90354 | 90354 | 0 | 0 | 0.0 | 0 |
 | `columnar-plus-tableau` | 14424384 | 14424384 | 0 | 0 | 0.0 | 0 |
 | `route-plus-tableau` | 11761776 | 11749256 | 3288 | 9232 | 9168.7 | 3 |
+| `dictionary-quagmire` | 48829248 | 48763677 | 0 | 65571 | 72339.6 | 1 |
 
 ### `periodic-tableau`
 
@@ -102,6 +103,23 @@ Least likely survivors (chance = probability a random configuration passes the s
 - substitute-then-transpose double-rotate-ccw widths=47,39 inverse reversed quagmire-i vigenere pt=kryptos ct=standard period=25 — 3 checks, chance 5.69e-5
 - substitute-then-transpose double-rotate-ccw widths=6,46 inverse quagmire-iii beaufort pt=kryptos ct=kryptos period=25 — 3 checks, chance 5.69e-5
 - substitute-then-transpose double-rotate-cw widths=10,34 inverse reversed quagmire-i beaufort pt=kryptos ct=standard period=25 — 3 checks, chance 5.69e-5
+
+### `dictionary-quagmire`
+
+Quagmire I, II, and III (Vigenère, Beaufort, variant Beaufort) with a keyword alphabet from every word in the given word lists, period 1..=max
+
+Least likely survivors (chance = probability a random configuration passes the same checks):
+
+- quagmire-i beaufort pt=abkari ct=standard period=26 — 1 checks, chance 3.85e-2
+- quagmire-i beaufort pt=abkhas ct=standard period=26 — 1 checks, chance 3.85e-2
+- quagmire-i beaufort pt=achakzai ct=standard period=26 — 1 checks, chance 3.85e-2
+- quagmire-i beaufort pt=ackman ct=standard period=26 — 1 checks, chance 3.85e-2
+- quagmire-i beaufort pt=acknowledge ct=standard period=26 — 1 checks, chance 3.85e-2
+- quagmire-i beaufort pt=acknowledgedly ct=standard period=26 — 1 checks, chance 3.85e-2
+- quagmire-i beaufort pt=acknowledgement ct=standard period=26 — 1 checks, chance 3.85e-2
+- quagmire-i beaufort pt=acknowledger ct=standard period=26 — 1 checks, chance 3.85e-2
+- quagmire-i beaufort pt=acockbill ct=standard period=26 — 1 checks, chance 3.85e-2
+- quagmire-i beaufort pt=ahankara ct=standard period=26 — 1 checks, chance 3.85e-2
 
 ### `route-plus-any-substitution`
 

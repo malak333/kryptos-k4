@@ -369,6 +369,68 @@
           "chance_probability": 0.00005689576695493856
         }
       ]
+    },
+    {
+      "family": "dictionary-quagmire",
+      "description": "Quagmire I, II, and III (Vigenère, Beaufort, variant Beaufort) with a keyword alphabet from every word in the given word lists, period 1..=max",
+      "configurations": 48829248,
+      "eliminated": 48763677,
+      "unconstrained": 0,
+      "surviving": 65571,
+      "expected_chance_survivors": 72339.6271475303,
+      "max_survivor_checks": 1,
+      "top_survivors": [
+        {
+          "parameters": "quagmire-i beaufort pt=abkari ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i beaufort pt=abkhas ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i beaufort pt=achakzai ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i beaufort pt=ackman ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i beaufort pt=acknowledge ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i beaufort pt=acknowledgedly ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i beaufort pt=acknowledgement ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i beaufort pt=acknowledger ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i beaufort pt=acockbill ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i beaufort pt=ahankara ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        }
+      ]
     }
   ],
   "route_any_substitution": {

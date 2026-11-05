@@ -1319,7 +1319,8 @@ fn findings_json_is_parseable_and_non_promotional() {
     assert_eq!(
         ids,
         [
-            "F1", "F2", "F3", "F4", "F5", "F6", "F13", "F14", "F15", "F16", "F17", "F18", "F19"
+            "F1", "F2", "F3", "F4", "F5", "F6", "F13", "F14", "F15", "F16", "F17", "F18", "F19",
+            "F20"
         ]
     );
     assert!(json.as_array().unwrap().iter().any(|finding| {

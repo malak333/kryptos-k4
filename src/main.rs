@@ -222,6 +222,9 @@ enum Command {
         /// Random permutations for the any-substitution route null.
         #[arg(long, default_value_t = 200_000)]
         route_random_permutations: usize,
+        /// Word list (one word per line) whose words become Quagmire I-III keyword alphabets; repeatable.
+        #[arg(long)]
+        wordlist: Vec<PathBuf>,
         /// Ciphertext shuffles for the structure-matched route null (periods 1..=8).
         #[arg(long, default_value_t = 200)]
         route_ciphertext_shuffles: usize,
@@ -439,6 +442,7 @@ fn main() -> Result<()> {
             max_route_width,
             route_random_permutations,
             route_ciphertext_shuffles,
+            wordlist,
             top,
             format,
         } => print_eliminate(
@@ -452,6 +456,7 @@ fn main() -> Result<()> {
                 route_ciphertext_shuffles,
                 top,
             },
+            &wordlist,
             format,
         )?,
         Command::RunningKey {

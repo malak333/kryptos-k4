@@ -20,8 +20,10 @@ archive-discovered, or private plaintext.
   transposition and Porta are impossible outright. Gronsfeld, ciphertext
   autokey, Gromark, and keyed columnar plus periodic tableau leave zero
   survivors over 15 million configurations. Periodic Quagmire I–IV and
-  plaintext autokey leave only chance-level survivors. Limits apply; see
-  [docs/negative-results.md](docs/negative-results.md).
+  plaintext autokey leave only chance-level survivors. Quagmire I–III with a
+  keyword alphabet from any dictionary word fail at every period up to 25, and
+  Quagmire I and II fail at every period up to 12 with any alphabet at all.
+  Limits apply; see [docs/negative-results.md](docs/negative-results.md).
 - **Route transpositions do not help.** Ten grid routes and K3-style double
   rotations at every width up to 48, before or after a periodic key, fit the
   anchors no better than chance, even with any alphabet per key column.
@@ -37,9 +39,9 @@ archive-discovered, or private plaintext.
   is not internally consistent.
 
 Next step: a closing synthesis of what the anchors rule out and which method
-classes remain open. A method that
-reproduces all 24 anchor letters by chance has probability about 26^-24, so a
-miss is an elimination. See [docs/research-plan.md](docs/research-plan.md).
+classes remain open. A method that reproduces all 24 anchor letters by chance
+has probability about 26^-24, so a miss is an elimination. See
+[docs/research-plan.md](docs/research-plan.md).
 
 ## Quick start
 
@@ -86,7 +88,7 @@ Examples:
 kryptos-k4 test-key --material BERLINWORLDCLOCK --sweep-offsets
 kryptos-k4 explain-key --material BERLINWORLDCLOCK --offset 0
 kryptos-k4 batch-test-keys --input experiments/k4-candidates.csv --batch-baseline-iterations 1000
-kryptos-k4 eliminate
+kryptos-k4 eliminate --wordlist /usr/share/dict/web2
 kryptos-k4 running-key --corpus /path/to/text.txt
 kryptos-k4 key-language --corpus /path/to/english.txt
 kryptos-k4 report --format markdown --output notes/k4-report.md

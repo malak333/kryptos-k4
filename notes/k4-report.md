@@ -848,7 +848,15 @@ Findings are reproducible research observations, not promoted solution claims.
   - Output: With any alphabet, Quagmire I is impossible at periods 1-12, 14, 15, 17, 18, 20-22, and 25; Quagmire II at 1-15, 17, 18, 21, 22, and 25. Both pass at period 19, where 1.5% and 2.1% of shuffles pass; the other passes (13, 16, 20, 23, 24, 26) are common under shuffling. Combined surprisal: K4 13.48 against a null mean of 6.37, p = 0.049.
   - Baseline: Impossibility is exact and needs no null. The surprisal p-value is post hoc (the statistic was chosen after period 19 was seen) and is not significant after that choice.
   - Interpretation: Quagmire I and II, with any alphabet at all, are ruled out at every period up to 12 and at most periods up to 26. The registered keyword alphabets were already eliminated at period 19 (F15). Period 19 is the weakest remaining gap, not evidence for it. Quagmire III and IV with arbitrary alphabets are not covered by this exact test.
-  - Next test: Check whether any keyword alphabet, not only the registered ones, satisfies the period-19 constraints.
+  - Next test: Check whether any dictionary keyword alphabet, not only the registered ones, fits Quagmire I-III (F20).
+  - Promoted: false
+- **F20 No dictionary keyword alphabet fits Quagmire I, II, or III at any period up to 25 (H2)**
+  - Sources: `experiments/eliminations/dictionary-keywords-preregistration.md`, `src/eliminate.rs`, `results/eliminations/anchor-elimination-v3`
+  - Steps: make a keyword alphabet from every word in /usr/share/dict/web2 (Webster's Second, 235,976 words) and /usr/share/dict/propernames (1,308 names), skipping duplicates and the standard alphabet; test each as Quagmire I, II, and III with Vigenere, Beaufort, and variant Beaufort at periods 1-26, with the periodic-tableau anchor checks; confirm with a planted keyword encryption that the checker keeps a true key
+  - Output: 48,829,248 configurations. 65,571 survive against 72,339.6 expected by chance, and none passes more than one check: every survivor is at a period (26) that leaves the anchors almost untested. No configuration survives at any period from 1 to 25, including period 19.
+  - Baseline: Each check carries chance 1/26; survivor counts match the chance expectation.
+  - Interpretation: Quagmire I-III with a keyword alphabet from any English dictionary word cannot produce K4 at periods 1-25. Together with F19, the period-19 gap for Quagmire I/II needs a non-dictionary mixed alphabet.
+  - Next test: Write the closing synthesis of eliminated and open method classes.
   - Promoted: false
 
 ## Release Check

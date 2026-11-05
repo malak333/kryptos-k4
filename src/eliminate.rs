@@ -990,6 +990,66 @@ pub fn eliminate_columnar(
     tally.finish()
 }
 
+/// Array version of `periodic_outcome` (no digit check) for large word lists.
+fn periodic_outcome_fast(offsets: &[(usize, u8)], period: usize) -> Outcome {
+    let mut outcome = Outcome::new();
+    let mut first = [u8::MAX; 64];
+    for &(position, key) in offsets {
+        let slot = &mut first[position % period];
+        if *slot == u8::MAX {
+            *slot = key;
+        } else {
+            outcome.check(key == *slot, 1.0 / 26.0);
+        }
+    }
+    outcome
+}
+
+/// Quagmire I, II, and III with a keyword alphabet for every word in a list.
+pub fn eliminate_dictionary_quagmire(
+    problem: &Problem,
+    words: &[String],
+    max_period: usize,
+    top: usize,
+) -> FamilyElimination {
+    assert!(max_period <= 64, "max period above 64");
+    let mut tally = Tally::new(
+        "dictionary-quagmire",
+        "Quagmire I, II, and III (Vigenère, Beaufort, variant Beaufort) with a keyword alphabet from every word in the given word lists, period 1..=max",
+        top,
+    );
+    let standard = KeyedAlphabet::standard();
+    let mut seen: std::collections::HashSet<[u8; 26]> = std::collections::HashSet::new();
+    seen.insert(standard.order);
+    let pairs = problem.pairs();
+    for word in words {
+        let alphabet = KeyedAlphabet::from_keyword(&word.to_ascii_lowercase(), word);
+        if !seen.insert(alphabet.order) {
+            continue;
+        }
+        for (plain, cipher) in [
+            (&alphabet, &standard),
+            (&standard, &alphabet),
+            (&alphabet, &alphabet),
+        ] {
+            for sign in Sign::ALL {
+                let tableau = Tableau {
+                    plain,
+                    cipher,
+                    sign,
+                };
+                let offsets = tableau_offsets(&tableau, &pairs);
+                for period in 1..=max_period {
+                    tally.record(periodic_outcome_fast(&offsets, period), || {
+                        format!("{} period={period}", tableau.label())
+                    });
+                }
+            }
+        }
+    }
+    tally.finish()
+}
+
 #[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct EliminationReport {
     pub structural: StructuralFacts,
@@ -1488,6 +1548,36 @@ mod tests {
                 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 21, 22, 25
             ]
         );
+    }
+
+    #[test]
+    fn dictionary_family_keeps_a_planted_keyword() {
+        let mixed = KeyedAlphabet::from_keyword("zebrafish", "ZEBRAFISH");
+        let standard = KeyedAlphabet::standard();
+        let plain = synthetic_plaintext();
+        let key = [5u8, 17, 2, 9, 20, 11, 3];
+        let tableau = Tableau {
+            plain: &standard,
+            cipher: &mixed,
+            sign: Sign::Beaufort,
+        };
+        let cipher = encrypt_periodic(&plain, &key, &tableau);
+        let problem = planted(&plain, &cipher);
+        let words: Vec<String> = ["apple", "zebrafish", "kryptos"]
+            .iter()
+            .map(|w| w.to_string())
+            .collect();
+        let result = eliminate_dictionary_quagmire(&problem, &words, 10, 5);
+        assert_planted_survivor(
+            &result,
+            "quagmire-ii beaufort pt=standard ct=zebrafish period=7",
+        );
+        let offsets = tableau_offsets(&tableau, &problem.pairs());
+        for period in 1..=26 {
+            let fast = periodic_outcome_fast(&offsets, period);
+            let slow = periodic_outcome(&offsets, period, false);
+            assert_eq!((fast.checks, fast.failures), (slow.checks, slow.failures));
+        }
     }
 
     #[test]
