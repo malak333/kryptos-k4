@@ -157,7 +157,7 @@ Facts from the anchors alone:
 - **Quagmire III and IV with arbitrary alphabets (exact search).**
   Quagmire III (one alphabet on both sides) with Vigenère or variant Beaufort
   is impossible at every period 1–26 except 24, which the search could not
-  finish in 2 billion nodes; no solution exists at any decided period. With
+  finish in 2 billion nodes (or in a 20-billion-node rerun); no solution exists at any decided period. With
   Beaufort it is impossible at 1–22, 24, and 25, and solvable at 23 and 26. Quagmire IV (two free alphabets) is
   fully decided: impossible at 1–7, 9–12, 14, 15, 17, 18, 21, 22, and 25, and
   solvable at 8, 13, 16, 19, 20, 23, 24, and 26.

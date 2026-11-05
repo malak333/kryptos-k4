@@ -11,7 +11,7 @@ The earlier long-form log (96 entries, 2026-05-20 through 2026-06-01) is
 
 - Re-ran the exact search with a 2-billion-node budget per period. Four of
   the five undecided Quagmire III cells are now impossible: Vigenère 19 and
-  23, Beaufort 16 and 24. Only Vigenère period 24 stays undecided. Archive
+  23, Beaufort 16 and 24. Only Vigenère period 24 stays undecided, even at 20 billion nodes. Archive
   `anchor-elimination-v5` replaces v4 (F21).
 
 ## 2026-11-05: Exact Quagmire III/IV search (phase 8)
