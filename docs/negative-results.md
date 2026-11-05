@@ -167,7 +167,32 @@ elimination, not a bug.
 
 Limits: only the 37 registered alphabets (not arbitrary alphabets), the stated
 periods, lags, and widths, and standard/Kryptos tableaux for the columnar
-search. Running keys need a corpus file; see `running-key`.
+search. Running keys are covered below.
+
+## Running keys
+
+Preregistration: `experiments/running-key/preregistration.md`. Results:
+`results/running-key/`.
+
+**Fixed corpus (`running-key`).** Eight texts were fixed before scoring: the
+K1–K3 plaintext, the K1–K3 ciphertext, the tableau rows, and Carter and Mace's
+*Tomb of Tut.ankh.Amen* Vol. I (1923), each forward and reversed. Every offset
+was tested on Vigenère, Beaufort, and variant Beaufort with standard and
+Kryptos alphabets: 10.2 million configurations. None reproduces all 24 anchor
+letters. The best is 9/24 (reversed Carter, 0.72 expected by chance); every
+corpus's best is at chance level.
+
+**Any English text (`key-language`).** A running key from English puts English
+letters at the anchors. For each of the 8,103 registered tableau
+configurations, the implied key at the two anchor runs (13 and 11 letters) was
+scored with a trigram model trained on half of Carter's text and compared with
+held-out English windows. One configuration reaches the 0.1% English quantile,
+against 1.13 expected from random keys, and its implied key
+(`CDHIRMEFADCNE FYEDNICKTHE`) is not English. A running key from any English
+text is eliminated for the 37 registered alphabets.
+
+Limits: registered alphabets only; a key that is itself enciphered, non-English,
+or transposed is not covered.
 
 ## Lessons
 

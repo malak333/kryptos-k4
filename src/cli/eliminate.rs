@@ -1,8 +1,8 @@
 use super::OutputFormat;
 use anyhow::{Context, Result, bail};
 use kryptos_k4::{
-    EliminationOptions, EliminationReport, RunningKeyReport, normalize_letters, run_elimination,
-    scan_running_key,
+    EliminationOptions, EliminationReport, KeyLanguageOptions, KeyLanguageReport, RunningKeyReport,
+    key_language, normalize_letters, run_elimination, scan_running_key,
 };
 use std::{fs, path::PathBuf};
 
@@ -133,5 +133,64 @@ fn render_running_key(corpus: &std::path::Path, report: &RunningKeyReport) -> St
         ));
     }
     out.push_str("\npromoted: false\n");
+    out
+}
+
+pub(crate) fn print_key_language(
+    corpus: PathBuf,
+    options: KeyLanguageOptions,
+    format: OutputFormat,
+) -> Result<()> {
+    let text = fs::read_to_string(&corpus)
+        .with_context(|| format!("failed to read corpus `{}`", corpus.display()))?;
+    let letters = normalize_letters(&text);
+    if letters.len() < 2_000 {
+        bail!(
+            "corpus `{}` has {} letters; at least 2000 are needed to train and test the model",
+            corpus.display(),
+            letters.len()
+        );
+    }
+    let report = key_language(&letters, &options);
+    match format {
+        OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&report)?),
+        OutputFormat::Markdown => print!("{}", render_key_language(&corpus, &report)),
+    }
+    Ok(())
+}
+
+fn render_key_language(corpus: &std::path::Path, report: &KeyLanguageReport) -> String {
+    let mut out = String::new();
+    out.push_str("# Anchor-Implied Key Language Test\n\nThis is not a claimed solution.\n\n");
+    out.push_str(&format!(
+        "English corpus: `{}` ({} training letters, {} held-out windows)\nanchor runs: {:?}\nconfigurations: {}\nthreshold: {:.4} (quantile {} of held-out English windows; English median {:.4})\nuniform random median: {:.4}; pass rate at threshold: {:.2e} over {} samples (seed {})\ncompatible configurations: {} (expected by chance: {:.2})\n\n",
+        corpus.display(),
+        report.training_letters,
+        report.heldout_windows,
+        report.anchor_runs,
+        report.configurations,
+        report.threshold,
+        report.quantile,
+        report.english_median,
+        report.uniform_median,
+        report.uniform_pass_rate,
+        report.uniform_samples,
+        report.seed,
+        report.compatible,
+        report.expected_compatible_by_chance
+    ));
+    out.push_str(
+        "| Tableau | Implied key | Score | English quantile |\n| --- | --- | ---: | ---: |\n",
+    );
+    for hit in &report.top {
+        out.push_str(&format!(
+            "| {} | {} | {:.4} | {:.2e} |\n",
+            hit.tableau,
+            hit.key_fragments.join(" "),
+            hit.score,
+            hit.english_quantile
+        ));
+    }
+    out.push_str(&format!("\n{}\n\npromoted: false\n", report.note));
     out
 }

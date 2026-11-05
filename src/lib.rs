@@ -10,6 +10,7 @@ pub mod data;
 pub mod eliminate;
 pub mod findings;
 pub mod hypotheses;
+pub mod key_language;
 pub mod key_test;
 pub mod release_check;
 pub mod report;
@@ -46,6 +47,7 @@ pub use eliminate::{
 };
 pub use findings::{Finding, findings};
 pub use hypotheses::{Hypothesis, hypotheses};
+pub use key_language::{KeyLanguageHit, KeyLanguageOptions, KeyLanguageReport, key_language};
 pub use key_test::{
     BatchKeyMaterialBaseline, BatchKeyMaterialCandidate, BatchKeyMaterialResult,
     BatchKeyMaterialRun, KeyMaterialExplanation, KeyMaterialMatch, KeyMaterialMismatch,

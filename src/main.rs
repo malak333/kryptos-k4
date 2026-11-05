@@ -5,7 +5,7 @@ mod cli;
 use anyhow::Result;
 use clap::{Parser, Subcommand};
 use cli::claim::print_verify_claim;
-use cli::eliminate::{print_eliminate, print_running_key};
+use cli::eliminate::{print_eliminate, print_key_language, print_running_key};
 use cli::info::{
     export_data, print_anchors, print_baseline, print_candidate_sequences,
     print_ciphertext_profile, print_constraints, print_facts, print_findings, print_hypotheses,
@@ -19,7 +19,7 @@ use cli::{
     CliAlphabet, CliBaselineAlphabet, CliBaselineTarget, CliCandidateTransform, CliFragmentMode,
     OutputFormat, write_output_file_atomically,
 };
-use kryptos_k4::{EliminationOptions, build_report, render_report};
+use kryptos_k4::{EliminationOptions, KeyLanguageOptions, build_report, render_report};
 use std::path::PathBuf;
 
 #[derive(Debug, Parser)]
@@ -235,6 +235,27 @@ enum Command {
         #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
         format: OutputFormat,
     },
+    /// Score the key each registered tableau implies at the anchors for English.
+    KeyLanguage {
+        /// Local English text file; the first half trains a trigram model, the second half is the English null.
+        #[arg(long)]
+        corpus: PathBuf,
+        /// Held-out English quantile used as the compatibility threshold.
+        #[arg(long, default_value_t = 0.001)]
+        quantile: f64,
+        /// Uniform random keys for the chance pass rate.
+        #[arg(long, default_value_t = 200_000)]
+        uniform_samples: usize,
+        /// Seed for the uniform null.
+        #[arg(long, default_value_t = 1)]
+        seed: u64,
+        /// Most English-like configurations to list.
+        #[arg(long, default_value_t = 10)]
+        top: usize,
+        /// Output format.
+        #[arg(long, value_enum, default_value_t = OutputFormat::Markdown)]
+        format: OutputFormat,
+    },
     /// Print registered research hypotheses.
     Hypotheses {
         /// Output format.
@@ -423,6 +444,23 @@ fn main() -> Result<()> {
             top,
             format,
         } => print_running_key(corpus, top, format)?,
+        Command::KeyLanguage {
+            corpus,
+            quantile,
+            uniform_samples,
+            seed,
+            top,
+            format,
+        } => print_key_language(
+            corpus,
+            KeyLanguageOptions {
+                quantile,
+                uniform_samples,
+                seed,
+                top,
+            },
+            format,
+        )?,
         Command::Hypotheses { format } => print_hypotheses(format)?,
         Command::CandidateSequences { format } => print_candidate_sequences(format)?,
         Command::Routes { format } => print_routes(format)?,

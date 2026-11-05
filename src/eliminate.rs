@@ -140,11 +140,11 @@ impl KeyedAlphabet {
         self.order.iter().map(|l| (b'A' + l) as char).collect()
     }
 
-    fn index(&self, letter: u8) -> u8 {
+    pub(crate) fn index(&self, letter: u8) -> u8 {
         self.position[letter as usize]
     }
 
-    fn letter(&self, index: u8) -> u8 {
+    pub(crate) fn letter(&self, index: u8) -> u8 {
         self.order[index as usize]
     }
 
@@ -174,7 +174,7 @@ pub struct Tableau<'a> {
 }
 
 impl Tableau<'_> {
-    fn offset(&self, p: u8, c: u8) -> u8 {
+    pub(crate) fn offset(&self, p: u8, c: u8) -> u8 {
         self.sign.key(self.plain.index(p), self.cipher.index(c))
     }
 
@@ -194,7 +194,7 @@ impl Tableau<'_> {
         }
     }
 
-    fn label(&self) -> String {
+    pub(crate) fn label(&self) -> String {
         format!(
             "{} {} pt={} ct={}",
             self.kind(),
@@ -498,7 +498,7 @@ fn tableau_offsets(tableau: &Tableau, pairs: &[(usize, u8, u8)]) -> Vec<(usize, 
         .collect()
 }
 
-fn all_tableaux(alphabets: &[KeyedAlphabet]) -> Vec<Tableau<'_>> {
+pub(crate) fn all_tableaux(alphabets: &[KeyedAlphabet]) -> Vec<Tableau<'_>> {
     let mut tableaux = Vec::new();
     for plain in alphabets {
         for cipher in alphabets {
@@ -570,7 +570,7 @@ pub fn eliminate_gronsfeld(
 }
 
 /// Key letters are read in this alphabet: the plaintext or the ciphertext one.
-fn key_alphabets<'a>(tableau: &Tableau<'a>) -> Vec<(&'static str, &'a KeyedAlphabet)> {
+pub(crate) fn key_alphabets<'a>(tableau: &Tableau<'a>) -> Vec<(&'static str, &'a KeyedAlphabet)> {
     if tableau.plain == tableau.cipher {
         vec![("key=pt", tableau.plain)]
     } else {
