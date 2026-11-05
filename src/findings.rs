@@ -235,7 +235,7 @@ pub fn findings() -> Vec<Finding> {
             related_hypothesis: "H3",
             source_inputs: &[
                 "src/route_elimination.rs",
-                "results/eliminations/anchor-elimination-v3",
+                "results/eliminations/anchor-elimination-v4",
             ],
             transformation_steps: &[
                 "write the 97 letters row by row into grids of width 2-48 (last row partial) and read them by ten routes: columns down, up, and right-to-left, column and row serpentines, clockwise and counterclockwise spirals, diagonals, and diagonal serpentines",
@@ -256,7 +256,7 @@ pub fn findings() -> Vec<Finding> {
             related_hypothesis: "H2",
             source_inputs: &[
                 "src/eliminate.rs",
-                "results/eliminations/anchor-elimination-v3",
+                "results/eliminations/anchor-elimination-v4",
             ],
             transformation_steps: &[
                 "write each anchor as a difference constraint mod 26 between the unknown alphabet position of a letter and an unknown key column (Quagmire I: plaintext alphabet mixed, ciphertext standard; Quagmire II: the reverse; the sign convention is absorbed by reflecting the alphabet)",
@@ -277,7 +277,7 @@ pub fn findings() -> Vec<Finding> {
             source_inputs: &[
                 "experiments/eliminations/dictionary-keywords-preregistration.md",
                 "src/eliminate.rs",
-                "results/eliminations/anchor-elimination-v3",
+                "results/eliminations/anchor-elimination-v4",
             ],
             transformation_steps: &[
                 "make a keyword alphabet from every word in /usr/share/dict/web2 (Webster's Second, 235,976 words) and /usr/share/dict/propernames (1,308 names), skipping duplicates and the standard alphabet",
@@ -287,6 +287,26 @@ pub fn findings() -> Vec<Finding> {
             output_summary: "48,829,248 configurations. 65,571 survive against 72,339.6 expected by chance, and none passes more than one check: every survivor is at a period (26) that leaves the anchors almost untested. No configuration survives at any period from 1 to 25, including period 19.",
             baseline_comparison: "Each check carries chance 1/26; survivor counts match the chance expectation.",
             interpretation: "Quagmire I-III with a keyword alphabet from any English dictionary word cannot produce K4 at periods 1-25. Together with F19, the period-19 gap for Quagmire I/II needs a non-dictionary mixed alphabet.",
+            next_test: "Search Quagmire III and IV with arbitrary alphabets exactly (F21).",
+            promoted_candidate: false,
+        },
+        Finding {
+            id: "F21",
+            title: "Exact search: Quagmire III fits almost no period with any alphabet; Quagmire IV stays solvable at eight",
+            related_hypothesis: "H2",
+            source_inputs: &[
+                "src/quagmire_search.rs",
+                "results/eliminations/anchor-elimination-v4",
+            ],
+            transformation_steps: &[
+                "write each anchor as posB(c) - posA(p) = k[col] (Vigenere; variant Beaufort is the same with k negated) or posB(c) + posA(p) = k[col] (Beaufort), with posA = posB for Quagmire III",
+                "mark periods impossible where no per-column substitution fits at all; otherwise drop columns holding a single anchor, whose key is free, and fix one letter per alphabet at 0 to remove translation symmetry",
+                "depth-first search over alphabet positions with key derivation and forced partner letters, re-verifying every solution found, with a budget of 200 million nodes per period",
+                "confirm with planted encryptions under scrambled alphabets that true keys are found for both kinds and signs",
+            ],
+            output_summary: "Quagmire III, Vigenere or variant Beaufort: impossible with any alphabet at every period 1-26 except 19, 23, and 24, which are undecided; no solution found at any period. Quagmire III, Beaufort: impossible at 1-15, 17-22, 25; solvable at 23 and 26; undecided at 16 and 24. Quagmire IV, either sign, fully decided: impossible at 1-7, 9-12, 14, 15, 17, 18, 21, 22, 25; solvable at 8, 13, 16, 19, 20, 23, 24, 26.",
+            baseline_comparison: "Impossibility is exact. Solvable periods are found within 30 search nodes; undecided periods exhaust the 200-million-node budget, which suggests but does not prove impossibility.",
+            interpretation: "Even with alphabets chosen freely, a single-alphabet Quagmire III is nearly ruled out at periods up to 26. Quagmire IV has enough freedom to fit the anchors at eight periods, so the anchors cannot eliminate it there; a specific alphabet pair or key would be needed.",
             next_test: "See docs/conclusions.md: test only specific, preregistered key sources, or rerun when more plaintext is released.",
             promoted_candidate: false,
         },

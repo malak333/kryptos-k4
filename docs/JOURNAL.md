@@ -7,6 +7,13 @@ Routine runs that repeat an earlier result do not get an entry.
 The earlier long-form log (96 entries, 2026-05-20 through 2026-06-01) is
 `experiments/PROGRESS_LOG.md` at git tag `pre-slimdown`.
 
+## 2026-11-05: Exact Quagmire III/IV search (phase 8)
+
+- Added an exact depth-first search for Quagmire III and IV with arbitrary
+  alphabets. Quagmire III with Vigenère is impossible at every period to 26
+  except three undecided ones. Quagmire IV is fully decided: solvable at 8,
+  13, 16, 19, 20, 23, 24, and 26, impossible elsewhere (F21).
+
 ## 2026-11-04: Route transpositions (phase 6)
 
 - Added the route family to `eliminate`: 18,849 route permutations (ten grid

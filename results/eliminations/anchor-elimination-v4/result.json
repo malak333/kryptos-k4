@@ -1289,6 +1289,737 @@
     "null_mean_surprisal": 6.366138828064809,
     "surprisal_p_value": 0.0485
   },
+  "quagmire_iii_iv_any_alphabet": [
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 1,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 2,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 3,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 4,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 5,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 6,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 7,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 8,
+      "result": "impossible",
+      "nodes": 11234
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 9,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 10,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 11,
+      "result": "impossible",
+      "nodes": 26
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 12,
+      "result": "impossible",
+      "nodes": 26
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 13,
+      "result": "impossible",
+      "nodes": 26
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 14,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 15,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 16,
+      "result": "impossible",
+      "nodes": 279386
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 17,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 18,
+      "result": "impossible",
+      "nodes": 26
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 19,
+      "result": "undecided",
+      "nodes": 200000001
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 20,
+      "result": "impossible",
+      "nodes": 530
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 21,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 22,
+      "result": "impossible",
+      "nodes": 26
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 23,
+      "result": "undecided",
+      "nodes": 200000001
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 24,
+      "result": "undecided",
+      "nodes": 200000001
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 25,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "vigenere-or-variant",
+      "period": 26,
+      "result": "impossible",
+      "nodes": 26
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 1,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 2,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 3,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 4,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 5,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 6,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 7,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 8,
+      "result": "impossible",
+      "nodes": 602
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 9,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 10,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 11,
+      "result": "impossible",
+      "nodes": 26
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 12,
+      "result": "impossible",
+      "nodes": 8042
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 13,
+      "result": "impossible",
+      "nodes": 225386
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 14,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 15,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 16,
+      "result": "undecided",
+      "nodes": 200000001
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 17,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 18,
+      "result": "impossible",
+      "nodes": 26
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 19,
+      "result": "impossible",
+      "nodes": 4482122
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 20,
+      "result": "impossible",
+      "nodes": 26
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 21,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 22,
+      "result": "impossible",
+      "nodes": 26
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 23,
+      "result": "possible",
+      "nodes": 11
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 24,
+      "result": "undecided",
+      "nodes": 200000001
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 25,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iii",
+      "sign": "beaufort",
+      "period": 26,
+      "result": "possible",
+      "nodes": 4
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 1,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 2,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 3,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 4,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 5,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 6,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 7,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 8,
+      "result": "possible",
+      "nodes": 28
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 9,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 10,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 11,
+      "result": "impossible",
+      "nodes": 1
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 12,
+      "result": "impossible",
+      "nodes": 304754
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 13,
+      "result": "possible",
+      "nodes": 15
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 14,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 15,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 16,
+      "result": "possible",
+      "nodes": 14
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 17,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 18,
+      "result": "impossible",
+      "nodes": 1
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 19,
+      "result": "possible",
+      "nodes": 16
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 20,
+      "result": "possible",
+      "nodes": 14
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 21,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 22,
+      "result": "impossible",
+      "nodes": 1
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 23,
+      "result": "possible",
+      "nodes": 13
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 24,
+      "result": "possible",
+      "nodes": 12
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 25,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "vigenere-or-variant",
+      "period": 26,
+      "result": "possible",
+      "nodes": 2
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 1,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 2,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 3,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 4,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 5,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 6,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 7,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 8,
+      "result": "possible",
+      "nodes": 10
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 9,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 10,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 11,
+      "result": "impossible",
+      "nodes": 1
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 12,
+      "result": "impossible",
+      "nodes": 304754
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 13,
+      "result": "possible",
+      "nodes": 14
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 14,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 15,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 16,
+      "result": "possible",
+      "nodes": 14
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 17,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 18,
+      "result": "impossible",
+      "nodes": 1
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 19,
+      "result": "possible",
+      "nodes": 16
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 20,
+      "result": "possible",
+      "nodes": 14
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 21,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 22,
+      "result": "impossible",
+      "nodes": 1
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 23,
+      "result": "possible",
+      "nodes": 13
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 24,
+      "result": "possible",
+      "nodes": 12
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 25,
+      "result": "impossible",
+      "nodes": 0
+    },
+    {
+      "kind": "quagmire-iv",
+      "sign": "beaufort",
+      "period": 26,
+      "result": "possible",
+      "nodes": 2
+    }
+  ],
+  "quagmire_search_budget": 200000000,
   "promoted_candidate": false,
   "note": "A configuration survives only if it passes every anchor check it has. Survivors with few checks are expected by chance (compare expected_chance_survivors); none is a decryption or a promoted candidate."
 }
