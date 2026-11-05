@@ -38,6 +38,66 @@
       43,
       45
     ],
+    "quagmire_i_any_alphabet_impossible_periods": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      14,
+      15,
+      17,
+      18,
+      20,
+      21,
+      22,
+      25,
+      34,
+      36,
+      37,
+      40,
+      42,
+      43,
+      44,
+      45
+    ],
+    "quagmire_ii_any_alphabet_impossible_periods": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      17,
+      18,
+      21,
+      22,
+      25,
+      34,
+      35,
+      36,
+      41,
+      42,
+      43,
+      44,
+      45
+    ],
     "max_period_checked": 48
   },
   "alphabets": [
@@ -845,6 +905,327 @@
         ]
       }
     ]
+  },
+  "quagmire_any_alphabet": {
+    "rows": [
+      {
+        "kind": "quagmire-i",
+        "period": 1,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 2,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 3,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 4,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 5,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 6,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 7,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 8,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 9,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 10,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 11,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 12,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 13,
+        "k4_consistent": true,
+        "shuffle_rate": 0.21464267866066966
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 14,
+        "k4_consistent": false,
+        "shuffle_rate": 0.01074462768615692
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 15,
+        "k4_consistent": false,
+        "shuffle_rate": 0.017241379310344827
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 16,
+        "k4_consistent": true,
+        "shuffle_rate": 0.4645177411294353
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 17,
+        "k4_consistent": false,
+        "shuffle_rate": 0.024237881059470265
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 18,
+        "k4_consistent": false,
+        "shuffle_rate": 0.6534232883558221
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 19,
+        "k4_consistent": true,
+        "shuffle_rate": 0.015242378810594703
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 20,
+        "k4_consistent": false,
+        "shuffle_rate": 0.16616691654172913
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 21,
+        "k4_consistent": false,
+        "shuffle_rate": 0.01074462768615692
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 22,
+        "k4_consistent": false,
+        "shuffle_rate": 0.020739630184907546
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 23,
+        "k4_consistent": true,
+        "shuffle_rate": 0.6039480259870065
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 24,
+        "k4_consistent": true,
+        "shuffle_rate": 0.8003498250874562
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 25,
+        "k4_consistent": false,
+        "shuffle_rate": 0.9062968515742129
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 26,
+        "k4_consistent": true,
+        "shuffle_rate": 0.9702648675662169
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 1,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 2,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 3,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 4,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 5,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 6,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0007496251874062968
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 7,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0017491254372813594
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 8,
+        "k4_consistent": false,
+        "shuffle_rate": 0.005247376311844078
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 9,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 10,
+        "k4_consistent": false,
+        "shuffle_rate": 0.05822088955522239
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 11,
+        "k4_consistent": false,
+        "shuffle_rate": 0.09770114942528736
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 12,
+        "k4_consistent": false,
+        "shuffle_rate": 0.1946526736631684
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 13,
+        "k4_consistent": false,
+        "shuffle_rate": 0.276111944027986
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 14,
+        "k4_consistent": false,
+        "shuffle_rate": 0.32658670664667666
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 15,
+        "k4_consistent": false,
+        "shuffle_rate": 0.020739630184907546
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 16,
+        "k4_consistent": true,
+        "shuffle_rate": 0.5704647676161919
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 17,
+        "k4_consistent": false,
+        "shuffle_rate": 0.023238380809595203
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 18,
+        "k4_consistent": false,
+        "shuffle_rate": 0.6304347826086957
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 19,
+        "k4_consistent": true,
+        "shuffle_rate": 0.02123938030984508
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 20,
+        "k4_consistent": true,
+        "shuffle_rate": 0.3060969515242379
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 21,
+        "k4_consistent": false,
+        "shuffle_rate": 0.32658670664667666
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 22,
+        "k4_consistent": false,
+        "shuffle_rate": 0.40004997501249373
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 23,
+        "k4_consistent": true,
+        "shuffle_rate": 0.6854072963518241
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 24,
+        "k4_consistent": true,
+        "shuffle_rate": 0.7948525737131434
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 25,
+        "k4_consistent": false,
+        "shuffle_rate": 0.8938030984507747
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 26,
+        "k4_consistent": true,
+        "shuffle_rate": 0.9702648675662169
+      }
+    ],
+    "shuffles": 2000,
+    "seed": 1,
+    "k4_surprisal": 13.48095380938347,
+    "null_mean_surprisal": 6.366138828064809,
+    "surprisal_p_value": 0.0485
   },
   "promoted_candidate": false,
   "note": "A configuration survives only if it passes every anchor check it has. Survivors with few checks are expected by chance (compare expected_chance_survivors); none is a decryption or a promoted candidate."

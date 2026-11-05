@@ -48,8 +48,34 @@ fn render_elimination(report: &EliminationReport) -> String {
         ));
     }
     out.push_str(&format!(
-        "- No periodic substitution (any alphabet per column) fits at periods: {:?} (checked 1..={}).\n\n",
+        "- No periodic substitution (any alphabet per column) fits at periods: {:?} (checked 1..={}).\n",
         facts.periodic_substitution_impossible_periods, facts.max_period_checked
+    ));
+    out.push_str(&format!(
+        "- No Quagmire I (any plaintext alphabet) fits at periods: {:?}.\n- No Quagmire II (any ciphertext alphabet) fits at periods: {:?}.\n\n",
+        facts.quagmire_i_any_alphabet_impossible_periods,
+        facts.quagmire_ii_any_alphabet_impossible_periods
+    ));
+    let quagmire = &report.quagmire_any_alphabet;
+    let passes: Vec<String> = quagmire
+        .rows
+        .iter()
+        .filter(|row| row.k4_consistent)
+        .map(|row| {
+            format!(
+                "{} period {} (shuffle rate {:.3})",
+                row.kind, row.period, row.shuffle_rate
+            )
+        })
+        .collect();
+    out.push_str(&format!(
+        "Quagmire I/II with any alphabet passes at: {}.\nCombined surprisal against {} ciphertext shuffles (seed {}): K4 {:.2}, null mean {:.2}, p = {:.3}.\n\n",
+        passes.join("; "),
+        quagmire.shuffles,
+        quagmire.seed,
+        quagmire.k4_surprisal,
+        quagmire.null_mean_surprisal,
+        quagmire.surprisal_p_value
     ));
 
     out.push_str("## Families\n\n");

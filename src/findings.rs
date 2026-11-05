@@ -235,7 +235,7 @@ pub fn findings() -> Vec<Finding> {
             related_hypothesis: "H3",
             source_inputs: &[
                 "src/route_elimination.rs",
-                "results/eliminations/anchor-elimination-v2",
+                "results/eliminations/anchor-elimination-v3",
             ],
             transformation_steps: &[
                 "write the 97 letters row by row into grids of width 2-48 (last row partial) and read them by ten routes: columns down, up, and right-to-left, column and row serpentines, clockwise and counterclockwise spirals, diagonals, and diagonal serpentines",
@@ -248,6 +248,26 @@ pub fn findings() -> Vec<Finding> {
             baseline_comparison: "Tableau checks carry 1/26 per letter equality. The general-substitution null keeps each route's structure and shuffles ciphertext letters, so correlated route variants are accounted for.",
             interpretation: "No registered route, with or without double rotation, combined with a periodic key on standard or Kryptos tableaux, produces K4. With arbitrary per-column alphabets, no route fits better than shuffled ciphertext. Longer keyed transpositions and non-periodic keys after a route remain open.",
             next_test: "Write up the closing synthesis: what the anchors rule out, and what classes remain open.",
+            promoted_candidate: false,
+        },
+        Finding {
+            id: "F19",
+            title: "Quagmire I and II fail at most periods even with an arbitrary mixed alphabet",
+            related_hypothesis: "H2",
+            source_inputs: &[
+                "src/eliminate.rs",
+                "results/eliminations/anchor-elimination-v3",
+            ],
+            transformation_steps: &[
+                "write each anchor as a difference constraint mod 26 between the unknown alphabet position of a letter and an unknown key column (Quagmire I: plaintext alphabet mixed, ciphertext standard; Quagmire II: the reverse; the sign convention is absorbed by reflecting the alphabet)",
+                "solve with a weighted union-find; a contradiction, or two letters forced to one alphabet position, eliminates the period for every possible alphabet and key",
+                "confirm with planted encryptions under a scrambled alphabet that a true key always passes",
+                "compare the periods K4 passes with 2,000 shuffles of the K4 ciphertext letters, and score the pattern by summed surprisal against an independent 2,000 shuffles (seed 1)",
+            ],
+            output_summary: "With any alphabet, Quagmire I is impossible at periods 1-12, 14, 15, 17, 18, 20-22, and 25; Quagmire II at 1-15, 17, 18, 21, 22, and 25. Both pass at period 19, where 1.5% and 2.1% of shuffles pass; the other passes (13, 16, 20, 23, 24, 26) are common under shuffling. Combined surprisal: K4 13.48 against a null mean of 6.37, p = 0.049.",
+            baseline_comparison: "Impossibility is exact and needs no null. The surprisal p-value is post hoc (the statistic was chosen after period 19 was seen) and is not significant after that choice.",
+            interpretation: "Quagmire I and II, with any alphabet at all, are ruled out at every period up to 12 and at most periods up to 26. The registered keyword alphabets were already eliminated at period 19 (F15). Period 19 is the weakest remaining gap, not evidence for it. Quagmire III and IV with arbitrary alphabets are not covered by this exact test.",
+            next_test: "Check whether any keyword alphabet, not only the registered ones, satisfies the period-19 constraints.",
             promoted_candidate: false,
         },
     ]

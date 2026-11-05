@@ -10,6 +10,11 @@ A correct method must reproduce all 24 public anchor letters. One failed check e
 - Identical plaintext/ciphertext pairs (one-based): [(28, 66)]. Position-keyed tableau ciphers must use equal keys there.
 - Pure transposition is impossible: E needs 3, K4 has 2.
 - No periodic substitution (any alphabet per column) fits at periods: [1, 2, 3, 4, 5, 6, 7, 9, 10, 14, 15, 17, 21, 25, 34, 42, 43, 45] (checked 1..=48).
+- No Quagmire I (any plaintext alphabet) fits at periods: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 17, 18, 20, 21, 22, 25, 34, 36, 37, 40, 42, 43, 44, 45].
+- No Quagmire II (any ciphertext alphabet) fits at periods: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 21, 22, 25, 34, 35, 36, 41, 42, 43, 44, 45].
+
+Quagmire I/II with any alphabet passes at: quagmire-i period 13 (shuffle rate 0.215); quagmire-i period 16 (shuffle rate 0.465); quagmire-i period 19 (shuffle rate 0.015); quagmire-i period 23 (shuffle rate 0.604); quagmire-i period 24 (shuffle rate 0.800); quagmire-i period 26 (shuffle rate 0.970); quagmire-ii period 16 (shuffle rate 0.570); quagmire-ii period 19 (shuffle rate 0.021); quagmire-ii period 20 (shuffle rate 0.306); quagmire-ii period 23 (shuffle rate 0.685); quagmire-ii period 24 (shuffle rate 0.795); quagmire-ii period 26 (shuffle rate 0.970).
+Combined surprisal against 2000 ciphertext shuffles (seed 1): K4 13.48, null mean 6.37, p = 0.049.
 
 ## Families
 

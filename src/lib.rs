@@ -43,8 +43,9 @@ pub use data::{
     sources,
 };
 pub use eliminate::{
-    EliminationOptions, EliminationReport, FamilyElimination, RunningKeyReport, StructuralFacts,
-    normalize_letters, run_elimination, scan_running_key, structural_facts,
+    EliminationOptions, EliminationReport, FamilyElimination, QuagmireSide, RunningKeyReport,
+    StructuralFacts, normalize_letters, quagmire_any_alphabet_consistent, run_elimination,
+    scan_running_key, structural_facts,
 };
 pub use findings::{Finding, findings};
 pub use hypotheses::{Hypothesis, hypotheses};

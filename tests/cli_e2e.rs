@@ -1319,7 +1319,7 @@ fn findings_json_is_parseable_and_non_promotional() {
     assert_eq!(
         ids,
         [
-            "F1", "F2", "F3", "F4", "F5", "F6", "F13", "F14", "F15", "F16", "F17", "F18"
+            "F1", "F2", "F3", "F4", "F5", "F6", "F13", "F14", "F15", "F16", "F17", "F18", "F19"
         ]
     );
     assert!(json.as_array().unwrap().iter().any(|finding| {
@@ -1627,6 +1627,22 @@ fn eliminate_reports_structural_facts_and_family_eliminations() {
     assert_eq!(
         json["structural"]["transposition_shortfall"],
         serde_json::json!([["E", 3, 2]])
+    );
+    let quagmire_i = json["structural"]["quagmire_i_any_alphabet_impossible_periods"]
+        .as_array()
+        .unwrap();
+    assert!(
+        quagmire_i.iter().take(12).eq((1..=12)
+            .map(serde_json::Value::from)
+            .collect::<Vec<_>>()
+            .iter())
+    );
+    assert_eq!(
+        json["quagmire_any_alphabet"]["rows"]
+            .as_array()
+            .unwrap()
+            .len(),
+        52
     );
     let families = json["families"].as_array().unwrap();
     let names: Vec<_> = families

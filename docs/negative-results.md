@@ -148,6 +148,13 @@ Facts from the anchors alone:
   position-keyed tableau cipher has equal keys there.
 - **No periodic substitution, with any alphabets, fits at periods** 1–7, 9,
   10, 14, 15, 17, 21, 25, 34, 42, 43, or 45.
+- **No Quagmire I with any plaintext alphabet fits at periods** 1–12, 14, 15,
+  17, 18, 20–22, or 25, and **no Quagmire II with any ciphertext alphabet** at
+  1–15, 17, 18, 21, 22, or 25. This is exact: each anchor is a difference
+  constraint between an unknown alphabet position and an unknown key column.
+  Both pass at period 19, which 1.5–2.1% of ciphertext shuffles also do. A
+  post-hoc combined test gives p = 0.049, which is not evidence. Keyword
+  alphabets at period 19 are already eliminated.
 
 Families, using 37 keyed alphabets fixed before scoring (standard plus 36
 Kryptos, clue, and theme keywords) in every plaintext/ciphertext pairing:
@@ -171,7 +178,7 @@ search. Running keys are covered below.
 
 ## Route transpositions
 
-Run: `results/eliminations/anchor-elimination-v2/`. Plaintext is written row by
+Run: `results/eliminations/anchor-elimination-v3/`. Plaintext is written row by
 row into a grid of width 2–48 (97 is prime, so the last row is partial) and
 read by ten routes: columns (down, up, right to left), column and row
 serpentines, spirals both ways, and diagonals. K3-style double rotations

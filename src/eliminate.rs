@@ -399,6 +399,12 @@ pub struct StructuralFacts {
     /// Periods (1..=max) at which no periodic substitution, with any alphabet
     /// per column, can map the anchors consistently.
     pub periodic_substitution_impossible_periods: Vec<usize>,
+    /// Periods at which no Quagmire I (any plaintext alphabet, standard
+    /// ciphertext alphabet, any sign) fits the anchors.
+    pub quagmire_i_any_alphabet_impossible_periods: Vec<usize>,
+    /// Periods at which no Quagmire II (standard plaintext alphabet, any
+    /// ciphertext alphabet, any sign) fits the anchors.
+    pub quagmire_ii_any_alphabet_impossible_periods: Vec<usize>,
     pub max_period_checked: usize,
 }
 
@@ -456,8 +462,190 @@ pub fn structural_facts(max_period: usize) -> StructuralFacts {
         identical_pair_positions_one_based: identical_pairs,
         transposition_shortfall: shortfall,
         periodic_substitution_impossible_periods: impossible,
+        quagmire_i_any_alphabet_impossible_periods: (1..=max_period)
+            .filter(|&period| {
+                !quagmire_any_alphabet_consistent(&positions, period, QuagmireSide::Plain)
+            })
+            .collect(),
+        quagmire_ii_any_alphabet_impossible_periods: (1..=max_period)
+            .filter(|&period| {
+                !quagmire_any_alphabet_consistent(&positions, period, QuagmireSide::Cipher)
+            })
+            .collect(),
         max_period_checked: max_period,
     }
+}
+
+/// Quagmire I/II with any alphabet, against shuffled K4 ciphertext letters.
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct QuagmireAnyAlphabetRow {
+    pub kind: &'static str,
+    pub period: usize,
+    pub k4_consistent: bool,
+    /// Fraction of ciphertext shuffles that are consistent.
+    pub shuffle_rate: f64,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub struct QuagmireAnyAlphabetSummary {
+    pub rows: Vec<QuagmireAnyAlphabetRow>,
+    pub shuffles: usize,
+    pub seed: u64,
+    /// Sum of -ln(shuffle rate) over the cells K4 passes.
+    pub k4_surprisal: f64,
+    pub null_mean_surprisal: f64,
+    /// Fraction of an independent set of shuffles with surprisal at least K4's.
+    pub surprisal_p_value: f64,
+}
+
+pub fn quagmire_any_alphabet_null(
+    max_period: usize,
+    shuffles: usize,
+    seed: u64,
+) -> QuagmireAnyAlphabetSummary {
+    use rand::seq::SliceRandom;
+    use rand_chacha::{ChaCha8Rng, rand_core::SeedableRng};
+    let problem = Problem::k4();
+    let cells: Vec<(&'static str, QuagmireSide, usize)> = [
+        ("quagmire-i", QuagmireSide::Plain),
+        ("quagmire-ii", QuagmireSide::Cipher),
+    ]
+    .iter()
+    .flat_map(|&(kind, side)| (1..=max_period).map(move |period| (kind, side, period)))
+    .collect();
+    let passes = |ciphertext: &[u8]| -> Vec<bool> {
+        let pairs: Vec<(usize, u8, u8)> = problem
+            .anchors
+            .iter()
+            .map(|a| (a.position, a.plain, ciphertext[a.position]))
+            .collect();
+        cells
+            .iter()
+            .map(|&(_, side, period)| quagmire_any_alphabet_consistent(&pairs, period, side))
+            .collect()
+    };
+    let mut rng = ChaCha8Rng::seed_from_u64(seed);
+    let mut shuffled = problem.ciphertext.clone();
+    let mut sample = |rng: &mut ChaCha8Rng| -> Vec<Vec<bool>> {
+        (0..shuffles)
+            .map(|_| {
+                shuffled.shuffle(rng);
+                passes(&shuffled)
+            })
+            .collect()
+    };
+    let rate_set = sample(&mut rng);
+    let test_set = sample(&mut rng);
+    // Add-half smoothing keeps -ln(rate) finite for cells no shuffle passes.
+    let rates: Vec<f64> = (0..cells.len())
+        .map(|i| (rate_set.iter().filter(|v| v[i]).count() as f64 + 0.5) / (shuffles as f64 + 1.0))
+        .collect();
+    let surprisal = |v: &[bool]| -> f64 {
+        v.iter()
+            .zip(&rates)
+            .filter(|(pass, _)| **pass)
+            .map(|(_, rate)| -rate.ln())
+            .sum()
+    };
+    let k4 = passes(&problem.ciphertext);
+    let k4_surprisal = surprisal(&k4);
+    let null: Vec<f64> = test_set.iter().map(|v| surprisal(v)).collect();
+    let null_mean_surprisal = null.iter().sum::<f64>() / null.len().max(1) as f64;
+    let surprisal_p_value =
+        null.iter().filter(|&&x| x >= k4_surprisal).count() as f64 / null.len().max(1) as f64;
+    QuagmireAnyAlphabetSummary {
+        rows: cells
+            .iter()
+            .zip(&k4)
+            .zip(&rates)
+            .map(
+                |((&(kind, _, period), &k4_consistent), &shuffle_rate)| QuagmireAnyAlphabetRow {
+                    kind,
+                    period,
+                    k4_consistent,
+                    shuffle_rate,
+                },
+            )
+            .collect(),
+        shuffles,
+        seed,
+        k4_surprisal,
+        null_mean_surprisal,
+        surprisal_p_value,
+    }
+}
+
+/// Which side of a Quagmire I/II tableau carries the unknown mixed alphabet.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum QuagmireSide {
+    /// Quagmire I: mixed plaintext alphabet, standard ciphertext alphabet.
+    Plain,
+    /// Quagmire II: standard plaintext alphabet, mixed ciphertext alphabet.
+    Cipher,
+}
+
+/// Exact test for Quagmire I or II with an arbitrary mixed alphabet.
+///
+/// Quagmire I Vigenère reads c = pos(p) + k[col]; Beaufort and variant
+/// Beaufort give pos(p) - k = -c or c. Each anchor is therefore a difference
+/// constraint pos(letter) - y[col] = w (mod 26) with w the known letter on the
+/// standard side, up to a sign that a reflected alphabet absorbs. Quagmire II
+/// is the same with the roles of plaintext and ciphertext swapped. A weighted
+/// union-find finds every contradiction, and letters forced to the same
+/// alphabet position also contradict. Passing is necessary, not sufficient:
+/// separate components are assumed placeable without collisions.
+pub fn quagmire_any_alphabet_consistent(
+    pairs: &[(usize, u8, u8)],
+    period: usize,
+    side: QuagmireSide,
+) -> bool {
+    // Nodes 0..26 are alphabet positions of letters; 26.. are key columns.
+    let nodes = 26 + period;
+    let mut parent: Vec<usize> = (0..nodes).collect();
+    // offset[x] = value(x) - value(parent[x]) mod 26.
+    let mut offset = vec![0u8; nodes];
+    fn find(parent: &mut [usize], offset: &mut [u8], x: usize) -> (usize, u8) {
+        let mut path = Vec::new();
+        let mut node = x;
+        while parent[node] != node {
+            path.push(node);
+            node = parent[node];
+        }
+        let root = node;
+        // Compress from the node nearest the root outward.
+        let mut total = 0u8;
+        for &n in path.iter().rev() {
+            total = (total + offset[n]) % 26;
+            offset[n] = total;
+            parent[n] = root;
+        }
+        (root, if path.is_empty() { 0 } else { offset[x] })
+    }
+    for &(position, plain, cipher) in pairs {
+        let (letter, known) = match side {
+            QuagmireSide::Plain => (plain as usize, cipher),
+            QuagmireSide::Cipher => (cipher as usize, plain),
+        };
+        let column = 26 + position % period;
+        // Constraint: value(letter) - value(column) = known.
+        let (root_letter, off_letter) = find(&mut parent, &mut offset, letter);
+        let (root_column, off_column) = find(&mut parent, &mut offset, column);
+        if root_letter == root_column {
+            if (off_letter + 26 - off_column) % 26 != known {
+                return false;
+            }
+        } else {
+            // value(root_letter) = value(letter) - off_letter
+            //                    = value(column) + known - off_letter
+            //                    = value(root_column) + off_column + known - off_letter.
+            parent[root_letter] = root_column;
+            offset[root_letter] = (off_column + known + 26 - off_letter) % 26;
+        }
+    }
+    // Two letters in one component at the same offset would share an
+    // alphabet position. A singleton letter is its own root and cannot collide.
+    let mut taken = std::collections::HashSet::new();
+    (0..26).all(|letter| taken.insert(find(&mut parent, &mut offset, letter)))
 }
 
 /// True when each residue class mod `period` maps plaintext to ciphertext
@@ -808,6 +996,7 @@ pub struct EliminationReport {
     pub alphabets: Vec<String>,
     pub families: Vec<FamilyElimination>,
     pub route_any_substitution: Option<crate::route_elimination::AnySubstitutionSummary>,
+    pub quagmire_any_alphabet: QuagmireAnyAlphabetSummary,
     pub promoted_candidate: bool,
     pub note: &'static str,
 }
@@ -887,6 +1076,7 @@ pub fn run_elimination(options: EliminationOptions) -> EliminationReport {
             .collect(),
         families,
         route_any_substitution,
+        quagmire_any_alphabet: quagmire_any_alphabet_null(options.max_period, 2_000, 1),
         promoted_candidate: false,
         note: "A configuration survives only if it passes every anchor check it has. Survivors with few checks are expected by chance (compare expected_chance_survivors); none is a decryption or a promoted candidate.",
     }
@@ -1248,6 +1438,58 @@ mod tests {
 
     /// Bean (2021): positions 28 and 66 (one-based) both carry plaintext R and
     /// ciphertext P, so any position-keyed tableau cipher has equal keys there.
+    #[test]
+    fn planted_quagmire_with_scrambled_alphabet_passes_any_alphabet_check() {
+        let mixed = KeyedAlphabet::from_keyword("scrambled", "QWERTYUIOPLKJHGFDSAZXCVBNM");
+        let standard = KeyedAlphabet::standard();
+        let plain = synthetic_plaintext();
+        let key = [4u8, 19, 0, 11, 23, 7, 15, 2];
+        for sign in Sign::ALL {
+            for (side, tableau) in [
+                (
+                    QuagmireSide::Plain,
+                    Tableau {
+                        plain: &mixed,
+                        cipher: &standard,
+                        sign,
+                    },
+                ),
+                (
+                    QuagmireSide::Cipher,
+                    Tableau {
+                        plain: &standard,
+                        cipher: &mixed,
+                        sign,
+                    },
+                ),
+            ] {
+                let cipher = encrypt_periodic(&plain, &key, &tableau);
+                let problem = planted(&plain, &cipher);
+                assert!(
+                    quagmire_any_alphabet_consistent(&problem.pairs(), key.len(), side),
+                    "{side:?} {sign:?}"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn k4_quagmire_any_alphabet_periods() {
+        let facts = structural_facts(26);
+        assert_eq!(
+            facts.quagmire_i_any_alphabet_impossible_periods,
+            vec![
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 17, 18, 20, 21, 22, 25
+            ]
+        );
+        assert_eq!(
+            facts.quagmire_ii_any_alphabet_impossible_periods,
+            vec![
+                1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 21, 22, 25
+            ]
+        );
+    }
+
     #[test]
     fn bean_equality_holds_in_the_data() {
         let facts = structural_facts(48);

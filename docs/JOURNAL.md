@@ -13,6 +13,9 @@ The earlier long-form log (96 entries, 2026-05-20 through 2026-06-01) is
   routes at widths 2–48, K3-style double rotations, inverses, reversals).
   With a periodic tableau key: chance-level survivors only. With any alphabet
   per key column: no excess over a ciphertext-shuffle null (F18).
+- Exact any-alphabet test for Quagmire I and II (weighted union-find): ruled
+  out at every period to 12 and most to 26; period 19 is the weakest gap,
+  p = 0.049 post hoc (F19).
 
 ## 2026-11-04: Running keys (phase 5)
 
