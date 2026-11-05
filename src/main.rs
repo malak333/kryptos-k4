@@ -216,6 +216,15 @@ enum Command {
         /// Maximum key period after or before columnar transposition.
         #[arg(long, default_value_t = 13)]
         max_columnar_period: usize,
+        /// Maximum grid width for route transpositions. Use 0 to skip.
+        #[arg(long, default_value_t = 48)]
+        max_route_width: usize,
+        /// Random permutations for the any-substitution route null.
+        #[arg(long, default_value_t = 200_000)]
+        route_random_permutations: usize,
+        /// Ciphertext shuffles for the structure-matched route null (periods 1..=8).
+        #[arg(long, default_value_t = 200)]
+        route_ciphertext_shuffles: usize,
         /// Survivors to list per family.
         #[arg(long, default_value_t = 10)]
         top: usize,
@@ -427,6 +436,9 @@ fn main() -> Result<()> {
             max_lag,
             max_columnar_width,
             max_columnar_period,
+            max_route_width,
+            route_random_permutations,
+            route_ciphertext_shuffles,
             top,
             format,
         } => print_eliminate(
@@ -435,6 +447,9 @@ fn main() -> Result<()> {
                 max_lag,
                 max_columnar_width,
                 max_columnar_period,
+                max_route_width,
+                route_random_permutations,
+                route_ciphertext_shuffles,
                 top,
             },
             format,

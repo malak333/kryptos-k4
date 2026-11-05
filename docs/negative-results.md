@@ -169,6 +169,27 @@ Limits: only the 37 registered alphabets (not arbitrary alphabets), the stated
 periods, lags, and widths, and standard/Kryptos tableaux for the columnar
 search. Running keys are covered below.
 
+## Route transpositions
+
+Run: `results/eliminations/anchor-elimination-v2/`. Plaintext is written row by
+row into a grid of width 2–48 (97 is prime, so the last row is partial) and
+read by ten routes: columns (down, up, right to left), column and row
+serpentines, spirals both ways, and diagonals. K3-style double rotations
+(rotate, rewrite at a second width, rotate again) are added for every width
+pair. With each route also inverted and reversed, there are 18,849 distinct
+permutations, each tested before and after the key.
+
+- **With a periodic tableau key** (standard and Kryptos alphabets, period
+  1–26): 11.8 million configurations, 9,232 survivors against 9,169 expected
+  by chance, none passing more than three checks.
+- **With any alphabet per key column** (general periodic substitution): no
+  route fits at period 1 or 2. At periods 3–8, the counts that fit match a null
+  that keeps each route and shuffles the ciphertext letters (smallest p =
+  0.065, at period 3, before correcting for eight periods).
+
+Limits: these route families only; keyed transpositions longer than width 8
+and non-periodic keys after a route are not covered.
+
 ## Running keys
 
 Preregistration: `experiments/running-key/preregistration.md`. Results:

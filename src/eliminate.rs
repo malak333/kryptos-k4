@@ -55,7 +55,7 @@ pub const KEYWORDS: &[&str] = &[
 ];
 
 /// Ciphertext length.
-const N: usize = 97;
+pub(crate) const N: usize = 97;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "kebab-case")]
@@ -251,7 +251,7 @@ impl Problem {
         }
     }
 
-    fn pairs(&self) -> Vec<(usize, u8, u8)> {
+    pub(crate) fn pairs(&self) -> Vec<(usize, u8, u8)> {
         self.anchors
             .iter()
             .map(|a| (a.position, a.plain, a.cipher))
@@ -262,7 +262,7 @@ impl Problem {
 /// Outcome of checking one configuration. All checks are evaluated, so the
 /// chance probability is comparable across eliminated and surviving configs.
 #[derive(Debug, Clone, Copy, Default)]
-struct Outcome {
+pub(crate) struct Outcome {
     checks: usize,
     failures: usize,
     chance_probability: f64,
@@ -309,7 +309,7 @@ pub struct FamilyElimination {
     pub top_survivors: Vec<Survivor>,
 }
 
-struct Tally {
+pub(crate) struct Tally {
     family: &'static str,
     description: &'static str,
     top: usize,
@@ -322,7 +322,7 @@ struct Tally {
 }
 
 impl Tally {
-    fn new(family: &'static str, description: &'static str, top: usize) -> Self {
+    pub(crate) fn new(family: &'static str, description: &'static str, top: usize) -> Self {
         Self {
             family,
             description,
@@ -336,7 +336,7 @@ impl Tally {
         }
     }
 
-    fn record(&mut self, outcome: Outcome, parameters: impl FnOnce() -> String) {
+    pub(crate) fn record(&mut self, outcome: Outcome, parameters: impl FnOnce() -> String) {
         self.configurations += 1;
         if outcome.checks == 0 {
             self.unconstrained += 1;
@@ -368,7 +368,7 @@ impl Tally {
         self.survivors.truncate(self.top);
     }
 
-    fn finish(mut self) -> FamilyElimination {
+    pub(crate) fn finish(mut self) -> FamilyElimination {
         self.trim();
         FamilyElimination {
             family: self.family,
@@ -462,7 +462,7 @@ pub fn structural_facts(max_period: usize) -> StructuralFacts {
 
 /// True when each residue class mod `period` maps plaintext to ciphertext
 /// letters one-to-one, i.e. some per-column substitution could fit.
-fn periodic_substitution_consistent(pairs: &[(usize, u8, u8)], period: usize) -> bool {
+pub(crate) fn periodic_substitution_consistent(pairs: &[(usize, u8, u8)], period: usize) -> bool {
     let mut forward: HashMap<(usize, u8), u8> = HashMap::new();
     let mut backward: HashMap<(usize, u8), u8> = HashMap::new();
     pairs.iter().all(|&(position, plain, cipher)| {
@@ -474,7 +474,7 @@ fn periodic_substitution_consistent(pairs: &[(usize, u8, u8)], period: usize) ->
 
 /// Periodic-key checks: within each residue class the implied key must be
 /// constant. `digits` adds a key-range check (Gronsfeld keys are 0..=9).
-fn periodic_outcome(offsets: &[(usize, u8)], period: usize, digits: bool) -> Outcome {
+pub(crate) fn periodic_outcome(offsets: &[(usize, u8)], period: usize, digits: bool) -> Outcome {
     let mut outcome = Outcome::new();
     let mut first: HashMap<usize, u8> = HashMap::new();
     for &(position, key) in offsets {
@@ -491,7 +491,7 @@ fn periodic_outcome(offsets: &[(usize, u8)], period: usize, digits: bool) -> Out
     outcome
 }
 
-fn tableau_offsets(tableau: &Tableau, pairs: &[(usize, u8, u8)]) -> Vec<(usize, u8)> {
+pub(crate) fn tableau_offsets(tableau: &Tableau, pairs: &[(usize, u8, u8)]) -> Vec<(usize, u8)> {
     pairs
         .iter()
         .map(|&(position, plain, cipher)| (position, tableau.offset(plain, cipher)))
@@ -807,6 +807,7 @@ pub struct EliminationReport {
     pub structural: StructuralFacts,
     pub alphabets: Vec<String>,
     pub families: Vec<FamilyElimination>,
+    pub route_any_substitution: Option<crate::route_elimination::AnySubstitutionSummary>,
     pub promoted_candidate: bool,
     pub note: &'static str,
 }
@@ -817,6 +818,9 @@ pub struct EliminationOptions {
     pub max_lag: usize,
     pub max_columnar_width: usize,
     pub max_columnar_period: usize,
+    pub max_route_width: usize,
+    pub route_random_permutations: usize,
+    pub route_ciphertext_shuffles: usize,
     pub top: usize,
 }
 
@@ -827,6 +831,9 @@ impl Default for EliminationOptions {
             max_lag: 52,
             max_columnar_width: 8,
             max_columnar_period: 13,
+            max_route_width: 48,
+            route_random_permutations: 200_000,
+            route_ciphertext_shuffles: 200,
             top: 10,
         }
     }
@@ -850,6 +857,28 @@ pub fn run_elimination(options: EliminationOptions) -> EliminationReport {
             options.top,
         ));
     }
+    let mut route_any_substitution = None;
+    if options.max_route_width >= 2 {
+        let routes = crate::route_elimination::registered_routes(options.max_route_width);
+        families.push(crate::route_elimination::eliminate_routes_tableau(
+            &problem,
+            &routes,
+            options.max_period,
+            options.top,
+        ));
+        route_any_substitution = Some(crate::route_elimination::eliminate_routes_any_substitution(
+            &problem,
+            &routes,
+            crate::route_elimination::AnySubstitutionOptions {
+                max_period: options.max_period,
+                random_permutations: options.route_random_permutations,
+                ciphertext_shuffles: options.route_ciphertext_shuffles,
+                shuffle_max_period: 8,
+                seed: 1,
+                examples: options.top,
+            },
+        ));
+    }
     EliminationReport {
         structural: structural_facts(48),
         alphabets: alphabets
@@ -857,6 +886,7 @@ pub fn run_elimination(options: EliminationOptions) -> EliminationReport {
             .map(|a| format!("{}={}", a.label, a.symbols()))
             .collect(),
         families,
+        route_any_substitution,
         promoted_candidate: false,
         note: "A configuration survives only if it passes every anchor check it has. Survivors with few checks are expected by chance (compare expected_chance_survivors); none is a decryption or a promoted candidate.",
     }

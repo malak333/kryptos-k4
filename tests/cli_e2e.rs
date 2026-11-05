@@ -1319,7 +1319,7 @@ fn findings_json_is_parseable_and_non_promotional() {
     assert_eq!(
         ids,
         [
-            "F1", "F2", "F3", "F4", "F5", "F6", "F13", "F14", "F15", "F16", "F17"
+            "F1", "F2", "F3", "F4", "F5", "F6", "F13", "F14", "F15", "F16", "F17", "F18"
         ]
     );
     assert!(json.as_array().unwrap().iter().any(|finding| {
@@ -1602,6 +1602,12 @@ fn eliminate_reports_structural_facts_and_family_eliminations() {
             "12",
             "--max-columnar-width",
             "3",
+            "--max-route-width",
+            "6",
+            "--route-random-permutations",
+            "200",
+            "--route-ciphertext-shuffles",
+            "5",
             "--format",
             "json",
         ])
@@ -1635,9 +1641,14 @@ fn eliminate_reports_structural_facts_and_family_eliminations() {
             "ciphertext-autokey",
             "plaintext-autokey",
             "gromark",
-            "columnar-plus-tableau"
+            "columnar-plus-tableau",
+            "route-plus-tableau"
         ]
     );
+    let any = &json["route_any_substitution"];
+    assert_eq!(any["rows"].as_array().unwrap().len(), 26);
+    assert_eq!(any["rows"][0]["consistent"], 0);
+    assert!(any["rows"][2]["shuffle_p_value"].is_number());
     for family in families {
         assert!(family["configurations"].as_u64().unwrap() > 0);
         assert!(family["max_survivor_checks"].as_u64().unwrap() <= 3);
@@ -1650,7 +1661,15 @@ fn eliminate_reports_structural_facts_and_family_eliminations() {
 
     Command::cargo_bin("kryptos-k4")
         .unwrap()
-        .args(["eliminate", "--max-lag", "4", "--max-columnar-width", "0"])
+        .args([
+            "eliminate",
+            "--max-lag",
+            "4",
+            "--max-columnar-width",
+            "0",
+            "--max-route-width",
+            "0",
+        ])
         .assert()
         .success()
         .stdout(predicate::str::contains("# Anchor Elimination"))

@@ -229,6 +229,27 @@ pub fn findings() -> Vec<Finding> {
             next_test: "Extend anchor elimination to route transpositions combined with periodic tableaux.",
             promoted_candidate: false,
         },
+        Finding {
+            id: "F18",
+            title: "Route transpositions with a periodic key, on any alphabets, show nothing beyond chance",
+            related_hypothesis: "H3",
+            source_inputs: &[
+                "src/route_elimination.rs",
+                "results/eliminations/anchor-elimination-v2",
+            ],
+            transformation_steps: &[
+                "write the 97 letters row by row into grids of width 2-48 (last row partial) and read them by ten routes: columns down, up, and right-to-left, column and row serpentines, clockwise and counterclockwise spirals, diagonals, and diagonal serpentines",
+                "add K3-style double rotations (rotate a width-w1 grid, rewrite at width w2, rotate again, both directions, w1 and w2 in 2-48), then each route inverted and reversed, deduplicated: 18,849 permutations",
+                "apply each before or after a periodic Vigenere, Beaufort, or variant Beaufort key on standard and Kryptos tableaux, period 1-26, with a chance probability per anchor check",
+                "separately, check each route and order for a general periodic substitution (any alphabet per key column, period 1-26)",
+                "compare general-substitution counts with 200,000 random permutations and with 200 shuffles of the K4 ciphertext letters under the same routes (seed 1)",
+            ],
+            output_summary: "Route plus tableau: 11,761,776 configurations, 9,232 survivors against 9,168.7 expected by chance, none passing more than three checks. General periodic substitution: no route fits at period 1 or 2; at periods 3-8 the consistent counts (14, 70, 182, 5280, 6728, 8976) match the ciphertext-shuffle expectation (7.1, 59.1, 223.3, 5165.9, 6997.4, 8321.8), smallest empirical p = 0.065 at period 3 before correcting for eight periods.",
+            baseline_comparison: "Tableau checks carry 1/26 per letter equality. The general-substitution null keeps each route's structure and shuffles ciphertext letters, so correlated route variants are accounted for.",
+            interpretation: "No registered route, with or without double rotation, combined with a periodic key on standard or Kryptos tableaux, produces K4. With arbitrary per-column alphabets, no route fits better than shuffled ciphertext. Longer keyed transpositions and non-periodic keys after a route remain open.",
+            next_test: "Write up the closing synthesis: what the anchors rule out, and what classes remain open.",
+            promoted_candidate: false,
+        },
     ]
 }
 

@@ -22,6 +22,9 @@ archive-discovered, or private plaintext.
   survivors over 15 million configurations. Periodic Quagmire I–IV and
   plaintext autokey leave only chance-level survivors. Limits apply; see
   [docs/negative-results.md](docs/negative-results.md).
+- **Route transpositions do not help.** Ten grid routes and K3-style double
+  rotations at every width up to 48, before or after a periodic key, fit the
+  anchors no better than chance, even with any alphabet per key column.
 - **Running keys are eliminated.** No sculpture text or Carter's 1923 account
   is a direct running key, and no registered tableau implies an
   English-looking key at the anchors, so a key taken from any English text
@@ -33,8 +36,8 @@ archive-discovered, or private plaintext.
   the public anchors. The only one with a checkable mechanism (SolveKryptos)
   is not internally consistent.
 
-Next step: extend the elimination to route transpositions and non-keyword
-alphabets. A method that
+Next step: a closing synthesis of what the anchors rule out and which method
+classes remain open. A method that
 reproduces all 24 anchor letters by chance has probability about 26^-24, so a
 miss is an elimination. See [docs/research-plan.md](docs/research-plan.md).
 
@@ -126,7 +129,7 @@ quote-free snapshot in `sources/archives/`.
 | --- | --- |
 | `src/data.rs`, `src/alphabet.rs` | Ciphertext, anchors, sources, alphabets. |
 | `src/analysis.rs`, `src/baseline.rs` | Anchor-derived fragments and seeded null controls. |
-| `src/eliminate.rs`, `src/key_language.rs` | Anchor-reproduction elimination, running-key scan, and implied-key language test. |
+| `src/eliminate.rs`, `src/route_elimination.rs`, `src/key_language.rs` | Anchor-reproduction elimination, running-key scan, and implied-key language test. |
 | `src/key_test.rs`, `src/candidates.rs`, `src/routes.rs` | Key-material, candidate, and route tests. |
 | `src/ciphertext_profile.rs` | Ciphertext-only diagnostics. |
 | `src/claim.rs` | Quarantined claim verification. |

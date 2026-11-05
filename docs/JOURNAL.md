@@ -7,6 +7,13 @@ Routine runs that repeat an earlier result do not get an entry.
 The earlier long-form log (96 entries, 2026-05-20 through 2026-06-01) is
 `experiments/PROGRESS_LOG.md` at git tag `pre-slimdown`.
 
+## 2026-11-05: Route transpositions (phase 6)
+
+- Added the route family to `eliminate`: 18,849 route permutations (ten grid
+  routes at widths 2–48, K3-style double rotations, inverses, reversals).
+  With a periodic tableau key: chance-level survivors only. With any alphabet
+  per key column: no excess over a ciphertext-shuffle null (F18).
+
 ## 2026-11-04: Running keys (phase 5)
 
 - Preregistered a running-key corpus before scoring: K1–K3 plaintext and

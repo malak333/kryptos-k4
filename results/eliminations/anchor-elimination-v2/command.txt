@@ -1,0 +1,1 @@
+cargo run --locked --release -- eliminate --format json

@@ -86,6 +86,34 @@ fn render_elimination(report: &EliminationReport) -> String {
         }
         out.push('\n');
     }
+    if let Some(any) = &report.route_any_substitution {
+        out.push_str(&format!(
+            "### `{}`\n\n{}\n\n{} routes; random-permutation null from {} permutations; ciphertext-shuffle null from {} shuffles for periods 1..={} (seed {}).\n\n",
+            any.family, any.description, any.routes, any.random_permutations, any.ciphertext_shuffles, any.shuffle_max_period, any.seed
+        ));
+        out.push_str("| Period | Configurations | Consistent | Random rate | Expected by random permutation | Expected by ciphertext shuffle | Shuffle p | Examples |\n| ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |\n");
+        for row in &any.rows {
+            out.push_str(&format!(
+                "| {} | {} | {} | {:.2e} | {:.1} | {} | {} | {} |\n",
+                row.period,
+                row.configurations,
+                row.consistent,
+                row.random_rate,
+                row.expected_by_random_permutation,
+                row.expected_by_ciphertext_shuffle
+                    .map_or("—".to_string(), |e| format!("{e:.1}")),
+                row.shuffle_p_value
+                    .map_or("—".to_string(), |p| format!("{p:.3}")),
+                row.examples
+                    .iter()
+                    .take(3)
+                    .cloned()
+                    .collect::<Vec<_>>()
+                    .join("; ")
+            ));
+        }
+        out.push('\n');
+    }
     out.push_str(&format!("{}\n\npromoted: false\n", report.note));
     out
 }
