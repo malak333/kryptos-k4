@@ -87,7 +87,6 @@ pub fn findings() -> Vec<Finding> {
             source_inputs: &[
                 "docs/negative-results.md",
                 "experiments/position-observations/cia-k4-row-boundaries-v1.json",
-                "experiments/evidence-summaries/cia-k4-row-boundaries-v1.md",
                 "sources/archives/cia-sculpture-2026-05-27.md",
             ],
             transformation_steps: &[
@@ -107,8 +106,8 @@ pub fn findings() -> Vec<Finding> {
             related_hypothesis: "H1/H2/H3/H4/H5",
             source_inputs: &[
                 "kryptosbot-methodology-2026",
-                "experiments/STOPPED_LANES.md",
                 "docs/negative-results.md",
+                "docs/research-plan.md",
             ],
             transformation_steps: &[
                 "register methodology context with a non-scored allowed-use boundary",
@@ -118,7 +117,7 @@ pub fn findings() -> Vec<Finding> {
             output_summary: "Simple single-layer, word-list, route, and uncorrected best-of-search lanes are documented as stopped for current evidence.",
             baseline_comparison: "The stopped-lane decision is backed by existing negative batch-level, routed, and structural controls rather than a new positive score.",
             interpretation: "Methodology context improves research discipline, but it is not plaintext, candidate evidence, or an independent scored observation.",
-            next_test: "Only reopen a stopped search family with a lane-specific preregistration that fixes the cipher family, transform set, target, and multiple-comparison control before scoring.",
+            next_test: "Do not reopen a stopped search family on the same inputs. Test a concrete cipher method by whether it reproduces all 24 public anchor letters; a miss eliminates it.",
             promoted_candidate: false,
         },
         Finding {

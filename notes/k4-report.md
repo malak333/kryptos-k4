@@ -776,7 +776,7 @@ Findings are reproducible research observations, not promoted solution claims.
   - Next test: Only add route families that are named, deterministic, and justified before seeing their score.
   - Promoted: false
 - **F5 Independent-lane phase is closed and negative (H3)**
-  - Sources: `docs/negative-results.md`, `experiments/position-observations/cia-k4-row-boundaries-v1.json`, `experiments/evidence-summaries/cia-k4-row-boundaries-v1.md`, `sources/archives/cia-sculpture-2026-05-27.md`
+  - Sources: `docs/negative-results.md`, `experiments/position-observations/cia-k4-row-boundaries-v1.json`, `sources/archives/cia-sculpture-2026-05-27.md`
   - Steps: record CIA sculpture web-page row-boundary positions 1, 4, 5, 36, 37, and 97 as the only source-backed non-anchor observation; score that observation against 26 distinct preregistered position models (period, spacing, mirror, grid, Tableau/HILL, and ciphertext-only priors) with seeded same-size position-shuffle nulls; prune 60 duplicate or escalating-variant lanes and their archives in the slim-down; history is preserved at git tag pre-slimdown
   - Output: None of the 26 surviving archives is significant: the lowest raw empirical p is 0.1303 (grid column edge, 4/6 hits). The lowest raw p anywhere in the phase, p=0.0436 (terminal residue balance), came from a pruned parameter variant and was p=1.0000 after correcting for the archives searched.
   - Baseline: Every archive used seeded same-size non-anchor position-shuffle or best-of-model nulls (seed 67, 100000 iterations unless the archive says otherwise).
@@ -784,12 +784,12 @@ Findings are reproducible research observations, not promoted solution claims.
   - Next test: Do not add models against this observation. Score future methods by reproducing all 24 public anchor letters, which happens by chance with probability about 26^-24.
   - Promoted: false
 - **F6 Methodology context stops repeated single-layer search mining (H1/H2/H3/H4/H5)**
-  - Sources: `kryptosbot-methodology-2026`, `experiments/STOPPED_LANES.md`, `docs/negative-results.md`
+  - Sources: `kryptosbot-methodology-2026`, `docs/negative-results.md`, `docs/research-plan.md`
   - Steps: register methodology context with a non-scored allowed-use boundary; compare it against completed batch, routed, and structural controls; record saturated search families as stopped unless a preregistration narrows the target before scoring
   - Output: Simple single-layer, word-list, route, and uncorrected best-of-search lanes are documented as stopped for current evidence.
   - Baseline: The stopped-lane decision is backed by existing negative batch-level, routed, and structural controls rather than a new positive score.
   - Interpretation: Methodology context improves research discipline, but it is not plaintext, candidate evidence, or an independent scored observation.
-  - Next test: Only reopen a stopped search family with a lane-specific preregistration that fixes the cipher family, transform set, target, and multiple-comparison control before scoring.
+  - Next test: Do not reopen a stopped search family on the same inputs. Test a concrete cipher method by whether it reproduces all 24 public anchor letters; a miss eliminates it.
   - Promoted: false
 - **F13 External plaintext claims are quarantined before verification (H3)**
   - Sources: `sources/archives/solvekryptos-2026-05-27.md`, `sources/archives/ssrn-bonifacino-running-key-2025-2026-05-31.md`, `sources/archives/smithsonian-2026-archive-discovery-2026-05-28.md`, `sources/source-packet.md`, `results/claim-verifications`, `src/claim.rs`

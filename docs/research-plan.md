@@ -123,40 +123,25 @@ Excluded evidence:
 - Falsification test: Pre-register a limited event-key list from strict sources, then test it without expanding ad hoc.
 - Risk: Underspecified and prone to unconstrained key hunting.
 
-## Repeatable Next-Test Plan
+## Next-Test Plan
 
-1. Create a source packet.
-   - Save PDFs or archived links for CIA, Scientific American, AP, HistoCrypt, and major Sanborn clue reporting.
-   - Record exact source URLs, access dates, and quote-free summaries.
+The original eight-step plan (source packet, normalized data, anchor
+constraints, then H1 through H5 screens, then a findings ledger) is complete;
+see `docs/negative-results.md` for what it found. The full original text is
+preserved at git tag `pre-slimdown`.
 
-2. Normalize the K4 working data.
-   - Store the ciphertext as a single 97-character uppercase string.
-   - Store known anchors with 0-based and 1-based positions.
-   - Keep a separate "do not use" note for claimed full plaintext material.
+Current direction: score each concrete cipher method by whether it reproduces
+all 24 public anchor letters at their positions. Chance agreement is about
+26^-24, so a miss eliminates the method and no null model is needed.
 
-3. Build the anchor-derived constraint table.
-   - For each known anchor, compute ciphertext/plaintext pairs.
-   - Derive implied key-stream fragments under standard A-Z, Kryptos alphabet, reversed Kryptos alphabet, Beaufort, and variant additive interpretations.
-   - Do not search keys yet.
-
-4. Test H1 first.
-   - Compare anchor-implied numeric fragments against Gromark-like recurrence constraints.
-   - Run permutation or random-baseline checks before promoting any finding.
-
-5. Test H2 second.
-   - Look for consistent key fragments or repeated key material under Kryptos-table assumptions.
-   - Treat any single-word hit as insufficient unless it predicts another anchor.
-
-6. Test H3 third.
-   - Define a small set of route/permutation families before testing.
-   - Score whether a single permutation makes H1/H2 fragments more coherent.
-
-7. Test contextual H4/H5 only after numeric baselines exist.
-   - Convert Berlin World Clock, compass, Egypt 1986, and Berlin Wall 1989 clues into pre-registered candidate key material.
-   - Reject any source-derived key material that only works after manual tuning.
-
-8. Maintain a findings ledger.
-   - Every finding must include source inputs, transformation steps, output, baseline comparison, and why it is or is not meaningful.
+1. Eliminate cipher families against the anchors: Quagmire I–IV, plaintext
+   and ciphertext autokey, Porta, Gronsfeld, and Gromark with short primers,
+   with Bean's published constraints as unit tests.
+2. Test running keys from a fixed, registered public corpus (K1–K3
+   plaintexts, Carter's diary, Berlin World Clock material, Egypt 1986 and
+   Berlin Wall 1989 texts) at every offset.
+3. Test bounded keyed-columnar and route transpositions, each followed by a
+   substitution-consistency check on the anchors.
 
 ## Decision Log
 
@@ -169,6 +154,7 @@ Excluded evidence:
 | Treat 2025 archive/plaintext discovery as context only. | Avoid it entirely; use discovered plaintext content. | It affects puzzle history but should not become solving material. |
 | Save the validated design as Markdown in this workspace. | Written strategy only; prepare but do not write files. | The plan should become durable project material. |
 | Recommended design is source-led dossier plus hypothesis register plus test plan. | Cryptanalytic-first review; chronological clue reconstruction. | Best balance of rigor, source control, and future testability. |
+| 2026-11: stop scoring position models against the single row-boundary observation; slim the repo and score methods by anchor reproduction. | Keep adding preregistered lanes; abandon the project. | Six positions cannot support many models, and the 24 anchor letters are a far stronger test. |
 
 ## Source List
 

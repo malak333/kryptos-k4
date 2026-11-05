@@ -8,10 +8,11 @@ promotion criteria.
 ## Rules
 
 - Use only public facts already represented in `sources/source-packet.md`,
-  `src/data.rs`, or `kryptos-k4-research-plan.md`.
+  `src/data.rs`, or `docs/research-plan.md`.
 - Add new rows only with a source ID and a short rationale.
-- Evaluate candidate rows through batch, routed, and held-out controls before
-  treating any result as a follow-up lead.
+- Evaluate candidate rows through batch and routed controls before treating
+  any result as a follow-up lead. Cyclic (periodic) use of short words is
+  already ruled out by the public anchors; see `docs/negative-results.md`.
 - Keep archive-sale reporting as historical context only; do not use
   archive-discovered plaintext or private auction material.
 

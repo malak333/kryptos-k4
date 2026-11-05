@@ -6,15 +6,7 @@ use serde::Serialize;
 use std::fs;
 use std::path::Path;
 
-const PLAINTEXT_LEAKAGE_SCAN_FILES: [&str; 7] = [
-    "README.md",
-    "docs/negative-results.md",
-    "docs/research-method.md",
-    "experiments/PROGRESS_LOG.md",
-    "experiments/STOPPED_LANES.md",
-    "sources/source-packet.md",
-    "notes/k4-report.md",
-];
+const PLAINTEXT_LEAKAGE_SCAN_FILES: [&str; 2] = ["README.md", "sources/source-packet.md"];
 
 const PLAINTEXT_LEAKAGE_SCAN_DIRS: [&str; 5] = [
     "docs",

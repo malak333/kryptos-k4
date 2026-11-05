@@ -80,6 +80,58 @@ variants (terminal residue balance, `p=0.0436`). After correcting for the
 number of archives searched it was `p=1.0000`. That is the expected result of
 sweeping parameters over one small observation.
 
+## Other stopped lanes
+
+These lanes ran before or alongside the row-boundary work. Each is stopped:
+rerunning it on the same inputs is not new evidence.
+
+- **Public anchor-derived key material.** `batch-test-keys`,
+  `batch-test-routed-keys`, and the former held-out control found no candidate.
+  Held-out controls picked apparent training leads that scored zero matches on
+  the withheld anchor groups. Source-adjacent words (`KRYPTOS`, `VIGENERE`,
+  `MATRIX`, `NINETYSEVEN`, `97`, and similar) did not survive batch-level
+  controls either. Lesson 2 below explains why cyclic short-word keys cannot
+  work.
+- **Gromark-style recurrence screen.** `baseline --target spans --alphabet all
+  --iterations 100000 --seed 67`: strongest row `EASTNORTHEAST`, Kryptos
+  alphabet, 2/11 contiguous triples, raw `p=0.3138`, adjusted `p=1.0000`. A
+  proper Gromark test needs the anchor-reproduction approach, not this screen.
+- **Candidate-independent position structure.** The former
+  `position-structure` and `structural-models` commands found nothing after
+  correction; the `period-14-grid-padding` model scored 0 with `p=1.0000`.
+- **W-delimiter positions.** Non-anchor `W` positions `21,37,49,59,75`
+  (one-based, repo convention) gave 1/6 row-boundary hits, hypergeometric
+  `p=0.3570`. External sources may label the same letters `20,36,48,58,74`;
+  convert coordinates explicitly before comparing.
+- **Stehle regularity, HILL tableau, CT perturbation.** Each was fixed as a
+  prediction artifact from community methodology context and scored only
+  against the row-boundary observation (table above). None is plaintext, key,
+  or route evidence.
+- **CIA artifact page.** Reviewed and archived, but it has no per-position
+  rationale, so it is not scoreable.
+
+## External claim screening
+
+Claims of a full K4 solution are registered as quarantined
+`unverified-solution-claim` sources. They are checked only with
+`verify-claim` against temporary local files, and no claimed plaintext or key
+stream is committed. Non-leaking results live under
+`results/claim-verifications/`.
+
+- **SolveKryptos (2026).** The claim text keeps 97 letters and all four public
+  anchors. Before the slim-down, dedicated verifiers (at tag `pre-slimdown`)
+  checked its published bundle: the reconciliation table and grids were
+  internally consistent, but the Y-pass template matched only 27/31 rule
+  checks, failing at K4 positions 27, 31, 32, and 33. The template's declared
+  zero positions also disagree with its printed rule.
+- **DearCipher (2026) and PRLog/Bishop (2020).** Each claim text keeps 97
+  letters and all four public anchors. Neither publishes a mechanism that can
+  be checked, so this says only that the authors kept the public anchors.
+- **SSRN Bonifacino claims (four papers).** Not screened. The public records
+  expose only abstracts, not the plaintext and key stream a check needs.
+
+Anchor compatibility is a minimum check. It cannot promote a claim.
+
 ## Lessons
 
 1. One six-position observation cannot support dozens of models. Adding

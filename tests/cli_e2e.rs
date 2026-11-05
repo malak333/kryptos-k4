@@ -1330,11 +1330,7 @@ fn findings_json_is_parseable_and_non_promotional() {
                 .any(|input| input == "docs/negative-results.md")
     }));
     assert!(json.as_array().unwrap().iter().any(|finding| {
-        finding["id"] == "F13"
-            && finding["title"]
-                .as_str()
-                .unwrap()
-                .contains("quarantined")
+        finding["id"] == "F13" && finding["title"].as_str().unwrap().contains("quarantined")
     }));
 }
 
