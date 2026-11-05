@@ -156,10 +156,9 @@ Facts from the anchors alone:
   post-hoc combined test gives p = 0.049, which is not evidence.
 - **Quagmire III and IV with arbitrary alphabets (exact search).**
   Quagmire III (one alphabet on both sides) with Vigenère or variant Beaufort
-  is impossible at every period 1–26 except 19, 23, and 24, which the search
-  could not finish in 200 million nodes; no solution exists at any decided
-  period. With Beaufort it is impossible at 1–15, 17–22, and 25, solvable at
-  23 and 26, and undecided at 16 and 24. Quagmire IV (two free alphabets) is
+  is impossible at every period 1–26 except 24, which the search could not
+  finish in 2 billion nodes; no solution exists at any decided period. With
+  Beaufort it is impossible at 1–22, 24, and 25, and solvable at 23 and 26. Quagmire IV (two free alphabets) is
   fully decided: impossible at 1–7, 9–12, 14, 15, 17, 18, 21, 22, and 25, and
   solvable at 8, 13, 16, 19, 20, 23, 24, and 26.
 - **No dictionary keyword alphabet fits Quagmire I, II, or III at periods
@@ -191,7 +190,7 @@ search. Running keys are covered below.
 
 ## Route transpositions
 
-Run: `results/eliminations/anchor-elimination-v4/`. Plaintext is written row by
+Run: `results/eliminations/anchor-elimination-v5/`. Plaintext is written row by
 row into a grid of width 2–48 (97 is prime, so the last row is partial) and
 read by ten routes: columns (down, up, right to left), column and row
 serpentines, spirals both ways, and diagonals. K3-style double rotations

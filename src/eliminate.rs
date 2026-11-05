@@ -1629,7 +1629,7 @@ mod tests {
             cipher: &alphabet,
             sign: Sign::Vigenere,
         };
-        let plain: Vec<u8> = (0..N as u8).map(|i| (i * 7 + 3) % 26).collect();
+        let plain: Vec<u8> = (0..N).map(|i| ((i * 7 + 3) % 26) as u8).collect();
         let cipher = encrypt_periodic(&plain, &[10, 4, 17], &tableau);
         let pairs: Vec<(usize, u8, u8)> = (0..N).map(|i| (i, plain[i], cipher[i])).collect();
         let offsets = tableau_offsets(&tableau, &pairs);

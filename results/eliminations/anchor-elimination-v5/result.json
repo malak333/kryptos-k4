@@ -1420,8 +1420,8 @@
       "kind": "quagmire-iii",
       "sign": "vigenere-or-variant",
       "period": 19,
-      "result": "undecided",
-      "nodes": 200000001
+      "result": "impossible",
+      "nodes": 567957962
     },
     {
       "kind": "quagmire-iii",
@@ -1448,15 +1448,15 @@
       "kind": "quagmire-iii",
       "sign": "vigenere-or-variant",
       "period": 23,
-      "result": "undecided",
-      "nodes": 200000001
+      "result": "impossible",
+      "nodes": 572496650
     },
     {
       "kind": "quagmire-iii",
       "sign": "vigenere-or-variant",
       "period": 24,
       "result": "undecided",
-      "nodes": 200000001
+      "nodes": 2000000001
     },
     {
       "kind": "quagmire-iii",
@@ -1581,8 +1581,8 @@
       "kind": "quagmire-iii",
       "sign": "beaufort",
       "period": 16,
-      "result": "undecided",
-      "nodes": 200000001
+      "result": "impossible",
+      "nodes": 1227905546
     },
     {
       "kind": "quagmire-iii",
@@ -1637,8 +1637,8 @@
       "kind": "quagmire-iii",
       "sign": "beaufort",
       "period": 24,
-      "result": "undecided",
-      "nodes": 200000001
+      "result": "impossible",
+      "nodes": 914429498
     },
     {
       "kind": "quagmire-iii",
@@ -2019,7 +2019,7 @@
       "nodes": 2
     }
   ],
-  "quagmire_search_budget": 200000000,
+  "quagmire_search_budget": 2000000000,
   "promoted_candidate": false,
   "note": "A configuration survives only if it passes every anchor check it has. Survivors with few checks are expected by chance (compare expected_chance_survivors); none is a decryption or a promoted candidate."
 }

@@ -24,7 +24,7 @@ Each line is exact or measured against a stated null. The full record is
 | Vigenère, Beaufort, variant Beaufort; standard or Kryptos alphabet | Eliminated at periods 1–26 | F15 |
 | Quagmire I–IV, 37 registered keyword alphabets in every pairing | Chance-level survivors only (at most 1 check) | F15 |
 | Quagmire I–III, keyword from any dictionary word (about 208,000 alphabets) | No survivor at periods 1–25 | F20 |
-| Quagmire III, any alphabet (exact search) | Vigenère: impossible at every period 1–26 except 19, 23, 24 (undecided). Beaufort: solvable only at 23 and 26 | F21 |
+| Quagmire III, any alphabet (exact search) | Vigenère: impossible at every period 1–26 except 24 (undecided). Beaufort: solvable only at 23 and 26 | F21 |
 | Quagmire IV, any two alphabets (exact search) | Impossible at 1–7, 9–12, 14, 15, 17, 18, 21, 22, 25; solvable at 8, 13, 16, 19, 20, 23, 24, 26 | F21 |
 | Gronsfeld, ciphertext autokey, Gromark (lag 2–12) | Zero survivors | F15 |
 | Plaintext autokey, lag 1–52 | Chance-level survivors only (at most 3 checks) | F15 |
@@ -89,11 +89,11 @@ positions. Every class below is open for that reason, not for lack of trying:
 
 ```bash
 cargo build --release
-target/release/kryptos-k4 eliminate --wordlist /usr/share/dict/web2 --wordlist /usr/share/dict/propernames --quagmire-search-budget 200000000
+target/release/kryptos-k4 eliminate --wordlist /usr/share/dict/web2 --wordlist /usr/share/dict/propernames --quagmire-search-budget 2000000000
 target/release/kryptos-k4 running-key --corpus <file>      # corpus files: experiments/running-key/preregistration.md
 target/release/kryptos-k4 key-language --corpus <carter-v1.txt>
 target/release/kryptos-k4 findings
 ```
 
-Archived runs: `results/eliminations/anchor-elimination-v4/` and
+Archived runs: `results/eliminations/anchor-elimination-v5/` and
 `results/running-key/`.
