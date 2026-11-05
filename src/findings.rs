@@ -247,7 +247,7 @@ pub fn findings() -> Vec<Finding> {
             output_summary: "Route plus tableau: 11,761,776 configurations, 9,232 survivors against 9,168.7 expected by chance, none passing more than three checks. General periodic substitution: no route fits at period 1 or 2; at periods 3-8 the consistent counts (14, 70, 182, 5280, 6728, 8976) match the ciphertext-shuffle expectation (7.1, 59.1, 223.3, 5165.9, 6997.4, 8321.8), smallest empirical p = 0.065 at period 3 before correcting for eight periods.",
             baseline_comparison: "Tableau checks carry 1/26 per letter equality. The general-substitution null keeps each route's structure and shuffles ciphertext letters, so correlated route variants are accounted for.",
             interpretation: "No registered route, with or without double rotation, combined with a periodic key on standard or Kryptos tableaux, produces K4. With arbitrary per-column alphabets, no route fits better than shuffled ciphertext. Longer keyed transpositions and non-periodic keys after a route remain open.",
-            next_test: "Write up the closing synthesis: what the anchors rule out, and what classes remain open.",
+            next_test: "Test Quagmire I/II with any alphabet exactly (F19).",
             promoted_candidate: false,
         },
         Finding {
@@ -287,7 +287,7 @@ pub fn findings() -> Vec<Finding> {
             output_summary: "48,829,248 configurations. 65,571 survive against 72,339.6 expected by chance, and none passes more than one check: every survivor is at a period (26) that leaves the anchors almost untested. No configuration survives at any period from 1 to 25, including period 19.",
             baseline_comparison: "Each check carries chance 1/26; survivor counts match the chance expectation.",
             interpretation: "Quagmire I-III with a keyword alphabet from any English dictionary word cannot produce K4 at periods 1-25. Together with F19, the period-19 gap for Quagmire I/II needs a non-dictionary mixed alphabet.",
-            next_test: "Write the closing synthesis of eliminated and open method classes.",
+            next_test: "See docs/conclusions.md: test only specific, preregistered key sources, or rerun when more plaintext is released.",
             promoted_candidate: false,
         },
     ]
