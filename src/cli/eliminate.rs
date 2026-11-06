@@ -93,7 +93,7 @@ fn render_elimination(report: &EliminationReport) -> String {
         })
         .collect();
     out.push_str(&format!(
-        "Quagmire I/II with any alphabet passes at: {}.\nCombined surprisal against {} ciphertext shuffles (seed {}): K4 {:.2}, null mean {:.2}, p = {:.3}.\n\n",
+        "Quagmire I/II with any alphabet passes the necessary union-find check at: {}.\nCombined surprisal against {} ciphertext shuffles (seed {}): K4 {:.2}, null mean {:.2}, p = {:.3}.\n\n",
         passes.join("; "),
         quagmire.shuffles,
         quagmire.seed,
@@ -105,8 +105,10 @@ fn render_elimination(report: &EliminationReport) -> String {
     /// Periods per (kind, sign): impossible, solvable, undecided.
     type ClassPeriods = (String, Vec<usize>, Vec<usize>, Vec<usize>);
     let mut by_class: Vec<ClassPeriods> = Vec::new();
-    for row in &report.quagmire_iii_iv_any_alphabet {
+    for row in &report.quagmire_exact_any_alphabet {
         let kind = match row.kind {
+            kryptos_k4::quagmire_search::QuagmireKind::I => "Quagmire I",
+            kryptos_k4::quagmire_search::QuagmireKind::II => "Quagmire II",
             kryptos_k4::quagmire_search::QuagmireKind::III => "Quagmire III",
             kryptos_k4::quagmire_search::QuagmireKind::IV => "Quagmire IV",
         };
@@ -128,7 +130,7 @@ fn render_elimination(report: &EliminationReport) -> String {
         }
     }
     out.push_str(&format!(
-        "Quagmire III/IV with arbitrary alphabets (exact search, budget {} nodes per period):\n\n| Kind and sign | Impossible | Solvable | Undecided |\n| --- | --- | --- | --- |\n",
+        "Quagmire I-IV with arbitrary alphabets (exact search, budget {} nodes per period):\n\n| Kind and sign | Impossible | Solvable | Undecided |\n| --- | --- | --- | --- |\n",
         report.quagmire_search_budget
     ));
     for (label, impossible, possible, undecided) in &by_class {

@@ -7,6 +7,20 @@ Routine runs that repeat an earlier result do not get an entry.
 The earlier long-form log (96 entries, 2026-05-20 through 2026-06-01) is
 `experiments/PROGRESS_LOG.md` at git tag `pre-slimdown`.
 
+## 2026-11-05: Every Quagmire cell decided (F22)
+
+- The last undecided cell, Quagmire III Vigenère period 24, has a one-line
+  proof the search had not encoded: `K`→`K` and `N`→`Q` share a column, and
+  self-encryption under one alphabet forces key 0. With that rule the cell
+  takes one node instead of more than 20 billion.
+- Extended the exact search to Quagmire I and II. Every period that passes
+  the F19 union-find test is genuinely solvable, so that necessary test lost
+  nothing at K4. All Quagmire I–IV cells up to period 26 are decided.
+  Archive `anchor-elimination-v6` replaces v5.
+- Checked Paradigm's K4 page: it verifies full 97-letter submissions against
+  a commitment of Sanborn's plaintext, and its hint shows only the two known
+  anchors. No new letters, so nothing to rerun.
+
 ## 2026-11-05: Quagmire III retry at 2 billion nodes
 
 - Re-ran the exact search with a 2-billion-node budget per period. Four of

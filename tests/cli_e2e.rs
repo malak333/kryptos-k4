@@ -1320,7 +1320,7 @@ fn findings_json_is_parseable_and_non_promotional() {
         ids,
         [
             "F1", "F2", "F3", "F4", "F5", "F6", "F13", "F14", "F15", "F16", "F17", "F18", "F19",
-            "F20", "F21"
+            "F20", "F21", "F22"
         ]
     );
     assert!(json.as_array().unwrap().iter().any(|finding| {
@@ -1648,8 +1648,8 @@ fn eliminate_reports_structural_facts_and_family_eliminations() {
         52
     );
 
-    let search = json["quagmire_iii_iv_any_alphabet"].as_array().unwrap();
-    assert_eq!(search.len(), 4 * 26);
+    let search = json["quagmire_exact_any_alphabet"].as_array().unwrap();
+    assert_eq!(search.len(), 8 * 26);
     assert!(
         search
             .iter()

@@ -1057,8 +1057,8 @@ pub struct EliminationReport {
     pub families: Vec<FamilyElimination>,
     pub route_any_substitution: Option<crate::route_elimination::AnySubstitutionSummary>,
     pub quagmire_any_alphabet: QuagmireAnyAlphabetSummary,
-    /// Quagmire III/IV with arbitrary alphabets: exact search per period.
-    pub quagmire_iii_iv_any_alphabet: Vec<crate::quagmire_search::QuagmireSearchRow>,
+    /// Quagmire I-IV with arbitrary alphabets: exact search per period.
+    pub quagmire_exact_any_alphabet: Vec<crate::quagmire_search::QuagmireSearchRow>,
     pub quagmire_search_budget: u64,
     pub promoted_candidate: bool,
     pub note: &'static str,
@@ -1142,7 +1142,7 @@ pub fn run_elimination(options: EliminationOptions) -> EliminationReport {
         families,
         route_any_substitution,
         quagmire_any_alphabet: quagmire_any_alphabet_null(options.max_period, 2_000, 1),
-        quagmire_iii_iv_any_alphabet: crate::quagmire_search::quagmire_iii_iv_search(
+        quagmire_exact_any_alphabet: crate::quagmire_search::quagmire_exact_search(
             options.max_period,
             options.quagmire_search_budget,
         ),

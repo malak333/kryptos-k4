@@ -1,10 +1,11 @@
-//! Exact search: can Quagmire III or IV, with arbitrary mixed alphabets,
-//! reproduce the anchors at a given period?
+//! Exact search: can Quagmire I, II, III, or IV, with arbitrary mixed
+//! alphabets, reproduce the anchors at a given period?
 //!
 //! Each anchor gives one equation in the unknown alphabet positions and the
 //! key of its column: posB(c) - posA(p) = k[col] for Vigenère (variant
 //! Beaufort is the same with k negated), posB(c) + posA(p) = k[col] for
-//! Beaufort. Quagmire III shares one alphabet (posA = posB). A column with a
+//! Beaufort. Quagmire I fixes posB to the standard alphabet, Quagmire II fixes
+//! posA, and Quagmire III shares one alphabet (posA = posB). A column with a
 //! single anchor constrains nothing (its key is free), so only columns with
 //! two or more anchors are kept. Periods where no per-column substitution fits
 //! at all are impossible outright. Otherwise a depth-first search assigns alphabet
@@ -17,6 +18,12 @@ use serde::Serialize;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum QuagmireKind {
+    /// Mixed plaintext alphabet, standard ciphertext alphabet.
+    #[serde(rename = "quagmire-i")]
+    I,
+    /// Standard plaintext alphabet, mixed ciphertext alphabet.
+    #[serde(rename = "quagmire-ii")]
+    II,
     /// One mixed alphabet on both sides.
     #[serde(rename = "quagmire-iii")]
     III,
@@ -49,6 +56,15 @@ pub struct QuagmireSearchRow {
     pub period: usize,
     pub result: SearchResult,
     pub nodes: u64,
+}
+
+impl QuagmireKind {
+    pub const ALL: [QuagmireKind; 4] = [
+        QuagmireKind::I,
+        QuagmireKind::II,
+        QuagmireKind::III,
+        QuagmireKind::IV,
+    ];
 }
 
 const UNSET: u8 = u8::MAX;
@@ -95,7 +111,22 @@ impl Search {
             for i in 0..self.equations.len() {
                 let (b, a, col) = self.equations[i];
                 let (vb, va, vk) = (self.value[b], self.value[a], self.key[col]);
-                if vb != UNSET && va != UNSET {
+                if b == a && self.sa == -1 {
+                    // A letter that encrypts to itself under one shared
+                    // alphabet with the Vigenère sign forces k = b - b = 0,
+                    // whatever its position.
+                    if vk == UNSET {
+                        self.key[col] = 0;
+                        trail.push(Trail::Key(col));
+                        changed = true;
+                    } else if vk != 0 {
+                        return false;
+                    }
+                } else if vk == 0 && self.sa == -1 && self.side[b] == self.side[a] {
+                    // Key 0 on one shared alphabet maps every letter to
+                    // itself, so two different letters cannot pair up.
+                    return false;
+                } else if vb != UNSET && va != UNSET {
                     let k = (vb as i32 + self.sa * va as i32).rem_euclid(26) as u8;
                     if vk == UNSET {
                         self.key[col] = k;
@@ -215,7 +246,7 @@ pub fn search_quagmire(
     // letters (Quagmire III maps both sides to 0..26).
     let cipher_var = |letter: u8| match kind {
         QuagmireKind::III => letter as usize,
-        QuagmireKind::IV => 26 + letter as usize,
+        QuagmireKind::I | QuagmireKind::II | QuagmireKind::IV => 26 + letter as usize,
     };
     // Quagmire III and IV are periodic substitutions, so a period where no
     // per-column substitution fits is impossible without searching.
@@ -242,7 +273,7 @@ pub fn search_quagmire(
     variables.sort_unstable();
     variables.dedup();
     let side: Vec<usize> = (0..52)
-        .map(|v| usize::from(kind == QuagmireKind::IV && v >= 26))
+        .map(|v| usize::from(kind != QuagmireKind::III && v >= 26))
         .collect();
     let mut search = Search {
         sa: match sign {
@@ -258,12 +289,27 @@ pub fn search_quagmire(
         nodes: 0,
         budget,
     };
-    // Symmetry: translating an alphabet is absorbed by the keys, so fix one
-    // plaintext-side letter (and, for IV, one ciphertext-side letter) at 0.
+    // Quagmire I and II: the standard side is known, letter i at position i.
+    let fixed_side = match kind {
+        QuagmireKind::I => Some(1),
+        QuagmireKind::II => Some(0),
+        QuagmireKind::III | QuagmireKind::IV => None,
+    };
+    if let Some(fixed) = fixed_side {
+        for letter in 0..26 {
+            search.value[26 * fixed + letter] = letter as u8;
+            search.used[fixed][letter] = true;
+        }
+    }
+    // Symmetry: translating a mixed alphabet is absorbed by the keys, so fix
+    // one letter of each mixed alphabet at 0.
     let mut trail = Vec::new();
-    let first_plain = search.equations[0].1;
-    let mut ok = search.assign(first_plain, 0, &mut trail);
-    if kind == QuagmireKind::IV {
+    let mut ok = true;
+    if fixed_side != Some(0) {
+        let first_plain = search.equations[0].1;
+        ok = search.assign(first_plain, 0, &mut trail);
+    }
+    if kind == QuagmireKind::II || kind == QuagmireKind::IV {
         let first_cipher = search.equations[0].0;
         ok = ok && search.assign(first_cipher, 0, &mut trail);
     }
@@ -283,10 +329,10 @@ pub fn search_quagmire(
 }
 
 /// Every kind, sign, and period 1..=max_period for the K4 anchors.
-pub fn quagmire_iii_iv_search(max_period: usize, budget: u64) -> Vec<QuagmireSearchRow> {
+pub fn quagmire_exact_search(max_period: usize, budget: u64) -> Vec<QuagmireSearchRow> {
     let anchors = anchor_letters();
     let mut rows = Vec::new();
-    for kind in [QuagmireKind::III, QuagmireKind::IV] {
+    for kind in QuagmireKind::ALL {
         for sign in [SearchSign::VigenereOrVariant, SearchSign::Beaufort] {
             for period in 1..=max_period {
                 let (result, nodes) = search_quagmire(&anchors, kind, sign, period, budget);
@@ -316,10 +362,15 @@ mod tests {
     /// Encrypt synthetic plaintext with a Quagmire III/IV tableau and confirm
     /// the search finds a solution at the true period.
     fn planted(kind: QuagmireKind, sign: SearchSign, period: usize) -> Vec<AnchorLetter> {
-        let order_a = scrambled("QWERTYUIOPLKJHGFDSAZXCVBNM");
+        let standard: Vec<u8> = (0..26).collect();
+        let order_a = match kind {
+            QuagmireKind::II => standard.clone(),
+            _ => scrambled("QWERTYUIOPLKJHGFDSAZXCVBNM"),
+        };
         let order_b = match kind {
+            QuagmireKind::I => standard,
             QuagmireKind::III => order_a.clone(),
-            QuagmireKind::IV => scrambled("MNBVCXZLKJHGFDSAPOIUYTREWQ"),
+            QuagmireKind::II | QuagmireKind::IV => scrambled("MNBVCXZLKJHGFDSAPOIUYTREWQ"),
         };
         let mut pos_a = [0u8; 26];
         for (i, &l) in order_a.iter().enumerate() {
@@ -346,8 +397,8 @@ mod tests {
     }
 
     #[test]
-    fn planted_quagmire_iii_and_iv_are_found() {
-        for kind in [QuagmireKind::III, QuagmireKind::IV] {
+    fn planted_quagmires_are_found() {
+        for kind in QuagmireKind::ALL {
             for sign in [SearchSign::VigenereOrVariant, SearchSign::Beaufort] {
                 for period in [3, 5, 8, 11, 19] {
                     let anchors = planted(kind, sign, period);
@@ -358,10 +409,27 @@ mod tests {
         }
     }
 
+    /// Position 74 (K -> K) shares column 1 with position 26 (N -> Q) at
+    /// period 24. Under one alphabet with the Vigenère sign the self-encryption
+    /// forces that column's key to 0, so N cannot become Q.
+    #[test]
+    fn k4_quagmire_iii_vigenere_period_24_is_impossible() {
+        let anchors = anchor_letters();
+        let (result, nodes) = search_quagmire(
+            &anchors,
+            QuagmireKind::III,
+            SearchSign::VigenereOrVariant,
+            24,
+            1_000,
+        );
+        assert_eq!(result, SearchResult::Impossible);
+        assert!(nodes <= 1, "decided by propagation, took {nodes} nodes");
+    }
+
     #[test]
     fn k4_small_periods_are_impossible() {
         let anchors = anchor_letters();
-        for kind in [QuagmireKind::III, QuagmireKind::IV] {
+        for kind in QuagmireKind::ALL {
             for sign in [SearchSign::VigenereOrVariant, SearchSign::Beaufort] {
                 for period in 1..=7 {
                     let (result, _) = search_quagmire(&anchors, kind, sign, period, 50_000_000);
@@ -370,6 +438,52 @@ mod tests {
                         SearchResult::Impossible,
                         "{kind:?} {sign:?} {period}"
                     );
+                }
+            }
+        }
+    }
+
+    /// Cross-checks on the K4 anchors for Quagmire I and II. The union-find
+    /// test in `eliminate` is necessary, so whatever it rejects must be
+    /// impossible here. Reflecting the mixed alphabet turns Beaufort into
+    /// Vigenère, so both signs must agree. Quagmire IV generalizes I and II,
+    /// so it must be solvable wherever they are.
+    #[test]
+    fn k4_quagmire_i_ii_agree_with_necessary_check_and_iv() {
+        use crate::eliminate::{QuagmireSide, quagmire_any_alphabet_consistent};
+        let anchors = anchor_letters();
+        let pairs: Vec<(usize, u8, u8)> = anchors
+            .iter()
+            .map(|a| (a.position, a.plain, a.cipher))
+            .collect();
+        for (kind, side) in [
+            (QuagmireKind::I, QuagmireSide::Plain),
+            (QuagmireKind::II, QuagmireSide::Cipher),
+        ] {
+            for period in 1..=26 {
+                let budget = 50_000_000;
+                let (vig, _) = search_quagmire(
+                    &anchors,
+                    kind,
+                    SearchSign::VigenereOrVariant,
+                    period,
+                    budget,
+                );
+                let (beau, _) =
+                    search_quagmire(&anchors, kind, SearchSign::Beaufort, period, budget);
+                assert_eq!(vig, beau, "{kind:?} period {period}: signs disagree");
+                if !quagmire_any_alphabet_consistent(&pairs, period, side) {
+                    assert_eq!(vig, SearchResult::Impossible, "{kind:?} period {period}");
+                }
+                if vig == SearchResult::Possible {
+                    let (iv, _) = search_quagmire(
+                        &anchors,
+                        QuagmireKind::IV,
+                        SearchSign::VigenereOrVariant,
+                        period,
+                        budget,
+                    );
+                    assert_eq!(iv, SearchResult::Possible, "IV at period {period}");
                 }
             }
         }

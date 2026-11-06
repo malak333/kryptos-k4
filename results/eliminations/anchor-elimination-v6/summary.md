@@ -13,14 +13,18 @@ A correct method must reproduce all 24 public anchor letters. One failed check e
 - No Quagmire I (any plaintext alphabet) fits at periods: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 17, 18, 20, 21, 22, 25, 34, 36, 37, 40, 42, 43, 44, 45].
 - No Quagmire II (any ciphertext alphabet) fits at periods: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 21, 22, 25, 34, 35, 36, 41, 42, 43, 44, 45].
 
-Quagmire I/II with any alphabet passes at: quagmire-i period 13 (shuffle rate 0.215); quagmire-i period 16 (shuffle rate 0.465); quagmire-i period 19 (shuffle rate 0.015); quagmire-i period 23 (shuffle rate 0.604); quagmire-i period 24 (shuffle rate 0.800); quagmire-i period 26 (shuffle rate 0.970); quagmire-ii period 16 (shuffle rate 0.570); quagmire-ii period 19 (shuffle rate 0.021); quagmire-ii period 20 (shuffle rate 0.306); quagmire-ii period 23 (shuffle rate 0.685); quagmire-ii period 24 (shuffle rate 0.795); quagmire-ii period 26 (shuffle rate 0.970).
+Quagmire I/II with any alphabet passes the necessary union-find check at: quagmire-i period 13 (shuffle rate 0.215); quagmire-i period 16 (shuffle rate 0.465); quagmire-i period 19 (shuffle rate 0.015); quagmire-i period 23 (shuffle rate 0.604); quagmire-i period 24 (shuffle rate 0.800); quagmire-i period 26 (shuffle rate 0.970); quagmire-ii period 16 (shuffle rate 0.570); quagmire-ii period 19 (shuffle rate 0.021); quagmire-ii period 20 (shuffle rate 0.306); quagmire-ii period 23 (shuffle rate 0.685); quagmire-ii period 24 (shuffle rate 0.795); quagmire-ii period 26 (shuffle rate 0.970).
 Combined surprisal against 2000 ciphertext shuffles (seed 1): K4 13.48, null mean 6.37, p = 0.049.
 
-Quagmire III/IV with arbitrary alphabets (exact search, budget 2000000000 nodes per period):
+Quagmire I-IV with arbitrary alphabets (exact search, budget 2000000000 nodes per period):
 
 | Kind and sign | Impossible | Solvable | Undecided |
 | --- | --- | --- | --- |
-| Quagmire III, Vigenère or variant Beaufort | [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 25, 26] | [] | [24] |
+| Quagmire I, Vigenère or variant Beaufort | [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 17, 18, 20, 21, 22, 25] | [13, 16, 19, 23, 24, 26] | [] |
+| Quagmire I, Beaufort | [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 15, 17, 18, 20, 21, 22, 25] | [13, 16, 19, 23, 24, 26] | [] |
+| Quagmire II, Vigenère or variant Beaufort | [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 21, 22, 25] | [16, 19, 20, 23, 24, 26] | [] |
+| Quagmire II, Beaufort | [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 21, 22, 25] | [16, 19, 20, 23, 24, 26] | [] |
+| Quagmire III, Vigenère or variant Beaufort | [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26] | [] | [] |
 | Quagmire III, Beaufort | [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25] | [23, 26] | [] |
 | Quagmire IV, Vigenère or variant Beaufort | [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 17, 18, 21, 22, 25] | [8, 13, 16, 19, 20, 23, 24, 26] | [] |
 | Quagmire IV, Beaufort | [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 14, 15, 17, 18, 21, 22, 25] | [8, 13, 16, 19, 20, 23, 24, 26] | [] |
