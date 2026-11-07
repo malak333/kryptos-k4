@@ -18,6 +18,9 @@ The earlier long-form log (96 entries, 2026-05-20 through 2026-06-01) is
   p = 0.049 post hoc (F19).
 - Added `eliminate --wordlist`: every Webster's Second and proper-name keyword
   alphabet as Quagmire I–III. No survivor at periods 1–25 (F20).
+- Wrote `docs/conclusions.md`: what the anchors rule out, what stays open
+  (methods with more free key values than 24 letters can test), and what
+  would move K4 forward.
 
 ## 2026-11-04: Running keys (phase 5)
 

@@ -38,10 +38,12 @@ archive-discovered, or private plaintext.
   the public anchors. The only one with a checkable mechanism (SolveKryptos)
   is not internally consistent.
 
-Next step: a closing synthesis of what the anchors rule out and which method
-classes remain open. A method that reproduces all 24 anchor letters by chance
-has probability about 26^-24, so a miss is an elimination. See
-[docs/research-plan.md](docs/research-plan.md).
+**Conclusion so far:** K4 is not a classical single-layer periodic or autokey
+cipher, nor a bounded transposition combined with one, nor a running key from
+English text, with any alphabet the sculpture, its clues, or a dictionary
+suggests. What remains open has too many free key values for 24 known letters
+to test. Progress needs more plaintext or a specific key-source hypothesis,
+stated before scoring. See [docs/conclusions.md](docs/conclusions.md).
 
 ## Quick start
 

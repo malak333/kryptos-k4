@@ -144,8 +144,11 @@ all 24 public anchor letters at their positions. Chance agreement is about
 3. Done (`eliminate`): keyed columnar width 2–8, and route transpositions
    (columns, serpentines, spirals, diagonals, K3-style double rotations, grid
    width 2–48) with periodic tableaux or any per-column alphabets (F18).
-4. Next: a closing synthesis of what the anchors rule out and which method
-   classes remain open (`docs/conclusions.md`).
+4. Done: Quagmire I/II with any alphabet (F19) and Quagmire I–III with every
+   dictionary keyword (F20).
+5. Done: closing synthesis in `docs/conclusions.md`. Further work should test a
+   specific, preregistered key source, or rerun the tools if more plaintext
+   is released.
 
 ## Decision Log
 
