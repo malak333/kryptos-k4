@@ -16,6 +16,12 @@ archive-discovered, or private plaintext.
 - **Periodic additive keys are ruled out.** Vigenère, Beaufort, and variant
   Beaufort with either the standard or the Kryptos alphabet contradict the
   anchors at every period from 1 to 26. Cyclic short-word keys cannot work.
+- **Anchor reproduction eliminates whole cipher families.** Pure
+  transposition and Porta are impossible outright. Gronsfeld, ciphertext
+  autokey, Gromark, and keyed columnar plus periodic tableau leave zero
+  survivors over 15 million configurations. Periodic Quagmire I–IV and
+  plaintext autokey leave only chance-level survivors. Limits apply; see
+  [docs/negative-results.md](docs/negative-results.md).
 - **Every statistical lane so far is negative.** One source-backed observation
   (six web-page row-boundary positions) was scored against 86 lanes, and none
   survived. See [docs/negative-results.md](docs/negative-results.md).
@@ -23,10 +29,10 @@ archive-discovered, or private plaintext.
   the public anchors. The only one with a checkable mechanism (SolveKryptos)
   is not internally consistent.
 
-Next step: test concrete cipher families, running keys, and transpositions by
-whether they reproduce all 24 anchor letters. A chance match has probability
-about 26^-24, so a miss is an elimination. See
-[docs/research-plan.md](docs/research-plan.md).
+Next step: run running keys from a fixed public corpus, and extend the
+elimination to route transpositions and non-keyword alphabets. A method that
+reproduces all 24 anchor letters by chance has probability about 26^-24, so a
+miss is an elimination. See [docs/research-plan.md](docs/research-plan.md).
 
 ## Quick start
 
@@ -59,6 +65,8 @@ accepts `--format json`.
 | `routes` | Bounded named route experiments over the anchor fragments. |
 | `hypotheses` | The ranked hypothesis register (H1–H5). |
 | `findings` | Findings ledger: inputs, steps, baseline, interpretation, next test. |
+| `eliminate` | Eliminate cipher families by anchor reproduction; reports survivors against chance. |
+| `running-key` | Test every offset of a local text file as a running key. |
 | `verify-claim` | Check a local claim file without printing it (see below). |
 | `report` | Full Markdown or JSON report; `notes/k4-report.md` is the committed copy. |
 | `export-data` | Write ciphertext, anchors, and sources as JSON. |
@@ -70,6 +78,8 @@ Examples:
 kryptos-k4 test-key --material BERLINWORLDCLOCK --sweep-offsets
 kryptos-k4 explain-key --material BERLINWORLDCLOCK --offset 0
 kryptos-k4 batch-test-keys --input experiments/k4-candidates.csv --batch-baseline-iterations 1000
+kryptos-k4 eliminate
+kryptos-k4 running-key --corpus /path/to/text.txt
 kryptos-k4 report --format markdown --output notes/k4-report.md
 ```
 
@@ -110,6 +120,7 @@ quote-free snapshot in `sources/archives/`.
 | --- | --- |
 | `src/data.rs`, `src/alphabet.rs` | Ciphertext, anchors, sources, alphabets. |
 | `src/analysis.rs`, `src/baseline.rs` | Anchor-derived fragments and seeded null controls. |
+| `src/eliminate.rs` | Anchor-reproduction elimination and running-key scan. |
 | `src/key_test.rs`, `src/candidates.rs`, `src/routes.rs` | Key-material, candidate, and route tests. |
 | `src/ciphertext_profile.rs` | Ciphertext-only diagnostics. |
 | `src/claim.rs` | Quarantined claim verification. |

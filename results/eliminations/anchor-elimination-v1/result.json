@@ -1,0 +1,254 @@
+{
+  "structural": {
+    "anchor_letters": 24,
+    "self_encrypting_positions_one_based": [
+      33,
+      74
+    ],
+    "identical_pair_positions_one_based": [
+      [
+        28,
+        66
+      ]
+    ],
+    "transposition_shortfall": [
+      [
+        "E",
+        3,
+        2
+      ]
+    ],
+    "periodic_substitution_impossible_periods": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      9,
+      10,
+      14,
+      15,
+      17,
+      21,
+      25,
+      34,
+      42,
+      43,
+      45
+    ],
+    "max_period_checked": 48
+  },
+  "alphabets": [
+    "standard=ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    "kryptos=KRYPTOSABCDEFGHIJLMNQUVWXZ",
+    "palimpsest=PALIMSETBCDFGHJKNOQRUVWXYZ",
+    "abscissa=ABSCIDEFGHJKLMNOPQRTUVWXYZ",
+    "iqlusion=IQLUSONABCDEFGHJKMPRTVWXYZ",
+    "undergruund=UNDERGABCFHIJKLMOPQSTVWXYZ",
+    "digetal=DIGETALBCFHJKMNOPQRSUVWXYZ",
+    "shadow=SHADOWBCEFGIJKLMNPQRTUVXYZ",
+    "lucid=LUCIDABEFGHJKMNOPQRSTVWXYZ",
+    "memory=MEORYABCDFGHIJKLNPQSTUVWXZ",
+    "invisible=INVSBLEACDFGHJKMOPQRTUWXYZ",
+    "layertwo=LAYERTWOBCDFGHIJKMNPQSUVXZ",
+    "sanborn=SANBORCDEFGHIJKLMPQTUVWXYZ",
+    "scheidt=SCHEIDTABFGJKLMNOPQRUVWXYZ",
+    "langley=LANGEYBCDFHIJKMOPQRSTUVWXZ",
+    "berlin=BERLINACDFGHJKMOPQSTUVWXYZ",
+    "clock=CLOKABDEFGHIJMNPQRSTUVWXYZ",
+    "berlinclock=BERLINCOKADFGHJMPQSTUVWXYZ",
+    "worldclock=WORLDCKABEFGHIJMNPQSTUVXYZ",
+    "weltzeituhr=WELTZIUHRABCDFGJKMNOPQSVXY",
+    "urania=URANIBCDEFGHJKLMOPQSTVWXYZ",
+    "alexanderplatz=ALEXNDRPTZBCFGHIJKMOQSUVWY",
+    "mengenlehreuhr=MENGLHRUABCDFIJKOPQSTVWXYZ",
+    "northeast=NORTHEASBCDFGIJKLMPQUVWXYZ",
+    "eastnortheast=EASTNORHBCDFGIJKLMPQUVWXYZ",
+    "compass=COMPASBDEFGHIJKLNQRTUVWXYZ",
+    "lodestone=LODESTNABCFGHIJKMPQRUVWXYZ",
+    "magnetic=MAGNETICBDFHJKLOPQRSUVWXYZ",
+    "egypt=EGYPTABCDFHIJKLMNOQRSUVWXZ",
+    "cairo=CAIROBDEFGHJKLMNPQSTUVWXYZ",
+    "giza=GIZABCDEFHJKLMNOPQRSTUVWXY",
+    "pyramid=PYRAMIDBCEFGHJKLNOQSTUVWXZ",
+    "tutankhamun=TUANKHMBCDEFGIJLOPQRSVWXYZ",
+    "carter=CARTEBDFGHIJKLMNOPQSUVWXYZ",
+    "howardcarter=HOWARDCTEBFGIJKLMNPQSUVXYZ",
+    "berlinwall=BERLINWACDFGHJKMOPQSTUVXYZ",
+    "enigma=ENIGMABCDFHJKLOPQRSTUVWXYZ"
+  ],
+  "families": [
+    {
+      "family": "periodic-tableau",
+      "description": "Vigenère, Beaufort, and variant Beaufort over every pair of registered alphabets (standard tableau and Quagmire I–IV) with a repeating key of period 1..=max",
+      "configurations": 106782,
+      "eliminated": 106594,
+      "unconstrained": 0,
+      "surviving": 188,
+      "expected_chance_survivors": 158.19555659939775,
+      "max_survivor_checks": 1,
+      "top_survivors": [
+        {
+          "parameters": "quagmire-i variant-beaufort pt=abscissa ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i variant-beaufort pt=cairo ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i variant-beaufort pt=iqlusion ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i variant-beaufort pt=lucid ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i variant-beaufort pt=pyramid ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i variant-beaufort pt=shadow ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i variant-beaufort pt=urania ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i vigenere pt=abscissa ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i vigenere pt=cairo ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i vigenere pt=iqlusion ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        }
+      ]
+    },
+    {
+      "family": "gronsfeld",
+      "description": "Periodic digit key (0..=9) on same-alphabet tableaux for every registered alphabet, three sign conventions, period 1..=max",
+      "configurations": 2886,
+      "eliminated": 2886,
+      "unconstrained": 0,
+      "surviving": 0,
+      "expected_chance_survivors": 1.2311992563824975e-9,
+      "max_survivor_checks": 0,
+      "top_survivors": []
+    },
+    {
+      "family": "ciphertext-autokey",
+      "description": "Key at position i is the ciphertext letter at i-L, after an unknown L-letter primer; every registered tableau, L in 1..=max",
+      "configurations": 421356,
+      "eliminated": 421356,
+      "unconstrained": 0,
+      "surviving": 0,
+      "expected_chance_survivors": 4.20345067191536e-11,
+      "max_survivor_checks": 0,
+      "top_survivors": []
+    },
+    {
+      "family": "plaintext-autokey",
+      "description": "Key at position i is the plaintext letter at i-L, after an unknown L-letter primer; every registered tableau, L in 1..=max",
+      "configurations": 421356,
+      "eliminated": 395786,
+      "unconstrained": 24309,
+      "surviving": 1261,
+      "expected_chance_survivors": 960.3555576143251,
+      "max_survivor_checks": 3,
+      "top_survivors": [
+        {
+          "parameters": "quagmire-ii vigenere pt=standard ct=tutankhamun key=ct lag=32",
+          "checks": 3,
+          "chance_probability": 0.00005689576695493856
+        },
+        {
+          "parameters": "quagmire-iv beaufort pt=enigma ct=kryptos key=ct lag=25",
+          "checks": 3,
+          "chance_probability": 0.00005689576695493856
+        },
+        {
+          "parameters": "quagmire-iv variant-beaufort pt=enigma ct=alexanderplatz key=ct lag=50",
+          "checks": 3,
+          "chance_probability": 0.00005689576695493856
+        },
+        {
+          "parameters": "quagmire-i variant-beaufort pt=layertwo ct=standard key=pt lag=31",
+          "checks": 2,
+          "chance_probability": 0.0014792899408284025
+        },
+        {
+          "parameters": "quagmire-iv beaufort pt=carter ct=giza key=pt lag=31",
+          "checks": 2,
+          "chance_probability": 0.0014792899408284025
+        },
+        {
+          "parameters": "quagmire-iv beaufort pt=digetal ct=eastnortheast key=ct lag=51",
+          "checks": 2,
+          "chance_probability": 0.0014792899408284025
+        },
+        {
+          "parameters": "quagmire-iv beaufort pt=eastnortheast ct=carter key=pt lag=51",
+          "checks": 2,
+          "chance_probability": 0.0014792899408284025
+        },
+        {
+          "parameters": "quagmire-iv beaufort pt=eastnortheast ct=pyramid key=ct lag=51",
+          "checks": 2,
+          "chance_probability": 0.0014792899408284025
+        },
+        {
+          "parameters": "quagmire-iv beaufort pt=eastnortheast ct=scheidt key=pt lag=51",
+          "checks": 2,
+          "chance_probability": 0.0014792899408284025
+        },
+        {
+          "parameters": "quagmire-iv beaufort pt=lodestone ct=pyramid key=ct lag=51",
+          "checks": 2,
+          "chance_probability": 0.0014792899408284025
+        }
+      ]
+    },
+    {
+      "family": "gromark",
+      "description": "Lagged-Fibonacci key k[i] = k[i-L] + k[i-L+1] mod m (m=10 classic Gromark, m=26 letter variant), L in 2..=12, every registered tableau",
+      "configurations": 90354,
+      "eliminated": 90354,
+      "unconstrained": 0,
+      "surviving": 0,
+      "expected_chance_survivors": 4.475924256733518e-14,
+      "max_survivor_checks": 0,
+      "top_survivors": []
+    },
+    {
+      "family": "columnar-plus-tableau",
+      "description": "Keyed columnar transposition (every column order, width 2..=max) before or after a periodic Vigenère/Beaufort/variant key on standard and Kryptos tableaux, period 1..=max",
+      "configurations": 14424384,
+      "eliminated": 14424384,
+      "unconstrained": 0,
+      "surviving": 0,
+      "expected_chance_survivors": 2.546861453523577e-10,
+      "max_survivor_checks": 0,
+      "top_survivors": []
+    }
+  ],
+  "promoted_candidate": false,
+  "note": "A configuration survives only if it passes every anchor check it has. Survivors with few checks are expected by chance (compare expected_chance_survivors); none is a decryption or a promoted candidate."
+}

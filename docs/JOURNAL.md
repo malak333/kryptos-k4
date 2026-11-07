@@ -7,6 +7,19 @@ Routine runs that repeat an earlier result do not get an entry.
 The earlier long-form log (96 entries, 2026-05-20 through 2026-06-01) is
 `experiments/PROGRESS_LOG.md` at git tag `pre-slimdown`.
 
+## 2026-11-04: Anchor elimination (phase 4)
+
+- Added `eliminate`: each configuration gets the anchor checks a correct
+  configuration must pass, with a chance probability per check. 15.5 million
+  configurations. Zero survivors for Gronsfeld, ciphertext autokey, Gromark
+  (lag 2–12), and keyed columnar width 2–8 plus periodic tableau. Periodic
+  Quagmire I–IV and plaintext autokey leave only chance-level survivors (at
+  most 1 and 3 checks).
+- From the anchors alone: no pure transposition (needs three `E`, K4 has
+  two), no Porta (two self-encryptions), no periodic substitution with any
+  alphabet at periods 1–7, 9, 10, 14, 15, 17, 21, 25.
+- Added `running-key --corpus FILE`. Not yet run on a real corpus.
+
 ## 2026-11-04: Slim-down phases 2 and 3
 
 - Cut the CLI from about 100 commands to 19 and the source from about 45k lines

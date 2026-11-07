@@ -7,6 +7,7 @@ pub mod candidates;
 pub mod ciphertext_profile;
 pub mod claim;
 pub mod data;
+pub mod eliminate;
 pub mod findings;
 pub mod hypotheses;
 pub mod key_test;
@@ -38,6 +39,10 @@ pub use claim::{
 pub use data::{
     Anchor, K4_CIPHERTEXT, KnownPlaintextSpan, Source, known_anchors, known_plaintext_spans,
     sources,
+};
+pub use eliminate::{
+    EliminationOptions, EliminationReport, FamilyElimination, RunningKeyReport, StructuralFacts,
+    normalize_letters, run_elimination, scan_running_key, structural_facts,
 };
 pub use findings::{Finding, findings};
 pub use hypotheses::{Hypothesis, hypotheses};

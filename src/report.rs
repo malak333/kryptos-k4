@@ -102,6 +102,8 @@ fn render_markdown(report: &Report) -> String {
 | `routes` | Bounded named route experiments with identity, reverse, and seeded-random baselines in Markdown or JSON. |
 | `findings` | Reproducible findings ledger with sources, transformations, baselines, interpretation, and next tests in Markdown or JSON. |
 | `sources` | Source provenance records and allowed-use notes in Markdown or JSON. |
+| `eliminate` | Anchor-reproduction elimination: structural facts (self-encryptions, identical pairs, transposition and periodic-substitution impossibility) and per-family counts of eliminated, untestable, and surviving configurations with the survivors expected by chance, for periodic tableaux and Quagmire I–IV, Gronsfeld, ciphertext and plaintext autokey, Gromark, and keyed columnar plus tableau, in Markdown or JSON. |
+| `running-key` | Every offset of a local corpus file as a running key on standard and Kryptos tableaux, with a match histogram and the count expected by chance at the best score, in Markdown or JSON. |
 | `verify-claim` | Local quarantine check for an external plaintext claim (and optional running-key stream): normalized length, public-anchor preservation, aggregate shift diagnostics, and additive ciphertext reconstruction, without printing or storing the claim, in Markdown or JSON. |
 | `release-check` | Local release gate: no GitHub Actions or Dependabot config, committed claim-verification archives stay non-promoting and non-leaking, and no leaked-plaintext sentinel markers appear in release-facing files, in Markdown or JSON. |
 | `export-data` | Covered by the source data rendered here; the command writes ciphertext, anchor, and source JSON files. |

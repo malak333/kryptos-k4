@@ -1,6 +1,7 @@
 //! Command handlers for the kryptos-k4 binary.
 
 pub(crate) mod claim;
+pub(crate) mod eliminate;
 
 pub(crate) mod info;
 
