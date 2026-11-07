@@ -148,6 +148,18 @@ Facts from the anchors alone:
   position-keyed tableau cipher has equal keys there.
 - **No periodic substitution, with any alphabets, fits at periods** 1–7, 9,
   10, 14, 15, 17, 21, 25, 34, 42, 43, or 45.
+- **No Quagmire I with any plaintext alphabet fits at periods** 1–12, 14, 15,
+  17, 18, 20–22, or 25, and **no Quagmire II with any ciphertext alphabet** at
+  1–15, 17, 18, 21, 22, or 25. This is exact: each anchor is a difference
+  constraint between an unknown alphabet position and an unknown key column.
+  Both pass at period 19, which 1.5–2.1% of ciphertext shuffles also do. A
+  post-hoc combined test gives p = 0.049, which is not evidence.
+- **No dictionary keyword alphabet fits Quagmire I, II, or III at periods
+  1–25.** Every word in Webster's Second and the system proper-names list
+  (about 208,000 distinct alphabets, 48.8 million configurations) was tested.
+  The only survivors are at period 26, where the anchors are almost
+  untested, at the chance rate. Preregistration:
+  `experiments/eliminations/dictionary-keywords-preregistration.md`.
 
 Families, using 37 keyed alphabets fixed before scoring (standard plus 36
 Kryptos, clue, and theme keywords) in every plaintext/ciphertext pairing:
@@ -165,9 +177,30 @@ Survivors pass at most three checks, at the rate chance predicts. Each checker
 keeps a planted true key in its unit tests, so zero survivors is a real
 elimination, not a bug.
 
-Limits: only the 37 registered alphabets (not arbitrary alphabets), the stated
+Limits: the 37 registered alphabets plus the dictionary alphabets above (Quagmire IV is tested only with registered pairs), the stated
 periods, lags, and widths, and standard/Kryptos tableaux for the columnar
 search. Running keys are covered below.
+
+## Route transpositions
+
+Run: `results/eliminations/anchor-elimination-v3/`. Plaintext is written row by
+row into a grid of width 2–48 (97 is prime, so the last row is partial) and
+read by ten routes: columns (down, up, right to left), column and row
+serpentines, spirals both ways, and diagonals. K3-style double rotations
+(rotate, rewrite at a second width, rotate again) are added for every width
+pair. With each route also inverted and reversed, there are 18,849 distinct
+permutations, each tested before and after the key.
+
+- **With a periodic tableau key** (standard and Kryptos alphabets, period
+  1–26): 11.8 million configurations, 9,232 survivors against 9,169 expected
+  by chance, none passing more than three checks.
+- **With any alphabet per key column** (general periodic substitution): no
+  route fits at period 1 or 2. At periods 3–8, the counts that fit match a null
+  that keeps each route and shuffles the ciphertext letters (smallest p =
+  0.065, at period 3, before correcting for eight periods).
+
+Limits: these route families only; keyed transpositions longer than width 8
+and non-periodic keys after a route are not covered.
 
 ## Running keys
 

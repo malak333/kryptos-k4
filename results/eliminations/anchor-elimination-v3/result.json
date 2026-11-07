@@ -1,0 +1,1294 @@
+{
+  "structural": {
+    "anchor_letters": 24,
+    "self_encrypting_positions_one_based": [
+      33,
+      74
+    ],
+    "identical_pair_positions_one_based": [
+      [
+        28,
+        66
+      ]
+    ],
+    "transposition_shortfall": [
+      [
+        "E",
+        3,
+        2
+      ]
+    ],
+    "periodic_substitution_impossible_periods": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      9,
+      10,
+      14,
+      15,
+      17,
+      21,
+      25,
+      34,
+      42,
+      43,
+      45
+    ],
+    "quagmire_i_any_alphabet_impossible_periods": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      14,
+      15,
+      17,
+      18,
+      20,
+      21,
+      22,
+      25,
+      34,
+      36,
+      37,
+      40,
+      42,
+      43,
+      44,
+      45
+    ],
+    "quagmire_ii_any_alphabet_impossible_periods": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      17,
+      18,
+      21,
+      22,
+      25,
+      34,
+      35,
+      36,
+      41,
+      42,
+      43,
+      44,
+      45
+    ],
+    "max_period_checked": 48
+  },
+  "alphabets": [
+    "standard=ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+    "kryptos=KRYPTOSABCDEFGHIJLMNQUVWXZ",
+    "palimpsest=PALIMSETBCDFGHJKNOQRUVWXYZ",
+    "abscissa=ABSCIDEFGHJKLMNOPQRTUVWXYZ",
+    "iqlusion=IQLUSONABCDEFGHJKMPRTVWXYZ",
+    "undergruund=UNDERGABCFHIJKLMOPQSTVWXYZ",
+    "digetal=DIGETALBCFHJKMNOPQRSUVWXYZ",
+    "shadow=SHADOWBCEFGIJKLMNPQRTUVXYZ",
+    "lucid=LUCIDABEFGHJKMNOPQRSTVWXYZ",
+    "memory=MEORYABCDFGHIJKLNPQSTUVWXZ",
+    "invisible=INVSBLEACDFGHJKMOPQRTUWXYZ",
+    "layertwo=LAYERTWOBCDFGHIJKMNPQSUVXZ",
+    "sanborn=SANBORCDEFGHIJKLMPQTUVWXYZ",
+    "scheidt=SCHEIDTABFGJKLMNOPQRUVWXYZ",
+    "langley=LANGEYBCDFHIJKMOPQRSTUVWXZ",
+    "berlin=BERLINACDFGHJKMOPQSTUVWXYZ",
+    "clock=CLOKABDEFGHIJMNPQRSTUVWXYZ",
+    "berlinclock=BERLINCOKADFGHJMPQSTUVWXYZ",
+    "worldclock=WORLDCKABEFGHIJMNPQSTUVXYZ",
+    "weltzeituhr=WELTZIUHRABCDFGJKMNOPQSVXY",
+    "urania=URANIBCDEFGHJKLMOPQSTVWXYZ",
+    "alexanderplatz=ALEXNDRPTZBCFGHIJKMOQSUVWY",
+    "mengenlehreuhr=MENGLHRUABCDFIJKOPQSTVWXYZ",
+    "northeast=NORTHEASBCDFGIJKLMPQUVWXYZ",
+    "eastnortheast=EASTNORHBCDFGIJKLMPQUVWXYZ",
+    "compass=COMPASBDEFGHIJKLNQRTUVWXYZ",
+    "lodestone=LODESTNABCFGHIJKMPQRUVWXYZ",
+    "magnetic=MAGNETICBDFHJKLOPQRSUVWXYZ",
+    "egypt=EGYPTABCDFHIJKLMNOQRSUVWXZ",
+    "cairo=CAIROBDEFGHJKLMNPQSTUVWXYZ",
+    "giza=GIZABCDEFHJKLMNOPQRSTUVWXY",
+    "pyramid=PYRAMIDBCEFGHJKLNOQSTUVWXZ",
+    "tutankhamun=TUANKHMBCDEFGIJLOPQRSVWXYZ",
+    "carter=CARTEBDFGHIJKLMNOPQSUVWXYZ",
+    "howardcarter=HOWARDCTEBFGIJKLMNPQSUVXYZ",
+    "berlinwall=BERLINWACDFGHJKMOPQSTUVXYZ",
+    "enigma=ENIGMABCDFHJKLOPQRSTUVWXYZ"
+  ],
+  "families": [
+    {
+      "family": "periodic-tableau",
+      "description": "Vigenère, Beaufort, and variant Beaufort over every pair of registered alphabets (standard tableau and Quagmire I–IV) with a repeating key of period 1..=max",
+      "configurations": 106782,
+      "eliminated": 106594,
+      "unconstrained": 0,
+      "surviving": 188,
+      "expected_chance_survivors": 158.19555659939775,
+      "max_survivor_checks": 1,
+      "top_survivors": [
+        {
+          "parameters": "quagmire-i variant-beaufort pt=abscissa ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i variant-beaufort pt=cairo ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i variant-beaufort pt=iqlusion ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i variant-beaufort pt=lucid ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i variant-beaufort pt=pyramid ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i variant-beaufort pt=shadow ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i variant-beaufort pt=urania ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i vigenere pt=abscissa ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i vigenere pt=cairo ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i vigenere pt=iqlusion ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        }
+      ]
+    },
+    {
+      "family": "gronsfeld",
+      "description": "Periodic digit key (0..=9) on same-alphabet tableaux for every registered alphabet, three sign conventions, period 1..=max",
+      "configurations": 2886,
+      "eliminated": 2886,
+      "unconstrained": 0,
+      "surviving": 0,
+      "expected_chance_survivors": 1.2311992563824975e-9,
+      "max_survivor_checks": 0,
+      "top_survivors": []
+    },
+    {
+      "family": "ciphertext-autokey",
+      "description": "Key at position i is the ciphertext letter at i-L, after an unknown L-letter primer; every registered tableau, L in 1..=max",
+      "configurations": 421356,
+      "eliminated": 421356,
+      "unconstrained": 0,
+      "surviving": 0,
+      "expected_chance_survivors": 4.20345067191536e-11,
+      "max_survivor_checks": 0,
+      "top_survivors": []
+    },
+    {
+      "family": "plaintext-autokey",
+      "description": "Key at position i is the plaintext letter at i-L, after an unknown L-letter primer; every registered tableau, L in 1..=max",
+      "configurations": 421356,
+      "eliminated": 395786,
+      "unconstrained": 24309,
+      "surviving": 1261,
+      "expected_chance_survivors": 960.3555576143251,
+      "max_survivor_checks": 3,
+      "top_survivors": [
+        {
+          "parameters": "quagmire-ii vigenere pt=standard ct=tutankhamun key=ct lag=32",
+          "checks": 3,
+          "chance_probability": 0.00005689576695493856
+        },
+        {
+          "parameters": "quagmire-iv beaufort pt=enigma ct=kryptos key=ct lag=25",
+          "checks": 3,
+          "chance_probability": 0.00005689576695493856
+        },
+        {
+          "parameters": "quagmire-iv variant-beaufort pt=enigma ct=alexanderplatz key=ct lag=50",
+          "checks": 3,
+          "chance_probability": 0.00005689576695493856
+        },
+        {
+          "parameters": "quagmire-i variant-beaufort pt=layertwo ct=standard key=pt lag=31",
+          "checks": 2,
+          "chance_probability": 0.0014792899408284025
+        },
+        {
+          "parameters": "quagmire-iv beaufort pt=carter ct=giza key=pt lag=31",
+          "checks": 2,
+          "chance_probability": 0.0014792899408284025
+        },
+        {
+          "parameters": "quagmire-iv beaufort pt=digetal ct=eastnortheast key=ct lag=51",
+          "checks": 2,
+          "chance_probability": 0.0014792899408284025
+        },
+        {
+          "parameters": "quagmire-iv beaufort pt=eastnortheast ct=carter key=pt lag=51",
+          "checks": 2,
+          "chance_probability": 0.0014792899408284025
+        },
+        {
+          "parameters": "quagmire-iv beaufort pt=eastnortheast ct=pyramid key=ct lag=51",
+          "checks": 2,
+          "chance_probability": 0.0014792899408284025
+        },
+        {
+          "parameters": "quagmire-iv beaufort pt=eastnortheast ct=scheidt key=pt lag=51",
+          "checks": 2,
+          "chance_probability": 0.0014792899408284025
+        },
+        {
+          "parameters": "quagmire-iv beaufort pt=lodestone ct=pyramid key=ct lag=51",
+          "checks": 2,
+          "chance_probability": 0.0014792899408284025
+        }
+      ]
+    },
+    {
+      "family": "gromark",
+      "description": "Lagged-Fibonacci key k[i] = k[i-L] + k[i-L+1] mod m (m=10 classic Gromark, m=26 letter variant), L in 2..=12, every registered tableau",
+      "configurations": 90354,
+      "eliminated": 90354,
+      "unconstrained": 0,
+      "surviving": 0,
+      "expected_chance_survivors": 4.475924256733518e-14,
+      "max_survivor_checks": 0,
+      "top_survivors": []
+    },
+    {
+      "family": "columnar-plus-tableau",
+      "description": "Keyed columnar transposition (every column order, width 2..=max) before or after a periodic Vigenère/Beaufort/variant key on standard and Kryptos tableaux, period 1..=max",
+      "configurations": 14424384,
+      "eliminated": 14424384,
+      "unconstrained": 0,
+      "surviving": 0,
+      "expected_chance_survivors": 2.546861453523577e-10,
+      "max_survivor_checks": 0,
+      "top_survivors": []
+    },
+    {
+      "family": "route-plus-tableau",
+      "description": "Route transposition (columns, serpentines, spirals, diagonals, K3-style double rotations; each also inverted and reversed; grid width 2..=max) before or after a periodic Vigenère/Beaufort/variant key on standard and Kryptos tableaux, period 1..=max",
+      "configurations": 11761776,
+      "eliminated": 11749256,
+      "unconstrained": 3288,
+      "surviving": 9232,
+      "expected_chance_survivors": 9168.670043310121,
+      "max_survivor_checks": 3,
+      "top_survivors": [
+        {
+          "parameters": "substitute-then-transpose double-rotate-ccw widths=26,7 inverse standard beaufort pt=standard ct=standard period=25",
+          "checks": 3,
+          "chance_probability": 0.00005689576695493856
+        },
+        {
+          "parameters": "substitute-then-transpose double-rotate-ccw widths=38,12 inverse reversed quagmire-i variant-beaufort pt=kryptos ct=standard period=25",
+          "checks": 3,
+          "chance_probability": 0.00005689576695493856
+        },
+        {
+          "parameters": "substitute-then-transpose double-rotate-ccw widths=38,12 inverse reversed quagmire-i vigenere pt=kryptos ct=standard period=25",
+          "checks": 3,
+          "chance_probability": 0.00005689576695493856
+        },
+        {
+          "parameters": "substitute-then-transpose double-rotate-ccw widths=43,34 reversed quagmire-iii variant-beaufort pt=kryptos ct=kryptos period=25",
+          "checks": 3,
+          "chance_probability": 0.00005689576695493856
+        },
+        {
+          "parameters": "substitute-then-transpose double-rotate-ccw widths=43,34 reversed quagmire-iii vigenere pt=kryptos ct=kryptos period=25",
+          "checks": 3,
+          "chance_probability": 0.00005689576695493856
+        },
+        {
+          "parameters": "substitute-then-transpose double-rotate-ccw widths=44,8 quagmire-ii beaufort pt=standard ct=kryptos period=25",
+          "checks": 3,
+          "chance_probability": 0.00005689576695493856
+        },
+        {
+          "parameters": "substitute-then-transpose double-rotate-ccw widths=47,39 inverse reversed quagmire-i variant-beaufort pt=kryptos ct=standard period=25",
+          "checks": 3,
+          "chance_probability": 0.00005689576695493856
+        },
+        {
+          "parameters": "substitute-then-transpose double-rotate-ccw widths=47,39 inverse reversed quagmire-i vigenere pt=kryptos ct=standard period=25",
+          "checks": 3,
+          "chance_probability": 0.00005689576695493856
+        },
+        {
+          "parameters": "substitute-then-transpose double-rotate-ccw widths=6,46 inverse quagmire-iii beaufort pt=kryptos ct=kryptos period=25",
+          "checks": 3,
+          "chance_probability": 0.00005689576695493856
+        },
+        {
+          "parameters": "substitute-then-transpose double-rotate-cw widths=10,34 inverse reversed quagmire-i beaufort pt=kryptos ct=standard period=25",
+          "checks": 3,
+          "chance_probability": 0.00005689576695493856
+        }
+      ]
+    },
+    {
+      "family": "dictionary-quagmire",
+      "description": "Quagmire I, II, and III (Vigenère, Beaufort, variant Beaufort) with a keyword alphabet from every word in the given word lists, period 1..=max",
+      "configurations": 48829248,
+      "eliminated": 48763677,
+      "unconstrained": 0,
+      "surviving": 65571,
+      "expected_chance_survivors": 72339.6271475303,
+      "max_survivor_checks": 1,
+      "top_survivors": [
+        {
+          "parameters": "quagmire-i beaufort pt=abkari ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i beaufort pt=abkhas ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i beaufort pt=achakzai ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i beaufort pt=ackman ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i beaufort pt=acknowledge ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i beaufort pt=acknowledgedly ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i beaufort pt=acknowledgement ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i beaufort pt=acknowledger ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i beaufort pt=acockbill ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        },
+        {
+          "parameters": "quagmire-i beaufort pt=ahankara ct=standard period=26",
+          "checks": 1,
+          "chance_probability": 0.038461538461538464
+        }
+      ]
+    }
+  ],
+  "route_any_substitution": {
+    "family": "route-plus-any-substitution",
+    "description": "Same routes and orders as route-plus-tableau, but any alphabet per key column (general periodic substitution); consistent means each key column maps plaintext to ciphertext one-to-one",
+    "routes": 18849,
+    "random_permutations": 200000,
+    "ciphertext_shuffles": 200,
+    "shuffle_max_period": 8,
+    "seed": 1,
+    "rows": [
+      {
+        "period": 1,
+        "configurations": 37698,
+        "consistent": 0,
+        "random_rate": 0.0,
+        "expected_by_random_permutation": 0.0,
+        "expected_by_ciphertext_shuffle": 0.0,
+        "shuffle_p_value": 1.0,
+        "examples": []
+      },
+      {
+        "period": 2,
+        "configurations": 37698,
+        "consistent": 0,
+        "random_rate": 0.0,
+        "expected_by_random_permutation": 0.0,
+        "expected_by_ciphertext_shuffle": 0.0,
+        "shuffle_p_value": 1.0,
+        "examples": []
+      },
+      {
+        "period": 3,
+        "configurations": 37698,
+        "consistent": 14,
+        "random_rate": 0.0001225,
+        "expected_by_random_permutation": 4.618005,
+        "expected_by_ciphertext_shuffle": 7.085,
+        "shuffle_p_value": 0.065,
+        "examples": [
+          "transpose-then-substitute diagonals-snake width=40 reversed",
+          "transpose-then-substitute columns-up width=47 inverse reversed",
+          "transpose-then-substitute double-rotate-cw widths=4,48 reversed",
+          "transpose-then-substitute double-rotate-cw widths=6,33",
+          "transpose-then-substitute double-rotate-cw widths=6,33 reversed",
+          "transpose-then-substitute double-rotate-cw widths=7,47 inverse reversed",
+          "transpose-then-substitute double-rotate-cw widths=14,47 inverse",
+          "transpose-then-substitute double-rotate-ccw widths=2,14 reversed",
+          "transpose-then-substitute double-rotate-ccw widths=9,24 reversed",
+          "transpose-then-substitute double-rotate-ccw widths=14,48 inverse"
+        ]
+      },
+      {
+        "period": 4,
+        "configurations": 37698,
+        "consistent": 70,
+        "random_rate": 0.0014725,
+        "expected_by_random_permutation": 55.510305,
+        "expected_by_ciphertext_shuffle": 59.09,
+        "shuffle_p_value": 0.275,
+        "examples": [
+          "transpose-then-substitute columns-down width=3",
+          "transpose-then-substitute rows-snake width=5",
+          "transpose-then-substitute rows-snake width=5 reversed",
+          "transpose-then-substitute columns-snake width=11 inverse",
+          "transpose-then-substitute columns-down-rtl width=24 inverse",
+          "transpose-then-substitute columns-up-rtl width=24 inverse",
+          "transpose-then-substitute columns-up-rtl width=24 inverse reversed",
+          "transpose-then-substitute columns-down width=33 inverse",
+          "transpose-then-substitute columns-down-rtl width=36 inverse reversed",
+          "transpose-then-substitute columns-up width=39 inverse"
+        ]
+      },
+      {
+        "period": 5,
+        "configurations": 37698,
+        "consistent": 182,
+        "random_rate": 0.00372,
+        "expected_by_random_permutation": 140.23656,
+        "expected_by_ciphertext_shuffle": 223.325,
+        "shuffle_p_value": 0.775,
+        "examples": [
+          "transpose-then-substitute columns-down width=3 inverse",
+          "transpose-then-substitute rows-snake width=19",
+          "transpose-then-substitute columns-up width=22 inverse reversed",
+          "transpose-then-substitute columns-down width=25",
+          "transpose-then-substitute columns-up width=28 inverse",
+          "transpose-then-substitute columns-up width=29 reversed",
+          "transpose-then-substitute columns-down width=30 reversed",
+          "transpose-then-substitute diagonals-snake width=34 inverse",
+          "transpose-then-substitute diagonals-snake width=34 inverse reversed",
+          "transpose-then-substitute columns-up-rtl width=44 inverse reversed"
+        ]
+      },
+      {
+        "period": 6,
+        "configurations": 37698,
+        "consistent": 5280,
+        "random_rate": 0.1358825,
+        "expected_by_random_permutation": 5122.498484999999,
+        "expected_by_ciphertext_shuffle": 5165.88,
+        "shuffle_p_value": 0.315,
+        "examples": [
+          "transpose-then-substitute columns-down width=2",
+          "transpose-then-substitute columns-down width=2 reversed",
+          "transpose-then-substitute columns-up width=2",
+          "transpose-then-substitute columns-up width=2 reversed",
+          "substitute-then-transpose columns-snake width=2 inverse",
+          "substitute-then-transpose spiral-cw width=2",
+          "substitute-then-transpose diagonals-snake width=2 reversed",
+          "substitute-then-transpose columns-down width=3",
+          "transpose-then-substitute columns-down width=3",
+          "transpose-then-substitute columns-down width=3 reversed"
+        ]
+      },
+      {
+        "period": 7,
+        "configurations": 37698,
+        "consistent": 6728,
+        "random_rate": 0.171725,
+        "expected_by_random_permutation": 6473.68905,
+        "expected_by_ciphertext_shuffle": 6997.375,
+        "shuffle_p_value": 0.815,
+        "examples": [
+          "transpose-then-substitute columns-down width=2",
+          "transpose-then-substitute columns-down width=2 reversed",
+          "substitute-then-transpose columns-down width=2 inverse reversed",
+          "substitute-then-transpose columns-down-rtl width=2 inverse",
+          "substitute-then-transpose columns-snake width=2 reversed",
+          "substitute-then-transpose rows-snake width=2 reversed",
+          "substitute-then-transpose spiral-cw width=2",
+          "substitute-then-transpose spiral-cw width=2 reversed",
+          "substitute-then-transpose columns-down width=3",
+          "substitute-then-transpose columns-down width=3 inverse reversed"
+        ]
+      },
+      {
+        "period": 8,
+        "configurations": 37698,
+        "consistent": 8976,
+        "random_rate": 0.226195,
+        "expected_by_random_permutation": 8527.099110000001,
+        "expected_by_ciphertext_shuffle": 8321.815,
+        "shuffle_p_value": 0.09,
+        "examples": [
+          "transpose-then-substitute columns-down width=2",
+          "substitute-then-transpose columns-down width=2 inverse",
+          "transpose-then-substitute columns-down width=2 reversed",
+          "transpose-then-substitute columns-up width=2",
+          "transpose-then-substitute columns-up width=2 reversed",
+          "substitute-then-transpose columns-down-rtl width=2 inverse reversed",
+          "substitute-then-transpose columns-snake width=2 inverse",
+          "substitute-then-transpose rows-snake width=2",
+          "transpose-then-substitute rows-snake width=2",
+          "substitute-then-transpose rows-snake width=2 reversed"
+        ]
+      },
+      {
+        "period": 9,
+        "configurations": 37698,
+        "consistent": 2419,
+        "random_rate": 0.05948,
+        "expected_by_random_permutation": 2242.27704,
+        "expected_by_ciphertext_shuffle": null,
+        "shuffle_p_value": null,
+        "examples": [
+          "transpose-then-substitute columns-down width=3",
+          "transpose-then-substitute columns-down width=3 reversed",
+          "transpose-then-substitute columns-up width=4",
+          "transpose-then-substitute columns-up width=4 reversed",
+          "transpose-then-substitute spiral-ccw width=4 reversed",
+          "transpose-then-substitute columns-down width=6",
+          "transpose-then-substitute columns-snake width=6",
+          "transpose-then-substitute diagonals width=6 inverse",
+          "transpose-then-substitute diagonals width=6 inverse reversed",
+          "transpose-then-substitute diagonals-snake width=6 inverse"
+        ]
+      },
+      {
+        "period": 10,
+        "configurations": 37698,
+        "consistent": 11483,
+        "random_rate": 0.2932825,
+        "expected_by_random_permutation": 11056.163685,
+        "expected_by_ciphertext_shuffle": null,
+        "shuffle_p_value": null,
+        "examples": [
+          "substitute-then-transpose columns-down width=2 inverse",
+          "substitute-then-transpose columns-down-rtl width=2 inverse reversed",
+          "substitute-then-transpose rows-snake width=2",
+          "substitute-then-transpose rows-snake width=2 reversed",
+          "substitute-then-transpose spiral-cw width=2 inverse",
+          "substitute-then-transpose diagonals width=2 reversed",
+          "transpose-then-substitute diagonals width=2 reversed",
+          "substitute-then-transpose diagonals-snake width=2",
+          "substitute-then-transpose diagonals-snake width=2 reversed",
+          "substitute-then-transpose columns-down width=3"
+        ]
+      },
+      {
+        "period": 11,
+        "configurations": 37698,
+        "consistent": 13863,
+        "random_rate": 0.3532025,
+        "expected_by_random_permutation": 13315.027844999999,
+        "expected_by_ciphertext_shuffle": null,
+        "shuffle_p_value": null,
+        "examples": [
+          "substitute-then-transpose columns-down width=2 inverse reversed",
+          "substitute-then-transpose columns-down-rtl width=2 inverse",
+          "transpose-then-substitute columns-down-rtl width=2 inverse",
+          "substitute-then-transpose columns-snake width=2",
+          "substitute-then-transpose columns-snake width=2 inverse",
+          "transpose-then-substitute columns-snake width=2 inverse",
+          "substitute-then-transpose columns-snake width=2 reversed",
+          "substitute-then-transpose rows-snake width=2",
+          "substitute-then-transpose spiral-cw width=2",
+          "substitute-then-transpose spiral-cw width=2 inverse"
+        ]
+      },
+      {
+        "period": 12,
+        "configurations": 37698,
+        "consistent": 16531,
+        "random_rate": 0.42378,
+        "expected_by_random_permutation": 15975.65844,
+        "expected_by_ciphertext_shuffle": null,
+        "shuffle_p_value": null,
+        "examples": [
+          "substitute-then-transpose columns-down width=2",
+          "transpose-then-substitute columns-down width=2",
+          "substitute-then-transpose columns-down width=2 inverse",
+          "transpose-then-substitute columns-down width=2 inverse",
+          "substitute-then-transpose columns-down width=2 reversed",
+          "transpose-then-substitute columns-down width=2 reversed",
+          "substitute-then-transpose columns-up width=2",
+          "transpose-then-substitute columns-up width=2",
+          "substitute-then-transpose columns-up width=2 reversed",
+          "transpose-then-substitute columns-up width=2 reversed"
+        ]
+      },
+      {
+        "period": 13,
+        "configurations": 37698,
+        "consistent": 18591,
+        "random_rate": 0.46661,
+        "expected_by_random_permutation": 17590.26378,
+        "expected_by_ciphertext_shuffle": null,
+        "shuffle_p_value": null,
+        "examples": [
+          "transpose-then-substitute columns-down width=2",
+          "substitute-then-transpose columns-down width=2 inverse",
+          "transpose-then-substitute columns-down width=2 reversed",
+          "substitute-then-transpose columns-down width=2 inverse reversed",
+          "transpose-then-substitute columns-down width=2 inverse reversed",
+          "substitute-then-transpose columns-down-rtl width=2 inverse",
+          "transpose-then-substitute columns-down-rtl width=2 inverse",
+          "substitute-then-transpose columns-down-rtl width=2 inverse reversed",
+          "substitute-then-transpose columns-snake width=2",
+          "transpose-then-substitute columns-snake width=2 inverse"
+        ]
+      },
+      {
+        "period": 14,
+        "configurations": 37698,
+        "consistent": 17971,
+        "random_rate": 0.45662,
+        "expected_by_random_permutation": 17213.660760000002,
+        "expected_by_ciphertext_shuffle": null,
+        "shuffle_p_value": null,
+        "examples": [
+          "substitute-then-transpose columns-down width=2",
+          "transpose-then-substitute columns-down width=2",
+          "substitute-then-transpose columns-down width=2 reversed",
+          "transpose-then-substitute columns-down width=2 reversed",
+          "substitute-then-transpose columns-down width=2 inverse reversed",
+          "transpose-then-substitute columns-down width=2 inverse reversed",
+          "substitute-then-transpose columns-up width=2",
+          "substitute-then-transpose columns-up width=2 reversed",
+          "substitute-then-transpose columns-down-rtl width=2 inverse",
+          "transpose-then-substitute columns-down-rtl width=2 inverse"
+        ]
+      },
+      {
+        "period": 15,
+        "configurations": 37698,
+        "consistent": 5983,
+        "random_rate": 0.14501,
+        "expected_by_random_permutation": 5466.58698,
+        "expected_by_ciphertext_shuffle": null,
+        "shuffle_p_value": null,
+        "examples": [
+          "substitute-then-transpose columns-down width=2 inverse",
+          "transpose-then-substitute columns-down width=2 inverse reversed",
+          "transpose-then-substitute columns-down-rtl width=2 inverse",
+          "transpose-then-substitute columns-snake width=2 inverse",
+          "transpose-then-substitute spiral-cw width=2",
+          "transpose-then-substitute spiral-cw width=2 inverse",
+          "transpose-then-substitute spiral-cw width=2 inverse reversed",
+          "transpose-then-substitute columns-down width=3 inverse",
+          "transpose-then-substitute columns-down width=3 inverse reversed",
+          "transpose-then-substitute columns-up width=3 inverse"
+        ]
+      },
+      {
+        "period": 16,
+        "configurations": 37698,
+        "consistent": 20492,
+        "random_rate": 0.520605,
+        "expected_by_random_permutation": 19625.76729,
+        "expected_by_ciphertext_shuffle": null,
+        "shuffle_p_value": null,
+        "examples": [
+          "substitute-then-transpose columns-down width=2",
+          "transpose-then-substitute columns-down width=2",
+          "substitute-then-transpose columns-down width=2 inverse",
+          "transpose-then-substitute columns-down width=2 inverse",
+          "substitute-then-transpose columns-down width=2 reversed",
+          "transpose-then-substitute columns-down width=2 reversed",
+          "transpose-then-substitute columns-down width=2 inverse reversed",
+          "substitute-then-transpose columns-up width=2",
+          "transpose-then-substitute columns-up width=2",
+          "substitute-then-transpose columns-up width=2 reversed"
+        ]
+      },
+      {
+        "period": 17,
+        "configurations": 37698,
+        "consistent": 7265,
+        "random_rate": 0.175645,
+        "expected_by_random_permutation": 6621.465209999999,
+        "expected_by_ciphertext_shuffle": null,
+        "shuffle_p_value": null,
+        "examples": [
+          "transpose-then-substitute columns-down width=2 inverse",
+          "transpose-then-substitute columns-down-rtl width=2 inverse reversed",
+          "transpose-then-substitute columns-snake width=2 inverse reversed",
+          "transpose-then-substitute rows-snake width=2",
+          "transpose-then-substitute spiral-cw width=2 inverse",
+          "transpose-then-substitute spiral-cw width=2 inverse reversed",
+          "transpose-then-substitute diagonals-snake width=2 reversed",
+          "substitute-then-transpose columns-down width=3",
+          "transpose-then-substitute columns-down width=3 inverse",
+          "transpose-then-substitute columns-down width=3 inverse reversed"
+        ]
+      },
+      {
+        "period": 18,
+        "configurations": 37698,
+        "consistent": 22995,
+        "random_rate": 0.60092,
+        "expected_by_random_permutation": 22653.48216,
+        "expected_by_ciphertext_shuffle": null,
+        "shuffle_p_value": null,
+        "examples": [
+          "substitute-then-transpose columns-down width=2",
+          "transpose-then-substitute columns-down width=2",
+          "substitute-then-transpose columns-down width=2 inverse",
+          "substitute-then-transpose columns-down width=2 reversed",
+          "transpose-then-substitute columns-down width=2 reversed",
+          "substitute-then-transpose columns-down width=2 inverse reversed",
+          "substitute-then-transpose columns-up width=2",
+          "transpose-then-substitute columns-up width=2",
+          "substitute-then-transpose columns-up width=2 reversed",
+          "transpose-then-substitute columns-up width=2 reversed"
+        ]
+      },
+      {
+        "period": 19,
+        "configurations": 37698,
+        "consistent": 8877,
+        "random_rate": 0.2126725,
+        "expected_by_random_permutation": 8017.327904999999,
+        "expected_by_ciphertext_shuffle": null,
+        "shuffle_p_value": null,
+        "examples": [
+          "transpose-then-substitute columns-down width=2 inverse",
+          "transpose-then-substitute columns-down width=2 inverse reversed",
+          "substitute-then-transpose columns-up width=2 reversed",
+          "transpose-then-substitute columns-up width=2 reversed",
+          "transpose-then-substitute columns-down-rtl width=2 inverse",
+          "transpose-then-substitute columns-down-rtl width=2 inverse reversed",
+          "transpose-then-substitute columns-snake width=2 inverse",
+          "substitute-then-transpose columns-snake width=2 reversed",
+          "transpose-then-substitute columns-snake width=2 reversed",
+          "transpose-then-substitute columns-snake width=2 inverse reversed"
+        ]
+      },
+      {
+        "period": 20,
+        "configurations": 37698,
+        "consistent": 20861,
+        "random_rate": 0.5409325,
+        "expected_by_random_permutation": 20392.073385,
+        "expected_by_ciphertext_shuffle": null,
+        "shuffle_p_value": null,
+        "examples": [
+          "substitute-then-transpose columns-down width=2 inverse",
+          "transpose-then-substitute columns-down width=2 inverse",
+          "transpose-then-substitute columns-down width=2 inverse reversed",
+          "transpose-then-substitute columns-down-rtl width=2 inverse",
+          "substitute-then-transpose columns-down-rtl width=2 inverse reversed",
+          "transpose-then-substitute columns-down-rtl width=2 inverse reversed",
+          "substitute-then-transpose columns-snake width=2 inverse",
+          "transpose-then-substitute columns-snake width=2 inverse",
+          "transpose-then-substitute columns-snake width=2 inverse reversed",
+          "substitute-then-transpose rows-snake width=2"
+        ]
+      },
+      {
+        "period": 21,
+        "configurations": 37698,
+        "consistent": 20632,
+        "random_rate": 0.5383,
+        "expected_by_random_permutation": 20292.8334,
+        "expected_by_ciphertext_shuffle": null,
+        "shuffle_p_value": null,
+        "examples": [
+          "substitute-then-transpose columns-down width=2",
+          "transpose-then-substitute columns-down width=2",
+          "substitute-then-transpose columns-down width=2 reversed",
+          "transpose-then-substitute columns-down width=2 reversed",
+          "substitute-then-transpose columns-down width=2 inverse reversed",
+          "substitute-then-transpose columns-up width=2",
+          "transpose-then-substitute columns-up width=2",
+          "substitute-then-transpose columns-up width=2 reversed",
+          "transpose-then-substitute columns-up width=2 reversed",
+          "substitute-then-transpose columns-down-rtl width=2 inverse"
+        ]
+      },
+      {
+        "period": 22,
+        "configurations": 37698,
+        "consistent": 23223,
+        "random_rate": 0.592175,
+        "expected_by_random_permutation": 22323.81315,
+        "expected_by_ciphertext_shuffle": null,
+        "shuffle_p_value": null,
+        "examples": [
+          "substitute-then-transpose columns-down width=2",
+          "transpose-then-substitute columns-down width=2 inverse",
+          "substitute-then-transpose columns-down width=2 reversed",
+          "substitute-then-transpose columns-down width=2 inverse reversed",
+          "transpose-then-substitute columns-down width=2 inverse reversed",
+          "substitute-then-transpose columns-up width=2",
+          "substitute-then-transpose columns-up width=2 reversed",
+          "substitute-then-transpose columns-down-rtl width=2 inverse",
+          "transpose-then-substitute columns-down-rtl width=2 inverse",
+          "substitute-then-transpose columns-down-rtl width=2 inverse reversed"
+        ]
+      },
+      {
+        "period": 23,
+        "configurations": 37698,
+        "consistent": 25437,
+        "random_rate": 0.6547925,
+        "expected_by_random_permutation": 24684.367665,
+        "expected_by_ciphertext_shuffle": null,
+        "shuffle_p_value": null,
+        "examples": [
+          "substitute-then-transpose columns-down width=2",
+          "transpose-then-substitute columns-down width=2",
+          "substitute-then-transpose columns-down width=2 inverse",
+          "transpose-then-substitute columns-down width=2 inverse",
+          "substitute-then-transpose columns-down width=2 reversed",
+          "transpose-then-substitute columns-down width=2 reversed",
+          "substitute-then-transpose columns-down width=2 inverse reversed",
+          "transpose-then-substitute columns-down width=2 inverse reversed",
+          "substitute-then-transpose columns-up width=2",
+          "substitute-then-transpose columns-up width=2 reversed"
+        ]
+      },
+      {
+        "period": 24,
+        "configurations": 37698,
+        "consistent": 26392,
+        "random_rate": 0.69224,
+        "expected_by_random_permutation": 26096.06352,
+        "expected_by_ciphertext_shuffle": null,
+        "shuffle_p_value": null,
+        "examples": [
+          "substitute-then-transpose columns-down width=2",
+          "transpose-then-substitute columns-down width=2",
+          "substitute-then-transpose columns-down width=2 inverse",
+          "transpose-then-substitute columns-down width=2 inverse",
+          "substitute-then-transpose columns-down width=2 reversed",
+          "transpose-then-substitute columns-down width=2 reversed",
+          "transpose-then-substitute columns-down width=2 inverse reversed",
+          "substitute-then-transpose columns-up width=2",
+          "transpose-then-substitute columns-up width=2",
+          "substitute-then-transpose columns-up width=2 reversed"
+        ]
+      },
+      {
+        "period": 25,
+        "configurations": 37698,
+        "consistent": 25749,
+        "random_rate": 0.6630175,
+        "expected_by_random_permutation": 24994.433715000003,
+        "expected_by_ciphertext_shuffle": null,
+        "shuffle_p_value": null,
+        "examples": [
+          "substitute-then-transpose columns-down width=2 inverse",
+          "transpose-then-substitute columns-down width=2 inverse",
+          "substitute-then-transpose columns-down width=2 reversed",
+          "substitute-then-transpose columns-down width=2 inverse reversed",
+          "transpose-then-substitute columns-down width=2 inverse reversed",
+          "substitute-then-transpose columns-up width=2",
+          "transpose-then-substitute columns-up width=2",
+          "substitute-then-transpose columns-down-rtl width=2 inverse",
+          "transpose-then-substitute columns-down-rtl width=2 inverse",
+          "substitute-then-transpose columns-down-rtl width=2 inverse reversed"
+        ]
+      },
+      {
+        "period": 26,
+        "configurations": 37698,
+        "consistent": 30474,
+        "random_rate": 0.7857475,
+        "expected_by_random_permutation": 29621.109255000003,
+        "expected_by_ciphertext_shuffle": null,
+        "shuffle_p_value": null,
+        "examples": [
+          "substitute-then-transpose columns-down width=2",
+          "transpose-then-substitute columns-down width=2",
+          "substitute-then-transpose columns-down width=2 inverse",
+          "transpose-then-substitute columns-down width=2 inverse",
+          "substitute-then-transpose columns-down width=2 reversed",
+          "transpose-then-substitute columns-down width=2 reversed",
+          "substitute-then-transpose columns-down width=2 inverse reversed",
+          "transpose-then-substitute columns-down width=2 inverse reversed",
+          "substitute-then-transpose columns-up width=2",
+          "substitute-then-transpose columns-up width=2 reversed"
+        ]
+      }
+    ]
+  },
+  "quagmire_any_alphabet": {
+    "rows": [
+      {
+        "kind": "quagmire-i",
+        "period": 1,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 2,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 3,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 4,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 5,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 6,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 7,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 8,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 9,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 10,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 11,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 12,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 13,
+        "k4_consistent": true,
+        "shuffle_rate": 0.21464267866066966
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 14,
+        "k4_consistent": false,
+        "shuffle_rate": 0.01074462768615692
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 15,
+        "k4_consistent": false,
+        "shuffle_rate": 0.017241379310344827
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 16,
+        "k4_consistent": true,
+        "shuffle_rate": 0.4645177411294353
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 17,
+        "k4_consistent": false,
+        "shuffle_rate": 0.024237881059470265
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 18,
+        "k4_consistent": false,
+        "shuffle_rate": 0.6534232883558221
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 19,
+        "k4_consistent": true,
+        "shuffle_rate": 0.015242378810594703
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 20,
+        "k4_consistent": false,
+        "shuffle_rate": 0.16616691654172913
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 21,
+        "k4_consistent": false,
+        "shuffle_rate": 0.01074462768615692
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 22,
+        "k4_consistent": false,
+        "shuffle_rate": 0.020739630184907546
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 23,
+        "k4_consistent": true,
+        "shuffle_rate": 0.6039480259870065
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 24,
+        "k4_consistent": true,
+        "shuffle_rate": 0.8003498250874562
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 25,
+        "k4_consistent": false,
+        "shuffle_rate": 0.9062968515742129
+      },
+      {
+        "kind": "quagmire-i",
+        "period": 26,
+        "k4_consistent": true,
+        "shuffle_rate": 0.9702648675662169
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 1,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 2,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 3,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 4,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 5,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 6,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0007496251874062968
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 7,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0017491254372813594
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 8,
+        "k4_consistent": false,
+        "shuffle_rate": 0.005247376311844078
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 9,
+        "k4_consistent": false,
+        "shuffle_rate": 0.0002498750624687656
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 10,
+        "k4_consistent": false,
+        "shuffle_rate": 0.05822088955522239
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 11,
+        "k4_consistent": false,
+        "shuffle_rate": 0.09770114942528736
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 12,
+        "k4_consistent": false,
+        "shuffle_rate": 0.1946526736631684
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 13,
+        "k4_consistent": false,
+        "shuffle_rate": 0.276111944027986
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 14,
+        "k4_consistent": false,
+        "shuffle_rate": 0.32658670664667666
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 15,
+        "k4_consistent": false,
+        "shuffle_rate": 0.020739630184907546
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 16,
+        "k4_consistent": true,
+        "shuffle_rate": 0.5704647676161919
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 17,
+        "k4_consistent": false,
+        "shuffle_rate": 0.023238380809595203
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 18,
+        "k4_consistent": false,
+        "shuffle_rate": 0.6304347826086957
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 19,
+        "k4_consistent": true,
+        "shuffle_rate": 0.02123938030984508
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 20,
+        "k4_consistent": true,
+        "shuffle_rate": 0.3060969515242379
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 21,
+        "k4_consistent": false,
+        "shuffle_rate": 0.32658670664667666
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 22,
+        "k4_consistent": false,
+        "shuffle_rate": 0.40004997501249373
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 23,
+        "k4_consistent": true,
+        "shuffle_rate": 0.6854072963518241
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 24,
+        "k4_consistent": true,
+        "shuffle_rate": 0.7948525737131434
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 25,
+        "k4_consistent": false,
+        "shuffle_rate": 0.8938030984507747
+      },
+      {
+        "kind": "quagmire-ii",
+        "period": 26,
+        "k4_consistent": true,
+        "shuffle_rate": 0.9702648675662169
+      }
+    ],
+    "shuffles": 2000,
+    "seed": 1,
+    "k4_surprisal": 13.48095380938347,
+    "null_mean_surprisal": 6.366138828064809,
+    "surprisal_p_value": 0.0485
+  },
+  "promoted_candidate": false,
+  "note": "A configuration survives only if it passes every anchor check it has. Survivors with few checks are expected by chance (compare expected_chance_survivors); none is a decryption or a promoted candidate."
+}

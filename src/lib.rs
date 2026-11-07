@@ -14,6 +14,7 @@ pub mod key_language;
 pub mod key_test;
 pub mod release_check;
 pub mod report;
+pub mod route_elimination;
 pub mod routes;
 
 pub use alphabet::{Alphabet, AlphabetKind};
@@ -42,8 +43,9 @@ pub use data::{
     sources,
 };
 pub use eliminate::{
-    EliminationOptions, EliminationReport, FamilyElimination, RunningKeyReport, StructuralFacts,
-    normalize_letters, run_elimination, scan_running_key, structural_facts,
+    EliminationOptions, EliminationReport, FamilyElimination, Problem, QuagmireSide,
+    RunningKeyReport, StructuralFacts, eliminate_dictionary_quagmire, normalize_letters,
+    quagmire_any_alphabet_consistent, run_elimination, scan_running_key, structural_facts,
 };
 pub use findings::{Finding, findings};
 pub use hypotheses::{Hypothesis, hypotheses};
@@ -60,4 +62,5 @@ pub use key_test::{
 };
 pub use release_check::{ReleaseCheck, run_release_checks};
 pub use report::{Report, ReportFormat, build_report, render_report};
+pub use route_elimination::{AnySubstitutionRow, AnySubstitutionSummary, Route, registered_routes};
 pub use routes::{RouteExperiment, RouteFamily, registered_route_families, run_route_experiments};

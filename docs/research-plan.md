@@ -141,8 +141,11 @@ all 24 public anchor letters at their positions. Chance agreement is about
    Carter text is a direct running key (F16), and no registered tableau
    implies an English-looking key at the anchors, so a running key from any
    English text is eliminated for those alphabets (F17).
-3. Done for keyed columnar width 2–8 (`eliminate`). Still open: route
-   transpositions, longer keys, and non-keyword alphabets.
+3. Done (`eliminate`): keyed columnar width 2–8, and route transpositions
+   (columns, serpentines, spirals, diagonals, K3-style double rotations, grid
+   width 2–48) with periodic tableaux or any per-column alphabets (F18).
+4. Next: a closing synthesis of what the anchors rule out and which method
+   classes remain open (`docs/conclusions.md`).
 
 ## Decision Log
 

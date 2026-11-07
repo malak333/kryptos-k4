@@ -1,13 +1,37 @@
 use super::OutputFormat;
 use anyhow::{Context, Result, bail};
 use kryptos_k4::{
-    EliminationOptions, EliminationReport, KeyLanguageOptions, KeyLanguageReport, RunningKeyReport,
-    key_language, normalize_letters, run_elimination, scan_running_key,
+    EliminationOptions, EliminationReport, KeyLanguageOptions, KeyLanguageReport, Problem,
+    RunningKeyReport, eliminate_dictionary_quagmire, key_language, normalize_letters,
+    run_elimination, scan_running_key,
 };
 use std::{fs, path::PathBuf};
 
-pub(crate) fn print_eliminate(options: EliminationOptions, format: OutputFormat) -> Result<()> {
-    let report = run_elimination(options);
+pub(crate) fn print_eliminate(
+    options: EliminationOptions,
+    wordlists: &[PathBuf],
+    format: OutputFormat,
+) -> Result<()> {
+    let mut report = run_elimination(options);
+    if !wordlists.is_empty() {
+        let mut words = Vec::new();
+        for path in wordlists {
+            let text = fs::read_to_string(path)
+                .with_context(|| format!("failed to read word list `{}`", path.display()))?;
+            words.extend(
+                text.lines()
+                    .map(str::trim)
+                    .filter(|w| w.bytes().any(|b| b.is_ascii_alphabetic()))
+                    .map(str::to_string),
+            );
+        }
+        report.families.push(eliminate_dictionary_quagmire(
+            &Problem::k4(),
+            &words,
+            options.max_period,
+            options.top,
+        ));
+    }
     match format {
         OutputFormat::Json => println!("{}", serde_json::to_string_pretty(&report)?),
         OutputFormat::Markdown => print!("{}", render_elimination(&report)),
@@ -48,8 +72,34 @@ fn render_elimination(report: &EliminationReport) -> String {
         ));
     }
     out.push_str(&format!(
-        "- No periodic substitution (any alphabet per column) fits at periods: {:?} (checked 1..={}).\n\n",
+        "- No periodic substitution (any alphabet per column) fits at periods: {:?} (checked 1..={}).\n",
         facts.periodic_substitution_impossible_periods, facts.max_period_checked
+    ));
+    out.push_str(&format!(
+        "- No Quagmire I (any plaintext alphabet) fits at periods: {:?}.\n- No Quagmire II (any ciphertext alphabet) fits at periods: {:?}.\n\n",
+        facts.quagmire_i_any_alphabet_impossible_periods,
+        facts.quagmire_ii_any_alphabet_impossible_periods
+    ));
+    let quagmire = &report.quagmire_any_alphabet;
+    let passes: Vec<String> = quagmire
+        .rows
+        .iter()
+        .filter(|row| row.k4_consistent)
+        .map(|row| {
+            format!(
+                "{} period {} (shuffle rate {:.3})",
+                row.kind, row.period, row.shuffle_rate
+            )
+        })
+        .collect();
+    out.push_str(&format!(
+        "Quagmire I/II with any alphabet passes at: {}.\nCombined surprisal against {} ciphertext shuffles (seed {}): K4 {:.2}, null mean {:.2}, p = {:.3}.\n\n",
+        passes.join("; "),
+        quagmire.shuffles,
+        quagmire.seed,
+        quagmire.k4_surprisal,
+        quagmire.null_mean_surprisal,
+        quagmire.surprisal_p_value
     ));
 
     out.push_str("## Families\n\n");
@@ -82,6 +132,34 @@ fn render_elimination(report: &EliminationReport) -> String {
             out.push_str(&format!(
                 "- {} — {} checks, chance {:.2e}\n",
                 survivor.parameters, survivor.checks, survivor.chance_probability
+            ));
+        }
+        out.push('\n');
+    }
+    if let Some(any) = &report.route_any_substitution {
+        out.push_str(&format!(
+            "### `{}`\n\n{}\n\n{} routes; random-permutation null from {} permutations; ciphertext-shuffle null from {} shuffles for periods 1..={} (seed {}).\n\n",
+            any.family, any.description, any.routes, any.random_permutations, any.ciphertext_shuffles, any.shuffle_max_period, any.seed
+        ));
+        out.push_str("| Period | Configurations | Consistent | Random rate | Expected by random permutation | Expected by ciphertext shuffle | Shuffle p | Examples |\n| ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |\n");
+        for row in &any.rows {
+            out.push_str(&format!(
+                "| {} | {} | {} | {:.2e} | {:.1} | {} | {} | {} |\n",
+                row.period,
+                row.configurations,
+                row.consistent,
+                row.random_rate,
+                row.expected_by_random_permutation,
+                row.expected_by_ciphertext_shuffle
+                    .map_or("—".to_string(), |e| format!("{e:.1}")),
+                row.shuffle_p_value
+                    .map_or("—".to_string(), |p| format!("{p:.3}")),
+                row.examples
+                    .iter()
+                    .take(3)
+                    .cloned()
+                    .collect::<Vec<_>>()
+                    .join("; ")
             ));
         }
         out.push('\n');
