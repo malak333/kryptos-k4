@@ -7,6 +7,15 @@ Routine runs that repeat an earlier result do not get an entry.
 The earlier long-form log (96 entries, 2026-05-20 through 2026-06-01) is
 `experiments/PROGRESS_LOG.md` at git tag `pre-slimdown`.
 
+## 2026-11-04: Running keys (phase 5)
+
+- Preregistered a running-key corpus before scoring: K1–K3 plaintext and
+  ciphertext, tableau rows, and Carter Vol. I, forward and reversed. 10.2
+  million configurations, no full match, best 9/24 at chance level (F16).
+- Added `key-language`: no registered tableau implies an English-looking key
+  at the anchors (1 compatible of 8,103; 1.13 expected by chance). A running
+  key from any English text is eliminated for the registered alphabets (F17).
+
 ## 2026-11-04: Anchor elimination (phase 4)
 
 - Added `eliminate`: each configuration gets the anchor checks a correct

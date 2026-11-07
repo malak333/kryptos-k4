@@ -137,10 +137,10 @@ all 24 public anchor letters at their positions. Chance agreement is about
 1. Done (`eliminate`): Quagmire I–IV, plaintext and ciphertext autokey,
    Porta, Gronsfeld, and Gromark, with Bean's equality as a unit test. See
    `docs/negative-results.md`.
-2. Tool ready (`running-key`), not yet run: running keys from a fixed public
-   corpus (K1–K3 plaintexts, Carter's account, Berlin World Clock material,
-   Egypt 1986 and Berlin Wall 1989 texts) at every offset. Corpus texts are
-   not committed; record each file's source and checksum with its result.
+2. Done (`running-key`, `key-language`): no preregistered sculpture or
+   Carter text is a direct running key (F16), and no registered tableau
+   implies an English-looking key at the anchors, so a running key from any
+   English text is eliminated for those alphabets (F17).
 3. Done for keyed columnar width 2–8 (`eliminate`). Still open: route
    transpositions, longer keys, and non-keyword alphabets.
 

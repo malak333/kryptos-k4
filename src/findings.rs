@@ -187,6 +187,48 @@ pub fn findings() -> Vec<Finding> {
             next_test: "Run running-key offsets over a fixed public corpus with running-key, and extend elimination to route transpositions and non-keyword alphabets.",
             promoted_candidate: false,
         },
+        Finding {
+            id: "F16",
+            title: "No preregistered sculpture or Carter text is a direct running key",
+            related_hypothesis: "H1/H5",
+            source_inputs: &[
+                "experiments/running-key/preregistration.md",
+                "src/eliminate.rs",
+                "results/running-key/corpus-v1",
+            ],
+            transformation_steps: &[
+                "fix the corpus before scoring: K1-K3 plaintext, K1-K3 ciphertext, the tableau rows, and Carter and Mace's Tomb of Tut.ankh.Amen Vol. I (1923 OCR), each forward and reversed, identified by SHA-256",
+                "read the key at K4 position i as corpus letter offset + i, for every offset",
+                "count anchor letters reproduced on Vigenere, Beaufort, and variant Beaufort with standard and Kryptos alphabets, reading the key in each key alphabet",
+                "compare the best count with the binomial chance expectation at p = 1/26",
+            ],
+            output_summary: "10,242,288 configurations over eight corpora. No configuration reproduces all 24 anchor letters. The best scores are 6/24 for each sculpture text, 8/24 for Carter forward (10.3 configurations expected at that level by chance), and 9/24 for Carter reversed (0.72 expected).",
+            baseline_comparison: "Binomial tail at p = 1/26 per anchor letter times the configuration count. Every corpus's best is at or near its chance expectation; summed over the eight corpora about 1.5 configurations are expected at 9 or more.",
+            interpretation: "None of these texts is a direct running key for K4 under the standard or Kryptos tableaux. OCR errors could cost a true Carter key a few letters, but no offset comes near 24.",
+            next_test: "Test whether a running key from any English text fits any registered tableau (F17).",
+            promoted_candidate: false,
+        },
+        Finding {
+            id: "F17",
+            title: "A running key from any English text fits none of the registered tableaux",
+            related_hypothesis: "H1/H2",
+            source_inputs: &[
+                "experiments/running-key/preregistration.md",
+                "src/key_language.rs",
+                "results/running-key/key-language-v1",
+            ],
+            transformation_steps: &[
+                "train a smoothed trigram model on the first half of the Carter Vol. I letters",
+                "score held-out English windows from the second half at the 24 anchor positions of a 74-letter window, and set the threshold at their 0.1% quantile",
+                "for each of the 37 x 37 x 3 registered tableaux and each key alphabet, score the key letters implied at the two anchor runs (13 and 11 letters)",
+                "score 200,000 uniform random keys (seed 1) to estimate how many configurations pass by chance",
+            ],
+            output_summary: "8,103 configurations. One passes the threshold (Quagmire IV Vigenere, pt=enigma ct=carter, implied key CDHIRMEFADCNE FYEDNICKTHE, English quantile 1.25e-3) against 1.13 expected from random keys. Held-out English windows have median score -7.61; the best anchor-implied key scores -9.41.",
+            baseline_comparison: "Uniform random keys pass the threshold at rate 1.40e-4, so 1.13 of 8,103 configurations are expected to pass by chance; 1 passed.",
+            interpretation: "No registered tableau implies an English-looking key at the anchors, so a running key taken from any English text is eliminated for the registered alphabets. A true English key would be wrongly rejected about 0.1% of the time. Arbitrary unkeyed alphabets and non-English or enciphered key texts remain open.",
+            next_test: "Extend anchor elimination to route transpositions combined with periodic tableaux.",
+            promoted_candidate: false,
+        },
     ]
 }
 

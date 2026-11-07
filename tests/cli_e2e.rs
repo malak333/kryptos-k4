@@ -1318,7 +1318,9 @@ fn findings_json_is_parseable_and_non_promotional() {
         .collect();
     assert_eq!(
         ids,
-        ["F1", "F2", "F3", "F4", "F5", "F6", "F13", "F14", "F15"]
+        [
+            "F1", "F2", "F3", "F4", "F5", "F6", "F13", "F14", "F15", "F16", "F17"
+        ]
     );
     assert!(json.as_array().unwrap().iter().any(|finding| {
         finding["id"] == "F5"
@@ -1702,4 +1704,45 @@ fn running_key_finds_a_planted_key_and_rejects_short_corpora() {
         .assert()
         .failure()
         .stderr(predicate::str::contains("at least 74"));
+}
+
+#[test]
+fn key_language_reports_chance_comparison_and_rejects_short_corpora() {
+    let text = "the quick brown fox jumps over the lazy dog while the clock in the square \
+        strikes noon and the travellers rest beneath the old stone arch near the river "
+        .repeat(30);
+    let temp = tempfile::tempdir().unwrap();
+    let corpus_path = temp.path().join("english.txt");
+    std::fs::write(&corpus_path, &text).unwrap();
+
+    let output = Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args([
+            "key-language",
+            "--corpus",
+            corpus_path.to_str().unwrap(),
+            "--uniform-samples",
+            "2000",
+            "--format",
+            "json",
+        ])
+        .assert()
+        .success()
+        .get_output()
+        .stdout
+        .clone();
+    let json: Value = serde_json::from_slice(&output).unwrap();
+    assert_eq!(json["anchor_runs"], serde_json::json!([13, 11]));
+    assert_eq!(json["configurations"], 8103);
+    assert!(json["english_median"].as_f64().unwrap() > json["uniform_median"].as_f64().unwrap());
+    assert_eq!(json["promoted_candidate"], false);
+
+    let short_path = temp.path().join("short.txt");
+    std::fs::write(&short_path, "TOO SHORT").unwrap();
+    Command::cargo_bin("kryptos-k4")
+        .unwrap()
+        .args(["key-language", "--corpus", short_path.to_str().unwrap()])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("at least 2000"));
 }

@@ -1,0 +1,247 @@
+{
+  "training_letters": 141196,
+  "heldout_windows": 141123,
+  "anchor_runs": [
+    13,
+    11
+  ],
+  "configurations": 8103,
+  "quantile": 0.001,
+  "threshold": -9.482520983426344,
+  "english_median": -7.61487065135825,
+  "uniform_samples": 200000,
+  "uniform_median": -11.744905447536883,
+  "uniform_pass_rate": 0.00014,
+  "expected_compatible_by_chance": 1.13442,
+  "compatible": 1,
+  "top": [
+    {
+      "tableau": "quagmire-iv vigenere pt=enigma ct=carter key=pt",
+      "key_fragments": [
+        "CDHIRMEFADCNE",
+        "FYEDNICKTHE"
+      ],
+      "score": -9.41104029787417,
+      "english_quantile": 0.0012471390205707079
+    },
+    {
+      "tableau": "quagmire-iv vigenere pt=enigma ct=urania key=pt",
+      "key_fragments": [
+        "FFFIRMEDTHDNE",
+        "XYEDSTDKVHN"
+      ],
+      "score": -9.499476959204527,
+      "english_quantile": 0.0009566123169150316
+    },
+    {
+      "tableau": "quagmire-iv vigenere pt=weltzeituhr ct=langley key=ct",
+      "key_fragments": [
+        "DQVSZXDOUNEWP",
+        "REDTONGWPYW"
+      ],
+      "score": -9.85112475768506,
+      "english_quantile": 0.00041098899541534687
+    },
+    {
+      "tableau": "quagmire-iv beaufort pt=worldclock ct=urania key=pt",
+      "key_fragments": [
+        "QUTMBSSUMSTHI",
+        "GASYAFTRFVS"
+      ],
+      "score": -9.855108530323612,
+      "english_quantile": 0.00040390297825301335
+    },
+    {
+      "tableau": "quagmire-iv vigenere pt=urania ct=lodestone key=pt",
+      "key_fragments": [
+        "AYURMAOZVNKHG",
+        "ROODRAGHTHA"
+      ],
+      "score": -9.944817388910822,
+      "english_quantile": 0.0003259567894673441
+    },
+    {
+      "tableau": "quagmire-iv variant-beaufort pt=layertwo ct=magnetic key=pt",
+      "key_fragments": [
+        "PHEDAKIHDAIYG",
+        "TTITCHCAVPE"
+      ],
+      "score": -9.989962739107069,
+      "english_quantile": 0.00025509661784400844
+    },
+    {
+      "tableau": "quagmire-iv vigenere pt=tutankhamun ct=scheidt key=pt",
+      "key_fragments": [
+        "ZFZVLAYRETEMT",
+        "CJYMRNMERDC"
+      ],
+      "score": -9.994448599196485,
+      "english_quantile": 0.00024092458351934127
+    },
+    {
+      "tableau": "quagmire-iv variant-beaufort pt=weltzeituhr ct=lodestone key=ct",
+      "key_fragments": [
+        "PCEBLOPFOMUQZ",
+        "SEPALIVECUO"
+      ],
+      "score": -10.037854283432058,
+      "english_quantile": 0.000212580514870007
+    },
+    {
+      "tableau": "quagmire-iv variant-beaufort pt=enigma ct=tutankhamun key=pt",
+      "key_fragments": [
+        "PQZYFWEECONYZ",
+        "GIESINNOGQD"
+      ],
+      "score": -10.039697769031802,
+      "english_quantile": 0.000212580514870007
+    },
+    {
+      "tableau": "quagmire-iv variant-beaufort pt=memory ct=tutankhamun key=pt",
+      "key_fragments": [
+        "NNMZXGIEDLEZM",
+        "RRITINENPNG"
+      ],
+      "score": -10.06270883392876,
+      "english_quantile": 0.000212580514870007
+    },
+    {
+      "tableau": "quagmire-iv vigenere pt=memory ct=undergruund key=ct",
+      "key_fragments": [
+        "CFINDOLHORCUZ",
+        "VXLACRCHBHZ"
+      ],
+      "score": -10.065814042210452,
+      "english_quantile": 0.000212580514870007
+    },
+    {
+      "tableau": "quagmire-iv vigenere pt=pyramid ct=worldclock key=ct",
+      "key_fragments": [
+        "OWERROMBDRLWZ",
+        "EMMAMDAFSEQ"
+      ],
+      "score": -10.085746485319435,
+      "english_quantile": 0.00020549449770767344
+    },
+    {
+      "tableau": "quagmire-iv beaufort pt=giza ct=tutankhamun key=pt",
+      "key_fragments": [
+        "RRLODEHMLSEMN",
+        "ECHEINKKGVO"
+      ],
+      "score": -10.1170532794326,
+      "english_quantile": 0.00019132246338300632
+    },
+    {
+      "tableau": "quagmire-iv variant-beaufort pt=enigma ct=cairo key=pt",
+      "key_fragments": [
+        "SSPYHXNQVRTEN",
+        "RINSFDTOBRE"
+      ],
+      "score": -10.1234981728069,
+      "english_quantile": 0.00018423644622067275
+    },
+    {
+      "tableau": "quagmire-iv variant-beaufort pt=mengenlehreuhr ct=palimpsest key=ct",
+      "key_fragments": [
+        "NEPZDYEAKKRJK",
+        "RIECEVESSDP"
+      ],
+      "score": -10.157130040337647,
+      "english_quantile": 0.00015589237757133848
+    },
+    {
+      "tableau": "quagmire-iv vigenere pt=kryptos ct=enigma key=pt",
+      "key_fragments": [
+        "XSELWEHGGMOFH",
+        "NGHTTKUBTSF"
+      ],
+      "score": -10.1624953882617,
+      "english_quantile": 0.00015589237757133848
+    },
+    {
+      "tableau": "quagmire-iv vigenere pt=shadow ct=sanborn key=ct",
+      "key_fragments": [
+        "AJRANKYHANISC",
+        "WMYDEBFHRGA"
+      ],
+      "score": -10.16376716656496,
+      "english_quantile": 0.0001488063604090049
+    },
+    {
+      "tableau": "quagmire-iv vigenere pt=urania ct=shadow key=ct",
+      "key_fragments": [
+        "HJSAMANZWAICB",
+        "INNENPFIRIS"
+      ],
+      "score": -10.168748303396502,
+      "english_quantile": 0.0001488063604090049
+    },
+    {
+      "tableau": "quagmire-iv variant-beaufort pt=lodestone ct=magnetic key=pt",
+      "key_fragments": [
+        "RRHFKFEICOUGH",
+        "TTETBOCOPRD"
+      ],
+      "score": -10.176816831157305,
+      "english_quantile": 0.0001488063604090049
+    },
+    {
+      "tableau": "quagmire-iv beaufort pt=memory ct=pyramid key=pt",
+      "key_fragments": [
+        "HTUNDTRVEISIJ",
+        "VORHBGHKICO"
+      ],
+      "score": -10.179091591251325,
+      "english_quantile": 0.0001488063604090049
+    },
+    {
+      "tableau": "quagmire-iv beaufort pt=giza ct=scheidt key=pt",
+      "key_fragments": [
+        "PPLODEHMXQOST",
+        "SCHEETSKXVW"
+      ],
+      "score": -10.218515883752149,
+      "english_quantile": 0.00012046229175967064
+    },
+    {
+      "tableau": "quagmire-iv vigenere pt=undergruund ct=worldclock key=ct",
+      "key_fragments": [
+        "AXERPRIBKBWWZ",
+        "EUIBESAGTES"
+      ],
+      "score": -10.243266277914914,
+      "english_quantile": 0.0001062902574350035
+    },
+    {
+      "tableau": "quagmire-iv variant-beaufort pt=digetal ct=mengenlehreuhr key=ct",
+      "key_fragments": [
+        "PEIBWXEYAMOMD",
+        "HHEDUTAUGPX"
+      ],
+      "score": -10.243937489979889,
+      "english_quantile": 0.0001062902574350035
+    },
+    {
+      "tableau": "quagmire-iv vigenere pt=pyramid ct=howardcarter key=pt",
+      "key_fragments": [
+        "YHGRARNFIRGYP",
+        "FLNBROCFSFP"
+      ],
+      "score": -10.244385077132458,
+      "english_quantile": 0.0001062902574350035
+    },
+    {
+      "tableau": "quagmire-iii variant-beaufort pt=invisible ct=invisible key=pt",
+      "key_fragments": [
+        "WVFQDYVNGURIP",
+        "SCVSEAREEPI"
+      ],
+      "score": -10.260553443363591,
+      "english_quantile": 0.00009211822311033637
+    }
+  ],
+  "seed": 1,
+  "promoted_candidate": false,
+  "note": "A configuration is compatible if its anchor-implied key scores at least as English-like as the given quantile of held-out English windows. Compare compatible with expected_compatible_by_chance; a compatible configuration is a lead to test, not a decryption."
+}

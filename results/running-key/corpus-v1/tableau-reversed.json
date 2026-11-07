@@ -1,0 +1,89 @@
+{
+  "corpus_letters": 871,
+  "offsets": 798,
+  "configurations": 14364,
+  "anchor_letters": 24,
+  "match_histogram": [
+    5736,
+    5267,
+    2433,
+    703,
+    153,
+    59,
+    12,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "expected_at_best": 0.3468137181099796,
+  "best_matches": 7,
+  "full_matches": 0,
+  "top_hits": [
+    {
+      "offset": 768,
+      "tableau": "quagmire-i vigenere pt=kryptos ct=standard key=pt",
+      "matches": 7
+    },
+    {
+      "offset": 21,
+      "tableau": "quagmire-i vigenere pt=kryptos ct=standard key=pt",
+      "matches": 6
+    },
+    {
+      "offset": 51,
+      "tableau": "quagmire-i vigenere pt=kryptos ct=standard key=pt",
+      "matches": 6
+    },
+    {
+      "offset": 81,
+      "tableau": "quagmire-i vigenere pt=kryptos ct=standard key=pt",
+      "matches": 6
+    },
+    {
+      "offset": 111,
+      "tableau": "quagmire-i vigenere pt=kryptos ct=standard key=pt",
+      "matches": 6
+    },
+    {
+      "offset": 141,
+      "tableau": "quagmire-i vigenere pt=kryptos ct=standard key=pt",
+      "matches": 6
+    },
+    {
+      "offset": 171,
+      "tableau": "quagmire-i vigenere pt=kryptos ct=standard key=pt",
+      "matches": 6
+    },
+    {
+      "offset": 201,
+      "tableau": "quagmire-i vigenere pt=kryptos ct=standard key=pt",
+      "matches": 6
+    },
+    {
+      "offset": 231,
+      "tableau": "quagmire-i vigenere pt=kryptos ct=standard key=pt",
+      "matches": 6
+    },
+    {
+      "offset": 261,
+      "tableau": "quagmire-i vigenere pt=kryptos ct=standard key=pt",
+      "matches": 6
+    }
+  ],
+  "promoted_candidate": false
+}

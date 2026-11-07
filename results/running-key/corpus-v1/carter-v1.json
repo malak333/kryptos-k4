@@ -1,0 +1,89 @@
+{
+  "corpus_letters": 282392,
+  "offsets": 282319,
+  "configurations": 5081742,
+  "anchor_letters": 24,
+  "match_histogram": [
+    2161322,
+    1855488,
+    790571,
+    221435,
+    44835,
+    7064,
+    914,
+    106,
+    7,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "expected_at_best": 10.278048637583353,
+  "best_matches": 8,
+  "full_matches": 0,
+  "top_hits": [
+    {
+      "offset": 5971,
+      "tableau": "quagmire-i vigenere pt=kryptos ct=standard key=ct",
+      "matches": 8
+    },
+    {
+      "offset": 23735,
+      "tableau": "quagmire-i vigenere pt=kryptos ct=standard key=ct",
+      "matches": 8
+    },
+    {
+      "offset": 32692,
+      "tableau": "quagmire-i vigenere pt=kryptos ct=standard key=ct",
+      "matches": 8
+    },
+    {
+      "offset": 173602,
+      "tableau": "quagmire-i vigenere pt=kryptos ct=standard key=ct",
+      "matches": 8
+    },
+    {
+      "offset": 174309,
+      "tableau": "quagmire-i vigenere pt=kryptos ct=standard key=ct",
+      "matches": 8
+    },
+    {
+      "offset": 191802,
+      "tableau": "quagmire-iii vigenere pt=kryptos ct=kryptos key=pt",
+      "matches": 8
+    },
+    {
+      "offset": 271312,
+      "tableau": "quagmire-ii vigenere pt=standard ct=kryptos key=pt",
+      "matches": 8
+    },
+    {
+      "offset": 8016,
+      "tableau": "quagmire-ii vigenere pt=standard ct=kryptos key=pt",
+      "matches": 7
+    },
+    {
+      "offset": 8814,
+      "tableau": "quagmire-ii variant-beaufort pt=standard ct=kryptos key=pt",
+      "matches": 7
+    },
+    {
+      "offset": 10267,
+      "tableau": "quagmire-ii beaufort pt=standard ct=kryptos key=pt",
+      "matches": 7
+    }
+  ],
+  "promoted_candidate": false
+}

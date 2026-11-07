@@ -1,0 +1,1 @@
+C=<corpus dir>; target/release/kryptos-k4 key-language --corpus $C/carter-v1.txt --top 25 --format json
