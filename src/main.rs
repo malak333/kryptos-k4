@@ -222,6 +222,9 @@ enum Command {
         /// Random permutations for the any-substitution route null.
         #[arg(long, default_value_t = 200_000)]
         route_random_permutations: usize,
+        /// Node budget per period for the exact Quagmire III/IV any-alphabet search.
+        #[arg(long, default_value_t = 1_000_000)]
+        quagmire_search_budget: u64,
         /// Word list (one word per line) whose words become Quagmire I-III keyword alphabets; repeatable.
         #[arg(long)]
         wordlist: Vec<PathBuf>,
@@ -442,6 +445,7 @@ fn main() -> Result<()> {
             max_route_width,
             route_random_permutations,
             route_ciphertext_shuffles,
+            quagmire_search_budget,
             wordlist,
             top,
             format,
@@ -454,6 +458,7 @@ fn main() -> Result<()> {
                 max_route_width,
                 route_random_permutations,
                 route_ciphertext_shuffles,
+                quagmire_search_budget,
                 top,
             },
             &wordlist,

@@ -152,8 +152,26 @@ Facts from the anchors alone:
   17, 18, 20–22, or 25, and **no Quagmire II with any ciphertext alphabet** at
   1–15, 17, 18, 21, 22, or 25. This is exact: each anchor is a difference
   constraint between an unknown alphabet position and an unknown key column.
-  Both pass at period 19, which 1.5–2.1% of ciphertext shuffles also do. A
+  Passing that test is necessary only, but the exact search below confirms
+  every passing period is solvable. Both pass at period 19, which 1.5–2.1% of ciphertext shuffles also do. A
   post-hoc combined test gives p = 0.049, which is not evidence.
+- **Quagmire I–IV with arbitrary alphabets (exact search, F21–F22).** Every
+  cell up to period 26 is decided, for both sign conventions:
+
+  | Kind | Impossible | Solvable |
+  | --- | --- | --- |
+  | Quagmire I (mixed plaintext alphabet) | 1–12, 14, 15, 17, 18, 20–22, 25 | 13, 16, 19, 23, 24, 26 |
+  | Quagmire II (mixed ciphertext alphabet) | 1–15, 17, 18, 21, 22, 25 | 16, 19, 20, 23, 24, 26 |
+  | Quagmire III, Vigenère or variant Beaufort | 1–26 | none |
+  | Quagmire III, Beaufort | 1–22, 24, 25 | 23, 26 |
+  | Quagmire IV (two free alphabets) | 1–7, 9–12, 14, 15, 17, 18, 21, 22, 25 | 8, 13, 16, 19, 20, 23, 24, 26 |
+
+  Quagmire III Vigenère period 24 had stayed undecided after 20 billion
+  search nodes, but it has a one-line proof. Position 74 (`K`→`K`) and
+  position 26 (`N`→`Q`) share a column. With one alphabet on both sides,
+  `K`→`K` forces that column's key to 0, and key 0 cannot turn `N` into `Q`.
+  The search now applies this rule during propagation. "Solvable" means the
+  anchors can be fitted; it is not evidence for the method.
 - **No dictionary keyword alphabet fits Quagmire I, II, or III at periods
   1–25.** Every word in Webster's Second and the system proper-names list
   (about 208,000 distinct alphabets, 48.8 million configurations) was tested.
@@ -183,7 +201,7 @@ search. Running keys are covered below.
 
 ## Route transpositions
 
-Run: `results/eliminations/anchor-elimination-v3/`. Plaintext is written row by
+Run: `results/eliminations/anchor-elimination-v6/`. Plaintext is written row by
 row into a grid of width 2–48 (97 is prime, so the last row is partial) and
 read by ten routes: columns (down, up, right to left), column and row
 serpentines, spirals both ways, and diagonals. K3-style double rotations

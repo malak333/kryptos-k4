@@ -1,0 +1,1 @@
+cargo run --locked --release -- eliminate --wordlist /usr/share/dict/web2 --wordlist /usr/share/dict/propernames --quagmire-search-budget 2000000000 --format json

@@ -93,7 +93,7 @@ fn render_elimination(report: &EliminationReport) -> String {
         })
         .collect();
     out.push_str(&format!(
-        "Quagmire I/II with any alphabet passes at: {}.\nCombined surprisal against {} ciphertext shuffles (seed {}): K4 {:.2}, null mean {:.2}, p = {:.3}.\n\n",
+        "Quagmire I/II with any alphabet passes the necessary union-find check at: {}.\nCombined surprisal against {} ciphertext shuffles (seed {}): K4 {:.2}, null mean {:.2}, p = {:.3}.\n\n",
         passes.join("; "),
         quagmire.shuffles,
         quagmire.seed,
@@ -101,6 +101,44 @@ fn render_elimination(report: &EliminationReport) -> String {
         quagmire.null_mean_surprisal,
         quagmire.surprisal_p_value
     ));
+
+    /// Periods per (kind, sign): impossible, solvable, undecided.
+    type ClassPeriods = (String, Vec<usize>, Vec<usize>, Vec<usize>);
+    let mut by_class: Vec<ClassPeriods> = Vec::new();
+    for row in &report.quagmire_exact_any_alphabet {
+        let kind = match row.kind {
+            kryptos_k4::quagmire_search::QuagmireKind::I => "Quagmire I",
+            kryptos_k4::quagmire_search::QuagmireKind::II => "Quagmire II",
+            kryptos_k4::quagmire_search::QuagmireKind::III => "Quagmire III",
+            kryptos_k4::quagmire_search::QuagmireKind::IV => "Quagmire IV",
+        };
+        let sign = match row.sign {
+            kryptos_k4::quagmire_search::SearchSign::VigenereOrVariant => {
+                "Vigenère or variant Beaufort"
+            }
+            kryptos_k4::quagmire_search::SearchSign::Beaufort => "Beaufort",
+        };
+        let label = format!("{kind}, {sign}");
+        if by_class.last().is_none_or(|(l, ..)| *l != label) {
+            by_class.push((label, Vec::new(), Vec::new(), Vec::new()));
+        }
+        let entry = by_class.last_mut().expect("class");
+        match row.result {
+            kryptos_k4::quagmire_search::SearchResult::Impossible => entry.1.push(row.period),
+            kryptos_k4::quagmire_search::SearchResult::Possible => entry.2.push(row.period),
+            kryptos_k4::quagmire_search::SearchResult::Undecided => entry.3.push(row.period),
+        }
+    }
+    out.push_str(&format!(
+        "Quagmire I-IV with arbitrary alphabets (exact search, budget {} nodes per period):\n\n| Kind and sign | Impossible | Solvable | Undecided |\n| --- | --- | --- | --- |\n",
+        report.quagmire_search_budget
+    ));
+    for (label, impossible, possible, undecided) in &by_class {
+        out.push_str(&format!(
+            "| {label} | {impossible:?} | {possible:?} | {undecided:?} |\n"
+        ));
+    }
+    out.push('\n');
 
     out.push_str("## Families\n\n");
     out.push_str("| Family | Configurations | Eliminated | Untestable | Surviving | Expected by chance | Most checks survived |\n");

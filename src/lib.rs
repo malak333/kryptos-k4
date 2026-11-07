@@ -12,6 +12,7 @@ pub mod findings;
 pub mod hypotheses;
 pub mod key_language;
 pub mod key_test;
+pub mod quagmire_search;
 pub mod release_check;
 pub mod report;
 pub mod route_elimination;

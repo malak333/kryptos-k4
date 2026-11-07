@@ -22,8 +22,10 @@ archive-discovered, or private plaintext.
   survivors over 15 million configurations. Periodic Quagmire I–IV and
   plaintext autokey leave only chance-level survivors. Quagmire I–III with a
   keyword alphabet from any dictionary word fail at every period up to 25, and
-  Quagmire I and II fail at every period up to 12 with any alphabet at all.
-  Limits apply; see [docs/negative-results.md](docs/negative-results.md).
+  Quagmire I and II fail at every period up to 12 with any alphabet at all,
+  and Quagmire III (Vigenère) fails at every period up to 26. An exact
+  search decides every Quagmire I–IV cell up to period 26. Limits
+  apply; see [docs/negative-results.md](docs/negative-results.md).
 - **Route transpositions do not help.** Ten grid routes and K3-style double
   rotations at every width up to 48, before or after a periodic key, fit the
   anchors no better than chance, even with any alphabet per key column.

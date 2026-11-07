@@ -235,7 +235,7 @@ pub fn findings() -> Vec<Finding> {
             related_hypothesis: "H3",
             source_inputs: &[
                 "src/route_elimination.rs",
-                "results/eliminations/anchor-elimination-v3",
+                "results/eliminations/anchor-elimination-v6",
             ],
             transformation_steps: &[
                 "write the 97 letters row by row into grids of width 2-48 (last row partial) and read them by ten routes: columns down, up, and right-to-left, column and row serpentines, clockwise and counterclockwise spirals, diagonals, and diagonal serpentines",
@@ -256,7 +256,7 @@ pub fn findings() -> Vec<Finding> {
             related_hypothesis: "H2",
             source_inputs: &[
                 "src/eliminate.rs",
-                "results/eliminations/anchor-elimination-v3",
+                "results/eliminations/anchor-elimination-v6",
             ],
             transformation_steps: &[
                 "write each anchor as a difference constraint mod 26 between the unknown alphabet position of a letter and an unknown key column (Quagmire I: plaintext alphabet mixed, ciphertext standard; Quagmire II: the reverse; the sign convention is absorbed by reflecting the alphabet)",
@@ -266,7 +266,7 @@ pub fn findings() -> Vec<Finding> {
             ],
             output_summary: "With any alphabet, Quagmire I is impossible at periods 1-12, 14, 15, 17, 18, 20-22, and 25; Quagmire II at 1-15, 17, 18, 21, 22, and 25. Both pass at period 19, where 1.5% and 2.1% of shuffles pass; the other passes (13, 16, 20, 23, 24, 26) are common under shuffling. Combined surprisal: K4 13.48 against a null mean of 6.37, p = 0.049.",
             baseline_comparison: "Impossibility is exact and needs no null. The surprisal p-value is post hoc (the statistic was chosen after period 19 was seen) and is not significant after that choice.",
-            interpretation: "Quagmire I and II, with any alphabet at all, are ruled out at every period up to 12 and at most periods up to 26. The registered keyword alphabets were already eliminated at period 19 (F15). Period 19 is the weakest remaining gap, not evidence for it. Quagmire III and IV with arbitrary alphabets are not covered by this exact test.",
+            interpretation: "Quagmire I and II, with any alphabet at all, are ruled out at every period up to 12 and at most periods up to 26. The registered keyword alphabets were already eliminated at period 19 (F15). Period 19 is the weakest remaining gap, not evidence for it. Passing this test is necessary, not sufficient; F22 confirms by exact search that every passing period is genuinely solvable. Quagmire III and IV with arbitrary alphabets are not covered by this test.",
             next_test: "Check whether any dictionary keyword alphabet, not only the registered ones, fits Quagmire I-III (F20).",
             promoted_candidate: false,
         },
@@ -277,7 +277,7 @@ pub fn findings() -> Vec<Finding> {
             source_inputs: &[
                 "experiments/eliminations/dictionary-keywords-preregistration.md",
                 "src/eliminate.rs",
-                "results/eliminations/anchor-elimination-v3",
+                "results/eliminations/anchor-elimination-v6",
             ],
             transformation_steps: &[
                 "make a keyword alphabet from every word in /usr/share/dict/web2 (Webster's Second, 235,976 words) and /usr/share/dict/propernames (1,308 names), skipping duplicates and the standard alphabet",
@@ -287,6 +287,46 @@ pub fn findings() -> Vec<Finding> {
             output_summary: "48,829,248 configurations. 65,571 survive against 72,339.6 expected by chance, and none passes more than one check: every survivor is at a period (26) that leaves the anchors almost untested. No configuration survives at any period from 1 to 25, including period 19.",
             baseline_comparison: "Each check carries chance 1/26; survivor counts match the chance expectation.",
             interpretation: "Quagmire I-III with a keyword alphabet from any English dictionary word cannot produce K4 at periods 1-25. Together with F19, the period-19 gap for Quagmire I/II needs a non-dictionary mixed alphabet.",
+            next_test: "Search Quagmire III and IV with arbitrary alphabets exactly (F21).",
+            promoted_candidate: false,
+        },
+        Finding {
+            id: "F21",
+            title: "Exact search: Quagmire III fits almost no period with any alphabet; Quagmire IV stays solvable at eight",
+            related_hypothesis: "H2",
+            source_inputs: &[
+                "src/quagmire_search.rs",
+                "results/eliminations/anchor-elimination-v6",
+            ],
+            transformation_steps: &[
+                "write each anchor as posB(c) - posA(p) = k[col] (Vigenere; variant Beaufort is the same with k negated) or posB(c) + posA(p) = k[col] (Beaufort), with posA = posB for Quagmire III",
+                "mark periods impossible where no per-column substitution fits at all; otherwise drop columns holding a single anchor, whose key is free, and fix one letter per alphabet at 0 to remove translation symmetry",
+                "depth-first search over alphabet positions with key derivation and forced partner letters, re-verifying every solution found, with a budget of 2 billion nodes per period",
+                "confirm with planted encryptions under scrambled alphabets that true keys are found for both kinds and signs",
+            ],
+            output_summary: "Quagmire III, Vigenere or variant Beaufort: impossible with any alphabet at every period 1-26 except 24, which was undecided here and is impossible by F22; no solution found at any period. Quagmire III, Beaufort: impossible at 1-22, 24, 25; solvable at 23 and 26. Quagmire IV, either sign, fully decided: impossible at 1-7, 9-12, 14, 15, 17, 18, 21, 22, 25; solvable at 8, 13, 16, 19, 20, 23, 24, 26.",
+            baseline_comparison: "Impossibility is exact. Solvable periods are found within 30 search nodes; the hardest decided period needed 1.23 billion nodes. Quagmire III Vigenere period 24 exhausts the 2-billion-node budget, and also a 20-billion-node run (eliminate --max-lag 1 --max-columnar-width 0 --max-route-width 0 --route-random-permutations 0 --route-ciphertext-shuffles 0 --quagmire-search-budget 20000000000), which suggests but does not prove impossibility. F22 decides it: the cell is impossible by a one-line argument the search had not encoded.",
+            interpretation: "Even with alphabets chosen freely, a single-alphabet Quagmire III is nearly ruled out at periods up to 26. Quagmire IV has enough freedom to fit the anchors at eight periods, so the anchors cannot eliminate it there; a specific alphabet pair or key would be needed.",
+            next_test: "Decide the last Quagmire III cell and Quagmire I/II exactly (F22).",
+            promoted_candidate: false,
+        },
+        Finding {
+            id: "F22",
+            title: "Every Quagmire I-IV cell up to period 26 is decided; Quagmire III with the Vigenere sign is impossible at all of them",
+            related_hypothesis: "H2",
+            source_inputs: &[
+                "src/quagmire_search.rs",
+                "results/eliminations/anchor-elimination-v6",
+            ],
+            transformation_steps: &[
+                "add to the F21 propagation: under one shared alphabet with the Vigenere sign, a letter that encrypts to itself forces its column key to 0, and key 0 cannot pair two different letters",
+                "extend the exact search to Quagmire I (ciphertext alphabet fixed to the standard order) and Quagmire II (plaintext alphabet fixed), both sign conventions, periods 1-26, budget 2 billion nodes per period",
+                "cross-check on the K4 anchors: every period the F19 union-find test rejects must be impossible here, the two signs must agree for Quagmire I and II (reflecting the mixed alphabet turns Beaufort into Vigenere), and Quagmire IV must be solvable wherever I or II is",
+                "confirm with planted encryptions under scrambled alphabets, including columns with key 0, that true keys are found for all four kinds and both signs",
+            ],
+            output_summary: "No cell is undecided. Quagmire III, Vigenere or variant Beaufort: impossible at every period 1-26. At period 24, position 74 (K to K) and position 26 (N to Q) share a column, so the column key is 0 and N cannot become Q. Quagmire I, either sign: impossible at 1-12, 14, 15, 17, 18, 20-22, 25; solvable at 13, 16, 19, 23, 24, 26. Quagmire II, either sign: impossible at 1-15, 17, 18, 21, 22, 25; solvable at 16, 19, 20, 23, 24, 26. Quagmire III Beaufort and Quagmire IV are unchanged from F21.",
+            baseline_comparison: "Impossibility and solvability are both exact; every solution found is re-verified against all anchor equations. Every Quagmire I/II cell is decided within 5 search nodes and Quagmire III Vigenere period 24 at the root; the hardest cell overall is still Quagmire III Beaufort period 16 at 1.23 billion nodes, so the 2-billion-node budget is not binding. The F19 union-find passes are exactly the solvable Quagmire I/II periods, so that necessary test lost nothing at K4. Solvable is not evidence: shuffled ciphertexts pass the F19 necessary test at these periods at the rates given there.",
+            interpretation: "The anchors decide every Quagmire configuration with arbitrary alphabets at periods up to 26. What survives (Quagmire I at 6 periods, II at 6, III Beaufort at 2, IV at 8) survives because those periods leave too few anchor pairs per column to test, not because anything fits well. A specific alphabet or key source is needed to go further.",
             next_test: "See docs/conclusions.md: test only specific, preregistered key sources, or rerun when more plaintext is released.",
             promoted_candidate: false,
         },
